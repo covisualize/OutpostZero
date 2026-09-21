@@ -19,6 +19,7 @@ namespace OutpostZero.Core
         [SerializeField] private int quality = 1;
         [SerializeField] private int vsync = 1;
         [SerializeField] private float fieldOfView = 55f;
+        [SerializeField] private bool merciful;
 
         public float ScreenShake => screenShake;
         public float MasterVolume => masterVolume;
@@ -31,7 +32,8 @@ namespace OutpostZero.Core
         public int Quality => quality;
         public bool VSync => vsync != 0;
         public float FieldOfView => fieldOfView;
-        public string DiscreteKey => (subtitles ? "1" : "0") + colorblindMode + quality + vsync;
+        public bool Merciful => merciful;
+        public string DiscreteKey => (subtitles ? "1" : "0") + colorblindMode + quality + vsync + (merciful ? "1" : "0");
         public bool ShowSettings { get; private set; }
 
         public event Action OnChanged;
@@ -107,6 +109,18 @@ namespace OutpostZero.Core
         {
             quality = (quality + 1) % 3;
             ApplyDisplay();
+            OnChanged?.Invoke();
+        }
+
+        public void ToggleMerciful()
+        {
+            merciful = !merciful;
+            OnChanged?.Invoke();
+        }
+
+        public void SetMerciful(bool value)
+        {
+            merciful = value;
             OnChanged?.Invoke();
         }
 

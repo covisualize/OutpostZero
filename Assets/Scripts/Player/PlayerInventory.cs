@@ -160,6 +160,52 @@ namespace OutpostZero.Player
             return granted;
         }
 
+        public string TakeGear()
+        {
+            var parts = new List<string>();
+            for (int i = 0; i < items.Count; i++)
+            {
+                if (items[i] == null || items[i].Quantity <= 0 || string.IsNullOrEmpty(items[i].ItemId)) continue;
+                parts.Add(items[i].ItemId + "*" + items[i].Quantity);
+            }
+            if (scrapCount > 0) parts.Add("scrap*" + scrapCount);
+            if (medicalKits > 0) parts.Add("medkit*" + medicalKits);
+            items.Clear();
+            scrapCount = 0;
+            medicalKits = 0;
+            currentWeight = 0f;
+            OnInventoryChanged?.Invoke();
+            return string.Join("+", parts);
+        }
+
+        public void RestoreGear(string packed)
+        {
+            if (string.IsNullOrEmpty(packed)) return;
+            string[] parts = packed.Split('+');
+            for (int i = 0; i < parts.Length; i++)
+            {
+                int star = parts[i].IndexOf('*');
+                if (star <= 0) continue;
+                string id = parts[i].Substring(0, star);
+                if (!int.TryParse(parts[i].Substring(star + 1), out int count) || count <= 0) continue;
+                if (id == "scrap")
+                {
+                    scrapCount += count;
+                    continue;
+                }
+                if (id == "medkit")
+                {
+                    medicalKits += count;
+                    continue;
+                }
+                var record = OutpostZero.Items.ItemCatalog.Find(id);
+                if (record == null) continue;
+                TryAddItem(record.Id, record.DisplayName, record.Category, count, record.Weight);
+            }
+            RecalculateWeight();
+            OnInventoryChanged?.Invoke();
+        }
+
         public void AddScrap(int amount)
         {
             scrapCount += amount;

@@ -155,27 +155,47 @@ namespace OutpostZero.Core
 
         public void TriggerPlayerDeath()
         {
+            bool merciful = SettingsService.Instance != null && SettingsService.Instance.Merciful;
+            if (merciful && SurvivorRoster.Instance != null && SurvivorRoster.Instance.WoundLeader())
+            {
+                BringToCamp(false);
+                GameplayFeedback.Toast("Dragged back to the gate");
+                SaveSystem.Instance?.Save(false);
+                return;
+            }
             Vector3 corpse = PlayerRegistry.Current != null ? PlayerRegistry.Current.transform.position : Vector3.zero;
-            bool successor = SurvivorRoster.Instance == null || SurvivorRoster.Instance.MarkLeaderDead(corpse);
+            var effects = PlayerRegistry.Current != null ? PlayerRegistry.Current.GetComponent<StatusEffectController>() : null;
+            string cause = effects != null && effects.IsInfected ? "infection" : "killed";
+            bool successor = SurvivorRoster.Instance == null || SurvivorRoster.Instance.MarkLeaderDead(corpse, cause);
             SetState(successor ? GameState.SuccessionScreen : GameState.GameOver);
+            SaveSystem.Instance?.Save(false);
         }
 
         public void AcceptSuccessor(string survivorId)
         {
             var next = SurvivorRoster.Instance != null ? SurvivorRoster.Instance.Promote(survivorId) : null;
+            BringToCamp(true);
+            GameplayFeedback.Toast(next != null ? next.displayName + " takes the gate" : "Back inside the gate");
+            SaveSystem.Instance?.Save(false);
+        }
+
+        private void BringToCamp(bool clearInjury)
+        {
+            int day = WorldClock.Instance != null ? WorldClock.Instance.Day : 1;
+            SuccessionLedger.NextMorning(day, out int nextDay, out float nextHour);
+            WorldClock.Instance?.Set(nextDay, nextHour);
             var player = PlayerRegistry.Current;
             if (player != null)
             {
                 var health = player.GetComponent<Combat.HealthSystem>();
                 health?.ResetHealth();
-                player.GetComponent<StatusEffectController>()?.ClearInjury();
+                if (clearInjury) player.GetComponent<StatusEffectController>()?.ClearInjury();
                 var body = player.GetComponent<CharacterController>();
                 if (body != null) body.enabled = false;
                 player.transform.position = new Vector3(-12f, 0.1f, -12f);
                 if (body != null) body.enabled = true;
             }
             EnterCamp();
-            GameplayFeedback.Toast(next != null ? next.displayName + " takes the gate" : "Back inside the gate");
         }
 
         public void BeginNewOutpost()

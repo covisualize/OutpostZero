@@ -317,14 +317,19 @@ namespace OutpostZero.UI
                     break;
                 case GameState.SuccessionScreen:
                     menu.Add(Title("LEADER KILLED"));
-                    menu.Add(Body("Choose who walks out next."));
+                    if (SurvivorRoster.Instance != null && SurvivorRoster.Instance.Memorials.Count > 0)
+                    {
+                        var fallen = SurvivorRoster.Instance.Memorials[SurvivorRoster.Instance.Memorials.Count - 1];
+                        menu.Add(Body(SuccessionLedger.Card(fallen)));
+                    }
+                    menu.Add(Body("Choose who walks out at dawn."));
                     if (SurvivorRoster.Instance != null)
                     {
                         foreach (var survivor in SurvivorRoster.Instance.Survivors)
                         {
                             if (!survivor.alive) continue;
                             string id = survivor.id;
-                            menu.Add(Button(survivor.displayName + " — " + survivor.trait + "  " + survivor.bond, () => GameManager.Instance.AcceptSuccessor(id)));
+                            menu.Add(Button(survivor.displayName + " — " + survivor.trait + "  " + ColonyDay.Mood(survivor.morale), () => GameManager.Instance.AcceptSuccessor(id)));
                         }
                     }
                     menu.Add(Button("The outpost falls", () => GameManager.Instance.SetState(GameState.GameOver)));
@@ -344,7 +349,8 @@ namespace OutpostZero.UI
                     break;
                 case GameState.GameOver:
                     menu.Add(Title(Loc.T("gameover.title")));
-                    menu.Add(Body("Every name on the roster is gone."));
+                    int remembered = SurvivorRoster.Instance != null ? SurvivorRoster.Instance.Memorials.Count : 0;
+                    menu.Add(Body(remembered > 0 ? remembered + " names on the memorial wall." : "Every name on the roster is gone."));
                     menu.Add(Button("New outpost", () => Go(FlowStep.Sanctuary, () => GameManager.Instance.BeginNewOutpost())));
                     break;
                 case GameState.MainMenu:
@@ -389,6 +395,7 @@ namespace OutpostZero.UI
             string[] tiers = { "Low", "Medium", "High" };
             parent.Add(Button("Quality: " + tiers[Mathf.Clamp(settings.Quality, 0, 2)], settings.CycleQuality));
             parent.Add(Button(settings.VSync ? "VSync on" : "VSync off", settings.ToggleVSync));
+            parent.Add(Button(settings.Merciful ? "Death: merciful" : "Death: permadeath", settings.ToggleMerciful));
             parent.Add(Body("Click an action, then press a key. Escape cancels."));
             for (int i = 0; i < ControlBindings.Count; i++)
             {
@@ -425,6 +432,11 @@ namespace OutpostZero.UI
             {
                 camp.Add(Body("Morale " + Mathf.RoundToInt(roster.AverageMorale())));
                 if (!string.IsNullOrEmpty(roster.DayNotes)) camp.Add(Body(roster.DayNotes));
+                if (roster.Memorials.Count > 0)
+                {
+                    camp.Add(Body("Memorial wall"));
+                    for (int i = 0; i < roster.Memorials.Count; i++) camp.Add(Body(SuccessionLedger.Card(roster.Memorials[i])));
+                }
                 foreach (var survivor in roster.Survivors)
                 {
                     string flag = survivor.leader ? "*" : survivor.alive ? "" : "x";
@@ -556,6 +568,7 @@ namespace OutpostZero.UI
                     builder.Append(Mathf.RoundToInt(survivor.morale)).Append(Mathf.RoundToInt(survivor.hunger)).Append(survivor.opinion).Append(survivor.injury);
                 }
                 builder.Append(SurvivorRoster.Instance.DayNotes);
+                builder.Append(SurvivorRoster.Instance.PackMemorials());
             }
             if (GridBuilder.Instance != null)
             {

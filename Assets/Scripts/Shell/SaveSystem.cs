@@ -92,6 +92,11 @@ namespace OutpostZero.Shell
             if (TutorialDirector.Instance != null) data.tutorialDone = TutorialDirector.Instance.Finished;
             if (CodexDirector.Instance != null) data.codex = CodexDirector.Instance.Packed;
             if (OutpostZero.Player.PlayerRegistry.Current != null) data.weaponMods = OutpostZero.Player.PlayerRegistry.Current.PackMods();
+            if (SurvivorRoster.Instance != null)
+            {
+                data.memorial = SurvivorRoster.Instance.PackMemorials();
+                data.corpses = SurvivorRoster.Instance.PackCorpses();
+            }
             if (SettingsService.Instance != null)
             {
                 data.language = SettingsService.Instance.Language;
@@ -105,6 +110,7 @@ namespace OutpostZero.Shell
                 data.volume = SettingsService.Instance.MasterVolume;
                 data.textScale = SettingsService.Instance.TextScale;
                 data.subtitles = SettingsService.Instance.Subtitles;
+                data.mercy = SettingsService.Instance.Merciful ? 1 : 0;
             }
             if (SurvivorRoster.Instance != null)
             {
@@ -150,6 +156,8 @@ namespace OutpostZero.Shell
             FactionTrade.Instance?.SetStanding(data.factionStanding);
             SettingsService.Instance?.ApplySnapshot(data.shake, data.volume, data.textScale, data.subtitles, data.language);
             SettingsService.Instance?.ApplyPresentation(data.sfxVolume, data.musicVolume, data.quality, data.vsync, data.fieldOfView, data.bindings);
+            SettingsService.Instance?.SetMerciful(data.mercy != 0);
+            SurvivorRoster.Instance?.RestoreStory(data.memorial, data.corpses);
             TutorialDirector.Instance?.SetFinished(data.tutorialDone);
             CodexDirector.Instance?.Restore(data.codex);
             OutpostZero.Player.PlayerRegistry.Current?.RestoreMods(data.weaponMods);

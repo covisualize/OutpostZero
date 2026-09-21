@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using OutpostZero.Core;
-using OutpostZero.Items;
 using OutpostZero.Player;
 
 namespace OutpostZero.Colony
@@ -32,6 +31,9 @@ namespace OutpostZero.Colony
         public IReadOnlyList<Survivor> Survivors => survivors;
         public event Action OnRosterChanged;
         public string DayNotes { get; private set; } = "";
+        private readonly List<SuccessionLedger.Memorial> memorials = new List<SuccessionLedger.Memorial>();
+        private readonly List<SuccessionLedger.CorpseMark> corpses = new List<SuccessionLedger.CorpseMark>();
+        public IReadOnlyList<SuccessionLedger.Memorial> Memorials => memorials;
 
         public Survivor Leader
         {
@@ -58,6 +60,8 @@ namespace OutpostZero.Colony
 
         public void Seed()
         {
+            memorials.Clear();
+            corpses.Clear();
             survivors.Clear();
             survivors.Add(Make("mara", "Mara Quill", "Steady Hands", true, "Close to Jonas"));
             survivors.Add(Make("jonas", "Jonas Reed", "Light Sleeper", false, "Close to Mara"));
@@ -85,24 +89,98 @@ namespace OutpostZero.Colony
 
         public bool MarkLeaderDead(Vector3 corpsePosition)
         {
+            return MarkLeaderDead(corpsePosition, "killed");
+        }
+
+        public bool MarkLeaderDead(Vector3 corpsePosition, string cause)
+        {
             var leader = Leader;
+            string fallen = leader != null ? leader.displayName : "";
             if (leader != null)
             {
                 leader.alive = false;
                 leader.leader = false;
                 leader.task = "Fallen";
             }
-            string fallen = leader != null ? leader.displayName : "";
-            foreach (var survivor in survivors)
+            var days = Snapshot();
+            SuccessionLedger.Grieve(days, fallen);
+            for (int i = 0; i < days.Count && i < survivors.Count; i++) survivors[i].morale = days[i].morale;
+            string district = OutpostZero.Shell.WorldMapService.Instance != null && OutpostZero.Shell.WorldMapService.Instance.Current != null
+                ? OutpostZero.Shell.WorldMapService.Instance.Current.id
+                : "ash_market";
+            int day = WorldClock.Instance != null ? WorldClock.Instance.Day : 1;
+            int kills = GameManager.Instance != null ? GameManager.Instance.ZombiesKilled : 0;
+            var carried = PlayerRegistry.Current != null ? PlayerRegistry.Current.GetComponent<PlayerInventory>() : null;
+            string gear = carried != null ? carried.TakeGear() : "";
+            memorials.Add(new SuccessionLedger.Memorial
             {
-                if (!survivor.alive) continue;
-                float loss = 14f;
-                if (!string.IsNullOrEmpty(fallen) && survivor.bond.Contains(fallen.Split(' ')[0])) loss += 10f;
-                survivor.morale = Mathf.Max(0f, survivor.morale - loss);
-            }
-            SpawnCorpse(corpsePosition);
+                name = fallen,
+                day = day,
+                kills = kills,
+                cause = string.IsNullOrEmpty(cause) ? "killed" : cause,
+                district = district
+            });
+            corpses.Add(new SuccessionLedger.CorpseMark
+            {
+                district = district,
+                x = corpsePosition.x,
+                y = corpsePosition.y,
+                z = corpsePosition.z,
+                name = fallen,
+                gear = gear,
+                recovered = false
+            });
+            SpawnCorpse(corpsePosition, corpses.Count - 1, gear);
             OnRosterChanged?.Invoke();
             return NextLiving() != null;
+        }
+
+        public bool WoundLeader()
+        {
+            var leader = Leader;
+            if (leader == null) return false;
+            leader.injury = Math.Max(leader.injury, SuccessionLedger.MercyInjury);
+            var days = Snapshot();
+            SuccessionLedger.Grieve(days, "");
+            for (int i = 0; i < days.Count && i < survivors.Count; i++) survivors[i].morale = days[i].morale;
+            ColonyStorage.Instance?.TrySpendScrap(SuccessionLedger.MercyScrap);
+            OnRosterChanged?.Invoke();
+            return true;
+        }
+
+        public void Recover(int index)
+        {
+            if (index < 0 || index >= corpses.Count) return;
+            corpses[index].recovered = true;
+            OnRosterChanged?.Invoke();
+        }
+
+        public void RestoreStory(string memorialPacked, string corpsePacked)
+        {
+            memorials.Clear();
+            memorials.AddRange(SuccessionLedger.UnpackMemorials(memorialPacked));
+            corpses.Clear();
+            corpses.AddRange(SuccessionLedger.UnpackCorpses(corpsePacked));
+            OnRosterChanged?.Invoke();
+        }
+
+        public string PackMemorials() => SuccessionLedger.PackMemorials(memorials);
+
+        public string PackCorpses() => SuccessionLedger.PackCorpses(corpses);
+
+        public void RaiseCorpses(string districtId)
+        {
+            var standing = FindObjectsByType<FallenGear>(FindObjectsSortMode.None);
+            for (int i = 0; i < standing.Length; i++)
+            {
+                if (standing[i] != null) Destroy(standing[i].gameObject);
+            }
+            for (int i = 0; i < corpses.Count; i++)
+            {
+                var mark = corpses[i];
+                if (mark.recovered || mark.district != districtId) continue;
+                SpawnCorpse(new Vector3(mark.x, mark.y, mark.z), i, mark.gear);
+            }
         }
 
         public Survivor PromoteNext() => Promote(null);
@@ -301,14 +379,14 @@ namespace OutpostZero.Colony
             return null;
         }
 
-        private static void SpawnCorpse(Vector3 position)
+        private static void SpawnCorpse(Vector3 position, int index, string gear)
         {
             var corpse = GameObject.CreatePrimitive(PrimitiveType.Capsule);
             corpse.name = "Corpse_Leader";
             corpse.transform.position = position + Vector3.up * 0.2f;
             corpse.transform.localScale = new Vector3(0.6f, 0.35f, 0.6f);
-            var container = corpse.AddComponent<LootContainer>();
-            container.Configure("crate");
+            corpse.layer = GameLayers.Interactable;
+            corpse.AddComponent<FallenGear>().Configure(index, gear);
         }
     }
 }

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using OutpostZero.AI;
+using OutpostZero.Colony;
 using OutpostZero.Core;
 using OutpostZero.Expedition;
 using OutpostZero.Graphics;
@@ -88,7 +89,9 @@ namespace OutpostZero.Shell
             ObjectiveTracker.Instance?.SetGoals(rules.KillGoal, rules.ScrapGoal);
             HordeDirector.Instance?.ApplyOpening(rules.OpeningTension, rules.SpawnInterval, rules.PreferredVariant);
             WeatherController.Instance?.SetFor(rules.Weather, 180f);
-            DistrictDressing.Instance?.Build(Current != null ? Current.id : "ash_market");
+            string districtId = Current != null ? Current.id : "ash_market";
+            DistrictDressing.Instance?.Build(districtId);
+            SurvivorRoster.Instance?.RaiseCorpses(districtId);
         }
 
         public void ClearCurrent()

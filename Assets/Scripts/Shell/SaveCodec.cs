@@ -52,6 +52,9 @@ namespace OutpostZero.Shell
         public bool tutorialDone;
         public string codex = "";
         public string weaponMods = "";
+        public string memorial = "";
+        public string corpses = "";
+        public int mercy;
         public string language = "en";
         public float shake = 1f;
         public float volume = 1f;

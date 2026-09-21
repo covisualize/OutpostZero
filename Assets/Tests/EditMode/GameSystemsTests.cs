@@ -175,6 +175,54 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void AFallenLeaderIsMournedAndCanBeFoundAgain()
+        {
+            var camp = new List<ColonistDay>
+            {
+                new ColonistDay { id = "jonas", bond = "Close to Mara", alive = true, morale = 80f },
+                new ColonistDay { id = "priya", bond = "Trusts Ellis", alive = true, morale = 70f },
+                new ColonistDay { id = "mara", bond = "", alive = false, morale = 10f }
+            };
+            SuccessionLedger.Grieve(camp, "Mara Quill");
+            Assert.AreEqual(40f, camp[0].morale);
+            Assert.AreEqual(45f, camp[1].morale);
+            Assert.AreEqual(10f, camp[2].morale);
+
+            Assert.AreEqual("wounded", SuccessionLedger.Outcome(true, 2));
+            Assert.AreEqual("succession", SuccessionLedger.Outcome(false, 2));
+            Assert.AreEqual("wiped", SuccessionLedger.Outcome(false, 0));
+            SuccessionLedger.NextMorning(4, out int day, out float hour);
+            Assert.AreEqual(5, day);
+            Assert.AreEqual(6.5f, hour);
+
+            string memorial = SuccessionLedger.PackMemorials(new[]
+            {
+                new SuccessionLedger.Memorial { name = "Mara Quill", day = 4, kills = 12, cause = "infection", district = "ash_market" }
+            });
+            var remembered = SuccessionLedger.UnpackMemorials(memorial);
+            Assert.AreEqual("Mara Quill", remembered[0].name);
+            Assert.AreEqual(12, remembered[0].kills);
+            Assert.AreEqual("infection", remembered[0].cause);
+            Assert.AreEqual(0, SuccessionLedger.UnpackMemorials(null).Count);
+
+            string bodies = SuccessionLedger.PackCorpses(new[]
+            {
+                new SuccessionLedger.CorpseMark { district = "ash_market", x = 3.5f, y = 0f, z = 8f, name = "Mara Quill", gear = "bandage*1+scrap*4", recovered = false }
+            });
+            var found = SuccessionLedger.UnpackCorpses(bodies);
+            Assert.AreEqual("ash_market", found[0].district);
+            Assert.AreEqual(3.5f, found[0].x);
+            Assert.AreEqual("bandage*1+scrap*4", found[0].gear);
+            Assert.IsFalse(found[0].recovered);
+            var saved = new SaveGameData { memorial = memorial, corpses = bodies, mercy = 0 };
+            Assert.IsTrue(SaveCodec.TryDeserialize(SaveCodec.Serialize(saved), out var loaded, out var error), error);
+            Assert.AreEqual(1, loaded.schemaVersion);
+            Assert.AreEqual(memorial, loaded.memorial);
+            Assert.AreEqual(bodies, loaded.corpses);
+            Assert.AreEqual(0, loaded.mercy);
+        }
+
+        [Test]
         public void DistrictsChangeTheQuotaAndTheStreet()
         {
             var market = DistrictRules.For("ash_market");
