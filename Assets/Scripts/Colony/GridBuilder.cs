@@ -145,15 +145,44 @@ namespace OutpostZero.Colony
             views.Clear();
         }
 
+        public int CountKind(string kind)
+        {
+            int count = 0;
+            for (int i = 0; i < placed.Count; i++)
+            {
+                if (placed[i].kind == kind && placed[i].integrity > 0) count++;
+            }
+            return count;
+        }
+
+        public int CoverCount(string approach)
+        {
+            RaidPlan.AnchorOf(approach, out float ax, out float az);
+            int count = 0;
+            for (int i = 0; i < placed.Count; i++)
+            {
+                var module = placed[i];
+                if (module.kind != "Barricade" || module.integrity <= 0) continue;
+                if (RaidPlan.Covers(ax, az, module.x, module.z)) count++;
+            }
+            return count;
+        }
+
         public bool StrikeBarricade(int amount)
         {
+            return StrikeFrom("gate", amount);
+        }
+
+        public bool StrikeFrom(string approach, int amount)
+        {
+            RaidPlan.AnchorOf(approach, out float ax, out float az);
             PlacedModule target = null;
             float best = float.MaxValue;
             foreach (var module in placed)
             {
                 if (module.kind != "Barricade" || module.integrity <= 0) continue;
-                float dx = module.x + 12f;
-                float dz = module.z + 12f;
+                float dx = module.x - ax;
+                float dz = module.z - az;
                 float distance = dx * dx + dz * dz;
                 if (distance >= best) continue;
                 best = distance;

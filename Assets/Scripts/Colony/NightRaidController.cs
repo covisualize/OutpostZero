@@ -11,6 +11,9 @@ namespace OutpostZero.Colony
         [SerializeField] private float duration = 75f;
         private float endsAt;
         private float nextStrike;
+        private float strikeInterval = 1.2f;
+        private int pressure = 6;
+        private string approach = "gate";
         private bool running;
 
         public bool Running => running;
@@ -29,12 +32,20 @@ namespace OutpostZero.Colony
         public void Begin()
         {
             if (GameManager.Instance == null) return;
+            int day = WorldClock.Instance != null ? WorldClock.Instance.Day : 1;
+            int placed = GridBuilder.Instance != null ? GridBuilder.Instance.CountKind("Watchtower") : 0;
+            int sceneTower = CampServices.Instance != null && CampServices.Instance.WatchtowerOnline ? 1 : 0;
+            int towers = placed > sceneTower ? placed : sceneTower;
+            var wave = RaidPlan.Opening(day, towers);
+            approach = wave.Approach;
+            pressure = wave.Pressure;
+            strikeInterval = wave.Interval;
             running = true;
             endsAt = Time.time + duration;
-            nextStrike = Time.time + 1.2f;
+            nextStrike = Time.time + strikeInterval;
             GameManager.Instance.SetState(GameState.RaidActive);
-            if (HordeDirector.Instance != null) HordeDirector.Instance.BeginRaid();
-            GameplayFeedback.Toast("Night raid — hold the gate");
+            if (HordeDirector.Instance != null) HordeDirector.Instance.BeginRaid(RaidPlan.SpawnCount(day, towers));
+            GameplayFeedback.Toast("Night raid from the " + approach);
         }
 
         private void Update()
@@ -47,7 +58,7 @@ namespace OutpostZero.Colony
             }
             if (Time.time >= nextStrike)
             {
-                nextStrike = Time.time + 1.2f;
+                nextStrike = Time.time + strikeInterval;
                 int guards = 0;
                 if (SurvivorRoster.Instance != null)
                 {
@@ -56,10 +67,11 @@ namespace OutpostZero.Colony
                         if (survivor.alive && survivor.task == "Guard") guards++;
                     }
                 }
-                int hit = Mathf.Max(2, 9 - guards * 3);
+                int cover = GridBuilder.Instance != null ? GridBuilder.Instance.CoverCount(approach) : 0;
+                int hit = RaidPlan.Strike(pressure, guards, cover);
                 if (GridBuilder.Instance != null && GridBuilder.Instance.BarricadeCount() > 0)
                 {
-                    GridBuilder.Instance.StrikeBarricade(hit);
+                    GridBuilder.Instance.StrikeFrom(approach, hit);
                 }
             }
             if (Time.time < endsAt) return;

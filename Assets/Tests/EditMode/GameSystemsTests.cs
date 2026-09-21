@@ -715,5 +715,53 @@ namespace OutpostZero.Tests.EditMode
             Assert.AreEqual("step", AudioMix.StepId("Ground"));
             Assert.AreEqual("step", AudioMix.StepId(null));
         }
+
+        [Test]
+        public void RaidsComeFromASideAndTowersSlowThem()
+        {
+            Assert.IsFalse(RaidPlan.Due(1, 0));
+            Assert.IsTrue(RaidPlan.Due(2, 0));
+            Assert.IsFalse(RaidPlan.Due(2, 8));
+            Assert.IsFalse(RaidPlan.Due(3, 0));
+            Assert.IsTrue(RaidPlan.Due(4, 7));
+
+            var first = RaidPlan.Opening(1, 0);
+            Assert.AreEqual("gate", first.Approach);
+            Assert.AreEqual(6, first.Pressure);
+            Assert.AreEqual(1.2f, first.Interval, 0.001f);
+            Assert.AreEqual("alley", RaidPlan.Opening(2, 0).Approach);
+            Assert.AreEqual("yard", RaidPlan.Opening(3, 0).Approach);
+            Assert.AreEqual("fence", RaidPlan.Opening(4, 0).Approach);
+            Assert.AreEqual("gate", RaidPlan.Opening(5, 0).Approach);
+
+            var towered = RaidPlan.Opening(1, 1);
+            Assert.AreEqual("alley", towered.Approach);
+            Assert.AreEqual(4, towered.Pressure);
+            Assert.AreEqual(1.6f, towered.Interval, 0.001f);
+            Assert.AreEqual(2, RaidPlan.Opening(1, 4).Pressure);
+            Assert.AreEqual(2.4f, RaidPlan.Opening(1, 4).Interval, 0.001f);
+            Assert.AreEqual(8, RaidPlan.Opening(4, 0).Pressure);
+
+            Assert.AreEqual(8, RaidPlan.SpawnCount(1, 0));
+            Assert.AreEqual(3, RaidPlan.SpawnCount(1, 2));
+            Assert.AreEqual(11, RaidPlan.SpawnCount(9, 0));
+            Assert.AreEqual(16, RaidPlan.SpawnCount(30, 0));
+
+            Assert.AreEqual(6, RaidPlan.Strike(6, 0, 0));
+            Assert.AreEqual(2, RaidPlan.Strike(9, 2, 1));
+            Assert.AreEqual(1, RaidPlan.Strike(6, 3, 0));
+
+            RaidPlan.AnchorOf("gate", out float gx, out float gz);
+            Assert.AreEqual(-6f, gx);
+            Assert.AreEqual(-8f, gz);
+            Assert.IsTrue(RaidPlan.Covers(gx, gz, -6f, -8f));
+            Assert.IsFalse(RaidPlan.Covers(gx, gz, -12f, -12f));
+            RaidPlan.AnchorOf("alley", out float ax, out float az);
+            Assert.AreEqual(-20f, ax);
+            Assert.AreEqual(-12f, az);
+            RaidPlan.AnchorOf("mystery", out float ux, out float uz);
+            Assert.AreEqual(-6f, ux);
+            Assert.AreEqual(-8f, uz);
+        }
     }
 }

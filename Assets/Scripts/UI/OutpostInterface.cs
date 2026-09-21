@@ -508,6 +508,9 @@ namespace OutpostZero.UI
                 WorldClock.Instance?.Advance(6f);
                 SurvivorRoster.Instance?.TickTasks();
             }));
+            int raidDay = WorldClock.Instance != null ? WorldClock.Instance.Day : 1;
+            int raidSecurity = ColonyStorage.Instance != null ? ColonyStorage.Instance.Security : 0;
+            camp.Add(Body(RaidPlan.Due(raidDay, raidSecurity) ? "A raid is likely tonight." : "The street is quiet tonight."));
             camp.Add(Button("Endure the night", () => NightRaidController.Instance?.Begin()));
             camp.Add(Body("Build [B] then click. " + (GridBuilder.Instance != null ? GridBuilder.Instance.Selected.ToString() : "")));
             var build = new VisualElement { style = { flexDirection = FlexDirection.Row } };
@@ -604,7 +607,8 @@ namespace OutpostZero.UI
         private static string CampSignature()
         {
             var builder = new StringBuilder();
-            if (ColonyStorage.Instance != null) builder.Append(ColonyStorage.Instance.Scrap).Append(ColonyStorage.Instance.Food);
+            if (WorldClock.Instance != null) builder.Append(WorldClock.Instance.Day);
+            if (ColonyStorage.Instance != null) builder.Append(ColonyStorage.Instance.Scrap).Append(ColonyStorage.Instance.Food).Append(ColonyStorage.Instance.Security);
             if (SurvivorRoster.Instance != null)
             {
                 foreach (var survivor in SurvivorRoster.Instance.Survivors)
