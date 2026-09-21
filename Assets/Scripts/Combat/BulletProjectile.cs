@@ -51,11 +51,7 @@ namespace OutpostZero.Combat
 
         private void OnHit(RaycastHit hit)
         {
-            var damageable = hit.collider.GetComponentInParent<IDamageable>();
-            if (damageable != null)
-            {
-                damageable.TakeDamage(damage, hit.point, direction, shooter);
-            }
+            DamageResolver.Resolve(hit, damage, shooter, true);
 
             // Spawn simple impact particle or decal here if available
             Destroy(gameObject);

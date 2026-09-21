@@ -70,7 +70,7 @@ namespace OutpostZero.Player
 
             // 2. Mouse Lead / Lookahead
             Vector3 mouseLead = Vector3.zero;
-            Ray ray = cam.ScreenPointToRay(Input.mousePosition);
+            Ray ray = cam.ScreenPointToRay(ExpeditionInput.Pointer);
             Plane groundPlane = new Plane(Vector3.up, new Vector3(0f, target.position.y, 0f));
 
             if (groundPlane.Raycast(ray, out float enter))

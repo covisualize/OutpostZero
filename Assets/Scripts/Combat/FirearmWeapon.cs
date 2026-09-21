@@ -37,6 +37,8 @@ namespace OutpostZero.Combat
         public event Action OnReloadStarted;
         public event Action OnReloadCompleted;
 
+        private float heat;
+
         private void Reset()
         {
             hitMask = GameLayers.WeaponHitMask;
@@ -76,6 +78,11 @@ namespace OutpostZero.Combat
             OnAmmoChanged?.Invoke(currentAmmo, reserveAmmo);
         }
 
+        private void Update()
+        {
+            if (heat > 0f) heat = Mathf.Max(0f, heat - 28f * Time.deltaTime);
+        }
+
         public override bool CanAttack()
         {
             return base.CanAttack() && !isReloading;
@@ -105,9 +112,11 @@ namespace OutpostZero.Combat
             EmitWeaponNoise();
 
             // Fire projectiles
+            heat = Mathf.Min(100f, heat + 7f);
+            float spread = spreadAngle * SpreadMultiplier * (1f + heat / 80f);
             for (int i = 0; i < projectilesPerShot; i++)
             {
-                Vector3 shootDir = ApplySpread(targetDirection, spreadAngle);
+                Vector3 shootDir = ApplySpread(targetDirection, spread);
                 FireSingleProjectile(shootDir);
             }
 
@@ -125,20 +134,12 @@ namespace OutpostZero.Combat
                 var bullet = projObj.GetComponent<BulletProjectile>();
                 if (bullet != null)
                 {
-                    bullet.Setup(direction, baseDamage, ownerGameObject, hitMask);
+                    bullet.Setup(direction, ModifiedDamage, ownerGameObject, hitMask);
                 }
             }
-            else
+            else if (Physics.Raycast(spawnPos, direction, out RaycastHit hit, range, hitMask, QueryTriggerInteraction.Ignore))
             {
-                // Instant Raycast Fallback
-                if (Physics.Raycast(spawnPos, direction, out RaycastHit hit, range, hitMask))
-                {
-                    var target = hit.collider.GetComponentInParent<IDamageable>();
-                    if (target != null)
-                    {
-                        target.TakeDamage(baseDamage, hit.point, direction, ownerGameObject);
-                    }
-                }
+                DamageResolver.Resolve(hit, ModifiedDamage, ownerGameObject, true);
             }
         }
 

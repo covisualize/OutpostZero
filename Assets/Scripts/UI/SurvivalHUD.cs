@@ -86,16 +86,16 @@ namespace OutpostZero.UI
         private void OnGUI()
         {
             // Immediate Mode GUI for zero-setup instant testing and playability
-            DrawTopHUD();
+            if (!UitkHud.Live) DrawTopHUD();
             DrawBottomStatus();
             DrawNoiseIndicator();
             DrawToast();
 
-            if (GameManager.Instance != null && GameManager.Instance.CurrentState == GameState.SuccessionScreen)
+            if (!ShellUi.OwnsMenus && GameManager.Instance != null && GameManager.Instance.CurrentState == GameState.SuccessionScreen)
             {
                 DrawSuccessionScreen();
             }
-            else if (GameManager.Instance != null && GameManager.Instance.CurrentState == GameState.Paused)
+            else if (!ShellUi.OwnsMenus && GameManager.Instance != null && GameManager.Instance.CurrentState == GameState.Paused)
             {
                 DrawPauseMenu();
             }

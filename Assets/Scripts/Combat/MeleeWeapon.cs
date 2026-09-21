@@ -78,12 +78,12 @@ namespace OutpostZero.Combat
                 if (angle <= swingArcAngle * 0.5f)
                 {
                     var damageable = col.GetComponentInParent<IDamageable>();
-                    if (damageable != null && !damageable.IsDead)
+                    var hazard = col.GetComponentInParent<DestructibleHazard>();
+                    if ((damageable != null && !damageable.IsDead) || hazard != null)
                     {
-                        damageable.TakeDamage(baseDamage, col.bounds.center, dirToTarget, ownerGameObject);
+                        DamageResolver.ResolveBody(col, col.bounds.center, dirToTarget, baseDamage * (GetComponent<WeaponMod>() != null ? GetComponent<WeaponMod>().damageMultiplier : 1f), ownerGameObject, false);
                         hitCount++;
 
-                        // Apply knockback if rigidbody present
                         var rb = col.GetComponentInParent<Rigidbody>();
                         if (rb != null && !rb.isKinematic)
                         {

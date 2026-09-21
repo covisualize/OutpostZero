@@ -18,6 +18,7 @@ namespace OutpostZero.AI
 
         [Header("Continuous Spawning")]
         [SerializeField] private bool periodicSpawn = true;
+        [SerializeField] private bool directorOwnsSpawns;
         [SerializeField] private float spawnInterval = 8f;
         [SerializeField] private int spawnBatchSize = 2;
 
@@ -25,6 +26,12 @@ namespace OutpostZero.AI
         private float nextSpawnTime;
         private Transform playerTransform;
         private ZombiePool pool;
+
+        public void UseDirectorForSpawns()
+        {
+            periodicSpawn = false;
+            directorOwnsSpawns = true;
+        }
 
         public void Configure(GameObject prefab, GameObject[] variants, int initial, int maxAlive)
         {
@@ -145,6 +152,7 @@ namespace OutpostZero.AI
         private void HandleLoudNoiseAlert(Vector3 origin, float radius, NoiseType type)
         {
             // Loud gunshots or explosions attract additional roving zombies
+            if (directorOwnsSpawns) return;
             if (type == NoiseType.GunshotLoud || type == NoiseType.Explosion)
             {
                 if (activeZombies.Count < maxAliveZombies)

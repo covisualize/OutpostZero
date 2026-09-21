@@ -590,8 +590,17 @@ namespace OutpostZero.EditorTools
             macheteMesh.transform.localPosition = new Vector3(0, 0, 0.15f);
             macheteMesh.transform.localRotation = Quaternion.Euler(0, 90, 0);
 
+            var rifleDef = DefaultDataGenerator.LoadWeapon("Rifle_Assault");
+            GameObject rifleObj = new GameObject("Assault_Rifle");
+            rifleObj.transform.SetParent(socket.transform, false);
+            var rifle = rifleObj.AddComponent<FirearmWeapon>();
+            rifle.Configure(rifleDef);
+            GameObject rifleMesh = InstantiateModel(ModelPaths.Relative(ModelPaths.AssaultRifle), "Rifle_Mesh", Vector3.zero, Quaternion.identity, Vector3.one, rifleObj.transform, isStatic: false, layer: GameLayers.Player);
+            rifleMesh.transform.localPosition = Vector3.zero;
+            rifleMesh.transform.localRotation = Quaternion.Euler(0, 90, 0);
+
             var pc = player.AddComponent<PlayerController>();
-            pc.Configure(new WeaponBase[] { pistol, shotgun, machete }, spot);
+            pc.Configure(new WeaponBase[] { pistol, shotgun, rifle, machete }, spot);
 
             Undo.RegisterCreatedObjectUndo(player, "Create Player Survivor");
             return player;
@@ -639,6 +648,8 @@ namespace OutpostZero.EditorTools
             spawnerObj.AddComponent<ZombiePool>();
             var spawner = spawnerObj.AddComponent<ZombieSpawner>();
             spawner.Configure(walker, new GameObject[] { walker, runner, brute }, 14, 32);
+            spawnerObj.AddComponent<HordeDirector>();
+            spawner.UseDirectorForSpawns();
 
             Undo.RegisterCreatedObjectUndo(spawnerObj, "Create Zombie Spawner");
         }

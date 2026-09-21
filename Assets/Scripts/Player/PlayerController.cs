@@ -51,6 +51,7 @@ namespace OutpostZero.Player
         public bool IsSprinting { get; private set; }
         public bool IsCrouching { get; private set; }
         public bool IsAimingDownSights { get; private set; }
+        public bool FlashlightOn => flashlightOn;
         public float CurrentStamina => currentStamina;
         public float MaxStamina => maxStamina;
         public WeaponBase ActiveWeapon => (equippedWeapons != null && equippedWeapons.Length > activeWeaponIndex) ? equippedWeapons[activeWeaponIndex] : null;
@@ -87,6 +88,16 @@ namespace OutpostZero.Player
             groundAimMask = GameLayers.EnvironmentMask | 1;
         }
 
+        public void AddWeapon(WeaponBase weapon)
+        {
+            if (weapon == null) return;
+            var list = new System.Collections.Generic.List<WeaponBase>();
+            if (equippedWeapons != null) list.AddRange(equippedWeapons);
+            list.Add(weapon);
+            equippedWeapons = list.ToArray();
+            weapon.gameObject.SetActive(false);
+        }
+
         private void Start()
         {
             if (equippedWeapons != null && equippedWeapons.Length > 0)
@@ -102,9 +113,13 @@ namespace OutpostZero.Player
 
         private void Update()
         {
-            if (GameManager.Instance != null && GameManager.Instance.CurrentState != GameState.ExpeditionActive)
+            if (GameManager.Instance != null)
             {
-                return;
+                var state = GameManager.Instance.CurrentState;
+                if (state != GameState.ExpeditionActive && state != GameState.RaidActive && state != GameState.CampManagement)
+                {
+                    return;
+                }
             }
 
             if (healthSystem.IsDead) return;
@@ -119,13 +134,13 @@ namespace OutpostZero.Player
         private void HandleInput()
         {
             // Flashlight Toggle (F)
-            if (Input.GetKeyDown(KeyCode.F))
+            if (ExpeditionInput.FlashlightPressed)
             {
                 flashlightOn = !flashlightOn;
                 if (flashlight != null) flashlight.enabled = flashlightOn;
             }
 
-            if (Input.GetKeyDown(KeyCode.Q))
+            if (ExpeditionInput.MedkitPressed)
             {
                 if (inventory != null && inventory.UseMedkit())
                 {
@@ -133,40 +148,41 @@ namespace OutpostZero.Player
                 }
             }
 
-            // Reload (R)
-            if (Input.GetKeyDown(KeyCode.R))
+            if (ExpeditionInput.ReloadPressed && ActiveWeapon is FirearmWeapon firearm)
             {
-                if (ActiveWeapon is FirearmWeapon firearm)
-                {
-                    firearm.TryStartReload();
-                }
+                firearm.TryStartReload();
             }
 
-            // Aim Down Sights (Right Mouse Button)
-            IsAimingDownSights = Input.GetMouseButton(1);
+            IsAimingDownSights = ExpeditionInput.AimHeld;
 
-            // Weapon Slot Selection (1, 2, 3)
-            if (Input.GetKeyDown(KeyCode.Alpha1)) SelectWeapon(0);
-            if (Input.GetKeyDown(KeyCode.Alpha2)) SelectWeapon(1);
-            if (Input.GetKeyDown(KeyCode.Alpha3)) SelectWeapon(2);
+            for (int i = 0; i < 4; i++)
+            {
+                if (ExpeditionInput.WeaponSlotPressed(i)) SelectWeapon(i);
+            }
 
-            // Scroll wheel weapon cycling
-            float scroll = Input.GetAxis("Mouse ScrollWheel");
+            float scroll = ExpeditionInput.Scroll;
             if (scroll > 0.05f) CycleWeapon(1);
             else if (scroll < -0.05f) CycleWeapon(-1);
         }
 
         private void HandleMovement()
         {
-            float horizontal = Input.GetAxisRaw("Horizontal");
-            float vertical = Input.GetAxisRaw("Vertical");
-            Vector3 inputDirection = new Vector3(horizontal, 0f, vertical).normalized;
+            var effects = GetComponent<StatusEffectController>();
+            if (effects != null && effects.IsKnockedDown)
+            {
+                IsSprinting = false;
+                characterController.Move(Vector3.down * Time.deltaTime);
+                return;
+            }
+
+            Vector2 move = ExpeditionInput.Move;
+            Vector3 inputDirection = new Vector3(move.x, 0f, move.y);
+            if (inputDirection.sqrMagnitude > 1f) inputDirection.Normalize();
 
             bool isMoving = inputDirection.sqrMagnitude > 0.01f;
 
-            // Crouch & Sprint checks
-            IsCrouching = Input.GetKey(KeyCode.C) || Input.GetKey(KeyCode.LeftControl);
-            bool wantsToSprint = Input.GetKey(KeyCode.LeftShift) && !IsCrouching && currentStamina > 5f;
+            IsCrouching = ExpeditionInput.CrouchHeld;
+            bool wantsToSprint = ExpeditionInput.SprintHeld && !IsCrouching && currentStamina > 5f;
 
             IsSprinting = isMoving && wantsToSprint;
 
@@ -174,6 +190,8 @@ namespace OutpostZero.Player
             float currentSpeed = walkSpeed;
             if (IsCrouching) currentSpeed = crouchSpeed;
             else if (IsSprinting) currentSpeed = sprintSpeed;
+            if (inventory != null) currentSpeed *= Mathf.Lerp(1f, 0.72f, inventory.WeightRatio);
+            if (effects != null) currentSpeed *= effects.SlowMultiplier;
 
             Vector3 moveVector = inputDirection * currentSpeed;
 
@@ -228,7 +246,7 @@ namespace OutpostZero.Player
             if (mainCamera == null) mainCamera = Camera.main;
             if (mainCamera == null) return;
 
-            Ray ray = mainCamera.ScreenPointToRay(Input.mousePosition);
+            Ray ray = mainCamera.ScreenPointToRay(ExpeditionInput.Pointer);
             Plane groundPlane = new Plane(Vector3.up, new Vector3(0f, transform.position.y, 0f));
 
             if (groundPlane.Raycast(ray, out float enter))
@@ -258,6 +276,8 @@ namespace OutpostZero.Player
                 if (currentStamina < maxStamina)
                 {
                     float rate = IsCrouching ? staminaRegenRate * 1.4f : staminaRegenRate;
+                var needs = GetComponent<SurvivalNeeds>();
+                if (needs != null) rate *= needs.StaminaRegenMultiplier;
                     currentStamina = Mathf.Min(maxStamina, currentStamina + rate * Time.deltaTime);
                     OnStaminaChanged?.Invoke(currentStamina, maxStamina);
                 }
@@ -269,7 +289,7 @@ namespace OutpostZero.Player
             if (ActiveWeapon == null) return;
 
             // Attack (Left Mouse Button)
-            if (Input.GetMouseButton(0))
+            if (ExpeditionInput.FireHeld && GameManager.Instance != null && GameManager.Instance.CurrentState != GameState.CampManagement)
             {
                 ActiveWeapon.TryAttack(transform.forward);
             }

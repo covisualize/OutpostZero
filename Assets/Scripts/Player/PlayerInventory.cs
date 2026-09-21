@@ -38,6 +38,7 @@ namespace OutpostZero.Player
 
         public float CurrentWeight => currentWeight;
         public float MaxWeightCapacity => maxWeightCapacity;
+        public float WeightRatio => currentWeight / Mathf.Max(0.01f, maxWeightCapacity);
         public int ScrapCount => scrapCount;
         public int MedicalKits => medicalKits;
         public IReadOnlyList<InventoryItem> Items => items;
@@ -105,6 +106,44 @@ namespace OutpostZero.Player
                 default:
                     return false;
             }
+        }
+
+        public bool GrantAmmoPublic(WeaponType weaponType, int amount) => GrantAmmo(weaponType, amount);
+
+        public bool TryConsume(string id)
+        {
+            var existing = items.Find(i => i.ItemId == id && i.Quantity > 0);
+            if (existing == null) return false;
+            existing.Quantity--;
+            if (existing.Quantity <= 0) items.Remove(existing);
+            RecalculateWeight();
+            OnInventoryChanged?.Invoke();
+            return true;
+        }
+
+        public bool TryUse(string id)
+        {
+            var record = OutpostZero.Items.ItemCatalog.Find(id);
+            if (record == null) return false;
+            if (record.Use == OutpostZero.Items.ItemUse.Ammo) return false;
+            if (record.Id == "medkit") return UseMedkit();
+            if (!TryConsume(id)) return false;
+            if (record.Heal > 0) GetComponent<Combat.HealthSystem>()?.Heal(record.Heal);
+            var needs = GetComponent<SurvivalNeeds>();
+            if (record.Hunger > 0f) needs?.Eat(record.Hunger);
+            if (record.Thirst > 0f) needs?.Drink(record.Thirst);
+            if (record.Id == "bandage") GetComponent<StatusEffectController>()?.ClearInjury();
+            GameplayFeedback.Toast("Used " + record.DisplayName);
+            return true;
+        }
+
+        public void DepositScrapToColony()
+        {
+            if (scrapCount <= 0) return;
+            OutpostZero.Colony.ColonyStorage.Instance?.AddScrap(scrapCount);
+            scrapCount = 0;
+            RecalculateWeight();
+            OnInventoryChanged?.Invoke();
         }
 
         private bool GrantAmmo(WeaponType weaponType, int amount)

@@ -68,6 +68,24 @@ namespace OutpostZero.EditorTools
                 weapon.modelPath = ModelPaths.Machete;
             });
 
+            SaveWeapon("Rifle_Assault", weapon =>
+            {
+                weapon.id = "rifle_assault";
+                weapon.displayName = "Assault Rifle";
+                weapon.weaponType = WeaponType.Rifle;
+                weapon.baseDamage = 26f;
+                weapon.attackRate = 9f;
+                weapon.range = 32f;
+                weapon.spreadAngle = 3f;
+                weapon.projectilesPerShot = 1;
+                weapon.maxMagazine = 30;
+                weapon.reserveAmmo = 90;
+                weapon.reloadDuration = 2.1f;
+                weapon.noiseRadius = 34f;
+                weapon.noiseType = NoiseType.GunshotLoud;
+                weapon.modelPath = ModelPaths.AssaultRifle;
+            });
+
             SaveZombie("Walker", zombie =>
             {
                 zombie.id = "walker";
