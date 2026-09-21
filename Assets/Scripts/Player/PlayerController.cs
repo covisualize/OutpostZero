@@ -82,6 +82,36 @@ namespace OutpostZero.Player
             PlayerRegistry.Unregister(this);
         }
 
+        public string PackMods()
+        {
+            if (equippedWeapons == null || equippedWeapons.Length == 0) return "";
+            var slots = new string[equippedWeapons.Length];
+            for (int i = 0; i < equippedWeapons.Length; i++)
+            {
+                var mod = equippedWeapons[i] != null ? equippedWeapons[i].GetComponent<WeaponMod>() : null;
+                slots[i] = mod != null ? mod.Pack() : "";
+            }
+            return WeaponMod.JoinSlots(slots);
+        }
+
+        public void RestoreMods(string packed)
+        {
+            if (equippedWeapons == null) return;
+            string[] slots = WeaponMod.SplitSlots(packed);
+            for (int i = 0; i < equippedWeapons.Length; i++)
+            {
+                if (equippedWeapons[i] == null) continue;
+                string slot = i < slots.Length ? slots[i] : "";
+                var mod = equippedWeapons[i].GetComponent<WeaponMod>();
+                if (mod == null)
+                {
+                    if (string.IsNullOrEmpty(slot)) continue;
+                    mod = equippedWeapons[i].gameObject.AddComponent<WeaponMod>();
+                }
+                mod.Restore(slot);
+            }
+        }
+
         public void Configure(WeaponBase[] weapons, Light tacticalLight)
         {
             equippedWeapons = weapons;

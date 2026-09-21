@@ -396,6 +396,24 @@ namespace OutpostZero.Tests.EditMode
             Assert.AreEqual(11, CraftingBench.Priced(12, true));
             Assert.AreEqual(12, CraftingBench.Priced(12, false));
             Assert.AreEqual(1, CraftingBench.Priced(1, true));
+
+            string packed = WeaponMod.JoinSlots(new[]
+            {
+                WeaponMod.PackFlags(true, true, false),
+                "",
+                WeaponMod.PackFlags(false, false, true)
+            });
+            var stacked = WeaponMod.Combine(WeaponMod.SplitSlots(packed)[0]);
+            Assert.AreEqual(0.4f, stacked.noise);
+            Assert.AreEqual(0.85f * 0.55f, stacked.spread, 0.0001f);
+            Assert.AreEqual(0, stacked.magazineBonus);
+            Assert.AreEqual(10, WeaponMod.Combine(WeaponMod.SplitSlots(packed)[2]).magazineBonus);
+            Assert.AreEqual(1f, WeaponMod.Combine(null).damage);
+            var saved = new SaveGameData { weaponMods = packed };
+            Assert.IsTrue(SaveCodec.TryDeserialize(SaveCodec.Serialize(saved), out var loaded, out var error), error);
+            Assert.AreEqual(1, loaded.schemaVersion);
+            Assert.AreEqual(packed, loaded.weaponMods);
+            Assert.AreEqual(0, WeaponMod.SplitSlots(null).Length);
         }
 
         [Test]

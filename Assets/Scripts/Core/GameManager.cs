@@ -187,6 +187,7 @@ namespace OutpostZero.Core
             GridBuilder.Instance?.ClearAll();
             TutorialDirector.Instance?.SetFinished(false);
             CodexDirector.Instance?.Restore("");
+            PlayerRegistry.Current?.RestoreMods("");
             zombiesKilled = 0;
             scrapLooted = 0;
             expeditionTimer = 0f;

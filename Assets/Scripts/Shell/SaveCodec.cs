@@ -51,6 +51,7 @@ namespace OutpostZero.Shell
         public int factionStanding;
         public bool tutorialDone;
         public string codex = "";
+        public string weaponMods = "";
         public string language = "en";
         public float shake = 1f;
         public float volume = 1f;

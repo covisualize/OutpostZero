@@ -91,6 +91,7 @@ namespace OutpostZero.Shell
             if (FactionTrade.Instance != null) data.factionStanding = FactionTrade.Instance.Standing;
             if (TutorialDirector.Instance != null) data.tutorialDone = TutorialDirector.Instance.Finished;
             if (CodexDirector.Instance != null) data.codex = CodexDirector.Instance.Packed;
+            if (OutpostZero.Player.PlayerRegistry.Current != null) data.weaponMods = OutpostZero.Player.PlayerRegistry.Current.PackMods();
             if (SettingsService.Instance != null)
             {
                 data.language = SettingsService.Instance.Language;
@@ -151,6 +152,7 @@ namespace OutpostZero.Shell
             SettingsService.Instance?.ApplyPresentation(data.sfxVolume, data.musicVolume, data.quality, data.vsync, data.fieldOfView, data.bindings);
             TutorialDirector.Instance?.SetFinished(data.tutorialDone);
             CodexDirector.Instance?.Restore(data.codex);
+            OutpostZero.Player.PlayerRegistry.Current?.RestoreMods(data.weaponMods);
             WorldMapService.Instance?.RestoreCleared(data.districtsCleared);
             if (data.districtIndex > data.districtsCleared) WorldMapService.Instance?.SelectIndex(data.districtIndex);
             if (data.survivors != null && data.survivors.Length > 0 && SurvivorRoster.Instance != null)
