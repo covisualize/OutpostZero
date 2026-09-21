@@ -11,7 +11,8 @@ namespace OutpostZero.Colony
         Campfire,
         MedicalCot,
         Water,
-        Merchant
+        Merchant,
+        Generator
     }
 
     public class CampStation : MonoBehaviour, IInteractable
@@ -29,6 +30,7 @@ namespace OutpostZero.Colony
                     case StationKind.Campfire: return "Cook and rest";
                     case StationKind.MedicalCot: return "Treat wounds";
                     case StationKind.Water: return "Draw water";
+                    case StationKind.Generator: return "Fuel the generator";
                     default: return "Trade";
                 }
             }
@@ -66,6 +68,14 @@ namespace OutpostZero.Colony
                     inventory?.GetComponent<SurvivalNeeds>()?.Drink(45f);
                     ColonyStorage.Instance?.AddWater(1);
                     GameplayFeedback.Toast("Water collected");
+                    break;
+                case StationKind.Generator:
+                    if (ColonyStorage.Instance != null && ColonyStorage.Instance.TrySpendScrap(4))
+                    {
+                        CampServices.Instance?.Refuel(8f);
+                        GameplayFeedback.Toast("Generator fueled");
+                    }
+                    else GameplayFeedback.Toast("Need 4 camp scrap");
                     break;
                 default:
                     FactionTrade.Instance?.Toggle();

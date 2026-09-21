@@ -105,6 +105,16 @@ namespace OutpostZero.AI
             return TensionState.Calm;
         }
 
+        public void ApplyOpening(float openingTension, float interval, string preferredVariant)
+        {
+            tension = Mathf.Clamp(openingTension, 0f, 100f);
+            spawnInterval = Mathf.Max(3f, interval);
+            state = Evaluate(tension);
+            nextSpawn = Time.time + 2f;
+            spawner?.Prefer(preferredVariant);
+            OnTensionStateChanged?.Invoke(state);
+        }
+
         public void BeginRaid()
         {
             tension = 90f;

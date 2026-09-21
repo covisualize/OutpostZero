@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using OutpostZero.Core;
 using OutpostZero.Items;
+using OutpostZero.Player;
 
 namespace OutpostZero.Colony
 {
@@ -16,6 +17,7 @@ namespace OutpostZero.Colony
         public bool leader;
         public float morale = 70f;
         public string task = "Rest";
+        public string bond = "";
     }
 
     public class SurvivorRoster : MonoBehaviour
@@ -52,16 +54,16 @@ namespace OutpostZero.Colony
         public void Seed()
         {
             survivors.Clear();
-            survivors.Add(Make("mara", "Mara Quill", "Steady Hands", true));
-            survivors.Add(Make("jonas", "Jonas Reed", "Light Sleeper", false));
-            survivors.Add(Make("priya", "Priya Sen", "Field Medic", false));
-            survivors.Add(Make("ellis", "Ellis Ward", "Scrounger", false));
+            survivors.Add(Make("mara", "Mara Quill", "Steady Hands", true, "Close to Jonas"));
+            survivors.Add(Make("jonas", "Jonas Reed", "Light Sleeper", false, "Close to Mara"));
+            survivors.Add(Make("priya", "Priya Sen", "Field Medic", false, "Trusts Ellis"));
+            survivors.Add(Make("ellis", "Ellis Ward", "Scrounger", false, "Trusts Priya"));
             OnRosterChanged?.Invoke();
         }
 
-        private static Survivor Make(string id, string name, string trait, bool leader)
+        private static Survivor Make(string id, string name, string trait, bool leader, string bond)
         {
-            return new Survivor { id = id, displayName = name, trait = trait, leader = leader, morale = 72f, task = "Rest" };
+            return new Survivor { id = id, displayName = name, trait = trait, leader = leader, morale = 72f, task = "Rest", bond = bond };
         }
 
         public bool MarkLeaderDead(Vector3 corpsePosition)
@@ -73,9 +75,13 @@ namespace OutpostZero.Colony
                 leader.leader = false;
                 leader.task = "Fallen";
             }
+            string fallen = leader != null ? leader.displayName : "";
             foreach (var survivor in survivors)
             {
-                if (survivor.alive) survivor.morale = Mathf.Max(0f, survivor.morale - 14f);
+                if (!survivor.alive) continue;
+                float loss = 14f;
+                if (!string.IsNullOrEmpty(fallen) && survivor.bond.Contains(fallen.Split(' ')[0])) loss += 10f;
+                survivor.morale = Mathf.Max(0f, survivor.morale - loss);
             }
             SpawnCorpse(corpsePosition);
             OnRosterChanged?.Invoke();
@@ -129,6 +135,9 @@ namespace OutpostZero.Colony
                         break;
                     case "Medic":
                         survivor.morale = Mathf.Min(100f, survivor.morale + 2f);
+                        var leader = PlayerRegistry.Current;
+                        leader?.GetComponent<Combat.HealthSystem>()?.Heal(12f);
+                        leader?.GetComponent<StatusEffectController>()?.ClearInjury();
                         break;
                 }
             }

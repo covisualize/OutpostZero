@@ -121,6 +121,7 @@ namespace OutpostZero.Core
             OnZombiesKilledChanged?.Invoke(zombiesKilled);
             OnScrapLootedChanged?.Invoke(scrapLooted);
             ObjectiveTracker.Instance?.ResetProgress();
+            WorldMapService.Instance?.ApplyOpening();
             SetState(GameState.ExpeditionActive);
         }
 

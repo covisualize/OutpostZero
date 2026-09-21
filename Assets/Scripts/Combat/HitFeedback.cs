@@ -18,13 +18,15 @@ namespace OutpostZero.Combat
         private float hitStopUntil;
         private float previousTimeScale = 1f;
 
-        private struct FloatingDamage
+        public struct FloatingDamage
         {
             public Vector3 World;
             public string Text;
             public float Until;
             public bool Crit;
         }
+
+        public IReadOnlyList<FloatingDamage> Popups => numbers;
 
         private void Awake()
         {
@@ -72,10 +74,11 @@ namespace OutpostZero.Combat
 
         private void HandleShot(Vector3 muzzle, WeaponBase weapon)
         {
-            var camera = Camera.main != null ? Camera.main.GetComponent<TopDownCameraFollow>() : null;
-            if (camera == null || weapon == null) return;
+            if (weapon == null || Camera.main == null) return;
             float trauma = weapon.Type == Core.WeaponType.Shotgun ? 0.45f : weapon.Type == Core.WeaponType.Melee ? 0.1f : 0.15f;
-            camera.AddTrauma(trauma * SettingsService.ShakeScale);
+            var rig = Camera.main.GetComponent<OutpostZero.Graphics.ExpeditionCameraRig>();
+            if (rig != null) rig.AddTrauma(trauma * SettingsService.ShakeScale);
+            else Camera.main.GetComponent<OutpostZero.Player.TopDownCameraFollow>()?.AddTrauma(trauma * SettingsService.ShakeScale);
         }
 
         private void HandleHit(Vector3 point, Vector3 normal, GameObject target)
@@ -112,22 +115,11 @@ namespace OutpostZero.Combat
             }
         }
 
-        private void OnGUI()
+        public void PrunePopups()
         {
-            var cam = Camera.main;
-            if (cam == null) return;
             for (int i = numbers.Count - 1; i >= 0; i--)
             {
-                if (Time.time > numbers[i].Until)
-                {
-                    numbers.RemoveAt(i);
-                    continue;
-                }
-                Vector3 screen = cam.WorldToScreenPoint(numbers[i].World);
-                if (screen.z < 0f) continue;
-                var style = new GUIStyle(GUI.skin.label) { fontSize = numbers[i].Crit ? 18 : 14, fontStyle = FontStyle.Bold };
-                style.normal.textColor = numbers[i].Crit ? new Color(1f, 0.85f, 0.2f) : Color.white;
-                GUI.Label(new Rect(screen.x, Screen.height - screen.y, 80f, 24f), numbers[i].Text, style);
+                if (Time.time > numbers[i].Until) numbers.RemoveAt(i);
             }
         }
     }

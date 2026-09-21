@@ -48,6 +48,13 @@ namespace OutpostZero.Graphics
             Apply();
         }
 
+        public void SetFor(WeatherKind weather, float holdSeconds)
+        {
+            kind = weather;
+            nextShift = Time.time + Mathf.Max(1f, holdSeconds);
+            Apply();
+        }
+
         private void Apply()
         {
             bool fog = kind != WeatherKind.Clear;

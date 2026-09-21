@@ -1,7 +1,10 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using OutpostZero.AI;
 using OutpostZero.Core;
+using OutpostZero.Expedition;
+using OutpostZero.Graphics;
 
 namespace OutpostZero.Shell
 {
@@ -57,6 +60,27 @@ namespace OutpostZero.Shell
             currentIndex = 0;
         }
 
+        public bool Select(string id)
+        {
+            if (districts.Count == 0) Seed();
+            for (int i = 0; i < districts.Count; i++)
+            {
+                if (districts[i].id != id || districts[i].cleared) continue;
+                currentIndex = i;
+                return true;
+            }
+            return false;
+        }
+
+        public void ApplyOpening()
+        {
+            var rules = DistrictRules.For(Current != null ? Current.id : "ash_market");
+            DistrictRules.SetActiveTable(rules.LootTable);
+            ObjectiveTracker.Instance?.SetGoals(rules.KillGoal, rules.ScrapGoal);
+            HordeDirector.Instance?.ApplyOpening(rules.OpeningTension, rules.SpawnInterval, rules.PreferredVariant);
+            WeatherController.Instance?.SetFor(rules.Weather, 180f);
+        }
+
         public void ClearCurrent()
         {
             var district = Current;
@@ -73,6 +97,10 @@ namespace OutpostZero.Shell
             currentIndex = Mathf.Clamp(count, 0, districts.Count - 1);
         }
 
-        public void ResetMap() => Seed();
+        public void ResetMap()
+        {
+            Seed();
+            DistrictRules.SetActiveTable("");
+        }
     }
 }

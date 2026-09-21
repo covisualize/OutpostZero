@@ -105,7 +105,8 @@ namespace OutpostZero.Shell
                         alive = survivor.alive,
                         leader = survivor.leader,
                         morale = survivor.morale,
-                        task = survivor.task
+                        task = survivor.task,
+                        bond = survivor.bond
                     });
                 }
                 data.survivors = list.ToArray();
@@ -144,7 +145,8 @@ namespace OutpostZero.Shell
                         alive = saved.alive,
                         leader = saved.leader,
                         morale = saved.morale,
-                        task = string.IsNullOrEmpty(saved.task) ? "Rest" : saved.task
+                        task = string.IsNullOrEmpty(saved.task) ? "Rest" : saved.task,
+                        bond = saved.bond
                     });
                 }
                 SurvivorRoster.Instance.Replace(list);

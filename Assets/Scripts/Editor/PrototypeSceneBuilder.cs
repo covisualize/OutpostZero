@@ -36,6 +36,7 @@ namespace OutpostZero.EditorTools
             EnsureURPPipelineConfigured();
             missingModels = 0;
             DefaultDataGenerator.Generate();
+            SurvivorAnimatorBuilder.Build();
 
             // 1. Core Singletons
             EnsureCoreManagers();
@@ -74,6 +75,7 @@ namespace OutpostZero.EditorTools
             EnsureURPPipelineConfigured();
             missingModels = 0;
             DefaultDataGenerator.Generate();
+            SurvivorAnimatorBuilder.Build();
 
             if (!Directory.Exists("Assets/Scenes"))
             {

@@ -78,5 +78,57 @@ namespace OutpostZero.Tests.EditMode
             Assert.AreEqual("PAUSED", Loc.T("menu.pause"));
             Assert.AreEqual("missing.key", Loc.T("missing.key"));
         }
+
+        [Test]
+        public void DistrictsChangeTheQuotaAndTheStreet()
+        {
+            var market = DistrictRules.For("ash_market");
+            var yard = DistrictRules.For("rail_yard");
+            var hospital = DistrictRules.For("old_hospital");
+            var gate = DistrictRules.For("north_gate");
+            var unknown = DistrictRules.For("nowhere");
+
+            Assert.AreEqual(8, market.KillGoal);
+            Assert.AreEqual(15, market.ScrapGoal);
+            Assert.AreEqual(WeatherKind.Clear, market.Weather);
+            Assert.AreEqual("", market.LootTable);
+
+            Assert.AreEqual(WeatherKind.Rain, yard.Weather);
+            Assert.AreEqual("military", yard.LootTable);
+            Assert.AreEqual("Brute", yard.PreferredVariant);
+
+            Assert.AreEqual(WeatherKind.Fog, hospital.Weather);
+            Assert.AreEqual("medical", hospital.LootTable);
+            Assert.AreEqual("Runner", hospital.PreferredVariant);
+
+            Assert.Greater(gate.KillGoal, market.KillGoal);
+            Assert.Greater(gate.OpeningTension, yard.OpeningTension);
+            Assert.AreEqual(market.KillGoal, unknown.KillGoal);
+        }
+
+        [Test]
+        public void DistrictTableBiasesStreetCrates()
+        {
+            DistrictRules.SetActiveTable("medical");
+            try
+            {
+                var grants = LootTables.Roll("crate", 3);
+                Assert.AreEqual("water", grants[1].ItemId);
+            }
+            finally
+            {
+                DistrictRules.SetActiveTable("");
+            }
+        }
+
+        [Test]
+        public void MedicalCacheRollsSupplies()
+        {
+            var grants = LootTables.Roll("medical", 3);
+            Assert.AreEqual(2, grants.Length);
+            Assert.IsTrue(grants[0].ItemId == "medkit" || grants[0].ItemId == "bandage");
+            Assert.AreEqual("water", grants[1].ItemId);
+            Assert.AreEqual(1, grants[1].Count);
+        }
     }
 }

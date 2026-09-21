@@ -26,6 +26,12 @@ namespace OutpostZero.AI
         private float nextSpawnTime;
         private Transform playerTransform;
         private ZombiePool pool;
+        private string preferredName = "";
+
+        public void Prefer(string nameFragment)
+        {
+            preferredName = nameFragment ?? "";
+        }
 
         public void UseDirectorForSpawns()
         {
@@ -127,11 +133,7 @@ namespace OutpostZero.AI
             {
                 if (activeZombies.Count >= maxAliveZombies) break;
 
-                GameObject chosenPrefab = defaultPrefab;
-                if (zombiePrefabVariants != null && zombiePrefabVariants.Length > 0)
-                {
-                    chosenPrefab = zombiePrefabVariants[Random.Range(0, zombiePrefabVariants.Length)];
-                }
+                GameObject chosenPrefab = ChoosePrefab(defaultPrefab);
 
                 Vector2 randomCircle = Random.insideUnitCircle.normalized * Random.Range(minDistanceFromPlayer, spawnRadius);
                 Vector3 candidatePos = center + new Vector3(randomCircle.x, 0f, randomCircle.y);
@@ -147,6 +149,27 @@ namespace OutpostZero.AI
                     activeZombies.Add(zombie);
                 }
             }
+        }
+
+        private GameObject ChoosePrefab(GameObject fallback)
+        {
+            if (zombiePrefabVariants == null || zombiePrefabVariants.Length == 0) return fallback;
+            if (!string.IsNullOrEmpty(preferredName) && Random.value < 0.72f)
+            {
+                int matches = 0;
+                GameObject pick = null;
+                for (int i = 0; i < zombiePrefabVariants.Length; i++)
+                {
+                    var candidate = zombiePrefabVariants[i];
+                    if (candidate == null || candidate.name.IndexOf(preferredName, System.StringComparison.Ordinal) < 0) continue;
+                    matches++;
+                    if (Random.Range(0, matches) == 0) pick = candidate;
+                }
+                if (pick != null) return pick;
+            }
+
+            var chosen = zombiePrefabVariants[Random.Range(0, zombiePrefabVariants.Length)];
+            return chosen != null ? chosen : fallback;
         }
 
         private void HandleLoudNoiseAlert(Vector3 origin, float radius, NoiseType type)

@@ -12,6 +12,7 @@ namespace OutpostZero.Shell
         public bool leader;
         public float morale;
         public string task;
+        public string bond;
     }
 
     [Serializable]

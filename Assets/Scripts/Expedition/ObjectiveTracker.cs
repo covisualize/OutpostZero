@@ -79,6 +79,13 @@ namespace OutpostZero.Expedition
             OnObjectivesChanged?.Invoke();
         }
 
+        public void SetGoals(int killsRequired, int scrapRequired)
+        {
+            killGoal = Mathf.Max(1, killsRequired);
+            scrapGoal = Mathf.Max(1, scrapRequired);
+            OnObjectivesChanged?.Invoke();
+        }
+
         public void ResetProgress()
         {
             kills = 0;

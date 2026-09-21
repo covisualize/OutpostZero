@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using OutpostZero.Shell;
 
 namespace OutpostZero.Items
 {
@@ -72,6 +73,18 @@ namespace OutpostZero.Items
         public static Grant[] Roll(string tableId, int salt)
         {
             var rng = new System.Random(salt);
+            if (tableId == "crate" && !string.IsNullOrEmpty(DistrictRules.ActiveTable))
+            {
+                tableId = DistrictRules.ActiveTable;
+            }
+            if (tableId == "medical")
+            {
+                return new[]
+                {
+                    new Grant { ItemId = rng.NextDouble() > 0.45 ? "medkit" : "bandage", Count = 1 },
+                    new Grant { ItemId = "water", Count = 1 }
+                };
+            }
             if (tableId == "military")
             {
                 return new[]

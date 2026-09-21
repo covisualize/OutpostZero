@@ -81,15 +81,15 @@ namespace OutpostZero.Player
                 return Mouse.current != null ? Mouse.current.rightButton.isPressed : Input.GetMouseButton(1);
             }
         }
-        public static bool PausePressed => Pressed(Key.Escape);
-        public static bool ReloadPressed => Pressed(Key.R);
-        public static bool InteractPressed => Pressed(Key.E);
-        public static bool MedkitPressed => Pressed(Key.Q);
+        public static bool PausePressed => Pressed(Key.Escape) || PadDown(pad => pad.startButton.wasPressedThisFrame);
+        public static bool ReloadPressed => Pressed(Key.R) || PadDown(pad => pad.buttonWest.wasPressedThisFrame);
+        public static bool InteractPressed => Pressed(Key.E) || PadDown(pad => pad.buttonSouth.wasPressedThisFrame);
+        public static bool MedkitPressed => Pressed(Key.Q) || PadDown(pad => pad.buttonNorth.wasPressedThisFrame);
         public static bool FlashlightPressed => Pressed(Key.F);
         public static bool CrouchHeld => Held(Key.C) || Held(Key.LeftCtrl);
         public static bool SprintHeld => Held(Key.LeftShift);
-        public static bool InventoryPressed => Pressed(Key.Tab) || Pressed(Key.I);
-        public static bool ThrowPressed => Pressed(Key.G);
+        public static bool InventoryPressed => Pressed(Key.Tab) || Pressed(Key.I) || PadDown(pad => pad.selectButton.wasPressedThisFrame);
+        public static bool ThrowPressed => Pressed(Key.G) || PadDown(pad => pad.buttonEast.wasPressedThisFrame);
         public static bool TakedownPressed => Pressed(Key.V);
         public static bool BuildPressed => Pressed(Key.B);
 
@@ -120,6 +120,12 @@ namespace OutpostZero.Player
         }
 
         private static bool Down(UnityEngine.InputSystem.Controls.KeyControl key) => key != null && key.isPressed;
+
+        private static bool PadDown(System.Func<Gamepad, bool> read)
+        {
+            var pad = Gamepad.current;
+            return pad != null && read(pad);
+        }
 
         private static KeyCode ToLegacy(Key key)
         {

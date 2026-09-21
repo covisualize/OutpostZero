@@ -42,6 +42,7 @@ namespace OutpostZero.Core
             Add<PerfBudget>(host.gameObject);
             Add<WorldMapService>(host.gameObject);
             Add<TutorialDirector>(host.gameObject);
+            Add<CampServices>(host.gameObject);
 
             foreach (var root in scene.GetRootGameObjects())
             {
@@ -57,10 +58,16 @@ namespace OutpostZero.Core
                 Add<HitFeedback>(camera.gameObject);
                 Add<ImpactDecalPool>(camera.gameObject);
                 Add<GameShellUI>(camera.gameObject);
-                Add<UitkHud>(camera.gameObject);
+                Add<OutpostInterface>(camera.gameObject);
+                Add<ExpeditionCameraRig>(camera.gameObject);
             }
 
             ExtractionZone.Create(new Vector3(-5.5f, 0.5f, -10f));
+
+            if (host.GetComponent<GameManager>().CurrentState == GameState.ExpeditionActive)
+            {
+                WorldMapService.Instance?.ApplyOpening();
+            }
         }
 
         private static void OutfitPlayer(PlayerController player)
@@ -70,6 +77,7 @@ namespace OutpostZero.Core
             Add<StatusEffectController>(player.gameObject);
             Add<PlayerVisibility>(player.gameObject);
             Add<ProceduralSurvivorMotion>(player.gameObject);
+            Add<SurvivorLocomotion>(player.gameObject);
             EnsureRifle(player);
         }
 
@@ -136,6 +144,7 @@ namespace OutpostZero.Core
                 else if (name.Contains("MedicalCot")) station = AddStation(go, StationKind.MedicalCot);
                 else if (name.Contains("WaterCollector")) station = AddStation(go, StationKind.Water);
                 else if (name.Contains("Merchant")) station = AddStation(go, StationKind.Merchant);
+                else if (name.Contains("Generator")) station = AddStation(go, StationKind.Generator);
             }
             if (station != null && station.Kind == StationKind.Merchant)
             {
@@ -147,6 +156,7 @@ namespace OutpostZero.Core
             {
                 if (name.Contains("Runner")) zombie.SetAbility(ZombieSpecialAbility.Lunge);
                 else if (name.Contains("Brute")) zombie.SetAbility(ZombieSpecialAbility.Charge);
+                if (go.GetComponent<ZombieMotion>() == null) go.AddComponent<ZombieMotion>();
             }
 
             var spawner = go.GetComponent<ZombieSpawner>();
