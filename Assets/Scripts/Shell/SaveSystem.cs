@@ -88,7 +88,12 @@ namespace OutpostZero.Shell
                 data.districtsCleared = WorldMapService.Instance.ClearedCount;
                 data.districtIndex = WorldMapService.Instance.CurrentIndex;
             }
-            if (FactionTrade.Instance != null) data.factionStanding = FactionTrade.Instance.Standing;
+            if (FactionTrade.Instance != null)
+            {
+                data.factionStanding = FactionTrade.Instance.Standing;
+                data.factions = FactionTrade.Instance.Pack();
+                data.quests = FactionTrade.Instance.Quests;
+            }
             if (TutorialDirector.Instance != null) data.tutorialDone = TutorialDirector.Instance.Finished;
             if (CodexDirector.Instance != null) data.codex = CodexDirector.Instance.Packed;
             if (OutpostZero.Player.PlayerRegistry.Current != null) data.weaponMods = OutpostZero.Player.PlayerRegistry.Current.PackMods();
@@ -153,7 +158,7 @@ namespace OutpostZero.Shell
             if (data == null) return;
             WorldClock.Instance?.Set(data.day, data.hour);
             ColonyStorage.Instance?.Set(data.colonyScrap, data.food, data.water);
-            FactionTrade.Instance?.SetStanding(data.factionStanding);
+            FactionTrade.Instance?.Restore(data.factionStanding, data.factions, data.quests);
             SettingsService.Instance?.ApplySnapshot(data.shake, data.volume, data.textScale, data.subtitles, data.language);
             SettingsService.Instance?.ApplyPresentation(data.sfxVolume, data.musicVolume, data.quality, data.vsync, data.fieldOfView, data.bindings);
             SettingsService.Instance?.SetMerciful(data.mercy != 0);

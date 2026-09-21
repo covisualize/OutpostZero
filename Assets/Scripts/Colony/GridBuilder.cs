@@ -13,7 +13,8 @@ namespace OutpostZero.Colony
         Water,
         Watchtower,
         Generator,
-        Workbench
+        Workbench,
+        TradingPost
     }
 
     [Serializable]
@@ -218,6 +219,7 @@ namespace OutpostZero.Colony
                 case ModuleKind.Watchtower: return 16;
                 case ModuleKind.Generator: return 14;
                 case ModuleKind.Workbench: return 12;
+                case ModuleKind.TradingPost: return 20;
                 default: return 6;
             }
         }
@@ -232,6 +234,7 @@ namespace OutpostZero.Colony
                 case "Watchtower": return new Vector3(1.2f, 2.4f, 1.2f);
                 case "Generator": return new Vector3(1.1f, 0.8f, 0.7f);
                 case "Workbench": return new Vector3(1.6f, 0.9f, 0.8f);
+                case "TradingPost": return new Vector3(1.8f, 1.4f, 1.2f);
                 default: return new Vector3(1.8f * health, 1.1f * Mathf.Lerp(0.35f, 1f, health), 0.4f);
             }
         }
@@ -245,6 +248,7 @@ namespace OutpostZero.Colony
                 case "Watchtower": return new Color(0.42f, 0.36f, 0.28f);
                 case "Generator": return new Color(0.55f, 0.48f, 0.18f);
                 case "Workbench": return new Color(0.38f, 0.32f, 0.26f);
+                case "TradingPost": return new Color(0.55f, 0.32f, 0.22f);
                 default: return new Color(0.48f, 0.42f, 0.32f);
             }
         }

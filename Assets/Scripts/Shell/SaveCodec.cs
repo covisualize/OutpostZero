@@ -49,6 +49,8 @@ namespace OutpostZero.Shell
         public float fieldOfView = 55f;
         public string bindings = "";
         public int factionStanding;
+        public string factions = "";
+        public string quests = "";
         public bool tutorialDone;
         public string codex = "";
         public string weaponMods = "";

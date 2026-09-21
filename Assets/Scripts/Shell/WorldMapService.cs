@@ -87,7 +87,9 @@ namespace OutpostZero.Shell
             var rules = DistrictRules.For(Current != null ? Current.id : "ash_market");
             DistrictRules.SetActiveTable(rules.LootTable);
             ObjectiveTracker.Instance?.SetGoals(rules.KillGoal, rules.ScrapGoal);
-            HordeDirector.Instance?.ApplyOpening(rules.OpeningTension, rules.SpawnInterval, rules.PreferredVariant);
+            float tension = rules.OpeningTension;
+            if (FactionTrade.Instance != null && FactionTrade.Instance.Ambush) tension += 12f;
+            HordeDirector.Instance?.ApplyOpening(tension, rules.SpawnInterval, rules.PreferredVariant);
             WeatherController.Instance?.SetFor(rules.Weather, 180f);
             string districtId = Current != null ? Current.id : "ash_market";
             DistrictDressing.Instance?.Build(districtId);
@@ -101,6 +103,7 @@ namespace OutpostZero.Shell
             district.cleared = true;
             if (currentIndex < districts.Count - 1) currentIndex++;
             if (CampaignWon) GameplayFeedback.Toast("The ring is quiet. Outpost Zero holds.");
+            FactionTrade.Instance?.NoteDistrictCleared();
         }
 
         public void RestoreCleared(int count)

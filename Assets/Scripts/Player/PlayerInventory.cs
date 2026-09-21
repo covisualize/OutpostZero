@@ -217,6 +217,26 @@ namespace OutpostZero.Player
             OnInventoryChanged?.Invoke();
         }
 
+        public bool TryConsume(string id, int count)
+        {
+            if (count <= 0 || string.IsNullOrEmpty(id)) return false;
+            var existing = items.Find(item => item.ItemId == id);
+            if (existing == null || existing.Quantity < count) return false;
+            existing.Quantity -= count;
+            if (existing.Quantity <= 0) items.Remove(existing);
+            RecalculateWeight();
+            OnInventoryChanged?.Invoke();
+            return true;
+        }
+
+        public bool TrySpendMedical(int count)
+        {
+            if (count <= 0 || medicalKits < count) return false;
+            medicalKits -= count;
+            OnInventoryChanged?.Invoke();
+            return true;
+        }
+
         public bool UseMedkit()
         {
             if (medicalKits <= 0) return false;

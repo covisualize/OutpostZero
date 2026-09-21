@@ -1,4 +1,5 @@
 using UnityEngine;
+using OutpostZero.Colony;
 using OutpostZero.Combat;
 using OutpostZero.Core;
 using OutpostZero.Graphics;
@@ -39,6 +40,38 @@ namespace OutpostZero.Expedition
                 Spawn(pieces[i]);
             }
             KitStructure.Raise(districtId, root);
+            RaiseCaravan();
+        }
+
+        private void RaiseCaravan()
+        {
+            int day = WorldClock.Instance != null ? WorldClock.Instance.Day : 1;
+            bool post = GridBuilder.Instance != null && GridBuilder.Instance.HasKind("TradingPost");
+            if (string.IsNullOrEmpty(CaravanBook.Counterparty(day, post))) return;
+
+            var stall = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            stall.name = "CaravanStall";
+            stall.transform.SetParent(root, false);
+            stall.transform.position = new Vector3(8f, 0.7f, 4f);
+            stall.transform.localScale = new Vector3(1.8f, 1.2f, 0.8f);
+            stall.layer = GameLayers.Interactable;
+            var stallRenderer = stall.GetComponent<Renderer>();
+            if (stallRenderer != null) stallRenderer.material.color = new Color(0.55f, 0.32f, 0.22f);
+            stall.AddComponent<CampStation>().Configure(StationKind.Merchant);
+            RaiseGuard(new Vector3(6.6f, 0.95f, 3.2f));
+            RaiseGuard(new Vector3(9.4f, 0.95f, 3.2f));
+        }
+
+        private void RaiseGuard(Vector3 position)
+        {
+            var guard = GameObject.CreatePrimitive(PrimitiveType.Capsule);
+            guard.name = "CaravanGuard";
+            guard.transform.SetParent(root, false);
+            guard.transform.position = position;
+            guard.transform.localScale = new Vector3(0.5f, 0.9f, 0.5f);
+            guard.layer = GameLayers.Environment;
+            var renderer = guard.GetComponent<Renderer>();
+            if (renderer != null) renderer.material.color = new Color(0.28f, 0.32f, 0.28f);
         }
 
         private void Spawn(DistrictLayout.Piece piece)

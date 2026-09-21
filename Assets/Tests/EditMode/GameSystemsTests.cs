@@ -502,5 +502,67 @@ namespace OutpostZero.Tests.EditMode
             Assert.AreEqual(0.35f, AudioSpace.SpatialBlend("step"));
             Assert.Greater(AudioSpace.MaxDistance("boom"), AudioSpace.MaxDistance("hit"));
         }
+
+        [Test]
+        public void CaravansVisitOnACalendarAndPricesFollowStanding()
+        {
+            Assert.IsTrue(CaravanBook.Visits(3));
+            Assert.IsTrue(CaravanBook.Visits(7));
+            Assert.IsTrue(CaravanBook.Visits(12));
+            Assert.IsFalse(CaravanBook.Visits(1));
+            Assert.IsFalse(CaravanBook.Visits(4));
+            Assert.AreEqual("caravan", CaravanBook.Visitor(3));
+            Assert.AreEqual("militia", CaravanBook.Visitor(7));
+            Assert.AreEqual("clinic", CaravanBook.Visitor(12));
+            Assert.AreEqual("farmers", CaravanBook.Visitor(15));
+
+            Assert.AreEqual(14, CaravanBook.Price("medkit", 0, false));
+            Assert.AreEqual(10, CaravanBook.Price("medkit", 100, false));
+            Assert.AreEqual(18, CaravanBook.Price("medkit", -100, false));
+            Assert.AreEqual(13, CaravanBook.Price("medkit", 0, true));
+            Assert.IsTrue(CaravanBook.Refuses("militia", -21));
+            Assert.IsFalse(CaravanBook.Refuses("militia", -20));
+            Assert.IsFalse(CaravanBook.Refuses("caravan", -100));
+            Assert.IsFalse(CaravanBook.Ambush(-40));
+            Assert.IsTrue(CaravanBook.Ambush(-41));
+
+            var standing = new[] { 5, -3, 0, 1 };
+            CaravanBook.Decay(standing);
+            Assert.AreEqual(4, standing[0]);
+            Assert.AreEqual(-2, standing[1]);
+            Assert.AreEqual(0, standing[2]);
+            Assert.AreEqual(0, standing[3]);
+
+            var legacy = new int[4];
+            CaravanBook.Unpack("", 10, legacy);
+            Assert.AreEqual(10, legacy[0]);
+            Assert.AreEqual(0, legacy[1]);
+            CaravanBook.Unpack(null, 10, legacy);
+            Assert.AreEqual(10, legacy[0]);
+            Assert.AreEqual(0, legacy[3]);
+
+            string packed = CaravanBook.Pack(new[] { 12, -8, 4, 1 });
+            var round = new int[4];
+            CaravanBook.Unpack(packed, 0, round);
+            Assert.AreEqual(12, round[0]);
+            Assert.AreEqual(-8, round[1]);
+            Assert.AreEqual(4, round[2]);
+            Assert.AreEqual(1, round[3]);
+            Assert.AreEqual("caravan", CaravanBook.Counterparty(3, false));
+            Assert.AreEqual("caravan", CaravanBook.Counterparty(1, true));
+            Assert.AreEqual("", CaravanBook.Counterparty(1, false));
+
+            string quests = CaravanBook.MarkQuest("", "clinic");
+            Assert.IsTrue(CaravanBook.QuestDone(quests, "clinic"));
+            Assert.IsFalse(CaravanBook.QuestDone(quests, "farmers"));
+            Assert.AreEqual(20, GridBuilder.Cost(ModuleKind.TradingPost));
+
+            var saved = new SaveGameData { factionStanding = 12, factions = packed, quests = quests };
+            Assert.IsTrue(SaveCodec.TryDeserialize(SaveCodec.Serialize(saved), out var loaded, out var error), error);
+            Assert.AreEqual(1, loaded.schemaVersion);
+            Assert.AreEqual(packed, loaded.factions);
+            Assert.AreEqual(quests, loaded.quests);
+            Assert.AreEqual(12, loaded.factionStanding);
+        }
     }
 }

@@ -9,6 +9,7 @@ using OutpostZero.Colony;
 using OutpostZero.Combat;
 using OutpostZero.Core;
 using OutpostZero.Expedition;
+using OutpostZero.Items;
 using OutpostZero.Player;
 using OutpostZero.Shell;
 
@@ -222,7 +223,8 @@ namespace OutpostZero.UI
             bool trade = FactionTrade.Instance != null && FactionTrade.Instance.Open;
             string language = SettingsService.Instance != null ? SettingsService.Instance.Language : "en";
             string discrete = SettingsService.Instance != null ? SettingsService.Instance.DiscreteKey : "";
-            string nextMenu = state + "|" + settings + "|" + trade + "|" + language + "|" + discrete + "|" + ControlBindings.Signature() + "|" + listening + "|" + credits + "|" + codexOpen + "|" + codexId;
+            string tradeKey = FactionTrade.Instance != null ? FactionTrade.Instance.Signature : "";
+            string nextMenu = state + "|" + settings + "|" + trade + "|" + language + "|" + discrete + "|" + ControlBindings.Signature() + "|" + listening + "|" + credits + "|" + codexOpen + "|" + codexId + "|" + tradeKey;
             if (nextMenu != menuKey)
             {
                 menuKey = nextMenu;
@@ -278,6 +280,43 @@ namespace OutpostZero.UI
             else arrived?.Invoke();
         }
 
+        private static void DrawTrade(VisualElement parent, FactionTrade faction)
+        {
+            string id = faction.ActiveId;
+            int standing = faction.StandingOf(id);
+            parent.Add(Title(faction.Faction + "  " + standing));
+            if (CaravanBook.Refuses(id, standing))
+            {
+                parent.Add(Body(faction.Faction + " will not trade"));
+            }
+            else
+            {
+                string[] stock = CaravanBook.Stock(id);
+                for (int i = 0; i < stock.Length; i++)
+                {
+                    string itemId = stock[i];
+                    var record = ItemCatalog.Find(itemId);
+                    string label = record != null ? record.DisplayName : itemId;
+                    parent.Add(Button("Buy " + label + " (" + faction.Price(itemId) + ")", () => faction.Buy(itemId)));
+                }
+                parent.Add(Button("Sell bandage", () => faction.SellBandage()));
+            }
+            parent.Add(Body(QuestLine(id, faction.Quests)));
+            if (id == "clinic" && !CaravanBook.QuestDone(faction.Quests, "clinic"))
+            {
+                parent.Add(Button("Deliver 4 medkits", () => faction.DeliverMedkits()));
+            }
+            parent.Add(Button("Leave", faction.Toggle));
+        }
+
+        private static string QuestLine(string id, string quests)
+        {
+            if (id == "clinic") return CaravanBook.QuestDone(quests, "clinic") ? "Field dressings learned" : "The Clinic wants 4 medkits";
+            if (id == "farmers") return CaravanBook.QuestDone(quests, "farmers") ? "Farmers remember the nest" : "Clear a district for the farmers";
+            if (id == "militia") return "Iron Militia sells rifle and shell ammo";
+            return CaravanBook.QuestDone(quests, "caravan") ? "Escort complete" : "Extract on a visit day and the caravan pays";
+        }
+
         private void RebuildMenu(GameState state, bool settings, bool trade)
         {
             menu.Clear();
@@ -288,12 +327,7 @@ namespace OutpostZero.UI
             }
             if (trade && FactionTrade.Instance != null)
             {
-                var faction = FactionTrade.Instance;
-                menu.Add(Title(faction.Faction + "  " + faction.Standing));
-                menu.Add(Button("Buy medkit (" + faction.Price("medkit") + ")", () => faction.Buy("medkit")));
-                menu.Add(Button("Buy rifle ammo (" + faction.Price("ammo_rifle") + ")", () => faction.Buy("ammo_rifle")));
-                menu.Add(Button("Buy water (" + faction.Price("water") + ")", () => faction.Buy("water")));
-                menu.Add(Button("Leave", faction.Toggle));
+                DrawTrade(menu, FactionTrade.Instance);
                 return;
             }
 
@@ -459,6 +493,14 @@ namespace OutpostZero.UI
                     camp.Add(row);
                 }
             }
+            if (FactionTrade.Instance != null)
+            {
+                var merchants = FactionTrade.Instance;
+                string who = string.IsNullOrEmpty(merchants.ActiveId) ? "caravan" : merchants.ActiveId;
+                string presence = string.IsNullOrEmpty(merchants.ActiveId) ? "away" : "at the gate";
+                camp.Add(Body(CaravanBook.Display(who) + " — " + presence + "  " + merchants.StandingOf(who)));
+            }
+            camp.Add(Button("Caravan", () => FactionTrade.Instance?.Toggle()));
             camp.Add(Button("Advance watch", () =>
             {
                 WorldClock.Instance?.Advance(6f);
@@ -473,6 +515,7 @@ namespace OutpostZero.UI
             build.Add(Button("Tower", () => GridBuilder.Instance?.Select(ModuleKind.Watchtower)));
             build.Add(Button("Generator", () => GridBuilder.Instance?.Select(ModuleKind.Generator)));
             build.Add(Button("Bench", () => GridBuilder.Instance?.Select(ModuleKind.Workbench)));
+            build.Add(Button("Post", () => GridBuilder.Instance?.Select(ModuleKind.TradingPost)));
             camp.Add(build);
             camp.Add(Body("Craft"));
             bool bench = GridBuilder.Instance != null && GridBuilder.Instance.HasKind("Workbench");
@@ -580,6 +623,7 @@ namespace OutpostZero.UI
             {
                 builder.Append(WorldMapService.Instance.Current.id);
             }
+            if (FactionTrade.Instance != null) builder.Append(FactionTrade.Instance.Signature);
             return builder.ToString();
         }
 

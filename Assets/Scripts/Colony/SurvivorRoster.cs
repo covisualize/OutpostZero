@@ -262,6 +262,7 @@ namespace OutpostZero.Colony
             ApplySnapshot(days);
             Spend(food, water);
             Publish(notes);
+            FactionTrade.Instance?.OnMorning(WorldClock.Instance != null ? WorldClock.Instance.Day : 1);
         }
 
         public void RewardReturn()
