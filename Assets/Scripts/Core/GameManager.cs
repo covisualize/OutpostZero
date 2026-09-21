@@ -88,7 +88,8 @@ namespace OutpostZero.Core
                 || newState == GameState.SuccessionScreen
                 || newState == GameState.GameOver
                 || newState == GameState.MainMenu
-                || newState == GameState.ExpeditionResults;
+                || newState == GameState.ExpeditionResults
+                || newState == GameState.Victory;
             Time.timeScale = frozen ? 0f : 1f;
             OnGameStateChanged?.Invoke(currentState);
         }
@@ -144,11 +145,10 @@ namespace OutpostZero.Core
             inventory?.DepositScrapToColony();
             WorldMapService.Instance?.ClearCurrent();
             ObjectiveTracker.Instance?.MarkExtracted();
-            SetState(GameState.ExpeditionResults);
+            bool won = WorldMapService.Instance != null && WorldMapService.Instance.CampaignWon;
+            SetState(won ? GameState.Victory : GameState.ExpeditionResults);
             SaveSystem.Instance?.Save(false);
-            GameplayFeedback.Toast(WorldMapService.Instance != null && WorldMapService.Instance.CampaignWon
-                ? "The ring is clear"
-                : "Extracted");
+            GameplayFeedback.Toast(won ? "The ring is clear" : "Extracted");
         }
 
         public void TriggerPlayerDeath()

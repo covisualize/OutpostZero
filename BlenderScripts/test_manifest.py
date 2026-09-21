@@ -26,6 +26,22 @@ class ManifestTests(unittest.TestCase):
         self.assertIn("Assets/Models/Props/Prop_StreetLamp.fbx", manifest["assets"])
         self.assertFalse(os.path.isfile(os.path.join(root, "Assets", "Models", "Props", "StreetLamp.fbx")))
 
+    def test_exported_meshes_have_uvs_and_characters_are_rigged(self):
+        root = repo_root()
+        with open(os.path.join(root, "BlenderScripts", "assets.manifest.json"), encoding="utf-8") as handle:
+            manifest = json.load(handle)
+        bare = []
+        unrigged = []
+        for relative in manifest["assets"]:
+            path = os.path.join(root, relative)
+            text = open(path, "rb").read().decode("latin1", errors="ignore")
+            if "LayerElementUV" not in text:
+                bare.append(relative)
+            if "/Characters/" in relative and "Hips" not in text:
+                unrigged.append(relative)
+        self.assertEqual(bare, [])
+        self.assertEqual(unrigged, [])
+
 
 if __name__ == "__main__":
     unittest.main()

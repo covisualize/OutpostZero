@@ -9,7 +9,8 @@ namespace OutpostZero.Core
         SuccessionScreen,
         ExpeditionResults,
         RaidActive,
-        MainMenu
+        MainMenu,
+        Victory
     }
 
     public enum NoiseType

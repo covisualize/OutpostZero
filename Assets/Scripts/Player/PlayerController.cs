@@ -3,6 +3,7 @@ using UnityEngine;
 using OutpostZero.Core;
 using OutpostZero.Sensory;
 using OutpostZero.Combat;
+using OutpostZero.Shell;
 
 namespace OutpostZero.Player
 {
@@ -182,8 +183,10 @@ namespace OutpostZero.Player
             if (inputDirection.sqrMagnitude > 1f) inputDirection.Normalize();
 
             bool isMoving = inputDirection.sqrMagnitude > 0.01f;
+            if (isMoving) TutorialDirector.Instance?.Note("move");
 
             IsCrouching = ExpeditionInput.CrouchHeld;
+            if (IsCrouching) TutorialDirector.Instance?.Note("crouch");
             bool wantsToSprint = ExpeditionInput.SprintHeld && !IsCrouching && currentStamina > 5f;
 
             IsSprinting = isMoving && wantsToSprint;
@@ -301,7 +304,7 @@ namespace OutpostZero.Player
             // Attack (Left Mouse Button)
             if (ExpeditionInput.FireHeld && GameManager.Instance != null && GameManager.Instance.CurrentState != GameState.CampManagement)
             {
-                ActiveWeapon.TryAttack(transform.forward);
+                if (ActiveWeapon.TryAttack(transform.forward)) TutorialDirector.Instance?.Note("fire");
             }
         }
 

@@ -105,6 +105,26 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void TutorialAdvancesOnlyOnTheMatchingAction()
+        {
+            bool finished;
+            int index = TutorialTrack.Advance(0, "fire", out finished);
+            Assert.AreEqual(0, index);
+            Assert.IsFalse(finished);
+
+            index = TutorialTrack.Advance(index, "move", out finished);
+            Assert.AreEqual(1, index);
+            index = TutorialTrack.Advance(index, "fire", out finished);
+            index = TutorialTrack.Advance(index, "crouch", out finished);
+            index = TutorialTrack.Advance(index, "loot", out finished);
+            Assert.AreEqual(4, index);
+            Assert.IsFalse(finished);
+            index = TutorialTrack.Advance(index, "pack", out finished);
+            Assert.IsTrue(finished);
+            Assert.AreEqual(TutorialTrack.Gates.Length, index);
+        }
+
+        [Test]
         public void DistrictLayoutsStayOnTheStreet()
         {
             string[] ids = { "ash_market", "rail_yard", "old_hospital", "north_gate", "nowhere" };

@@ -287,6 +287,12 @@ namespace OutpostZero.UI
                     }
                     menu.Add(Button("The outpost falls", () => GameManager.Instance.SetState(GameState.GameOver)));
                     break;
+                case GameState.Victory:
+                    menu.Add(Title("OUTPOST HOLDS"));
+                    menu.Add(Body("Three districts are quiet. The gate can stay shut."));
+                    menu.Add(Button("Enter sanctuary", () => GameManager.Instance.EnterCamp()));
+                    menu.Add(Button("New outpost", () => GameManager.Instance.RestartCurrentScene()));
+                    break;
                 case GameState.ExpeditionResults:
                     menu.Add(Title(Loc.T("result.title")));
                     var map = WorldMapService.Instance;

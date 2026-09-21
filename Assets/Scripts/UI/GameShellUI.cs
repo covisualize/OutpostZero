@@ -1,5 +1,6 @@
 using UnityEngine;
 using OutpostZero.Player;
+using OutpostZero.Shell;
 
 namespace OutpostZero.UI
 {
@@ -28,6 +29,7 @@ namespace OutpostZero.UI
             if (ExpeditionInput.InventoryPressed)
             {
                 inventoryOpen = !inventoryOpen;
+                if (inventoryOpen) TutorialDirector.Instance?.Note("pack");
             }
         }
     }
