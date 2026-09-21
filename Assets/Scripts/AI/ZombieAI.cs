@@ -118,6 +118,7 @@ namespace OutpostZero.AI
             {
                 healthSystem.Configure(archetype.maxHealth, archetype.armor);
             }
+            CharacterVariety.Ensure(gameObject).Bind(archetypeId, false);
         }
 
         public void ResetForSpawn()
@@ -135,6 +136,7 @@ namespace OutpostZero.AI
             }
             currentState = ZombieState.Idle;
             SetState(ZombieState.Wander);
+            CharacterVariety.Ensure(gameObject).Bind(string.IsNullOrEmpty(archetypeId) ? name : archetypeId, true);
         }
 
         public void SetAbility(ZombieSpecialAbility ability)
@@ -171,6 +173,7 @@ namespace OutpostZero.AI
 
         private void Start()
         {
+            CharacterVariety.Ensure(gameObject).Bind(string.IsNullOrEmpty(archetypeId) ? name : archetypeId, false);
             SetState(ZombieState.Wander);
         }
 

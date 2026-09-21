@@ -12,7 +12,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Test models_dir resolution
         working-directory: BlenderScripts
-        run: python3 -m unittest test_paths.py test_manifest.py test_character_rig.py test_texture_set.py test_kit_catalog.py
+        run: python3 -m unittest test_paths.py test_manifest.py test_character_rig.py test_texture_set.py test_kit_catalog.py test_character_detail.py
 
   generate:
     name: Headless Blender 4.2 asset build

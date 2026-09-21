@@ -83,6 +83,7 @@ namespace OutpostZero.Core
             Add<PlayerVisibility>(player.gameObject);
             Add<ProceduralSurvivorMotion>(player.gameObject);
             Add<SurvivorLocomotion>(player.gameObject);
+            CharacterVariety.Ensure(player.gameObject).Bind("survivor", true);
             EnsureRifle(player);
         }
 
@@ -162,6 +163,14 @@ namespace OutpostZero.Core
                 if (name.Contains("Runner")) zombie.SetAbility(ZombieSpecialAbility.Lunge);
                 else if (name.Contains("Brute")) zombie.SetAbility(ZombieSpecialAbility.Charge);
                 if (go.GetComponent<ZombieMotion>() == null) go.AddComponent<ZombieMotion>();
+            }
+            else if (name.Contains("Merchant"))
+            {
+                CharacterVariety.Ensure(go).Bind("merchant", false);
+            }
+            else if (name.Contains("Colonist"))
+            {
+                CharacterVariety.Ensure(go).Bind("colonist", false);
             }
 
             var spawner = go.GetComponent<ZombieSpawner>();

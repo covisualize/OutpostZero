@@ -93,6 +93,13 @@ def glows(name):
     return "zombie" in text or "campfire" in text or "lamp" in text
 
 
+def vein(name, x, y, seed):
+    if not glows(name):
+        return False
+    stride = 11 if "zombie" in name.lower() else 29
+    return _hash(x, y, seed ^ 0x51) % stride == 0
+
+
 def _hash(ix, iy, seed):
     mixed = (ix * 374761393 + iy * 668265263 + seed) & 0xFFFFFFFF
     mixed = ((mixed ^ (mixed >> 13)) * 1274126177) & 0xFFFFFFFF
@@ -127,7 +134,7 @@ def rasters(name, size=SIZE):
             shade = 255 if edge > 2 else 168
             grain = 210 + (fine % 46)
             scale = (value * shade * grain) // (255 * 255)
-            speck = glow and _hash(x, y, seed ^ 0x51) % 29 == 0
+            speck = vein(name, x, y, seed)
             red = _clamp(base[0] * scale // 128 + (70 if speck else 0))
             green = _clamp(base[1] * scale // 128 + (18 if speck else 0))
             blue = _clamp(base[2] * scale // 128)
@@ -166,7 +173,7 @@ def rasters(name, size=SIZE):
             ao[index + 2] = occlusion
             ao[index + 3] = 255
             roughness = _clamp(255 - metal // 2 + (height[row + x] % 24) - 12)
-            emissive = 255 if glow and _hash(x, y, seed ^ 0x51) % 29 == 0 else 0
+            emissive = 255 if vein(name, x, y, seed) else 0
             mask[index] = metal
             mask[index + 1] = roughness
             mask[index + 2] = emissive

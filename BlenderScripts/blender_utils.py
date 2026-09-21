@@ -12,7 +12,7 @@ def reset_scene():
     for block in bpy.data.materials:
         bpy.data.materials.remove(block, do_unlink=True)
 
-def get_or_create_material(name, base_color=(0.8, 0.8, 0.8, 1.0), metallic=0.0, roughness=0.5):
+def get_or_create_material(name, base_color=(0.8, 0.8, 0.8, 1.0), metallic=0.0, roughness=0.5, emission=0.0, emission_color=None):
     """Creates or retrieves a Principled BSDF material with PBR properties."""
     if name in bpy.data.materials:
         mat = bpy.data.materials[name]
@@ -32,6 +32,11 @@ def get_or_create_material(name, base_color=(0.8, 0.8, 0.8, 1.0), metallic=0.0, 
         # Roughness
         if "Roughness" in bsdf.inputs:
             bsdf.inputs["Roughness"].default_value = roughness
+        if emission > 0:
+            if "Emission Strength" in bsdf.inputs:
+                bsdf.inputs["Emission Strength"].default_value = emission
+            if "Emission Color" in bsdf.inputs:
+                bsdf.inputs["Emission Color"].default_value = emission_color or base_color
     return mat
 
 def assign_material(obj, mat):

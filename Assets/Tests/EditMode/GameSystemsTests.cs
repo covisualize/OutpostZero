@@ -602,5 +602,32 @@ namespace OutpostZero.Tests.EditMode
             Assert.AreEqual(2, poles);
             Assert.IsTrue(gap);
         }
+
+        [Test]
+        public void CharactersKeepDistinctEyesAndAGoreLine()
+        {
+            var walker = CharacterLook.Eye("walker");
+            var runner = CharacterLook.Eye("Zombie_Runner");
+            var brute = CharacterLook.Eye("brute");
+            Assert.Greater(walker.G, walker.R);
+            Assert.Greater(walker.R, walker.B);
+            Assert.Greater(runner.R, runner.G);
+            Assert.Greater(brute.R, brute.G);
+            Assert.Greater(brute.G, brute.B);
+            Assert.AreEqual(2.5f, CharacterLook.Strength("walker"));
+            Assert.Less(CharacterLook.Strength("brute"), CharacterLook.Strength("walker"));
+            Assert.IsTrue(CharacterLook.Glows("walker"));
+            Assert.IsFalse(CharacterLook.Glows("survivor"));
+            Assert.AreEqual("walker", CharacterLook.RoleOf("Zombie_Walker(Clone)"));
+            var first = CharacterLook.Clothing(1);
+            var second = CharacterLook.Clothing(2);
+            Assert.AreNotEqual(first.R, second.R);
+            Assert.Greater(first.R, 0.4f);
+            Assert.Less(first.R, 2f);
+            Assert.IsTrue(CharacterLook.Wounded(39f, 100f));
+            Assert.IsFalse(CharacterLook.Wounded(40f, 100f));
+            Assert.IsFalse(CharacterLook.Wounded(0f, 0f));
+            Assert.Greater(CharacterLook.EyeHeight("brute"), CharacterLook.EyeHeight("runner"));
+        }
     }
 }
