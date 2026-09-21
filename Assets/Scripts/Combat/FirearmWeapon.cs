@@ -29,7 +29,16 @@ namespace OutpostZero.Combat
         [SerializeField] private AudioClip emptyClickSound;
 
         public int CurrentAmmo => currentAmmo;
-        public int MaxMagazine => maxMagazine;
+        public int MaxMagazine => MagazineCapacity;
+
+        private int MagazineCapacity
+        {
+            get
+            {
+                var mod = GetComponent<WeaponMod>();
+                return maxMagazine + (mod != null ? mod.magazineBonus : 0);
+            }
+        }
         public int ReserveAmmo => reserveAmmo;
         public bool IsReloading => isReloading;
 
@@ -163,7 +172,7 @@ namespace OutpostZero.Combat
 
         public void TryStartReload()
         {
-            if (isReloading || currentAmmo >= maxMagazine || reserveAmmo <= 0) return;
+            if (isReloading || currentAmmo >= MagazineCapacity || reserveAmmo <= 0) return;
 
             StartCoroutine(ReloadRoutine());
         }
@@ -176,7 +185,7 @@ namespace OutpostZero.Combat
 
             yield return new WaitForSeconds(reloadDuration);
 
-            int needed = maxMagazine - currentAmmo;
+            int needed = MagazineCapacity - currentAmmo;
             int loaded = Mathf.Min(needed, reserveAmmo);
 
             currentAmmo += loaded;

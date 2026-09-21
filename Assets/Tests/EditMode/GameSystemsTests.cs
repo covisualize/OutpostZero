@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using NUnit.Framework;
 using OutpostZero.AI;
 using OutpostZero.Colony;
+using OutpostZero.Combat;
 using OutpostZero.Core;
 using OutpostZero.Graphics;
 using OutpostZero.Items;
@@ -371,6 +372,30 @@ namespace OutpostZero.Tests.EditMode
                 if (CodexBook.Entries[i].Id == "mechanic.noise") noise = CodexBook.Entries[i];
             }
             Assert.IsTrue(CodexBook.Visible(noise, ""));
+        }
+
+        [Test]
+        public void WeaponModsAndCampSquaresChangeTheShotAndThePrice()
+        {
+            var suppressor = WeaponMod.ProfileFor("suppressor");
+            var optic = WeaponMod.ProfileFor("optic");
+            var mag = WeaponMod.ProfileFor("extended_mag");
+            Assert.Less(suppressor.noise, 1f);
+            Assert.Less(optic.spread, 1f);
+            Assert.AreEqual(10, mag.magazineBonus);
+            Assert.AreEqual(1f, WeaponMod.ProfileFor("missing").damage);
+
+            Assert.AreEqual(14, GridBuilder.Cost(ModuleKind.Generator));
+            Assert.AreEqual(12, GridBuilder.Cost(ModuleKind.Workbench));
+            var yard = new List<PlacedModule>
+            {
+                new PlacedModule { kind = "Barricade", x = 2f, z = -4f, integrity = 100 }
+            };
+            Assert.IsTrue(GridBuilder.Occupied(yard, 2f, -4f));
+            Assert.IsFalse(GridBuilder.Occupied(yard, 4f, -4f));
+            Assert.AreEqual(11, CraftingBench.Priced(12, true));
+            Assert.AreEqual(12, CraftingBench.Priced(12, false));
+            Assert.AreEqual(1, CraftingBench.Priced(1, true));
         }
     }
 }

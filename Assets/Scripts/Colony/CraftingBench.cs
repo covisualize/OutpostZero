@@ -29,7 +29,9 @@ namespace OutpostZero.Colony
             new Recipe { Id = "ammo_rifle", Label = "Rifle mag", ScrapCost = 7, OutputId = "ammo_rifle", OutputCount = 1 },
             new Recipe { Id = "noise_lure", Label = "Noise lure", ScrapCost = 2, OutputId = "noise_lure", OutputCount = 1 },
             new Recipe { Id = "molotov", Label = "Molotov", ScrapCost = 6, OutputId = "molotov", OutputCount = 1 },
-            new Recipe { Id = "suppressor", Label = "Suppressor", ScrapCost = 12, OutputId = "suppressor", OutputCount = 1 }
+            new Recipe { Id = "suppressor", Label = "Suppressor", ScrapCost = 12, OutputId = "suppressor", OutputCount = 1 },
+            new Recipe { Id = "optic", Label = "Optic", ScrapCost = 9, OutputId = "optic", OutputCount = 1 },
+            new Recipe { Id = "extended_mag", Label = "Extended mag", ScrapCost = 8, OutputId = "extended_mag", OutputCount = 1 }
         };
 
         private void Awake()
@@ -50,24 +52,26 @@ namespace OutpostZero.Colony
                 if (candidate.Id == recipeId) recipe = candidate;
             }
             if (recipe == null) return false;
-            if (ColonyStorage.Instance == null || !ColonyStorage.Instance.TrySpendScrap(recipe.ScrapCost))
+            bool bench = GridBuilder.Instance != null && GridBuilder.Instance.HasKind("Workbench");
+            int cost = Priced(recipe.ScrapCost, bench);
+            if (ColonyStorage.Instance == null || !ColonyStorage.Instance.TrySpendScrap(cost))
             {
                 GameplayFeedback.Toast("Not enough camp scrap");
                 return false;
             }
 
-            if (recipe.OutputId == "suppressor")
+            if (recipe.OutputId == "suppressor" || recipe.OutputId == "optic" || recipe.OutputId == "extended_mag")
             {
                 var player = PlayerRegistry.Current;
                 var weapon = player != null ? player.ActiveWeapon : null;
                 if (weapon == null)
                 {
-                    ColonyStorage.Instance.AddScrap(recipe.ScrapCost);
+                    ColonyStorage.Instance.AddScrap(cost);
                     return false;
                 }
                 var mod = weapon.GetComponent<WeaponMod>() ?? weapon.gameObject.AddComponent<WeaponMod>();
-                mod.ApplySuppressor();
-                GameplayFeedback.Toast("Suppressor fitted");
+                mod.Apply(recipe.OutputId);
+                GameplayFeedback.Toast(recipe.Label + " fitted");
                 return true;
             }
 
@@ -75,7 +79,7 @@ namespace OutpostZero.Colony
             var inventory = PlayerRegistry.Current != null ? PlayerRegistry.Current.GetComponent<PlayerInventory>() : null;
             if (record == null || inventory == null)
             {
-                ColonyStorage.Instance.AddScrap(recipe.ScrapCost);
+                ColonyStorage.Instance.AddScrap(cost);
                 return false;
             }
 
@@ -85,13 +89,19 @@ namespace OutpostZero.Colony
             }
             else if (!inventory.TryAddItem(record.Id, record.DisplayName, record.Category, recipe.OutputCount, record.Weight))
             {
-                ColonyStorage.Instance.AddScrap(recipe.ScrapCost);
+                ColonyStorage.Instance.AddScrap(cost);
                 GameplayFeedback.Toast("Pack is full");
                 return false;
             }
 
             GameplayFeedback.Toast("Crafted " + recipe.Label);
             return true;
+        }
+
+        public static int Priced(int scrap, bool workbench)
+        {
+            if (!workbench) return scrap;
+            return scrap <= 1 ? 1 : scrap - 1;
         }
     }
 }

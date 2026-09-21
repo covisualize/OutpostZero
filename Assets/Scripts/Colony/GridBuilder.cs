@@ -11,7 +11,9 @@ namespace OutpostZero.Colony
         Barricade,
         Cot,
         Water,
-        Watchtower
+        Watchtower,
+        Generator,
+        Workbench
     }
 
     [Serializable]
@@ -81,15 +83,20 @@ namespace OutpostZero.Colony
 
         public bool TryPlace(ModuleKind kind, Vector3 world)
         {
+            float x = Mathf.Round(world.x / cell) * cell;
+            float z = Mathf.Round(world.z / cell) * cell;
+            if (Occupied(placed, x, z))
+            {
+                GameplayFeedback.Toast("That square is taken");
+                return false;
+            }
+
             int cost = Cost(kind);
             if (ColonyStorage.Instance == null || !ColonyStorage.Instance.TrySpendScrap(cost))
             {
                 GameplayFeedback.Toast("Need " + cost + " camp scrap");
                 return false;
             }
-
-            float x = Mathf.Round(world.x / cell) * cell;
-            float z = Mathf.Round(world.z / cell) * cell;
             var record = new PlacedModule { kind = kind.ToString(), x = x, z = z, rotation = 0, integrity = 100 };
             placed.Add(record);
             SpawnView(record);
@@ -164,6 +171,27 @@ namespace OutpostZero.Colony
             return true;
         }
 
+        public bool HasKind(string kind)
+        {
+            for (int i = 0; i < placed.Count; i++)
+            {
+                if (placed[i].kind == kind && placed[i].integrity > 0) return true;
+            }
+            return false;
+        }
+
+        public static bool Occupied(IReadOnlyList<PlacedModule> modules, float x, float z)
+        {
+            if (modules == null) return false;
+            for (int i = 0; i < modules.Count; i++)
+            {
+                var module = modules[i];
+                if (module == null) continue;
+                if (Mathf.Abs(module.x - x) < 0.01f && Mathf.Abs(module.z - z) < 0.01f) return true;
+            }
+            return false;
+        }
+
         public int BarricadeCount()
         {
             int count = 0;
@@ -188,6 +216,8 @@ namespace OutpostZero.Colony
                 case ModuleKind.Cot: return 8;
                 case ModuleKind.Water: return 10;
                 case ModuleKind.Watchtower: return 16;
+                case ModuleKind.Generator: return 14;
+                case ModuleKind.Workbench: return 12;
                 default: return 6;
             }
         }
@@ -200,6 +230,8 @@ namespace OutpostZero.Colony
                 case "Cot": return new Vector3(1.4f, 0.4f, 0.7f);
                 case "Water": return new Vector3(0.8f, 1.1f, 0.8f);
                 case "Watchtower": return new Vector3(1.2f, 2.4f, 1.2f);
+                case "Generator": return new Vector3(1.1f, 0.8f, 0.7f);
+                case "Workbench": return new Vector3(1.6f, 0.9f, 0.8f);
                 default: return new Vector3(1.8f * health, 1.1f * Mathf.Lerp(0.35f, 1f, health), 0.4f);
             }
         }
@@ -211,6 +243,8 @@ namespace OutpostZero.Colony
                 case "Cot": return new Color(0.45f, 0.55f, 0.62f);
                 case "Water": return new Color(0.25f, 0.55f, 0.75f);
                 case "Watchtower": return new Color(0.42f, 0.36f, 0.28f);
+                case "Generator": return new Color(0.55f, 0.48f, 0.18f);
+                case "Workbench": return new Color(0.38f, 0.32f, 0.26f);
                 default: return new Color(0.48f, 0.42f, 0.32f);
             }
         }

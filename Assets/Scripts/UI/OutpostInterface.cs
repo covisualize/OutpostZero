@@ -459,12 +459,16 @@ namespace OutpostZero.UI
             build.Add(Button("Cot", () => GridBuilder.Instance?.Select(ModuleKind.Cot)));
             build.Add(Button("Water", () => GridBuilder.Instance?.Select(ModuleKind.Water)));
             build.Add(Button("Tower", () => GridBuilder.Instance?.Select(ModuleKind.Watchtower)));
+            build.Add(Button("Generator", () => GridBuilder.Instance?.Select(ModuleKind.Generator)));
+            build.Add(Button("Bench", () => GridBuilder.Instance?.Select(ModuleKind.Workbench)));
             camp.Add(build);
             camp.Add(Body("Craft"));
+            bool bench = GridBuilder.Instance != null && GridBuilder.Instance.HasKind("Workbench");
             foreach (var recipe in CraftingBench.Recipes)
             {
                 string id = recipe.Id;
-                camp.Add(Button(recipe.Label + " (" + recipe.ScrapCost + ")", () => CraftingBench.Instance?.Craft(id)));
+                int cost = CraftingBench.Priced(recipe.ScrapCost, bench);
+                camp.Add(Button(recipe.Label + " (" + cost + ")", () => CraftingBench.Instance?.Craft(id)));
             }
             var map = WorldMapService.Instance;
             if (map != null)
@@ -553,7 +557,11 @@ namespace OutpostZero.UI
                 }
                 builder.Append(SurvivorRoster.Instance.DayNotes);
             }
-            if (GridBuilder.Instance != null) builder.Append(GridBuilder.Instance.Selected);
+            if (GridBuilder.Instance != null)
+            {
+                builder.Append(GridBuilder.Instance.Selected);
+                foreach (var module in GridBuilder.Instance.Placed) builder.Append(module.kind);
+            }
             if (CampServices.Instance != null) builder.Append(CampServices.Instance.GeneratorOnline);
             if (WorldMapService.Instance != null && WorldMapService.Instance.Current != null)
             {

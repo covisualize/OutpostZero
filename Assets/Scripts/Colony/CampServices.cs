@@ -100,6 +100,7 @@ namespace OutpostZero.Colony
                     if (module.kind == "Water") waterPresent = true;
                     if (module.kind == "Cot") cotPresent = true;
                     if (module.kind == "Watchtower") towerPresent = true;
+                    if (module.kind == "Generator") generatorPresent = true;
                 }
             }
             CountContacts();
