@@ -57,6 +57,7 @@ namespace OutpostZero.Colony
                     }
                     WorldClock.Instance?.SleepUntilMorning();
                     SurvivorRoster.Instance?.TickTasks();
+                    SurvivorRoster.Instance?.EndDay(false);
                     break;
                 case StationKind.MedicalCot:
                     var health = inventory != null ? inventory.GetComponent<Combat.HealthSystem>() : null;

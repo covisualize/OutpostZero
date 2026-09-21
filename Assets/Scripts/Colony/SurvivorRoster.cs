@@ -16,6 +16,10 @@ namespace OutpostZero.Colony
         public bool alive = true;
         public bool leader;
         public float morale = 70f;
+        public float hunger = 78f;
+        public float thirst = 78f;
+        public int opinion = 18;
+        public int injury;
         public string task = "Rest";
         public string bond = "";
     }
@@ -27,6 +31,7 @@ namespace OutpostZero.Colony
         [SerializeField] private List<Survivor> survivors = new List<Survivor>();
         public IReadOnlyList<Survivor> Survivors => survivors;
         public event Action OnRosterChanged;
+        public string DayNotes { get; private set; } = "";
 
         public Survivor Leader
         {
@@ -63,7 +68,19 @@ namespace OutpostZero.Colony
 
         private static Survivor Make(string id, string name, string trait, bool leader, string bond)
         {
-            return new Survivor { id = id, displayName = name, trait = trait, leader = leader, morale = 72f, task = "Rest", bond = bond };
+            return new Survivor
+            {
+                id = id,
+                displayName = name,
+                trait = trait,
+                leader = leader,
+                morale = 72f,
+                hunger = 78f,
+                thirst = 78f,
+                opinion = string.IsNullOrEmpty(bond) ? 0 : 18,
+                task = "Rest",
+                bond = bond
+            };
         }
 
         public bool MarkLeaderDead(Vector3 corpsePosition)
@@ -119,29 +136,129 @@ namespace OutpostZero.Colony
                 switch (survivor.task)
                 {
                     case "Scavenge":
-                        if (storage != null) storage.AddScrap(4 + (survivor.trait == "Scrounger" ? 3 : 0));
-                        survivor.morale = Mathf.Max(0f, survivor.morale - 4f);
+                        int scrap = Pay(4 + (survivor.trait == "Scrounger" ? 3 : 0), survivor.morale);
+                        if (scrap > 0 && storage != null) storage.AddScrap(scrap);
+                        if (scrap > 0) survivor.morale = Mathf.Max(0f, survivor.morale - 4f);
                         break;
                     case "Cook":
-                        if (storage != null) storage.AddFood(2);
-                        survivor.morale = Mathf.Min(100f, survivor.morale + 3f);
+                        int meals = Pay(2, survivor.morale);
+                        if (meals > 0 && storage != null) storage.AddFood(meals);
+                        if (meals > 0) survivor.morale = Mathf.Min(100f, survivor.morale + 3f);
                         break;
                     case "Guard":
-                        survivor.morale = Mathf.Max(0f, survivor.morale - 2f);
-                        if (storage != null) storage.AddSecurity(1);
+                        int watch = Pay(1, survivor.morale);
+                        if (watch > 0) survivor.morale = Mathf.Max(0f, survivor.morale - 2f);
+                        if (watch > 0 && storage != null) storage.AddSecurity(watch);
                         break;
                     case "Rest":
                         survivor.morale = Mathf.Min(100f, survivor.morale + 8f);
                         break;
                     case "Medic":
+                        if (ColonyDay.OutputScale(survivor.morale) <= 0f) break;
                         survivor.morale = Mathf.Min(100f, survivor.morale + 2f);
                         var leader = PlayerRegistry.Current;
                         leader?.GetComponent<Combat.HealthSystem>()?.Heal(12f);
                         leader?.GetComponent<StatusEffectController>()?.ClearInjury();
+                        for (int i = 0; i < survivors.Count; i++)
+                        {
+                            if (survivors[i].alive && survivors[i].injury > 0) survivors[i].injury--;
+                        }
                         break;
                 }
             }
             OnRosterChanged?.Invoke();
+        }
+
+        public void EndDay(bool expeditionWon)
+        {
+            EndDay(expeditionWon, "");
+        }
+
+        public void EndDay(bool expeditionWon, string fallenName)
+        {
+            var days = Snapshot();
+            int food = ColonyStorage.Instance != null ? ColonyStorage.Instance.Food : 0;
+            int water = ColonyStorage.Instance != null ? ColonyStorage.Instance.Water : 0;
+            bool cot = CampServices.Instance != null && CampServices.Instance.CotOnline;
+            var notes = ColonyDay.Simulate(days, ref food, ref water, cot, expeditionWon, fallenName);
+            ApplySnapshot(days);
+            Spend(food, water);
+            Publish(notes);
+        }
+
+        public void RewardReturn()
+        {
+            var days = Snapshot();
+            var notes = ColonyDay.RewardReturn(days);
+            ApplySnapshot(days);
+            Publish(notes);
+        }
+
+        private static int Pay(int amount, float morale)
+        {
+            float scale = ColonyDay.OutputScale(morale);
+            if (scale <= 0f) return 0;
+            if (scale > 1f) return amount + 1;
+            if (scale < 1f) return Math.Max(1, amount - 1);
+            return amount;
+        }
+
+        private List<ColonistDay> Snapshot()
+        {
+            var days = new List<ColonistDay>(survivors.Count);
+            for (int i = 0; i < survivors.Count; i++)
+            {
+                var survivor = survivors[i];
+                days.Add(new ColonistDay
+                {
+                    id = survivor.id,
+                    trait = survivor.trait,
+                    task = survivor.task,
+                    bond = survivor.bond,
+                    alive = survivor.alive,
+                    leader = survivor.leader,
+                    morale = survivor.morale,
+                    hunger = survivor.hunger,
+                    thirst = survivor.thirst,
+                    opinion = survivor.opinion,
+                    injury = survivor.injury
+                });
+            }
+            return days;
+        }
+
+        private void ApplySnapshot(List<ColonistDay> days)
+        {
+            int count = Math.Min(survivors.Count, days.Count);
+            for (int i = 0; i < count; i++)
+            {
+                var survivor = survivors[i];
+                var day = days[i];
+                survivor.task = day.task;
+                survivor.alive = day.alive;
+                survivor.morale = day.morale;
+                survivor.hunger = day.hunger;
+                survivor.thirst = day.thirst;
+                survivor.opinion = day.opinion;
+                survivor.injury = day.injury;
+            }
+        }
+
+        private void Spend(int foodLeft, int waterLeft)
+        {
+            var storage = ColonyStorage.Instance;
+            if (storage == null) return;
+            int foodDelta = storage.Food - foodLeft;
+            int waterDelta = storage.Water - waterLeft;
+            if (foodDelta > 0) storage.AddFood(-foodDelta);
+            if (waterDelta > 0) storage.AddWater(-waterDelta);
+        }
+
+        private void Publish(string[] notes)
+        {
+            DayNotes = notes == null || notes.Length == 0 ? "" : string.Join(", ", notes);
+            OnRosterChanged?.Invoke();
+            if (DayNotes.Length > 0) GameplayFeedback.Toast(DayNotes);
         }
 
         public float AverageMorale()

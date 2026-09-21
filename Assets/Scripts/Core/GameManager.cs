@@ -146,6 +146,7 @@ namespace OutpostZero.Core
             WorldMapService.Instance?.ClearCurrent();
             ObjectiveTracker.Instance?.MarkExtracted();
             bool won = WorldMapService.Instance != null && WorldMapService.Instance.CampaignWon;
+            SurvivorRoster.Instance?.RewardReturn();
             SetState(won ? GameState.Victory : GameState.ExpeditionResults);
             SaveSystem.Instance?.Save(false);
             GameplayFeedback.Toast(won ? "The ring is clear" : "Extracted");

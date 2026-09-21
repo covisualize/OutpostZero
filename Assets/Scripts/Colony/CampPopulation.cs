@@ -31,6 +31,7 @@ namespace OutpostZero.Colony
                     continue;
                 }
                 var body = Ensure(survivor.id, survivor.displayName);
+                Tint(body, survivor.morale);
                 Vector3 goal = Station(survivor.task) + new Vector3(Mathf.Sin(survivor.id.GetHashCode()) * 0.6f, 0f, 0.4f);
                 body.position = Vector3.MoveTowards(body.position, goal, 1.4f * Time.deltaTime);
                 Vector3 face = goal - body.position;
@@ -51,6 +52,25 @@ namespace OutpostZero.Colony
             if (renderer != null) renderer.material.color = new Color(0.55f, 0.48f, 0.36f);
             bodies[id] = body.transform;
             return body.transform;
+        }
+
+        private static void Tint(Transform body, float morale)
+        {
+            var renderer = body.GetComponent<Renderer>();
+            if (renderer == null) return;
+            Color tint;
+            switch (ColonyDay.Mood(morale))
+            {
+                case "Inspired": tint = new Color(0.72f, 0.62f, 0.42f); break;
+                case "Depressed": tint = new Color(0.35f, 0.35f, 0.38f); break;
+                case "Breakdown": tint = new Color(0.45f, 0.2f, 0.18f); break;
+                default: tint = new Color(0.55f, 0.48f, 0.36f); break;
+            }
+            var block = new MaterialPropertyBlock();
+            renderer.GetPropertyBlock(block);
+            block.SetColor("_BaseColor", tint);
+            block.SetColor("_Color", tint);
+            renderer.SetPropertyBlock(block);
         }
 
         private static Vector3 Station(string task)

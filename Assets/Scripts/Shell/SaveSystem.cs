@@ -117,6 +117,11 @@ namespace OutpostZero.Shell
                         alive = survivor.alive,
                         leader = survivor.leader,
                         morale = survivor.morale,
+                        hunger = survivor.hunger,
+                        thirst = survivor.thirst,
+                        opinion = survivor.opinion,
+                        injury = survivor.injury,
+                        needsTracked = true,
                         task = survivor.task,
                         bond = survivor.bond
                     });
@@ -159,6 +164,10 @@ namespace OutpostZero.Shell
                         alive = saved.alive,
                         leader = saved.leader,
                         morale = saved.morale,
+                        hunger = saved.needsTracked ? saved.hunger : 78f,
+                        thirst = saved.needsTracked ? saved.thirst : 78f,
+                        opinion = saved.needsTracked ? saved.opinion : (string.IsNullOrEmpty(saved.bond) ? 0 : 18),
+                        injury = saved.needsTracked ? saved.injury : 0,
                         task = string.IsNullOrEmpty(saved.task) ? "Rest" : saved.task,
                         bond = saved.bond
                     });

@@ -371,10 +371,17 @@ namespace OutpostZero.UI
             if (roster != null)
             {
                 camp.Add(Body("Morale " + Mathf.RoundToInt(roster.AverageMorale())));
+                if (!string.IsNullOrEmpty(roster.DayNotes)) camp.Add(Body(roster.DayNotes));
                 foreach (var survivor in roster.Survivors)
                 {
                     string flag = survivor.leader ? "*" : survivor.alive ? "" : "x";
-                    camp.Add(Body(flag + " " + survivor.displayName + " (" + survivor.trait + ") " + survivor.task + "  " + survivor.bond));
+                    string mood = ColonyDay.Mood(survivor.morale);
+                    camp.Add(Body(flag + " " + survivor.displayName + " (" + survivor.trait + ") " + survivor.task
+                        + "  " + mood
+                        + "  food " + Mathf.RoundToInt(survivor.hunger)
+                        + " water " + Mathf.RoundToInt(survivor.thirst)
+                        + "  " + survivor.bond
+                        + "  opinion " + survivor.opinion));
                     if (!survivor.alive) continue;
                     string id = survivor.id;
                     var row = new VisualElement();
@@ -489,7 +496,9 @@ namespace OutpostZero.UI
                 foreach (var survivor in SurvivorRoster.Instance.Survivors)
                 {
                     builder.Append(survivor.id).Append(survivor.task).Append(survivor.alive).Append(survivor.leader);
+                    builder.Append(Mathf.RoundToInt(survivor.morale)).Append(Mathf.RoundToInt(survivor.hunger)).Append(survivor.opinion).Append(survivor.injury);
                 }
+                builder.Append(SurvivorRoster.Instance.DayNotes);
             }
             if (GridBuilder.Instance != null) builder.Append(GridBuilder.Instance.Selected);
             if (CampServices.Instance != null) builder.Append(CampServices.Instance.GeneratorOnline);

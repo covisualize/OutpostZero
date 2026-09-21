@@ -11,6 +11,11 @@ namespace OutpostZero.Shell
         public bool alive;
         public bool leader;
         public float morale;
+        public float hunger;
+        public float thirst;
+        public int opinion;
+        public int injury;
+        public bool needsTracked;
         public string task;
         public string bond;
     }
