@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using NUnit.Framework;
 using OutpostZero.AI;
 using OutpostZero.Colony;
+using OutpostZero.Core;
 using OutpostZero.Graphics;
 using OutpostZero.Items;
 using OutpostZero.Player;
@@ -311,6 +312,32 @@ namespace OutpostZero.Tests.EditMode
             var healed = ColonyDay.Simulate(infected, ref food, ref water, true, false, "");
             Assert.AreEqual(0, infected[0].injury);
             Assert.Contains("recovery", healed);
+        }
+
+        [Test]
+        public void SceneRouteNamesEveryStepAndEndsOnAFullBar()
+        {
+            var titles = new System.Collections.Generic.HashSet<string>();
+            foreach (FlowStep step in System.Enum.GetValues(typeof(FlowStep)))
+            {
+                string title = SceneRoute.Title(step);
+                Assert.IsFalse(string.IsNullOrEmpty(title));
+                Assert.IsTrue(titles.Add(title));
+                Assert.IsFalse(string.IsNullOrEmpty(SceneRoute.Tip(step, 0)));
+                Assert.AreNotEqual(SceneRoute.Tip(step, 0), SceneRoute.Tip(step, 1));
+                var beats = SceneRoute.Beats(step);
+                Assert.GreaterOrEqual(beats.Length, 2);
+                Assert.AreEqual(1f, beats[beats.Length - 1]);
+                for (int i = 1; i < beats.Length; i++) Assert.Greater(beats[i], beats[i - 1]);
+            }
+
+            Assert.AreEqual(GameState.MainMenu, SceneRoute.StateFor(FlowStep.Boot));
+            Assert.AreEqual(GameState.MainMenu, SceneRoute.StateFor(FlowStep.MainMenu));
+            Assert.AreEqual(GameState.CampManagement, SceneRoute.StateFor(FlowStep.Sanctuary));
+            Assert.AreEqual(GameState.ExpeditionActive, SceneRoute.StateFor(FlowStep.Expedition));
+            Assert.AreEqual(GameState.ExpeditionResults, SceneRoute.StateFor(FlowStep.Results));
+            Assert.AreEqual("0.5.0", SceneRoute.Version);
+            Assert.GreaterOrEqual(SceneRoute.Tips.Length, 12);
         }
     }
 }

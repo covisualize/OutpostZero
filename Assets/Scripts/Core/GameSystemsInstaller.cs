@@ -42,6 +42,7 @@ namespace OutpostZero.Core
             Add<PerfBudget>(host.gameObject);
             Add<WorldMapService>(host.gameObject);
             Add<TutorialDirector>(host.gameObject);
+            Add<OutpostZero.UI.SceneFlow>(host.gameObject);
             Add<CampServices>(host.gameObject);
             Add<CampPopulation>(host.gameObject);
             Add<DistrictDressing>(host.gameObject);

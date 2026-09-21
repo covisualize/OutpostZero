@@ -177,6 +177,32 @@ namespace OutpostZero.Core
             GameplayFeedback.Toast(next != null ? next.displayName + " takes the gate" : "Back inside the gate");
         }
 
+        public void BeginNewOutpost()
+        {
+            SurvivorRoster.Instance?.ResetRoster();
+            ObjectiveTracker.Instance?.ResetProgress();
+            WorldMapService.Instance?.ResetMap();
+            ColonyStorage.Instance?.ResetStores();
+            GridBuilder.Instance?.ClearAll();
+            TutorialDirector.Instance?.SetFinished(false);
+            zombiesKilled = 0;
+            scrapLooted = 0;
+            expeditionTimer = 0f;
+            OnZombiesKilledChanged?.Invoke(zombiesKilled);
+            OnScrapLootedChanged?.Invoke(scrapLooted);
+            var player = PlayerRegistry.Current;
+            if (player != null)
+            {
+                player.GetComponent<Combat.HealthSystem>()?.ResetHealth();
+                player.GetComponent<StatusEffectController>()?.ClearInjury();
+                var body = player.GetComponent<CharacterController>();
+                if (body != null) body.enabled = false;
+                player.transform.position = new Vector3(-12f, 0.1f, -12f);
+                if (body != null) body.enabled = true;
+            }
+            SetState(GameState.CampManagement);
+        }
+
         public void RestartCurrentScene()
         {
             Time.timeScale = 1f;

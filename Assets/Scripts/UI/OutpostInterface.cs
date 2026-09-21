@@ -38,6 +38,7 @@ namespace OutpostZero.UI
         private string packKey = "";
         private readonly List<Label> popups = new List<Label>();
         private int listening = -1;
+        private bool credits;
 
         private void Update()
         {
@@ -219,7 +220,7 @@ namespace OutpostZero.UI
             bool trade = FactionTrade.Instance != null && FactionTrade.Instance.Open;
             string language = SettingsService.Instance != null ? SettingsService.Instance.Language : "en";
             string discrete = SettingsService.Instance != null ? SettingsService.Instance.DiscreteKey : "";
-            string nextMenu = state + "|" + settings + "|" + trade + "|" + language + "|" + discrete + "|" + ControlBindings.Signature() + "|" + listening;
+            string nextMenu = state + "|" + settings + "|" + trade + "|" + language + "|" + discrete + "|" + ControlBindings.Signature() + "|" + listening + "|" + credits;
             if (nextMenu != menuKey)
             {
                 menuKey = nextMenu;
@@ -241,6 +242,12 @@ namespace OutpostZero.UI
             }
 
             DrawPopups();
+        }
+
+        private static void Go(FlowStep step, System.Action arrived)
+        {
+            if (SceneFlow.Instance != null) SceneFlow.Instance.Travel(step, arrived);
+            else arrived?.Invoke();
         }
 
         private void RebuildMenu(GameState state, bool settings, bool trade)
@@ -268,10 +275,10 @@ namespace OutpostZero.UI
                     menu.Add(Title(Loc.T("menu.pause")));
                     menu.Add(Button(Loc.T("menu.resume"), () => GameManager.Instance.TogglePause()));
                     menu.Add(Button(Loc.T("menu.save"), () => SaveSystem.Instance?.Save()));
-                    menu.Add(Button(Loc.T("menu.camp"), () => GameManager.Instance.EnterCamp()));
+                    menu.Add(Button(Loc.T("menu.camp"), () => Go(FlowStep.Sanctuary, () => GameManager.Instance.EnterCamp())));
                     menu.Add(Button(Loc.T("menu.settings"), () => SettingsService.Instance?.TogglePanel()));
-                    menu.Add(Button(Loc.T("menu.main"), () => GameManager.Instance.SetState(GameState.MainMenu)));
-                    menu.Add(Button("Restart", () => GameManager.Instance.RestartCurrentScene()));
+                    menu.Add(Button(Loc.T("menu.main"), () => Go(FlowStep.MainMenu, () => GameManager.Instance.SetState(GameState.MainMenu))));
+                    menu.Add(Button("Restart", () => Go(FlowStep.Boot, () => GameManager.Instance.RestartCurrentScene())));
                     break;
                 case GameState.SuccessionScreen:
                     menu.Add(Title("LEADER KILLED"));
@@ -290,31 +297,41 @@ namespace OutpostZero.UI
                 case GameState.Victory:
                     menu.Add(Title("OUTPOST HOLDS"));
                     menu.Add(Body("Three districts are quiet. The gate can stay shut."));
-                    menu.Add(Button("Enter sanctuary", () => GameManager.Instance.EnterCamp()));
-                    menu.Add(Button("New outpost", () => GameManager.Instance.RestartCurrentScene()));
+                    menu.Add(Button("Enter sanctuary", () => Go(FlowStep.Sanctuary, () => GameManager.Instance.EnterCamp())));
+                    menu.Add(Button("New outpost", () => Go(FlowStep.Sanctuary, () => GameManager.Instance.BeginNewOutpost())));
                     break;
                 case GameState.ExpeditionResults:
                     menu.Add(Title(Loc.T("result.title")));
                     var map = WorldMapService.Instance;
                     menu.Add(Body(map != null && map.CampaignWon ? "The district ring is clear." : "Supplies are back inside the gate."));
                     if (map != null && map.Current != null) menu.Add(Body("Next: " + map.Current.displayName));
-                    menu.Add(Button("Enter sanctuary", () => GameManager.Instance.EnterCamp()));
+                    menu.Add(Button("Enter sanctuary", () => Go(FlowStep.Sanctuary, () => GameManager.Instance.EnterCamp())));
                     break;
                 case GameState.GameOver:
                     menu.Add(Title(Loc.T("gameover.title")));
                     menu.Add(Body("Every name on the roster is gone."));
-                    menu.Add(Button("New outpost", () => GameManager.Instance.RestartCurrentScene()));
+                    menu.Add(Button("New outpost", () => Go(FlowStep.Sanctuary, () => GameManager.Instance.BeginNewOutpost())));
                     break;
                 case GameState.MainMenu:
-                    menu.Add(Title("OUTPOST ZERO"));
-                    menu.Add(Button("Continue expedition", () =>
+                    if (credits)
                     {
-                        if (SaveSystem.Instance != null && SaveSystem.Instance.Load()) return;
-                        GameManager.Instance.SetState(GameState.ExpeditionActive);
-                    }));
-                    menu.Add(Button("New expedition", () => GameManager.Instance.RestartCurrentScene()));
+                        menu.Add(Title("CREDITS"));
+                        menu.Add(Body("Outpost Zero " + SceneRoute.Version));
+                        menu.Add(Body("A sanctuary, a street, and whoever is still on the board."));
+                        menu.Add(Button("Back", () => credits = false));
+                        break;
+                    }
+                    menu.Add(Title("OUTPOST ZERO"));
+                    menu.Add(Body("Version " + SceneRoute.Version));
+                    menu.Add(Button("Continue", () => Go(FlowStep.Sanctuary, () =>
+                    {
+                        if (SaveSystem.Instance == null || !SaveSystem.Instance.Load())
+                            GameManager.Instance.SetState(GameState.MainMenu);
+                    })));
+                    menu.Add(Button("New outpost", () => Go(FlowStep.Sanctuary, () => GameManager.Instance.BeginNewOutpost())));
                     menu.Add(Button(Loc.T("menu.settings"), () => SettingsService.Instance?.TogglePanel()));
-                    menu.Add(Button("Back to the street", () => GameManager.Instance.SetState(GameState.ExpeditionActive)));
+                    menu.Add(Button("Credits", () => credits = true));
+                    menu.Add(Button("Back to the street", () => Go(FlowStep.Expedition, () => GameManager.Instance.BeginExpedition())));
                     break;
             }
             menu.style.display = menu.childCount > 0 ? DisplayStyle.Flex : DisplayStyle.None;
@@ -429,7 +446,7 @@ namespace OutpostZero.UI
                     camp.Add(Button(mark + district.displayName, () => map.Select(id)));
                 }
             }
-            camp.Add(Button("Leave for the district", () => GameManager.Instance.BeginExpedition()));
+            camp.Add(Button("Leave for the district", () => Go(FlowStep.Expedition, () => GameManager.Instance.BeginExpedition())));
         }
 
         private void RebuildPack(bool open)
