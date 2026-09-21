@@ -19,9 +19,16 @@ namespace OutpostZero.EditorTools
             importer.materialImportMode = ModelImporterMaterialImportMode.ImportViaMaterialDescription;
             importer.importCameras = false;
             importer.importLights = false;
-            importer.animationType = assetPath.Contains("/Characters/")
+            bool character = assetPath.Contains("/Characters/");
+            importer.importAnimation = character;
+            importer.animationType = character
                 ? ModelImporterAnimationType.Generic
                 : ModelImporterAnimationType.None;
+            if (character)
+            {
+                importer.avatarSetup = ModelImporterAvatarSetup.CreateFromThisModel;
+                importer.animationCompression = ModelImporterAnimationCompression.Off;
+            }
         }
 
         private static void OnPostprocessAllAssets(string[] imported, string[] deleted, string[] moved, string[] movedFrom)
@@ -33,6 +40,7 @@ namespace OutpostZero.EditorTools
                 foreach (string path in imported)
                 {
                     if (!path.StartsWith("Assets/Models/") || !path.EndsWith(".fbx")) continue;
+                    if (path.Contains("/Characters/")) AssignCharacterClips(path);
                     string relative = path.Substring("Assets/Models/".Length);
                     string prefabPath = "Assets/Prefabs/" + Path.ChangeExtension(relative, ".prefab");
                     string directory = Path.GetDirectoryName(prefabPath);
@@ -62,6 +70,20 @@ namespace OutpostZero.EditorTools
             {
                 busy = false;
             }
+        }
+
+        private static void AssignCharacterClips(string path)
+        {
+            AnimationClip idle = null;
+            AnimationClip walk = null;
+            foreach (var asset in AssetDatabase.LoadAllAssetsAtPath(path))
+            {
+                var clip = asset as AnimationClip;
+                if (clip == null || clip.name.StartsWith("__preview")) continue;
+                if (clip.name.Contains("Idle")) idle = clip;
+                else if (clip.name.Contains("Walk")) walk = clip;
+            }
+            if (idle != null || walk != null) SurvivorAnimatorBuilder.AssignMotions(idle, walk);
         }
     }
 }

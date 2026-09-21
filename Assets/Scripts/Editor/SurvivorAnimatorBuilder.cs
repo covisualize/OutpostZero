@@ -10,7 +10,7 @@ namespace OutpostZero.EditorTools
     /// </summary>
     public static class SurvivorAnimatorBuilder
     {
-        public const string ControllerPath = "Assets/Animations/SurvivorLocomotion.controller";
+        public const string ControllerPath = "Assets/Resources/SurvivorLocomotion.controller";
 
         public static AnimatorController Build()
         {
@@ -47,11 +47,26 @@ namespace OutpostZero.EditorTools
             return controller;
         }
 
+        public static void AssignMotions(AnimationClip idle, AnimationClip walk)
+        {
+            var controller = Build();
+            var machine = controller.layers[0].stateMachine;
+            foreach (var child in machine.states)
+            {
+                if (child.state.name == "Idle" && idle != null) child.state.motion = idle;
+                if (child.state.name == "Walk" && walk != null) child.state.motion = walk;
+                if (child.state.name == "Sprint" && walk != null) child.state.motion = walk;
+                if (child.state.name == "Crouch" && idle != null) child.state.motion = idle;
+            }
+            EditorUtility.SetDirty(controller);
+            AssetDatabase.SaveAssets();
+        }
+
         private static void DirectoryEnsure()
         {
-            if (!AssetDatabase.IsValidFolder("Assets/Animations"))
+            if (!AssetDatabase.IsValidFolder("Assets/Resources"))
             {
-                AssetDatabase.CreateFolder("Assets", "Animations");
+                AssetDatabase.CreateFolder("Assets", "Resources");
             }
         }
     }

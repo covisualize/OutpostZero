@@ -3,8 +3,8 @@ using UnityEngine;
 namespace OutpostZero.Player
 {
     /// <summary>
-    /// Idle, walk, crouch, and sprint poses. The exported characters have no skeleton,
-    /// so the bob plays on a child mesh instead of the character controller root.
+    /// Idle, walk, crouch, and sprint. A rigged body uses the SurvivorLocomotion controller.
+    /// A mesh with no avatar falls back to a bob on the visual child, not the character root.
     /// </summary>
     public class SurvivorLocomotion : MonoBehaviour
     {
@@ -27,7 +27,13 @@ namespace OutpostZero.Player
         private void Awake()
         {
             controller = GetComponent<PlayerController>();
-            animator = GetComponent<Animator>();
+            animator = GetComponent<Animator>() ?? GetComponentInChildren<Animator>();
+            if (animator != null && animator.runtimeAnimatorController == null)
+            {
+                var controllerAsset = Resources.Load<RuntimeAnimatorController>("SurvivorLocomotion");
+                if (controllerAsset != null) animator.runtimeAnimatorController = controllerAsset;
+            }
+            if (animator != null && animator.runtimeAnimatorController != null) return;
             visual = FindVisual();
             if (visual == null) return;
             animationPlayer = visual.gameObject.GetComponent<Animation>() ?? visual.gameObject.AddComponent<Animation>();
