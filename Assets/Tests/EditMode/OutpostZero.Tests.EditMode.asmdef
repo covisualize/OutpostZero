@@ -1,0 +1,25 @@
+{
+    "name": "OutpostZero.Tests.EditMode",
+    "rootNamespace": "OutpostZero.Tests.EditMode",
+    "references": [
+        "OutpostZero",
+        "OutpostZero.Editor",
+        "UnityEngine.TestRunner",
+        "UnityEditor.TestRunner"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

@@ -28,8 +28,10 @@ namespace OutpostZero.Core
                 return;
             }
 
+            var gameplayScene = gameObject.scene;
             Instance = this;
             DontDestroyOnLoad(gameObject);
+            PlayabilityBootstrap.Apply(gameplayScene);
         }
 
         private void Update()

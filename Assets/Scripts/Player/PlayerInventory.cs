@@ -80,6 +80,46 @@ namespace OutpostZero.Player
             return true;
         }
 
+        public void AddMedicalKits(int amount)
+        {
+            if (amount <= 0) return;
+            medicalKits += amount;
+            RecalculateWeight();
+            OnInventoryChanged?.Invoke();
+        }
+
+        public bool TryCollect(LootKind kind, int amount)
+        {
+            switch (kind)
+            {
+                case LootKind.Medkit:
+                    AddMedicalKits(amount);
+                    return true;
+                case LootKind.Ammo9mm:
+                    return GrantAmmo(WeaponType.Pistol, amount);
+                case LootKind.AmmoShotgun:
+                    return GrantAmmo(WeaponType.Shotgun, amount);
+                case LootKind.Scrap:
+                    AddScrap(amount);
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
+        private bool GrantAmmo(WeaponType weaponType, int amount)
+        {
+            var guns = GetComponentsInChildren<Combat.FirearmWeapon>(true);
+            bool granted = false;
+            foreach (var gun in guns)
+            {
+                if (gun.Type != weaponType) continue;
+                gun.AddReserveAmmo(amount);
+                granted = true;
+            }
+            return granted;
+        }
+
         public void AddScrap(int amount)
         {
             scrapCount += amount;

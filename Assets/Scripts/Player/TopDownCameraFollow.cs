@@ -1,4 +1,5 @@
 using UnityEngine;
+using OutpostZero.Core;
 
 namespace OutpostZero.Player
 {
@@ -33,11 +34,19 @@ namespace OutpostZero.Player
             cam = GetComponent<Camera>();
         }
 
+        public void SetFollowTarget(Transform followTarget)
+        {
+            target = followTarget;
+            playerController = followTarget != null ? followTarget.GetComponent<PlayerController>() : null;
+        }
+
         private void Start()
         {
             if (target == null)
             {
-                var player = FindObjectOfType<PlayerController>();
+                var player = PlayerRegistry.Current != null
+                    ? PlayerRegistry.Current
+                    : FindFirstObjectByType<PlayerController>();
                 if (player != null)
                 {
                     target = player.transform;

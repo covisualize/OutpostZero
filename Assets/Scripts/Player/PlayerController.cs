@@ -44,6 +44,7 @@ namespace OutpostZero.Player
         // Components
         private CharacterController characterController;
         private HealthSystem healthSystem;
+        private PlayerInventory inventory;
         private Camera mainCamera;
 
         // State Flags
@@ -61,10 +62,29 @@ namespace OutpostZero.Player
         {
             characterController = GetComponent<CharacterController>();
             healthSystem = GetComponent<HealthSystem>();
+            inventory = GetComponent<PlayerInventory>();
             mainCamera = Camera.main;
             currentStamina = maxStamina;
 
             healthSystem.OnDeath += HandlePlayerDeath;
+            GameLayers.ApplyRecursively(gameObject, GameLayers.Player);
+        }
+
+        private void OnEnable()
+        {
+            PlayerRegistry.Register(this);
+        }
+
+        private void OnDisable()
+        {
+            PlayerRegistry.Unregister(this);
+        }
+
+        public void Configure(WeaponBase[] weapons, Light tacticalLight)
+        {
+            equippedWeapons = weapons;
+            flashlight = tacticalLight;
+            groundAimMask = GameLayers.EnvironmentMask | 1;
         }
 
         private void Start()
@@ -103,6 +123,14 @@ namespace OutpostZero.Player
             {
                 flashlightOn = !flashlightOn;
                 if (flashlight != null) flashlight.enabled = flashlightOn;
+            }
+
+            if (Input.GetKeyDown(KeyCode.Q))
+            {
+                if (inventory != null && inventory.UseMedkit())
+                {
+                    GameplayFeedback.Toast("Medkit used  +50 HP");
+                }
             }
 
             // Reload (R)

@@ -16,10 +16,17 @@ namespace OutpostZero.UI
         [Header("Acoustic Monitoring")]
         private float currentNoiseLevel = 0f;
         private float noiseDecaySpeed = 3.5f;
+        private string toastMessage;
+        private float toastUntil;
 
         private void Start()
         {
-            if (player == null) player = FindObjectOfType<PlayerController>();
+            if (player == null)
+            {
+                player = PlayerRegistry.Current != null
+                    ? PlayerRegistry.Current
+                    : FindFirstObjectByType<PlayerController>();
+            }
             if (player != null)
             {
                 playerHealth = player.GetComponent<HealthSystem>();
@@ -30,6 +37,24 @@ namespace OutpostZero.UI
             {
                 NoiseManager.Instance.OnNoiseEmitted += HandleNoiseEmitted;
             }
+
+            GameplayFeedback.OnToast += ShowToast;
+        }
+
+        public void Bind(PlayerController boundPlayer)
+        {
+            player = boundPlayer;
+            if (player != null)
+            {
+                playerHealth = player.GetComponent<HealthSystem>();
+                inventory = player.GetComponent<PlayerInventory>();
+            }
+        }
+
+        private void ShowToast(string message)
+        {
+            toastMessage = message;
+            toastUntil = Time.unscaledTime + 2.4f;
         }
 
         private void OnDestroy()
@@ -38,6 +63,8 @@ namespace OutpostZero.UI
             {
                 NoiseManager.Instance.OnNoiseEmitted -= HandleNoiseEmitted;
             }
+
+            GameplayFeedback.OnToast -= ShowToast;
         }
 
         private void Update()
@@ -62,6 +89,7 @@ namespace OutpostZero.UI
             DrawTopHUD();
             DrawBottomStatus();
             DrawNoiseIndicator();
+            DrawToast();
 
             if (GameManager.Instance != null && GameManager.Instance.CurrentState == GameState.SuccessionScreen)
             {
@@ -154,6 +182,15 @@ namespace OutpostZero.UI
             GUI.color = noiseColor;
             GUI.DrawTexture(new Rect(x, y, barWidth * currentNoiseLevel, barHeight), Texture2D.whiteTexture);
             GUI.color = Color.white;
+        }
+
+        private void DrawToast()
+        {
+            if (string.IsNullOrEmpty(toastMessage) || Time.unscaledTime > toastUntil) return;
+
+            float width = 420f;
+            Rect rect = new Rect((Screen.width - width) * 0.5f, Screen.height * 0.22f, width, 36f);
+            GUI.Box(rect, toastMessage);
         }
 
         private void DrawSuccessionScreen()

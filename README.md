@@ -7,9 +7,9 @@ A 3D top-down / isometric post-apocalyptic survival game built in Unity, combini
 ## Quick Start Guide
 
 ### 1. Open the Project in Unity
-- Open **Unity Hub** (or run `unity open C:\Users\User\.gemini\antigravity\scratch\OutpostZero`).
-- Select **Add Project from Disk** and select `C:\Users\User\.gemini\antigravity\scratch\OutpostZero`.
-- Use **Unity 6 LTS** or **Unity 2022.3+ LTS** with the Universal Render Pipeline (URP).
+- Open **Unity Hub** and add this repository from disk.
+- Use **Unity 6000.0.83f1** with the Universal Render Pipeline (URP).
+- Regenerate models with Blender 4.2 LTS. Commands are in `BlenderScripts/README.md`.
 
 ### 2. Generate the Prototype Sandbox (One-Click)
 1. Open a new scene (or default scene).
@@ -61,6 +61,23 @@ A 3D top-down / isometric post-apocalyptic survival game built in Unity, combini
    - Real-time Health, Stamina, Weapon Ammo/Reload status, Acoustic Noise Bar, and Scrap count.
 
 ---
+
+## Continuous integration
+
+GitHub Actions workflows:
+
+- `.github/workflows/unity-ci.yml` — EditMode tests, PlayMode smoke test, headless scene build, Linux player. Windows player builds run on version tags.
+- `.github/workflows/blender-assets.yml` — path tests plus a Blender 4.2 headless asset build.
+
+Repository secrets required for the Unity jobs:
+
+| Secret | Purpose |
+|---|---|
+| `UNITY_LICENSE` | Unity license file contents (or the license string GameCI expects) |
+| `UNITY_EMAIL` | Unity account email |
+| `UNITY_PASSWORD` | Unity account password |
+
+See [GameCI](https://game.ci/) for activating a personal or serial license. Without those secrets the Unity jobs cannot start; the Blender path tests do not need them.
 
 ## Roadmap Ahead
 

@@ -84,11 +84,13 @@ namespace OutpostZero.Sensory
                 {
                     // Check obstacle occlusion: sound attenuates through solid walls
                     float occlusionMultiplier = 1.0f;
-                    if (Physics.Linecast(origin, listener.Position, out RaycastHit hit))
+                    Vector3 from = origin + Vector3.up * 1.2f;
+                    Vector3 to = listener.Position + Vector3.up * 1.2f;
+                    if (Physics.Linecast(from, to, out RaycastHit hit, GameLayers.EnvironmentMask))
                     {
                         if (hit.collider.gameObject != source && hit.collider.gameObject != (listener as Component)?.gameObject)
                         {
-                            occlusionMultiplier = 0.45f; // Muffled by walls
+                            occlusionMultiplier = 0.45f;
                         }
                     }
 

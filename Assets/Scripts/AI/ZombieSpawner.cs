@@ -24,11 +24,38 @@ namespace OutpostZero.AI
         private readonly List<GameObject> activeZombies = new List<GameObject>();
         private float nextSpawnTime;
         private Transform playerTransform;
+        private ZombiePool pool;
+
+        public void Configure(GameObject prefab, GameObject[] variants, int initial, int maxAlive)
+        {
+            zombiePrefab = prefab;
+            zombiePrefabVariants = variants;
+            initialCount = initial;
+            maxAliveZombies = maxAlive;
+        }
+
+        private void Awake()
+        {
+            pool = GetComponent<ZombiePool>() ?? gameObject.AddComponent<ZombiePool>();
+        }
 
         private void Start()
         {
-            var player = FindObjectOfType<Player.PlayerController>();
+            var player = PlayerRegistry.Current;
             if (player != null) playerTransform = player.transform;
+
+            if (pool != null)
+            {
+                pool.OnReleased += HandleReleased;
+                pool.RememberPrefab(zombiePrefab);
+                if (zombiePrefabVariants != null)
+                {
+                    foreach (var variant in zombiePrefabVariants)
+                    {
+                        pool.RememberPrefab(variant);
+                    }
+                }
+            }
 
             SpawnInitialHorde();
 
@@ -40,16 +67,28 @@ namespace OutpostZero.AI
 
         private void OnDestroy()
         {
+            if (pool != null)
+            {
+                pool.OnReleased -= HandleReleased;
+            }
+
             if (NoiseManager.Instance != null)
             {
                 NoiseManager.Instance.OnNoiseEmitted -= HandleLoudNoiseAlert;
             }
         }
 
+        private void HandleReleased(GameObject zombie)
+        {
+            activeZombies.Remove(zombie);
+        }
+
         private void Update()
         {
-            // Prune dead/destroyed zombies
-            activeZombies.RemoveAll(z => z == null);
+            if (playerTransform == null && PlayerRegistry.Current != null)
+            {
+                playerTransform = PlayerRegistry.Current.transform;
+            }
 
             if (periodicSpawn && Time.time >= nextSpawnTime)
             {
@@ -92,7 +131,11 @@ namespace OutpostZero.AI
 
                 if (NavMesh.SamplePosition(candidatePos, out NavMeshHit hit, 5f, NavMesh.AllAreas))
                 {
-                    GameObject zombie = Instantiate(chosenPrefab, hit.position, Quaternion.Euler(0f, Random.Range(0f, 360f), 0f));
+                    Quaternion rotation = Quaternion.Euler(0f, Random.Range(0f, 360f), 0f);
+                    GameObject zombie = pool != null
+                        ? pool.Rent(chosenPrefab, hit.position, rotation)
+                        : Instantiate(chosenPrefab, hit.position, rotation);
+                    if (zombie == null) continue;
                     zombie.SetActive(true);
                     activeZombies.Add(zombie);
                 }

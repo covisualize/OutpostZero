@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7c1e0a2b4d6f4890a1b2c3d4e5f60718, type: 3}
+  m_Name: Pistol_9mm
+  m_EditorClassIdentifier: OutpostZero::OutpostZero.Core.WeaponDefinition
+  id: pistol_9mm
+  displayName: Tactical 9mm Pistol
+  weaponType: 1
+  baseDamage: 34
+  attackRate: 3.2
+  range: 25
+  spreadAngle: 2.5
+  projectilesPerShot: 1
+  maxMagazine: 12
+  reserveAmmo: 60
+  reloadDuration: 1.8
+  noiseRadius: 20
+  noiseIntensity: 1
+  noiseType: 4
+  staminaCost: 0
+  isMelee: 0
+  modelPath: Assets/Models/Weapons/Weapon_Pistol_9mm.fbx
