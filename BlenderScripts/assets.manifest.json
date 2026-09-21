@@ -2,6 +2,8 @@
   "blender": "4.2.11",
   "axis": { "forward": "-Z", "up": "Y" },
   "export": "FBX_MESH",
+  "textures": ["Albedo", "Normal", "AO", "Mask", "Icon"],
+  "textureSize": 128,
   "categories": ["Characters", "Weapons", "Environment", "Props", "BaseBuilding"],
   "assets": [
     "Assets/Models/Props/Prop_StreetLamp.fbx",

@@ -41,6 +41,7 @@ namespace OutpostZero.EditorTools
                 {
                     if (!path.StartsWith("Assets/Models/") || !path.EndsWith(".fbx")) continue;
                     if (path.Contains("/Characters/")) AssignCharacterClips(path);
+                    var baked = EnsureSurfaceMaterial(path);
                     string relative = path.Substring("Assets/Models/".Length);
                     string prefabPath = "Assets/Prefabs/" + Path.ChangeExtension(relative, ".prefab");
                     string directory = Path.GetDirectoryName(prefabPath);
@@ -50,6 +51,11 @@ namespace OutpostZero.EditorTools
                     var source = AssetDatabase.LoadAssetAtPath<GameObject>(path);
                     if (source == null) continue;
                     var instance = (GameObject)PrefabUtility.InstantiatePrefab(source);
+                    if (baked != null)
+                    {
+                        foreach (var renderer in instance.GetComponentsInChildren<Renderer>())
+                            renderer.sharedMaterial = baked;
+                    }
                     if (instance.GetComponentInChildren<Collider>() == null)
                     {
                         var box = instance.AddComponent<BoxCollider>();
@@ -70,6 +76,36 @@ namespace OutpostZero.EditorTools
             {
                 busy = false;
             }
+        }
+
+        private static Material EnsureSurfaceMaterial(string fbxPath)
+        {
+            string directory = Path.GetDirectoryName(fbxPath)?.Replace('\\', '/');
+            string stem = Path.GetFileNameWithoutExtension(fbxPath);
+            var albedo = AssetDatabase.LoadAssetAtPath<Texture2D>(directory + "/" + stem + "_Albedo.png");
+            var normal = AssetDatabase.LoadAssetAtPath<Texture2D>(directory + "/" + stem + "_Normal.png");
+            var occlusion = AssetDatabase.LoadAssetAtPath<Texture2D>(directory + "/" + stem + "_AO.png");
+            var mask = AssetDatabase.LoadAssetAtPath<Texture2D>(directory + "/" + stem + "_Mask.png");
+            if (albedo == null) return null;
+            var shader = Shader.Find("OutpostZero/TriplanarRim");
+            if (shader == null) return null;
+            const string folder = "Assets/Materials/Baked";
+            Directory.CreateDirectory(folder);
+            string materialPath = folder + "/" + stem + ".mat";
+            var material = AssetDatabase.LoadAssetAtPath<Material>(materialPath);
+            if (material == null)
+            {
+                material = new Material(shader) { name = stem };
+                AssetDatabase.CreateAsset(material, materialPath);
+            }
+            material.shader = shader;
+            material.SetTexture("_BaseMap", albedo);
+            material.SetTexture("_BumpMap", normal);
+            material.SetTexture("_OcclusionMap", occlusion);
+            material.SetTexture("_MaskMap", mask);
+            material.SetFloat("_HasMaps", 1f);
+            EditorUtility.SetDirty(material);
+            return material;
         }
 
         private static void AssignCharacterClips(string path)

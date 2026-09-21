@@ -16,7 +16,10 @@ namespace OutpostZero.Graphics
             {
                 if (renderer == null) continue;
                 string name = renderer.gameObject.name;
-                if (triplanar != null && (name.Contains("Zombie") || name.Contains("Ground") || name.Contains("Barrel") || name.Contains("Road")))
+                bool mapped = renderer.sharedMaterial != null
+                    && renderer.sharedMaterial.HasProperty("_HasMaps")
+                    && renderer.sharedMaterial.GetFloat("_HasMaps") > 0.5f;
+                if (!mapped && triplanar != null && (name.Contains("Zombie") || name.Contains("Ground") || name.Contains("Barrel") || name.Contains("Road")))
                 {
                     renderer.sharedMaterial = triplanar;
                 }

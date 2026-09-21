@@ -9,6 +9,11 @@ Shader "OutpostZero/TriplanarRim"
         _Dissolve ("Dissolve", Range(0, 1)) = 0
         _Wetness ("Wetness", Range(0, 1)) = 0
         _Metallic ("Metallic", Range(0, 1)) = 0.05
+        _HasMaps ("Has Maps", Float) = 0
+        _BaseMap ("Albedo", 2D) = "white" {}
+        _BumpMap ("Normal", 2D) = "bump" {}
+        _OcclusionMap ("Occlusion", 2D) = "white" {}
+        _MaskMap ("Mask", 2D) = "black" {}
     }
 
     SubShader
@@ -28,6 +33,7 @@ Shader "OutpostZero/TriplanarRim"
             {
                 float4 positionOS : POSITION;
                 float3 normalOS : NORMAL;
+                float2 uv : TEXCOORD0;
             };
 
             struct Varyings
@@ -35,6 +41,7 @@ Shader "OutpostZero/TriplanarRim"
                 float4 positionCS : SV_POSITION;
                 float3 positionWS : TEXCOORD0;
                 float3 normalWS : TEXCOORD1;
+                float2 uv : TEXCOORD2;
             };
 
             CBUFFER_START(UnityPerMaterial)
@@ -45,7 +52,17 @@ Shader "OutpostZero/TriplanarRim"
                 float _Dissolve;
                 float _Wetness;
                 float _Metallic;
+                float _HasMaps;
             CBUFFER_END
+
+            TEXTURE2D(_BaseMap);
+            SAMPLER(sampler_BaseMap);
+            TEXTURE2D(_BumpMap);
+            SAMPLER(sampler_BumpMap);
+            TEXTURE2D(_OcclusionMap);
+            SAMPLER(sampler_OcclusionMap);
+            TEXTURE2D(_MaskMap);
+            SAMPLER(sampler_MaskMap);
 
             float Hash(float3 p)
             {
@@ -82,6 +99,7 @@ Shader "OutpostZero/TriplanarRim"
                 output.positionCS = pos.positionCS;
                 output.positionWS = pos.positionWS;
                 output.normalWS = TransformObjectToWorldNormal(input.normalOS);
+                output.uv = input.uv;
                 return output;
             }
 
@@ -94,7 +112,21 @@ Shader "OutpostZero/TriplanarRim"
                 float rim = pow(1.0 - saturate(dot(normal, view)), _RimPower);
                 Light mainLight = GetMainLight();
                 float ndotl = saturate(dot(normal, mainLight.direction));
-                float3 color = _BaseColor.rgb * (0.25 + ndotl) * lerp(0.85, 1.15, noise);
+                float3 albedo = _BaseColor.rgb;
+                float metallic = _Metallic;
+                float3 emissive = 0;
+                if (_HasMaps > 0.5)
+                {
+                    albedo = SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, input.uv).rgb;
+                    float occlusion = SAMPLE_TEXTURE2D(_OcclusionMap, sampler_OcclusionMap, input.uv).r;
+                    albedo *= lerp(1.0, occlusion, 0.85);
+                    float3 bump = SAMPLE_TEXTURE2D(_BumpMap, sampler_BumpMap, input.uv).rgb * 2.0 - 1.0;
+                    ndotl = saturate(ndotl + bump.x * 0.35);
+                    float4 mask = SAMPLE_TEXTURE2D(_MaskMap, sampler_MaskMap, input.uv);
+                    metallic = mask.r;
+                    emissive = mask.b * albedo;
+                }
+                float3 color = albedo * (0.25 + ndotl) * lerp(0.85, 1.15, noise);
                 float grime = saturate(1.15 - input.positionWS.y * 0.18);
                 color *= lerp(1.0, 0.7, grime * 0.4);
                 float wet = _Wetness * saturate(normal.y);
@@ -103,7 +135,8 @@ Shader "OutpostZero/TriplanarRim"
                 float spec = pow(saturate(dot(reflectDir, view)), 28.0) * wet;
                 color += spec * mainLight.color.rgb * 0.4;
                 color = lerp(color, _RimColor.rgb, rim * _RimColor.a);
-                color = lerp(color, color * mainLight.color.rgb, _Metallic);
+                color = lerp(color, color * mainLight.color.rgb, metallic);
+                color += emissive;
                 return half4(color, 1);
             }
             ENDHLSL

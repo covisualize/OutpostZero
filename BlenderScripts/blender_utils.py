@@ -237,4 +237,6 @@ def export_fbx(output_filepath, animated=False):
         bake_anim_use_nla_strips=False,
         bake_anim_simplify_factor=0.0,
     )
+    from texture_set import write_set
+    write_set(output_filepath)
     print(f"[Blender] Successfully exported: {output_filepath}")
