@@ -2,6 +2,7 @@ using NUnit.Framework;
 using OutpostZero.AI;
 using OutpostZero.Graphics;
 using OutpostZero.Items;
+using OutpostZero.Player;
 using OutpostZero.Shell;
 
 namespace OutpostZero.Tests.EditMode
@@ -48,6 +49,7 @@ namespace OutpostZero.Tests.EditMode
             Assert.AreEqual("mara", loaded.survivors[0].id);
             Assert.IsFalse(loaded.survivors[0].alive);
             Assert.AreEqual("Barricade", loaded.modules[0].kind);
+            Assert.AreEqual(100, loaded.modules[0].integrity);
         }
 
         [Test]
@@ -79,6 +81,27 @@ namespace OutpostZero.Tests.EditMode
         {
             Assert.AreEqual("PAUSED", Loc.T("menu.pause"));
             Assert.AreEqual("missing.key", Loc.T("missing.key"));
+        }
+
+        [Test]
+        public void KeyRebindRejectsADuplicateAndRoundTrips()
+        {
+            ControlBindings.ResetDefaults();
+            try
+            {
+                Assert.AreEqual("E", ControlBindings.Label(ControlBindings.Action.Interact));
+                Assert.IsTrue(ControlBindings.TryRebindNamed(ControlBindings.Action.Interact, "H"));
+                Assert.IsFalse(ControlBindings.TryRebindNamed(ControlBindings.Action.Reload, "H"));
+                string packed = ControlBindings.Pack();
+                ControlBindings.ResetDefaults();
+                Assert.AreEqual("E", ControlBindings.Label(ControlBindings.Action.Interact));
+                ControlBindings.Unpack(packed);
+                Assert.AreEqual("H", ControlBindings.Label(ControlBindings.Action.Interact));
+            }
+            finally
+            {
+                ControlBindings.ResetDefaults();
+            }
         }
 
         [Test]

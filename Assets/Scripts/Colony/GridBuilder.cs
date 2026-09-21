@@ -21,6 +21,7 @@ namespace OutpostZero.Colony
         public float x;
         public float z;
         public int rotation;
+        public int integrity = 100;
     }
 
     public class GridBuilder : MonoBehaviour
@@ -89,7 +90,7 @@ namespace OutpostZero.Colony
 
             float x = Mathf.Round(world.x / cell) * cell;
             float z = Mathf.Round(world.z / cell) * cell;
-            var record = new PlacedModule { kind = kind.ToString(), x = x, z = z, rotation = 0 };
+            var record = new PlacedModule { kind = kind.ToString(), x = x, z = z, rotation = 0, integrity = 100 };
             placed.Add(record);
             SpawnView(record);
             GameplayFeedback.Toast("Placed " + kind);
@@ -115,7 +116,7 @@ namespace OutpostZero.Colony
             view.name = "Module_" + module.kind;
             view.transform.position = new Vector3(module.x, 0.6f, module.z);
             view.transform.rotation = Quaternion.Euler(0f, module.rotation, 0f);
-            view.transform.localScale = Scale(module.kind);
+            view.transform.localScale = Scale(module.kind, module.integrity);
             var renderer = view.GetComponent<Renderer>();
             if (renderer != null)
             {
@@ -136,6 +137,49 @@ namespace OutpostZero.Colony
             views.Clear();
         }
 
+        public bool StrikeBarricade(int amount)
+        {
+            PlacedModule target = null;
+            float best = float.MaxValue;
+            foreach (var module in placed)
+            {
+                if (module.kind != "Barricade" || module.integrity <= 0) continue;
+                float dx = module.x + 12f;
+                float dz = module.z + 12f;
+                float distance = dx * dx + dz * dz;
+                if (distance >= best) continue;
+                best = distance;
+                target = module;
+            }
+            if (target == null) return false;
+            target.integrity = Mathf.Max(0, target.integrity - Mathf.Max(1, amount));
+            if (target.integrity > 0)
+            {
+                RefreshViews();
+                return false;
+            }
+            placed.Remove(target);
+            RefreshViews();
+            GameplayFeedback.Toast("A barricade gave way");
+            return true;
+        }
+
+        public int BarricadeCount()
+        {
+            int count = 0;
+            foreach (var module in placed)
+            {
+                if (module.kind == "Barricade" && module.integrity > 0) count++;
+            }
+            return count;
+        }
+
+        private void RefreshViews()
+        {
+            var copy = placed.ToArray();
+            Restore(copy);
+        }
+
         public static int Cost(ModuleKind kind)
         {
             switch (kind)
@@ -148,14 +192,15 @@ namespace OutpostZero.Colony
             }
         }
 
-        private static Vector3 Scale(string kind)
+        private static Vector3 Scale(string kind, int integrity)
         {
+            float health = Mathf.Clamp01((integrity <= 0 ? 100 : integrity) / 100f);
             switch (kind)
             {
                 case "Cot": return new Vector3(1.4f, 0.4f, 0.7f);
                 case "Water": return new Vector3(0.8f, 1.1f, 0.8f);
                 case "Watchtower": return new Vector3(1.2f, 2.4f, 1.2f);
-                default: return new Vector3(1.8f, 1.1f, 0.4f);
+                default: return new Vector3(1.8f * health, 1.1f * Mathf.Lerp(0.35f, 1f, health), 0.4f);
             }
         }
 

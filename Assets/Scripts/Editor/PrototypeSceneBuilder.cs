@@ -34,6 +34,7 @@ namespace OutpostZero.EditorTools
 
             // 0. Ensure URP Pipeline Asset & Settings
             EnsureURPPipelineConfigured();
+            RendererFeatureSetup.EnsureDecals();
             missingModels = 0;
             DefaultDataGenerator.Generate();
             SurvivorAnimatorBuilder.Build();
@@ -73,6 +74,7 @@ namespace OutpostZero.EditorTools
             Debug.Log("[Outpost Zero] Starting headless batch scene build...");
 
             EnsureURPPipelineConfigured();
+            RendererFeatureSetup.EnsureDecals();
             missingModels = 0;
             DefaultDataGenerator.Generate();
             SurvivorAnimatorBuilder.Build();

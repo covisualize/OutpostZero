@@ -10,6 +10,7 @@ namespace OutpostZero.Colony
 
         [SerializeField] private float duration = 75f;
         private float endsAt;
+        private float nextStrike;
         private bool running;
 
         public bool Running => running;
@@ -30,6 +31,7 @@ namespace OutpostZero.Colony
             if (GameManager.Instance == null) return;
             running = true;
             endsAt = Time.time + duration;
+            nextStrike = Time.time + 1.2f;
             GameManager.Instance.SetState(GameState.RaidActive);
             if (HordeDirector.Instance != null) HordeDirector.Instance.BeginRaid();
             GameplayFeedback.Toast("Night raid — hold the gate");
@@ -42,6 +44,23 @@ namespace OutpostZero.Colony
             {
                 running = false;
                 return;
+            }
+            if (Time.time >= nextStrike)
+            {
+                nextStrike = Time.time + 1.2f;
+                int guards = 0;
+                if (SurvivorRoster.Instance != null)
+                {
+                    foreach (var survivor in SurvivorRoster.Instance.Survivors)
+                    {
+                        if (survivor.alive && survivor.task == "Guard") guards++;
+                    }
+                }
+                int hit = Mathf.Max(2, 9 - guards * 3);
+                if (GridBuilder.Instance != null && GridBuilder.Instance.BarricadeCount() > 0)
+                {
+                    GridBuilder.Instance.StrikeBarricade(hit);
+                }
             }
             if (Time.time < endsAt) return;
             running = false;

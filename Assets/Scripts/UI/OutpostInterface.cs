@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.UIElements;
 using OutpostZero.AI;
 using OutpostZero.Colony;
@@ -36,6 +37,22 @@ namespace OutpostZero.UI
         private string campKey = "";
         private string packKey = "";
         private readonly List<Label> popups = new List<Label>();
+        private int listening = -1;
+
+        private void Update()
+        {
+            if (listening < 0 || Keyboard.current == null) return;
+            foreach (Key key in (Key[])System.Enum.GetValues(typeof(Key)))
+            {
+                if (key == Key.None) continue;
+                var control = Keyboard.current[key];
+                if (control == null || !control.wasPressedThisFrame) continue;
+                if (key != Key.Escape) ControlBindings.TryRebind((ControlBindings.Action)listening, key);
+                listening = -1;
+                menuKey = "";
+                return;
+            }
+        }
 
         private void Start()
         {
@@ -201,7 +218,8 @@ namespace OutpostZero.UI
             bool settings = SettingsService.Instance != null && SettingsService.Instance.ShowSettings;
             bool trade = FactionTrade.Instance != null && FactionTrade.Instance.Open;
             string language = SettingsService.Instance != null ? SettingsService.Instance.Language : "en";
-            string nextMenu = state + "|" + settings + "|" + trade + "|" + language;
+            string discrete = SettingsService.Instance != null ? SettingsService.Instance.DiscreteKey : "";
+            string nextMenu = state + "|" + settings + "|" + trade + "|" + language + "|" + discrete + "|" + ControlBindings.Signature() + "|" + listening;
             if (nextMenu != menuKey)
             {
                 menuKey = nextMenu;
@@ -302,10 +320,30 @@ namespace OutpostZero.UI
             parent.Add(Title("SETTINGS"));
             parent.Add(SliderRow("Shake", settings.ScreenShake, settings.SetShake));
             parent.Add(SliderRow("Volume", settings.MasterVolume, settings.SetVolume));
+            parent.Add(SliderRow("Effects", settings.SfxVolume, settings.SetSfx));
+            parent.Add(SliderRow("Music", settings.MusicVolume, settings.SetMusic));
+            parent.Add(SliderRow("Field of view", settings.FieldOfView, 40f, 75f, settings.SetFieldOfView));
             parent.Add(SliderRow("Text", settings.TextScale, 0.8f, 1.6f, settings.SetTextScale));
             parent.Add(Button(settings.Subtitles ? "Subtitles on" : "Subtitles off", () => settings.SetSubtitles(!settings.Subtitles)));
             parent.Add(Button("Colorblind mode " + settings.ColorblindMode, settings.CycleColorblind));
             parent.Add(Button(settings.Language == "es" ? "Idioma: ES" : "Language: EN", () => settings.SetLanguage(settings.Language == "es" ? "en" : "es")));
+            string[] tiers = { "Low", "Medium", "High" };
+            parent.Add(Button("Quality: " + tiers[Mathf.Clamp(settings.Quality, 0, 2)], settings.CycleQuality));
+            parent.Add(Button(settings.VSync ? "VSync on" : "VSync off", settings.ToggleVSync));
+            parent.Add(Body("Click an action, then press a key. Escape cancels."));
+            for (int i = 0; i < ControlBindings.Count; i++)
+            {
+                var action = (ControlBindings.Action)i;
+                int index = i;
+                string caption = listening == index ? "Press a key for " + action : action + ": " + ControlBindings.Label(action);
+                parent.Add(Button(caption, () => listening = index));
+            }
+            parent.Add(Button("Reset keys", () =>
+            {
+                ControlBindings.ResetDefaults();
+                listening = -1;
+                menuKey = "";
+            }));
             parent.Add(Button("Close", settings.TogglePanel));
             parent.style.display = DisplayStyle.Flex;
         }

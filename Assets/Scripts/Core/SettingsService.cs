@@ -14,13 +14,24 @@ namespace OutpostZero.Core
         [SerializeField] private bool subtitles = true;
         [SerializeField] private int colorblindMode;
         [SerializeField] private string language = "en";
+        [SerializeField] private float sfxVolume = 1f;
+        [SerializeField] private float musicVolume = 0.7f;
+        [SerializeField] private int quality = 1;
+        [SerializeField] private int vsync = 1;
+        [SerializeField] private float fieldOfView = 55f;
 
         public float ScreenShake => screenShake;
         public float MasterVolume => masterVolume;
+        public float SfxVolume => sfxVolume;
+        public float MusicVolume => musicVolume;
         public float TextScale => textScale;
         public bool Subtitles => subtitles;
         public int ColorblindMode => colorblindMode;
         public string Language => language;
+        public int Quality => quality;
+        public bool VSync => vsync != 0;
+        public float FieldOfView => fieldOfView;
+        public string DiscreteKey => (subtitles ? "1" : "0") + colorblindMode + quality + vsync;
         public bool ShowSettings { get; private set; }
 
         public event Action OnChanged;
@@ -34,6 +45,7 @@ namespace OutpostZero.Core
             }
             Instance = this;
             ApplyVolume();
+            ApplyDisplay();
         }
 
         public void SetShake(float value)
@@ -73,6 +85,38 @@ namespace OutpostZero.Core
             OnChanged?.Invoke();
         }
 
+        public void SetSfx(float value)
+        {
+            sfxVolume = Mathf.Clamp01(value);
+            OnChanged?.Invoke();
+        }
+
+        public void SetMusic(float value)
+        {
+            musicVolume = Mathf.Clamp01(value);
+            OnChanged?.Invoke();
+        }
+
+        public void SetFieldOfView(float value)
+        {
+            fieldOfView = Mathf.Clamp(value, 40f, 75f);
+            OnChanged?.Invoke();
+        }
+
+        public void CycleQuality()
+        {
+            quality = (quality + 1) % 3;
+            ApplyDisplay();
+            OnChanged?.Invoke();
+        }
+
+        public void ToggleVSync()
+        {
+            vsync = vsync == 0 ? 1 : 0;
+            ApplyDisplay();
+            OnChanged?.Invoke();
+        }
+
         public void TogglePanel() => ShowSettings = !ShowSettings;
 
         public void ApplySnapshot(float shake, float volume, float scale, bool captions, string lang)
@@ -86,9 +130,28 @@ namespace OutpostZero.Core
             OnChanged?.Invoke();
         }
 
+        public void ApplyPresentation(float sfx, float music, int tier, int sync, float fov, string bindings)
+        {
+            sfxVolume = Mathf.Clamp01(sfx <= 0f ? 1f : sfx);
+            musicVolume = Mathf.Clamp01(music <= 0f ? 0.7f : music);
+            quality = Mathf.Clamp(tier, 0, 2);
+            vsync = sync == 0 ? 0 : 1;
+            fieldOfView = Mathf.Clamp(fov < 40f ? 55f : fov, 40f, 75f);
+            OutpostZero.Player.ControlBindings.Unpack(bindings);
+            ApplyVolume();
+            ApplyDisplay();
+            OnChanged?.Invoke();
+        }
+
         private void ApplyVolume()
         {
             AudioListener.volume = masterVolume;
+        }
+
+        private void ApplyDisplay()
+        {
+            QualitySettings.vSyncCount = vsync;
+            Application.targetFrameRate = vsync == 0 ? 60 : -1;
         }
     }
 }

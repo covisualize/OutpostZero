@@ -1,7 +1,9 @@
 using System.Collections.Generic;
 using UnityEngine;
+using OutpostZero.AI;
 using OutpostZero.Combat;
 using OutpostZero.Core;
+using OutpostZero.Player;
 using OutpostZero.Sensory;
 
 namespace OutpostZero.Shell
@@ -17,6 +19,8 @@ namespace OutpostZero.Shell
         private readonly List<AudioSource> pool = new List<AudioSource>();
         private AudioSource ambient;
         private NoiseManager subscribedNoise;
+        private float nextStep;
+        private bool peaked;
 
         private void Awake()
         {
@@ -52,17 +56,55 @@ namespace OutpostZero.Shell
         private void Update()
         {
             var noise = NoiseManager.Instance;
-            if (noise == subscribedNoise) return;
-            if (subscribedNoise != null) subscribedNoise.OnNoiseEmitted -= OnNoise;
-            subscribedNoise = noise;
-            if (subscribedNoise != null) subscribedNoise.OnNoiseEmitted += OnNoise;
+            if (noise != subscribedNoise)
+            {
+                if (subscribedNoise != null) subscribedNoise.OnNoiseEmitted -= OnNoise;
+                subscribedNoise = noise;
+                if (subscribedNoise != null) subscribedNoise.OnNoiseEmitted += OnNoise;
+            }
+
+            float tension = HordeDirector.Instance != null ? HordeDirector.Instance.Tension : 0f;
+            float music = SettingsService.Instance != null ? SettingsService.Instance.MusicVolume : 0.7f;
+            ambient.volume = music * (0.08f + tension / 500f);
+            ambient.pitch = Mathf.Lerp(0.82f, 1.35f, tension / 100f);
+            if (tension >= 75f && !peaked)
+            {
+                peaked = true;
+                Play("pulse", 0.35f);
+            }
+            else if (tension < 40f)
+            {
+                peaked = false;
+            }
+            Step();
         }
 
         public void Play(string id, float volume = 1f)
         {
             var source = Rent();
             source.pitch = Random.Range(0.94f, 1.06f);
-            source.PlayOneShot(GetClip(id), volume * (SettingsService.Instance != null ? SettingsService.Instance.MasterVolume : 1f));
+            float sfx = SettingsService.Instance != null ? SettingsService.Instance.SfxVolume : 1f;
+            source.PlayOneShot(GetClip(id), volume * sfx);
+        }
+
+        private void Step()
+        {
+            var player = PlayerRegistry.Current;
+            if (player == null) return;
+            var body = player.GetComponent<CharacterController>();
+            if (body == null || body.velocity.magnitude < 0.8f) return;
+            if (Time.time < nextStep) return;
+            float interval = player.IsSprinting ? 0.28f : player.IsCrouching ? 0.55f : 0.42f;
+            nextStep = Time.time + interval;
+            bool road = false;
+            if (Physics.Raycast(player.transform.position + Vector3.up, Vector3.down, out var hit, 2.2f, GameLayers.VisionOcclusionMask, QueryTriggerInteraction.Ignore))
+            {
+                road = hit.collider.name.Contains("Road") || hit.collider.name.Contains("Street");
+            }
+            var source = Rent();
+            source.pitch = road ? Random.Range(1.05f, 1.2f) : Random.Range(0.85f, 1f);
+            float sfx = SettingsService.Instance != null ? SettingsService.Instance.SfxVolume : 1f;
+            source.PlayOneShot(GetClip(road ? "step_hard" : "step"), (player.IsCrouching ? 0.12f : 0.28f) * sfx);
         }
 
         private void OnShot(Vector3 muzzle, WeaponBase weapon)
@@ -107,7 +149,7 @@ namespace OutpostZero.Shell
                 float t = i / (float)samples;
                 float noise = (float)(random.NextDouble() * 2.0 - 1.0);
                 float envelope = id == "ambient" ? 0.25f : Mathf.Exp(-t * (id == "boom" ? 4f : 10f));
-                float tone = id == "scream" ? Mathf.Sin(t * 90f) : id == "ui" ? Mathf.Sin(t * 40f) : noise;
+                float tone = id == "scream" ? Mathf.Sin(t * 90f) : id == "pulse" ? Mathf.Sin(t * 28f) : id == "step" || id == "step_hard" ? noise * Mathf.Sin(t * 18f) : id == "ui" ? Mathf.Sin(t * 40f) : noise;
                 data[i] = tone * envelope * (id == "ambient" ? 0.2f : 0.6f);
             }
             clip = AudioClip.Create(id, samples, 1, rate, false);

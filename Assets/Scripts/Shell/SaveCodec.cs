@@ -22,6 +22,7 @@ namespace OutpostZero.Shell
         public float x;
         public float z;
         public int rotation;
+        public int integrity = 100;
     }
 
     [Serializable]
@@ -36,6 +37,12 @@ namespace OutpostZero.Shell
         public int kills;
         public int districtsCleared;
         public int districtIndex;
+        public float sfxVolume = 1f;
+        public float musicVolume = 0.7f;
+        public int quality = 1;
+        public int vsync = 1;
+        public float fieldOfView = 55f;
+        public string bindings = "";
         public int factionStanding;
         public bool tutorialDone;
         public string language = "en";

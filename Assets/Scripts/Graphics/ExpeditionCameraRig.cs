@@ -46,9 +46,10 @@ namespace OutpostZero.Graphics
                 virtualCamera.LookAt = virtualCamera.Follow;
             }
 
-            Vector3 offset = new Vector3(0f, 16f, -11f);
+            bool camp = GameManager.Instance != null && GameManager.Instance.CurrentState == GameState.CampManagement;
+            Vector3 offset = camp ? new Vector3(0f, 26f, -18f) : new Vector3(0f, 16f, -11f);
             var player = PlayerRegistry.Current;
-            if (player != null && Camera.main != null)
+            if (player != null && Camera.main != null && !camp)
             {
                 Ray ray = Camera.main.ScreenPointToRay(ExpeditionInput.Pointer);
                 var plane = new Plane(Vector3.up, player.transform.position);
@@ -59,9 +60,16 @@ namespace OutpostZero.Graphics
                     lead = Vector3.ClampMagnitude(lead * 0.15f, 4.5f);
                     offset += lead;
                 }
-                float fov = player.IsAimingDownSights ? 42f : 55f;
+                float wide = SettingsService.Instance != null ? SettingsService.Instance.FieldOfView : 55f;
+                float fov = player.IsAimingDownSights ? wide - 13f : wide;
                 var lens = virtualCamera.Lens;
                 lens.FieldOfView = Mathf.Lerp(lens.FieldOfView, fov, 4f * Time.deltaTime);
+                virtualCamera.Lens = lens;
+            }
+            else if (camp)
+            {
+                var lens = virtualCamera.Lens;
+                lens.FieldOfView = Mathf.Lerp(lens.FieldOfView, 62f, 4f * Time.deltaTime);
                 virtualCamera.Lens = lens;
             }
 

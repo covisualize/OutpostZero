@@ -1,12 +1,17 @@
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
+using OutpostZero.Core;
 
 namespace OutpostZero.Graphics
 {
     public class PostFxRig : MonoBehaviour
     {
         private Volume volume;
+        private Bloom bloom;
+        private Vignette vignette;
+        private FilmGrain grain;
+        private DepthOfField depth;
 
         private void Start()
         {
@@ -16,12 +21,12 @@ namespace OutpostZero.Graphics
             var profile = ScriptableObject.CreateInstance<VolumeProfile>();
             volume.sharedProfile = profile;
 
-            var bloom = profile.Add<Bloom>();
+            bloom = profile.Add<Bloom>();
             bloom.active = true;
             bloom.intensity.Override(0.35f);
             bloom.threshold.Override(1.1f);
 
-            var vignette = profile.Add<Vignette>();
+            vignette = profile.Add<Vignette>();
             vignette.active = true;
             vignette.intensity.Override(0.28f);
             vignette.smoothness.Override(0.4f);
@@ -35,6 +40,34 @@ namespace OutpostZero.Graphics
             color.postExposure.Override(0.15f);
             color.contrast.Override(12f);
             color.colorFilter.Override(new Color(1f, 0.96f, 0.9f));
+
+            grain = profile.Add<FilmGrain>();
+            grain.active = false;
+            grain.intensity.Override(0.18f);
+            grain.type.Override(FilmGrainLookup.Medium1);
+
+            depth = profile.Add<DepthOfField>();
+            depth.active = false;
+            depth.mode.Override(DepthOfFieldMode.Gaussian);
+            depth.gaussianStart.Override(6f);
+            depth.gaussianEnd.Override(18f);
+            ApplyTier(1, false);
+        }
+
+        private void Update()
+        {
+            int tier = SettingsService.Instance != null ? SettingsService.Instance.Quality : 1;
+            bool aiming = PlayerRegistry.Current != null && PlayerRegistry.Current.IsAimingDownSights;
+            ApplyTier(tier, aiming);
+        }
+
+        private void ApplyTier(int tier, bool aiming)
+        {
+            if (bloom == null) return;
+            bloom.intensity.Override(tier == 0 ? 0.12f : tier == 2 ? 0.55f : 0.35f);
+            vignette.intensity.Override(tier == 0 ? 0.16f : 0.28f);
+            grain.active = tier == 2;
+            depth.active = aiming && tier > 0;
         }
     }
 }

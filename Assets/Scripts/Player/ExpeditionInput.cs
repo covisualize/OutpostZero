@@ -81,17 +81,17 @@ namespace OutpostZero.Player
                 return Mouse.current != null ? Mouse.current.rightButton.isPressed : Input.GetMouseButton(1);
             }
         }
-        public static bool PausePressed => Pressed(Key.Escape) || PadDown(pad => pad.startButton.wasPressedThisFrame);
-        public static bool ReloadPressed => Pressed(Key.R) || PadDown(pad => pad.buttonWest.wasPressedThisFrame);
-        public static bool InteractPressed => Pressed(Key.E) || PadDown(pad => pad.buttonSouth.wasPressedThisFrame);
-        public static bool MedkitPressed => Pressed(Key.Q) || PadDown(pad => pad.buttonNorth.wasPressedThisFrame);
-        public static bool FlashlightPressed => Pressed(Key.F) || PadDown(pad => pad.dpadUp.wasPressedThisFrame);
-        public static bool CrouchHeld => Held(Key.C) || Held(Key.LeftCtrl) || PadHeld(pad => pad.rightStickButton.isPressed);
-        public static bool SprintHeld => Held(Key.LeftShift) || PadHeld(pad => pad.leftStickButton.isPressed);
-        public static bool InventoryPressed => Pressed(Key.Tab) || Pressed(Key.I) || PadDown(pad => pad.selectButton.wasPressedThisFrame);
-        public static bool ThrowPressed => Pressed(Key.G) || PadDown(pad => pad.buttonEast.wasPressedThisFrame);
-        public static bool TakedownPressed => Pressed(Key.V);
-        public static bool BuildPressed => Pressed(Key.B) || PadDown(pad => pad.dpadDown.wasPressedThisFrame);
+        public static bool PausePressed => Pressed(ControlBindings.Action.Pause) || PadDown(pad => pad.startButton.wasPressedThisFrame);
+        public static bool ReloadPressed => Pressed(ControlBindings.Action.Reload) || PadDown(pad => pad.buttonWest.wasPressedThisFrame);
+        public static bool InteractPressed => Pressed(ControlBindings.Action.Interact) || PadDown(pad => pad.buttonSouth.wasPressedThisFrame);
+        public static bool MedkitPressed => Pressed(ControlBindings.Action.Medkit) || PadDown(pad => pad.buttonNorth.wasPressedThisFrame);
+        public static bool FlashlightPressed => Pressed(ControlBindings.Action.Flashlight) || PadDown(pad => pad.dpadUp.wasPressedThisFrame);
+        public static bool CrouchHeld => Held(ControlBindings.Action.Crouch) || Held(Key.LeftCtrl) || PadHeld(pad => pad.rightStickButton.isPressed);
+        public static bool SprintHeld => Held(ControlBindings.Action.Sprint) || PadHeld(pad => pad.leftStickButton.isPressed);
+        public static bool InventoryPressed => Pressed(ControlBindings.Action.Inventory) || Pressed(Key.I) || PadDown(pad => pad.selectButton.wasPressedThisFrame);
+        public static bool ThrowPressed => Pressed(ControlBindings.Action.Throw) || PadDown(pad => pad.buttonEast.wasPressedThisFrame);
+        public static bool TakedownPressed => Pressed(ControlBindings.Action.Takedown);
+        public static bool BuildPressed => Pressed(ControlBindings.Action.Build) || PadDown(pad => pad.dpadDown.wasPressedThisFrame);
 
         public static int WeaponCycle
         {
@@ -116,6 +116,10 @@ namespace OutpostZero.Player
                 default: return false;
             }
         }
+
+        private static bool Pressed(ControlBindings.Action action) => Pressed(ControlBindings.KeyFor(action));
+
+        private static bool Held(ControlBindings.Action action) => Held(ControlBindings.KeyFor(action));
 
         private static bool Pressed(Key key)
         {

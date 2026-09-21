@@ -22,7 +22,9 @@ namespace OutpostZero.Shell
             Instance = this;
         }
 
-        public bool Save()
+        public bool Save() => Save(true);
+
+        public bool Save(bool announce)
         {
             var data = Capture();
             string json = SaveCodec.Serialize(data);
@@ -35,7 +37,7 @@ namespace OutpostZero.Shell
                 if (File.Exists(path)) File.Copy(path, path + ".bak", true);
                 File.Copy(tmp, path, true);
                 File.Delete(tmp);
-                GameplayFeedback.Toast("Game saved");
+                if (announce) GameplayFeedback.Toast("Game saved");
                 return true;
             }
             catch (System.Exception ex)
@@ -91,6 +93,12 @@ namespace OutpostZero.Shell
             if (SettingsService.Instance != null)
             {
                 data.language = SettingsService.Instance.Language;
+                data.sfxVolume = SettingsService.Instance.SfxVolume;
+                data.musicVolume = SettingsService.Instance.MusicVolume;
+                data.quality = SettingsService.Instance.Quality;
+                data.vsync = SettingsService.Instance.VSync ? 1 : 0;
+                data.fieldOfView = SettingsService.Instance.FieldOfView;
+                data.bindings = OutpostZero.Player.ControlBindings.Pack();
                 data.shake = SettingsService.Instance.ScreenShake;
                 data.volume = SettingsService.Instance.MasterVolume;
                 data.textScale = SettingsService.Instance.TextScale;
@@ -120,7 +128,7 @@ namespace OutpostZero.Shell
                 var modules = new List<ModuleSave>();
                 foreach (var module in GridBuilder.Instance.Placed)
                 {
-                    modules.Add(new ModuleSave { kind = module.kind, x = module.x, z = module.z, rotation = module.rotation });
+                    modules.Add(new ModuleSave { kind = module.kind, x = module.x, z = module.z, rotation = module.rotation, integrity = module.integrity <= 0 ? 100 : module.integrity });
                 }
                 data.modules = modules.ToArray();
             }
@@ -134,6 +142,7 @@ namespace OutpostZero.Shell
             ColonyStorage.Instance?.Set(data.colonyScrap, data.food, data.water);
             FactionTrade.Instance?.SetStanding(data.factionStanding);
             SettingsService.Instance?.ApplySnapshot(data.shake, data.volume, data.textScale, data.subtitles, data.language);
+            SettingsService.Instance?.ApplyPresentation(data.sfxVolume, data.musicVolume, data.quality, data.vsync, data.fieldOfView, data.bindings);
             TutorialDirector.Instance?.SetFinished(data.tutorialDone);
             WorldMapService.Instance?.RestoreCleared(data.districtsCleared);
             if (data.districtIndex > data.districtsCleared) WorldMapService.Instance?.SelectIndex(data.districtIndex);
@@ -163,7 +172,7 @@ namespace OutpostZero.Shell
                 {
                     foreach (var module in data.modules)
                     {
-                        modules.Add(new PlacedModule { kind = module.kind, x = module.x, z = module.z, rotation = module.rotation });
+                        modules.Add(new PlacedModule { kind = module.kind, x = module.x, z = module.z, rotation = module.rotation, integrity = module.integrity <= 0 ? 100 : module.integrity });
                     }
                 }
                 GridBuilder.Instance.Restore(modules.ToArray());

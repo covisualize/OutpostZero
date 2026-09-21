@@ -43,6 +43,7 @@ namespace OutpostZero.Core
             Add<WorldMapService>(host.gameObject);
             Add<TutorialDirector>(host.gameObject);
             Add<CampServices>(host.gameObject);
+            Add<CampPopulation>(host.gameObject);
 
             foreach (var root in scene.GetRootGameObjects())
             {

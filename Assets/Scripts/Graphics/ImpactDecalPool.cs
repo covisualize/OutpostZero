@@ -28,17 +28,52 @@ namespace OutpostZero.Graphics
             }
         }
 
+        private enum Mark
+        {
+            Blood,
+            Hole,
+            Scorch,
+            Oil
+        }
+
         private void Spawn(Vector3 point, Vector3 normal, GameObject target)
         {
+            var mark = Choose(target);
             var decal = Rent();
             decal.Object.transform.position = point + normal * 0.02f;
             if (normal.sqrMagnitude > 0.001f)
             {
                 decal.Object.transform.rotation = Quaternion.LookRotation(-normal);
             }
-            decal.Until = Time.time + 8f;
+            Paint(decal.Object.GetComponent<Renderer>(), mark);
+            decal.Until = Time.time + (mark == Mark.Scorch ? 14f : 8f);
             decal.Object.SetActive(true);
             Burst(point);
+        }
+
+        private static Mark Choose(GameObject target)
+        {
+            if (target == null) return Mark.Hole;
+            string name = target.name;
+            if (name.Contains("Oil")) return Mark.Oil;
+            if (name.Contains("Barrel") || name.Contains("Explosive")) return Mark.Scorch;
+            if (name.Contains("Zombie") || target.GetComponentInParent<OutpostZero.AI.ZombieAI>() != null) return Mark.Blood;
+            return Mark.Hole;
+        }
+
+        private static void Paint(Renderer renderer, Mark mark)
+        {
+            if (renderer == null) return;
+            Color color = mark == Mark.Blood ? new Color(0.45f, 0.05f, 0.04f, 0.9f)
+                : mark == Mark.Oil ? new Color(0.08f, 0.08f, 0.07f, 0.85f)
+                : mark == Mark.Scorch ? new Color(0.12f, 0.1f, 0.08f, 0.9f)
+                : new Color(0.22f, 0.2f, 0.18f, 0.8f);
+            float scale = mark == Mark.Scorch ? 0.7f : mark == Mark.Blood ? 0.42f : 0.28f;
+            renderer.transform.localScale = new Vector3(scale, scale, scale);
+            var block = new MaterialPropertyBlock();
+            block.SetColor("_BaseColor", color);
+            block.SetColor("_Color", color);
+            renderer.SetPropertyBlock(block);
         }
 
         private void Burst(Vector3 point)
@@ -60,6 +95,16 @@ namespace OutpostZero.Graphics
             foreach (var decal in pool)
             {
                 if (decal.Object != null && !decal.Object.activeSelf) return decal;
+            }
+            if (pool.Count >= 48)
+            {
+                Decal oldest = pool[0];
+                for (int i = 1; i < pool.Count; i++)
+                {
+                    if (pool[i].Until < oldest.Until) oldest = pool[i];
+                }
+                oldest.Object.SetActive(false);
+                return oldest;
             }
             if (material == null)
             {

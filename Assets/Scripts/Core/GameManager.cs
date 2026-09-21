@@ -111,6 +111,7 @@ namespace OutpostZero.Core
         public void EnterCamp()
         {
             SetState(GameState.CampManagement);
+            SaveSystem.Instance?.Save(false);
         }
 
         public void BeginExpedition()
@@ -144,6 +145,7 @@ namespace OutpostZero.Core
             WorldMapService.Instance?.ClearCurrent();
             ObjectiveTracker.Instance?.MarkExtracted();
             SetState(GameState.ExpeditionResults);
+            SaveSystem.Instance?.Save(false);
             GameplayFeedback.Toast(WorldMapService.Instance != null && WorldMapService.Instance.CampaignWon
                 ? "The ring is clear"
                 : "Extracted");
