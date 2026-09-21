@@ -2,7 +2,7 @@
 
 import unittest
 
-from character_rig import REQUIRED_BONES, bone_names, humanoid_bones, locomotion_clips
+from character_rig import REQUIRED_BONES, SURVIVOR_CLIPS, WALKER_CLIPS, bone_names, clips_for, humanoid_bones, locomotion_clips
 
 
 class CharacterRigTests(unittest.TestCase):
@@ -32,6 +32,29 @@ class CharacterRigTests(unittest.TestCase):
                 self.assertEqual(len(rotation), 3)
                 frames.add(frame)
         self.assertGreaterEqual(len(frames), 2)
+
+    def test_each_role_has_its_action_list(self):
+        known = set(bone_names())
+        survivor = clips_for("Survivor_Leader")
+        for name in SURVIVOR_CLIPS:
+            self.assertIn(name, survivor)
+        self.assertEqual(set(locomotion_clips()), set(survivor))
+        walker = clips_for("Zombie_Walker")
+        for name in WALKER_CLIPS:
+            self.assertIn(name, walker)
+        spine = [rotation[0] for bone, _frame, rotation in walker["Idle"] if bone == "Spine"]
+        self.assertGreaterEqual(min(spine), 12.0)
+        self.assertIn("Lunge", clips_for("Zombie_Runner"))
+        brute = clips_for("Zombie_Brute")
+        self.assertIn("Charge", brute)
+        self.assertIn("Roar", brute)
+        merchant = clips_for("NPC_Merchant")
+        self.assertIn("Work", merchant)
+        self.assertIn("Talk", merchant)
+        for clips in (survivor, walker, brute, merchant, clips_for("Colonist_Survivor")):
+            for keys in clips.values():
+                for bone, _frame, _rotation in keys:
+                    self.assertIn(bone, known)
 
 
 if __name__ == "__main__":

@@ -1,4 +1,5 @@
 using UnityEngine;
+using OutpostZero.Combat;
 
 namespace OutpostZero.Player
 {
@@ -21,6 +22,8 @@ namespace OutpostZero.Player
         private PlayerController controller;
         private Transform visual;
         private Pose pose = Pose.Idle;
+        private HealthSystem health;
+        private FirearmWeapon[] guns;
 
         public Pose CurrentPose => pose;
 
@@ -43,6 +46,55 @@ namespace OutpostZero.Player
             AddClip(Pose.Crouch, 0.03f, 0.7f);
             AddClip(Pose.Sprint, 0.1f, 0.28f);
             animationPlayer.Play(Pose.Idle.ToString());
+        }
+
+        private void Start()
+        {
+            health = GetComponent<HealthSystem>();
+            if (health != null)
+            {
+                health.OnDamaged += HandleDamaged;
+                health.OnDeath += HandleDeath;
+            }
+            guns = GetComponentsInChildren<FirearmWeapon>(true);
+            for (int i = 0; i < guns.Length; i++)
+            {
+                if (guns[i] != null) guns[i].OnReloadStarted += HandleReload;
+            }
+        }
+
+        private void OnDestroy()
+        {
+            if (health != null)
+            {
+                health.OnDamaged -= HandleDamaged;
+                health.OnDeath -= HandleDeath;
+            }
+            if (guns == null) return;
+            for (int i = 0; i < guns.Length; i++)
+            {
+                if (guns[i] != null) guns[i].OnReloadStarted -= HandleReload;
+            }
+        }
+
+        public void NotifyAttack()
+        {
+            if (animator != null) animator.SetTrigger("Attack");
+        }
+
+        private void HandleReload()
+        {
+            if (animator != null) animator.SetTrigger("Reload");
+        }
+
+        private void HandleDamaged(float amount, Vector3 point)
+        {
+            if (animator != null && amount > 0f) animator.SetTrigger("Hit");
+        }
+
+        private void HandleDeath(Vector3 point, Vector3 direction, GameObject attacker)
+        {
+            if (animator != null) animator.SetTrigger("Death");
         }
 
         private Transform FindVisual()

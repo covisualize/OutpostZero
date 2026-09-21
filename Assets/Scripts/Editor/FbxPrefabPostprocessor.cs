@@ -74,16 +74,14 @@ namespace OutpostZero.EditorTools
 
         private static void AssignCharacterClips(string path)
         {
-            AnimationClip idle = null;
-            AnimationClip walk = null;
+            var clips = new System.Collections.Generic.List<AnimationClip>();
             foreach (var asset in AssetDatabase.LoadAllAssetsAtPath(path))
             {
                 var clip = asset as AnimationClip;
                 if (clip == null || clip.name.StartsWith("__preview")) continue;
-                if (clip.name.Contains("Idle")) idle = clip;
-                else if (clip.name.Contains("Walk")) walk = clip;
+                clips.Add(clip);
             }
-            if (idle != null || walk != null) SurvivorAnimatorBuilder.AssignMotions(idle, walk);
+            if (clips.Count > 0) SurvivorAnimatorBuilder.AssignMotions(clips);
         }
     }
 }

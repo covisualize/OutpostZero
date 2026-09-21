@@ -161,7 +161,7 @@ def prepare_character(mesh):
 
 
 def attach_humanoid(mesh):
-    from character_rig import humanoid_bones, locomotion_clips
+    from character_rig import clips_for, humanoid_bones
 
     if mesh is None:
         return None
@@ -187,7 +187,7 @@ def attach_humanoid(mesh):
     arm_obj.select_set(True)
     bpy.context.view_layer.objects.active = arm_obj
     bpy.ops.object.parent_set(type='ARMATURE_AUTO')
-    _key_clips(arm_obj, locomotion_clips())
+    _key_clips(arm_obj, clips_for(mesh.name))
     return arm_obj
 
 

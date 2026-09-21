@@ -304,7 +304,11 @@ namespace OutpostZero.Player
             // Attack (Left Mouse Button)
             if (ExpeditionInput.FireHeld && GameManager.Instance != null && GameManager.Instance.CurrentState != GameState.CampManagement)
             {
-                if (ActiveWeapon.TryAttack(transform.forward)) TutorialDirector.Instance?.Note("fire");
+                if (ActiveWeapon.TryAttack(transform.forward))
+                {
+                    TutorialDirector.Instance?.Note("fire");
+                    GetComponent<SurvivorLocomotion>()?.NotifyAttack();
+                }
             }
         }
 

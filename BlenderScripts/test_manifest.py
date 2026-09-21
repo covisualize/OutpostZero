@@ -43,6 +43,26 @@ class ManifestTests(unittest.TestCase):
         self.assertEqual(bare, [])
         self.assertEqual(unrigged, [])
 
+    def test_character_takes_include_combat_and_role_clips(self):
+        root = repo_root()
+        expected = {
+            "Assets/Models/Characters/Survivor_Leader.fbx": ("Sprint", "CrouchIdle", "Reload", "Death", "Takedown"),
+            "Assets/Models/Characters/Colonist_Survivor.fbx": ("Sprint", "Reload", "Melee"),
+            "Assets/Models/Characters/Zombie_Walker.fbx": ("Shamble", "Attack", "DeathC"),
+            "Assets/Models/Characters/Zombie_Runner.fbx": ("Lunge",),
+            "Assets/Models/Characters/Zombie_Brute.fbx": ("Charge", "Roar"),
+            "Assets/Models/Characters/NPC_Merchant.fbx": ("Work", "Talk"),
+        }
+        missing = []
+        for relative, names in expected.items():
+            path = os.path.join(root, relative)
+            with open(path, "rb") as handle:
+                text = handle.read().decode("latin1", errors="ignore")
+            for name in names:
+                if name not in text:
+                    missing.append(relative + ":" + name)
+        self.assertEqual(missing, [])
+
 
 if __name__ == "__main__":
     unittest.main()
