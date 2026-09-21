@@ -139,6 +139,7 @@ namespace OutpostZero.Player
             {
                 flashlightOn = !flashlightOn;
                 if (flashlight != null) flashlight.enabled = flashlightOn;
+                if (flashlightOn) CodexDirector.Hear("flashlight");
             }
 
             if (ExpeditionInput.MedkitPressed)
@@ -146,15 +147,18 @@ namespace OutpostZero.Player
                 if (inventory != null && inventory.UseMedkit())
                 {
                     GameplayFeedback.Toast("Medkit used  +50 HP");
+                    CodexDirector.Hear("medkit");
                 }
             }
 
             if (ExpeditionInput.ReloadPressed && ActiveWeapon is FirearmWeapon firearm)
             {
                 firearm.TryStartReload();
+                if (firearm.IsReloading) CodexDirector.Hear("reload");
             }
 
             IsAimingDownSights = ExpeditionInput.AimHeld;
+            if (IsAimingDownSights) CodexDirector.Hear("aim");
 
             for (int i = 0; i < 4; i++)
             {
@@ -183,10 +187,11 @@ namespace OutpostZero.Player
             if (inputDirection.sqrMagnitude > 1f) inputDirection.Normalize();
 
             bool isMoving = inputDirection.sqrMagnitude > 0.01f;
-            if (isMoving) TutorialDirector.Instance?.Note("move");
+            if (isMoving) CodexDirector.Hear("move");
 
             IsCrouching = ExpeditionInput.CrouchHeld;
-            if (IsCrouching) TutorialDirector.Instance?.Note("crouch");
+            if (IsCrouching) CodexDirector.Hear("crouch");
+            if (IsSprinting) CodexDirector.Hear("sprint");
             bool wantsToSprint = ExpeditionInput.SprintHeld && !IsCrouching && currentStamina > 5f;
 
             IsSprinting = isMoving && wantsToSprint;
@@ -306,7 +311,7 @@ namespace OutpostZero.Player
             {
                 if (ActiveWeapon.TryAttack(transform.forward))
                 {
-                    TutorialDirector.Instance?.Note("fire");
+                    CodexDirector.Hear("fire");
                     GetComponent<SurvivorLocomotion>()?.NotifyAttack();
                 }
             }

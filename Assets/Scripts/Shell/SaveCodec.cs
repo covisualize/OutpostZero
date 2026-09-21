@@ -50,6 +50,7 @@ namespace OutpostZero.Shell
         public string bindings = "";
         public int factionStanding;
         public bool tutorialDone;
+        public string codex = "";
         public string language = "en";
         public float shake = 1f;
         public float volume = 1f;

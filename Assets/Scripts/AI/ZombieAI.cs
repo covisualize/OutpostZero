@@ -63,6 +63,7 @@ namespace OutpostZero.AI
         private float abilityReady;
         private Vector3 spawnOrigin;
         [SerializeField] private ZombieSpecialAbility specialAbility;
+        private string archetypeId = "";
 
         public Vector3 Position => transform.position;
         public float HearingSensitivity => hearingSensitivity;
@@ -103,6 +104,7 @@ namespace OutpostZero.AI
             hearingSensitivity = archetype.hearingSensitivity;
             hordeAlertRadius = archetype.hordeAlertRadius;
             specialAbility = archetype.specialAbility;
+            archetypeId = archetype.id;
             visionMask = GameLayers.VisionOcclusionMask;
 
             if (agent == null) agent = GetComponent<NavMeshAgent>();
@@ -507,7 +509,7 @@ namespace OutpostZero.AI
 
             if (GameManager.Instance != null)
             {
-                GameManager.Instance.RecordZombieKill();
+                GameManager.Instance.RecordZombieKill(archetypeId);
             }
 
             if (Random.value < 0.45f)

@@ -39,6 +39,8 @@ namespace OutpostZero.UI
         private readonly List<Label> popups = new List<Label>();
         private int listening = -1;
         private bool credits;
+        private bool codexOpen;
+        private string codexId = "";
 
         private void Update()
         {
@@ -220,7 +222,7 @@ namespace OutpostZero.UI
             bool trade = FactionTrade.Instance != null && FactionTrade.Instance.Open;
             string language = SettingsService.Instance != null ? SettingsService.Instance.Language : "en";
             string discrete = SettingsService.Instance != null ? SettingsService.Instance.DiscreteKey : "";
-            string nextMenu = state + "|" + settings + "|" + trade + "|" + language + "|" + discrete + "|" + ControlBindings.Signature() + "|" + listening + "|" + credits;
+            string nextMenu = state + "|" + settings + "|" + trade + "|" + language + "|" + discrete + "|" + ControlBindings.Signature() + "|" + listening + "|" + credits + "|" + codexOpen + "|" + codexId;
             if (nextMenu != menuKey)
             {
                 menuKey = nextMenu;
@@ -242,6 +244,32 @@ namespace OutpostZero.UI
             }
 
             DrawPopups();
+        }
+
+        private void DrawCodex(VisualElement parent)
+        {
+            string packed = CodexDirector.Instance != null ? CodexDirector.Instance.Packed : "";
+            if (!string.IsNullOrEmpty(codexId))
+            {
+                CodexBook.Entry selected = null;
+                for (int i = 0; i < CodexBook.Entries.Length; i++)
+                {
+                    if (CodexBook.Entries[i].Id == codexId) selected = CodexBook.Entries[i];
+                }
+                parent.Add(Title(selected != null && CodexBook.Visible(selected, packed) ? selected.Title : "Unknown"));
+                parent.Add(Body(selected != null && CodexBook.Visible(selected, packed) ? selected.Body : "Not seen yet."));
+                parent.Add(Button("Back", () => codexId = ""));
+                return;
+            }
+            parent.Add(Title("CODEX"));
+            for (int i = 0; i < CodexBook.Entries.Length; i++)
+            {
+                var entry = CodexBook.Entries[i];
+                string id = entry.Id;
+                bool visible = CodexBook.Visible(entry, packed);
+                parent.Add(Button(visible ? entry.Title : "Unknown", () => codexId = id));
+            }
+            parent.Add(Button("Close", () => codexOpen = false));
         }
 
         private static void Go(FlowStep step, System.Action arrived)
@@ -272,9 +300,16 @@ namespace OutpostZero.UI
             switch (state)
             {
                 case GameState.Paused:
+                    if (codexOpen)
+                    {
+                        DrawCodex(menu);
+                        break;
+                    }
                     menu.Add(Title(Loc.T("menu.pause")));
                     menu.Add(Button(Loc.T("menu.resume"), () => GameManager.Instance.TogglePause()));
                     menu.Add(Button(Loc.T("menu.save"), () => SaveSystem.Instance?.Save()));
+                    menu.Add(Button("Codex", () => { codexOpen = true; codexId = ""; }));
+                    menu.Add(Button("Skip the lesson", () => TutorialDirector.Instance?.Dismiss()));
                     menu.Add(Button(Loc.T("menu.camp"), () => Go(FlowStep.Sanctuary, () => GameManager.Instance.EnterCamp())));
                     menu.Add(Button(Loc.T("menu.settings"), () => SettingsService.Instance?.TogglePanel()));
                     menu.Add(Button(Loc.T("menu.main"), () => Go(FlowStep.MainMenu, () => GameManager.Instance.SetState(GameState.MainMenu))));
@@ -331,6 +366,7 @@ namespace OutpostZero.UI
                     menu.Add(Button("New outpost", () => Go(FlowStep.Sanctuary, () => GameManager.Instance.BeginNewOutpost())));
                     menu.Add(Button(Loc.T("menu.settings"), () => SettingsService.Instance?.TogglePanel()));
                     menu.Add(Button("Credits", () => credits = true));
+                    menu.Add(Button("Skip the lesson", () => TutorialDirector.Instance?.Dismiss()));
                     menu.Add(Button("Back to the street", () => Go(FlowStep.Expedition, () => GameManager.Instance.BeginExpedition())));
                     break;
             }

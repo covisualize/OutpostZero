@@ -339,5 +339,38 @@ namespace OutpostZero.Tests.EditMode
             Assert.AreEqual("0.5.0", SceneRoute.Version);
             Assert.GreaterOrEqual(SceneRoute.Tips.Length, 12);
         }
+
+        [Test]
+        public void CodexHintsShowOnceAndZombiesStayHiddenUntilAKill()
+        {
+            Assert.AreEqual(12, CodexBook.Hints.Length);
+            Assert.GreaterOrEqual(CodexBook.Entries.Length, 12);
+
+            Assert.IsTrue(CodexBook.TryHint("", "move", out string first, out string packed));
+            Assert.IsFalse(string.IsNullOrEmpty(first));
+            Assert.IsTrue(CodexBook.Has(packed, "hint.move"));
+            Assert.IsFalse(CodexBook.TryHint(packed, "move", out _, out string again));
+            Assert.AreEqual(packed, again);
+
+            CodexBook.Entry walker = null;
+            for (int i = 0; i < CodexBook.Entries.Length; i++)
+            {
+                if (CodexBook.Entries[i].Id == "zombie.walker") walker = CodexBook.Entries[i];
+            }
+            Assert.IsNotNull(walker);
+            Assert.IsFalse(CodexBook.Visible(walker, packed));
+            packed = CodexBook.Remember(packed, "zombie.walker", out bool added);
+            Assert.IsTrue(added);
+            Assert.IsTrue(CodexBook.Visible(walker, packed));
+            CodexBook.Remember(packed, "zombie.walker", out bool twice);
+            Assert.IsFalse(twice);
+
+            CodexBook.Entry noise = null;
+            for (int i = 0; i < CodexBook.Entries.Length; i++)
+            {
+                if (CodexBook.Entries[i].Id == "mechanic.noise") noise = CodexBook.Entries[i];
+            }
+            Assert.IsTrue(CodexBook.Visible(noise, ""));
+        }
     }
 }

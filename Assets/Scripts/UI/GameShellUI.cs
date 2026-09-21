@@ -29,7 +29,7 @@ namespace OutpostZero.UI
             if (ExpeditionInput.InventoryPressed)
             {
                 inventoryOpen = !inventoryOpen;
-                if (inventoryOpen) TutorialDirector.Instance?.Note("pack");
+                if (inventoryOpen) CodexDirector.Hear("pack");
             }
         }
     }

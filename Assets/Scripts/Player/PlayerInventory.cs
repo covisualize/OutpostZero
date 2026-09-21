@@ -78,6 +78,7 @@ namespace OutpostZero.Player
 
             RecalculateWeight();
             OnInventoryChanged?.Invoke();
+            if (WeightRatio >= 0.8f) OutpostZero.Shell.CodexDirector.Hear("weight");
             return true;
         }
 
@@ -162,7 +163,7 @@ namespace OutpostZero.Player
         public void AddScrap(int amount)
         {
             scrapCount += amount;
-            if (amount > 0) OutpostZero.Shell.TutorialDirector.Instance?.Note("loot");
+            if (amount > 0) OutpostZero.Shell.CodexDirector.Hear("loot");
             if (GameManager.Instance != null)
             {
                 GameManager.Instance.AddScrap(amount);

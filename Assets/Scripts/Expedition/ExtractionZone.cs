@@ -35,6 +35,7 @@ namespace OutpostZero.Expedition
                 return;
             }
             tracker?.MarkExtracted();
+            OutpostZero.Shell.CodexDirector.Hear("extract");
             GameManager.Instance.CompleteExpedition();
         }
 

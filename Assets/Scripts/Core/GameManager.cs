@@ -127,10 +127,11 @@ namespace OutpostZero.Core
             SetState(GameState.ExpeditionActive);
         }
 
-        public void RecordZombieKill()
+        public void RecordZombieKill(string archetypeId = null)
         {
             zombiesKilled++;
             OnZombiesKilledChanged?.Invoke(zombiesKilled);
+            if (!string.IsNullOrEmpty(archetypeId)) CodexDirector.Instance?.Unlock("zombie." + archetypeId);
         }
 
         public void AddScrap(int amount)
@@ -185,6 +186,7 @@ namespace OutpostZero.Core
             ColonyStorage.Instance?.ResetStores();
             GridBuilder.Instance?.ClearAll();
             TutorialDirector.Instance?.SetFinished(false);
+            CodexDirector.Instance?.Restore("");
             zombiesKilled = 0;
             scrapLooted = 0;
             expeditionTimer = 0f;
@@ -212,6 +214,7 @@ namespace OutpostZero.Core
             ColonyStorage.Instance?.ResetStores();
             GridBuilder.Instance?.ClearAll();
             TutorialDirector.Instance?.SetFinished(false);
+            CodexDirector.Instance?.Restore("");
             zombiesKilled = 0;
             scrapLooted = 0;
             expeditionTimer = 0f;
