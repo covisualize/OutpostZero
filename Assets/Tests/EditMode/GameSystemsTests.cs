@@ -397,5 +397,18 @@ namespace OutpostZero.Tests.EditMode
             Assert.AreEqual(12, CraftingBench.Priced(12, false));
             Assert.AreEqual(1, CraftingBench.Priced(1, true));
         }
+
+        [Test]
+        public void RainWetsTheGroundAndShotsSitInTheWorld()
+        {
+            Assert.AreEqual(0.65f, WeatherSurface.Wetness(WeatherKind.Rain));
+            Assert.AreEqual(0.2f, WeatherSurface.Wetness(WeatherKind.Fog));
+            Assert.AreEqual(0f, WeatherSurface.Wetness(WeatherKind.Clear));
+            Assert.AreEqual(0.62f, WeatherSurface.Sight(WeatherKind.Fog));
+            Assert.AreEqual(0f, AudioSpace.SpatialBlend("pulse"));
+            Assert.AreEqual(1f, AudioSpace.SpatialBlend("gun"));
+            Assert.AreEqual(0.35f, AudioSpace.SpatialBlend("step"));
+            Assert.Greater(AudioSpace.MaxDistance("boom"), AudioSpace.MaxDistance("hit"));
+        }
     }
 }

@@ -7,6 +7,7 @@ Shader "OutpostZero/TriplanarRim"
         _RimPower ("Rim Power", Range(0.5, 8)) = 3
         _Tile ("Tile", Float) = 1.6
         _Dissolve ("Dissolve", Range(0, 1)) = 0
+        _Wetness ("Wetness", Range(0, 1)) = 0
         _Metallic ("Metallic", Range(0, 1)) = 0.05
     }
 
@@ -42,6 +43,7 @@ Shader "OutpostZero/TriplanarRim"
                 float _RimPower;
                 float _Tile;
                 float _Dissolve;
+                float _Wetness;
                 float _Metallic;
             CBUFFER_END
 
@@ -93,6 +95,13 @@ Shader "OutpostZero/TriplanarRim"
                 Light mainLight = GetMainLight();
                 float ndotl = saturate(dot(normal, mainLight.direction));
                 float3 color = _BaseColor.rgb * (0.25 + ndotl) * lerp(0.85, 1.15, noise);
+                float grime = saturate(1.15 - input.positionWS.y * 0.18);
+                color *= lerp(1.0, 0.7, grime * 0.4);
+                float wet = _Wetness * saturate(normal.y);
+                color = lerp(color, color * float3(0.55, 0.62, 0.72), wet * 0.6);
+                float3 reflectDir = reflect(-mainLight.direction, normal);
+                float spec = pow(saturate(dot(reflectDir, view)), 28.0) * wet;
+                color += spec * mainLight.color.rgb * 0.4;
                 color = lerp(color, _RimColor.rgb, rim * _RimColor.a);
                 color = lerp(color, color * mainLight.color.rgb, _Metallic);
                 return half4(color, 1);

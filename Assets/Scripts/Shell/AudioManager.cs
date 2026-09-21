@@ -9,6 +9,27 @@ using OutpostZero.Sensory;
 namespace OutpostZero.Shell
 {
     /// <summary>
+    /// Which one-shots stay in the ears and which sit in the world.
+    /// </summary>
+    public static class AudioSpace
+    {
+        public static float SpatialBlend(string id)
+        {
+            if (id == "ambient" || id == "pulse" || id == "ui") return 0f;
+            if (id == "step" || id == "step_hard") return 0.35f;
+            return 1f;
+        }
+
+        public static float MaxDistance(string id)
+        {
+            if (id == "boom") return 48f;
+            if (id == "scream") return 36f;
+            if (id == "gun" || id == "shotgun") return 32f;
+            return 18f;
+        }
+    }
+
+    /// <summary>
     /// Procedural one-shots so the expedition is not silent before authored clips exist.
     /// </summary>
     public class AudioManager : MonoBehaviour
@@ -81,8 +102,18 @@ namespace OutpostZero.Shell
 
         public void Play(string id, float volume = 1f)
         {
+            PlayAt(id, transform.position, volume);
+        }
+
+        public void PlayAt(string id, Vector3 position, float volume = 1f, float pitch = 0f)
+        {
             var source = Rent();
-            source.pitch = Random.Range(0.94f, 1.06f);
+            source.transform.position = position;
+            source.spatialBlend = AudioSpace.SpatialBlend(id);
+            source.minDistance = 1.5f;
+            source.maxDistance = AudioSpace.MaxDistance(id);
+            source.rolloffMode = AudioRolloffMode.Linear;
+            source.pitch = pitch > 0f ? pitch : Random.Range(0.94f, 1.06f);
             float sfx = SettingsService.Instance != null ? SettingsService.Instance.SfxVolume : 1f;
             source.PlayOneShot(GetClip(id), volume * sfx);
         }
@@ -101,26 +132,29 @@ namespace OutpostZero.Shell
             {
                 road = hit.collider.name.Contains("Road") || hit.collider.name.Contains("Street");
             }
-            var source = Rent();
-            source.pitch = road ? Random.Range(1.05f, 1.2f) : Random.Range(0.85f, 1f);
-            float sfx = SettingsService.Instance != null ? SettingsService.Instance.SfxVolume : 1f;
-            source.PlayOneShot(GetClip(road ? "step_hard" : "step"), (player.IsCrouching ? 0.12f : 0.28f) * sfx);
+            float pitch = road ? Random.Range(1.05f, 1.2f) : Random.Range(0.85f, 1f);
+            PlayAt(road ? "step_hard" : "step", player.transform.position, player.IsCrouching ? 0.12f : 0.28f, pitch);
         }
 
         private void OnShot(Vector3 muzzle, WeaponBase weapon)
         {
             if (weapon == null) return;
-            Play(weapon.Type == WeaponType.Shotgun ? "shotgun" : weapon.Type == WeaponType.Melee ? "swing" : "gun", 0.8f);
+            string id = weapon.Type == WeaponType.Shotgun ? "shotgun" : weapon.Type == WeaponType.Melee ? "swing" : "gun";
+            PlayAt(id, muzzle, 0.8f);
         }
 
-        private void OnHit(Vector3 point, Vector3 normal, GameObject target) => Play("hit", 0.45f);
+        private void OnHit(Vector3 point, Vector3 normal, GameObject target) => PlayAt("hit", point, 0.45f);
 
-        private void OnKill(GameObject victim, GameObject killer) => Play("kill", 0.5f);
+        private void OnKill(GameObject victim, GameObject killer)
+        {
+            Vector3 at = victim != null ? victim.transform.position : transform.position;
+            PlayAt("kill", at, 0.5f);
+        }
 
         private void OnNoise(Vector3 origin, float radius, NoiseType type)
         {
-            if (type == NoiseType.Explosion) Play("boom", 0.9f);
-            else if (type == NoiseType.ZombieScream) Play("scream", 0.55f);
+            if (type == NoiseType.Explosion) PlayAt("boom", origin, 0.9f);
+            else if (type == NoiseType.ZombieScream) PlayAt("scream", origin, 0.55f);
         }
 
         private AudioSource Rent()
@@ -129,7 +163,9 @@ namespace OutpostZero.Shell
             {
                 if (!source.isPlaying) return source;
             }
-            var extra = gameObject.AddComponent<AudioSource>();
+            var voice = new GameObject("Voice");
+            voice.transform.SetParent(transform, false);
+            var extra = voice.AddComponent<AudioSource>();
             extra.spatialBlend = 0f;
             extra.playOnAwake = false;
             pool.Add(extra);
