@@ -136,10 +136,19 @@ namespace OutpostZero.Combat
                 {
                     bullet.Setup(direction, ModifiedDamage, ownerGameObject, hitMask);
                 }
+                Vector3 eject = muzzlePoint != null ? muzzlePoint.right : transform.right;
+                CombatVfx.Shot(spawnPos, direction, spawnPos + direction * Mathf.Min(range, 8f), eject);
             }
-            else if (Physics.Raycast(spawnPos, direction, out RaycastHit hit, range, hitMask, QueryTriggerInteraction.Ignore))
+            else
             {
-                DamageResolver.Resolve(hit, ModifiedDamage, ownerGameObject, true);
+                Vector3 end = spawnPos + direction * range;
+                if (Physics.Raycast(spawnPos, direction, out RaycastHit hit, range, hitMask, QueryTriggerInteraction.Ignore))
+                {
+                    end = hit.point;
+                    DamageResolver.Resolve(hit, ModifiedDamage, ownerGameObject, true);
+                }
+                Vector3 eject = muzzlePoint != null ? muzzlePoint.right : transform.right;
+                CombatVfx.Shot(spawnPos, direction, end, eject);
             }
         }
 

@@ -52,8 +52,7 @@ namespace OutpostZero.Combat
         private void OnHit(RaycastHit hit)
         {
             DamageResolver.Resolve(hit, damage, shooter, true);
-
-            // Spawn simple impact particle or decal here if available
+            CombatVfx.Tracer(transform.position, hit.point);
             Destroy(gameObject);
         }
     }

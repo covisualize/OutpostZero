@@ -56,6 +56,7 @@ namespace OutpostZero.Combat
                 }
             }
 
+            CombatVfx.Burst(origin, kind);
             CombatEvents.RaiseHit(origin, Vector3.up, gameObject);
             GameplayFeedback.Toast(kind == HazardKind.Explosive ? "Barrel exploded" : kind == HazardKind.Toxic ? "Toxic cloud" : "Oil spill");
             Destroy(gameObject);
