@@ -246,6 +246,14 @@ namespace OutpostZero.Player
             if (mainCamera == null) mainCamera = Camera.main;
             if (mainCamera == null) return;
 
+            Vector2 aimStick = ExpeditionInput.AimStick;
+            if (aimStick.sqrMagnitude > 0.04f)
+            {
+                Vector3 stickDir = new Vector3(aimStick.x, 0f, aimStick.y);
+                transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(stickDir), rotationSpeed * Time.deltaTime);
+                return;
+            }
+
             Ray ray = mainCamera.ScreenPointToRay(ExpeditionInput.Pointer);
             Plane groundPlane = new Plane(Vector3.up, new Vector3(0f, transform.position.y, 0f));
 

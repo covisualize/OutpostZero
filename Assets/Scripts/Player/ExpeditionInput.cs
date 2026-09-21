@@ -13,6 +13,13 @@ namespace OutpostZero.Player
         {
             get
             {
+                var pad = Gamepad.current;
+                if (pad != null)
+                {
+                    Vector2 stick = pad.leftStick.ReadValue();
+                    if (stick.sqrMagnitude > 0.04f) return Vector2.ClampMagnitude(stick, 1f);
+                }
+
                 var keyboard = Keyboard.current;
                 if (keyboard == null)
                 {
@@ -21,8 +28,19 @@ namespace OutpostZero.Player
 
                 float x = (Down(keyboard.dKey) || Down(keyboard.rightArrowKey) ? 1f : 0f) - (Down(keyboard.aKey) || Down(keyboard.leftArrowKey) ? 1f : 0f);
                 float y = (Down(keyboard.wKey) || Down(keyboard.upArrowKey) ? 1f : 0f) - (Down(keyboard.sKey) || Down(keyboard.downArrowKey) ? 1f : 0f);
+
                 var value = new Vector2(x, y);
                 return value.sqrMagnitude > 1f ? value.normalized : value;
+            }
+        }
+
+        public static Vector2 AimStick
+        {
+            get
+            {
+                var pad = Gamepad.current;
+                if (pad == null) return Vector2.zero;
+                return pad.rightStick.ReadValue();
             }
         }
 
@@ -44,8 +62,25 @@ namespace OutpostZero.Player
             }
         }
 
-        public static bool FireHeld => Mouse.current != null ? Mouse.current.leftButton.isPressed : Input.GetMouseButton(0);
-        public static bool AimHeld => Mouse.current != null ? Mouse.current.rightButton.isPressed : Input.GetMouseButton(1);
+        public static bool FireHeld
+        {
+            get
+            {
+                var pad = Gamepad.current;
+                if (pad != null && (pad.rightTrigger.isPressed || pad.rightShoulder.isPressed)) return true;
+                return Mouse.current != null ? Mouse.current.leftButton.isPressed : Input.GetMouseButton(0);
+            }
+        }
+
+        public static bool AimHeld
+        {
+            get
+            {
+                var pad = Gamepad.current;
+                if (pad != null && (pad.leftTrigger.isPressed || pad.leftShoulder.isPressed)) return true;
+                return Mouse.current != null ? Mouse.current.rightButton.isPressed : Input.GetMouseButton(1);
+            }
+        }
         public static bool PausePressed => Pressed(Key.Escape);
         public static bool ReloadPressed => Pressed(Key.R);
         public static bool InteractPressed => Pressed(Key.E);
