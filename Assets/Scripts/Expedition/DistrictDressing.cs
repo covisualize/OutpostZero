@@ -38,6 +38,7 @@ namespace OutpostZero.Expedition
             {
                 Spawn(pieces[i]);
             }
+            KitStructure.Raise(districtId, root);
         }
 
         private void Spawn(DistrictLayout.Piece piece)

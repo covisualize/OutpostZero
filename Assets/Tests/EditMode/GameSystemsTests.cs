@@ -1,9 +1,12 @@
 using System.Collections.Generic;
+using System.IO;
 using NUnit.Framework;
+using UnityEngine;
 using OutpostZero.AI;
 using OutpostZero.Colony;
 using OutpostZero.Combat;
 using OutpostZero.Core;
+using OutpostZero.Expedition;
 using OutpostZero.Graphics;
 using OutpostZero.Items;
 using OutpostZero.Player;
@@ -146,6 +149,29 @@ namespace OutpostZero.Tests.EditMode
             Assert.Greater(DistrictLayout.Count("rail_yard", "barrel_explosive"), DistrictLayout.Count("ash_market", "barrel_explosive"));
             Assert.GreaterOrEqual(DistrictLayout.Count("old_hospital", "crate_medical"), 2);
             Assert.GreaterOrEqual(DistrictLayout.Count("north_gate", "cover"), 3);
+        }
+
+        [Test]
+        public void KitAssemblesAnEnterableThreeStoreyBlock()
+        {
+            string path = Path.Combine(Directory.GetCurrentDirectory(), "Assets", "Resources", "KitCatalog.json");
+            Assert.IsTrue(File.Exists(path), path);
+            var book = JsonUtility.FromJson<KitBook>(File.ReadAllText(path));
+            Assert.GreaterOrEqual(book.pieces.Length, 45);
+            Assert.AreEqual(2f, book.grid);
+            Assert.IsTrue(KitPlan.UsesOnlyKnownPieces(book.pieces, book.apartment));
+            Assert.IsTrue(KitPlan.UsesOnlyKnownPieces(book.pieces, book.storefront));
+            Assert.IsTrue(KitPlan.UsesOnlyKnownPieces(book.pieces, book.warehouse));
+            Assert.IsTrue(KitPlan.UsesOnlyKnownPieces(book.pieces, book.hospital));
+            Assert.IsTrue(KitPlan.ReachesStorey(book.apartment, 0f));
+            Assert.IsTrue(KitPlan.ReachesStorey(book.apartment, 3f));
+            Assert.IsTrue(KitPlan.ReachesStorey(book.apartment, 6f));
+            var door = KitPlan.Find(book.pieces, "wall_door");
+            Assert.GreaterOrEqual(door.door, 1.2f);
+            Assert.IsTrue(KitPlan.ClearAt(door, 1f, 1f, 0.1f));
+            Assert.IsFalse(KitPlan.ClearAt(door, 0.05f, 1f, 0.1f));
+            Assert.AreEqual("apartment", KitPlan.RecipeName("north_gate"));
+            Assert.AreEqual("storefront", KitPlan.RecipeName("ash_market"));
         }
 
         [Test]

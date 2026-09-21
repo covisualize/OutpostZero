@@ -31,6 +31,7 @@ def build_all(only=None):
     import generate_architecture
     import generate_base_building
     import generate_characters
+    import generate_kit
     import generate_props
     import generate_weapons
 
@@ -69,6 +70,9 @@ def build_all(only=None):
             ("Prop_Barrels", generate_props.generate_barrels),
             ("Prop_Crates", generate_props.generate_crates),
             ("Prop_StreetFurniture", generate_props.generate_street_furniture),
+        ],
+        "kit": [
+            ("SnapKit", generate_kit.generate_all),
         ],
         "base": [
             ("Base_CraftingWorkbench", generate_base_building.generate_workbench),
