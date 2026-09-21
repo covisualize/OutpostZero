@@ -47,6 +47,7 @@ namespace OutpostZero.Core
             Add<CampServices>(host.gameObject);
             Add<CampPopulation>(host.gameObject);
             Add<DistrictDressing>(host.gameObject);
+            StreetDetail.RaiseHome();
 
             foreach (var root in scene.GetRootGameObjects())
             {

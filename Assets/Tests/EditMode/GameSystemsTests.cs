@@ -564,5 +564,43 @@ namespace OutpostZero.Tests.EditMode
             Assert.AreEqual(quests, loaded.quests);
             Assert.AreEqual(12, loaded.factionStanding);
         }
+
+        [Test]
+        public void DressingStaysOffTheSpawnAndReadsAsAPlace()
+        {
+            var market = DressingPlan.Debris("ash_market");
+            var again = DressingPlan.Debris("ash_market");
+            var yard = DressingPlan.Debris("rail_yard");
+            Assert.GreaterOrEqual(market.Length, 12);
+            Assert.AreEqual(market.Length, again.Length);
+            Assert.AreEqual(market[0].X, again[0].X);
+            Assert.AreEqual(market[0].Z, again[0].Z);
+            Assert.AreNotEqual(market[0].X, yard[0].X);
+            Assert.IsTrue(DressingPlan.Spaced(market, 0.85f));
+            for (int i = 0; i < market.Length; i++)
+            {
+                Assert.IsTrue(DressingPlan.OnTheStreet(market[i].X, market[i].Z));
+            }
+
+            var patches = DressingPlan.Patches("old_hospital");
+            Assert.GreaterOrEqual(patches.Length, 3);
+            for (int i = 0; i < patches.Length; i++) Assert.IsTrue(DressingPlan.OnTheStreet(patches[i].X, patches[i].Z));
+
+            var home = DressingPlan.Home();
+            Assert.GreaterOrEqual(home.Length, 8);
+            for (int i = 0; i < home.Length; i++) Assert.IsTrue(DressingPlan.ClearsHome(home[i].X, home[i].Z));
+
+            var horizon = DressingPlan.Horizon();
+            int poles = 0;
+            bool gap = true;
+            for (int i = 0; i < horizon.Length; i++)
+            {
+                if (horizon[i].Role == "skyline" || horizon[i].Role == "tower") Assert.Greater(horizon[i].Z, 22f);
+                if (horizon[i].Role == "pole") poles++;
+                if (horizon[i].Role == "overpass" && System.Math.Abs(horizon[i].X) < 3f) gap = false;
+            }
+            Assert.AreEqual(2, poles);
+            Assert.IsTrue(gap);
+        }
     }
 }

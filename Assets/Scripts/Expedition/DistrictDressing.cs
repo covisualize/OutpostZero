@@ -41,6 +41,7 @@ namespace OutpostZero.Expedition
             }
             KitStructure.Raise(districtId, root);
             RaiseCaravan();
+            StreetDetail.RaiseStreet(districtId, root);
         }
 
         private void RaiseCaravan()
