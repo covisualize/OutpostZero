@@ -105,6 +105,26 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void DistrictLayoutsStayOnTheStreet()
+        {
+            string[] ids = { "ash_market", "rail_yard", "old_hospital", "north_gate", "nowhere" };
+            foreach (string id in ids)
+            {
+                var pieces = DistrictLayout.For(id);
+                Assert.Greater(pieces.Length, 0);
+                for (int i = 0; i < pieces.Length; i++)
+                {
+                    Assert.IsTrue(DistrictLayout.StaysOnTheStreet(pieces[i]), id + " " + pieces[i].Role);
+                }
+            }
+
+            Assert.Greater(DistrictLayout.Count("ash_market", "stall"), 0);
+            Assert.Greater(DistrictLayout.Count("rail_yard", "barrel_explosive"), DistrictLayout.Count("ash_market", "barrel_explosive"));
+            Assert.GreaterOrEqual(DistrictLayout.Count("old_hospital", "crate_medical"), 2);
+            Assert.GreaterOrEqual(DistrictLayout.Count("north_gate", "cover"), 3);
+        }
+
+        [Test]
         public void DistrictsChangeTheQuotaAndTheStreet()
         {
             var market = DistrictRules.For("ash_market");

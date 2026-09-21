@@ -10,7 +10,7 @@ if script_dir not in sys.path:
 from blender_paths import models_dir
 from blender_utils import (
     reset_scene, get_or_create_material, create_box, create_cylinder, 
-    create_sphere, create_cone, join_objects, set_origin_to_bottom, export_fbx
+    create_sphere, create_cone, join_objects, set_origin_to_bottom, export_fbx, prepare_character
 )
 
 MODELS_DIR = models_dir("Characters")
@@ -84,7 +84,8 @@ def generate_player_leader():
 
     final_mesh = join_objects(parts, "Survivor_Leader")
     set_origin_to_bottom(final_mesh)
-    export_fbx(os.path.join(MODELS_DIR, "Survivor_Leader.fbx"))
+    prepare_character(final_mesh)
+    export_fbx(os.path.join(MODELS_DIR, "Survivor_Leader.fbx"), animated=True)
 
 def generate_zombie_walker():
     reset_scene()
@@ -130,7 +131,8 @@ def generate_zombie_walker():
 
     final_mesh = join_objects(parts, "Zombie_Walker")
     set_origin_to_bottom(final_mesh)
-    export_fbx(os.path.join(MODELS_DIR, "Zombie_Walker.fbx"))
+    prepare_character(final_mesh)
+    export_fbx(os.path.join(MODELS_DIR, "Zombie_Walker.fbx"), animated=True)
 
 def generate_zombie_runner():
     reset_scene()
@@ -166,7 +168,8 @@ def generate_zombie_runner():
 
     final_mesh = join_objects(parts, "Zombie_Runner")
     set_origin_to_bottom(final_mesh)
-    export_fbx(os.path.join(MODELS_DIR, "Zombie_Runner.fbx"))
+    prepare_character(final_mesh)
+    export_fbx(os.path.join(MODELS_DIR, "Zombie_Runner.fbx"), animated=True)
 
 def generate_zombie_brute():
     reset_scene()
@@ -211,7 +214,8 @@ def generate_zombie_brute():
 
     final_mesh = join_objects(parts, "Zombie_Brute")
     set_origin_to_bottom(final_mesh)
-    export_fbx(os.path.join(MODELS_DIR, "Zombie_Brute.fbx"))
+    prepare_character(final_mesh)
+    export_fbx(os.path.join(MODELS_DIR, "Zombie_Brute.fbx"), animated=True)
 
 def generate_npc_merchant():
     reset_scene()
@@ -255,7 +259,8 @@ def generate_npc_merchant():
 
     final_mesh = join_objects(parts, "NPC_Merchant")
     set_origin_to_bottom(final_mesh)
-    export_fbx(os.path.join(MODELS_DIR, "NPC_Merchant.fbx"))
+    prepare_character(final_mesh)
+    export_fbx(os.path.join(MODELS_DIR, "NPC_Merchant.fbx"), animated=True)
 
 def generate_colonist():
     reset_scene()
@@ -282,7 +287,8 @@ def generate_colonist():
 
     final_mesh = join_objects(parts, "Colonist_Survivor")
     set_origin_to_bottom(final_mesh)
-    export_fbx(os.path.join(MODELS_DIR, "Colonist_Survivor.fbx"))
+    prepare_character(final_mesh)
+    export_fbx(os.path.join(MODELS_DIR, "Colonist_Survivor.fbx"), animated=True)
 
 if __name__ == "__main__":
     print("[CharacterGenerator] Generating characters...")

@@ -44,6 +44,7 @@ namespace OutpostZero.Core
             Add<TutorialDirector>(host.gameObject);
             Add<CampServices>(host.gameObject);
             Add<CampPopulation>(host.gameObject);
+            Add<DistrictDressing>(host.gameObject);
 
             foreach (var root in scene.GetRootGameObjects())
             {

@@ -88,6 +88,7 @@ namespace OutpostZero.Shell
             ObjectiveTracker.Instance?.SetGoals(rules.KillGoal, rules.ScrapGoal);
             HordeDirector.Instance?.ApplyOpening(rules.OpeningTension, rules.SpawnInterval, rules.PreferredVariant);
             WeatherController.Instance?.SetFor(rules.Weather, 180f);
+            DistrictDressing.Instance?.Build(Current != null ? Current.id : "ash_market");
         }
 
         public void ClearCurrent()

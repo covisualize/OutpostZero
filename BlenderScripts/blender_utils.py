@@ -141,9 +141,85 @@ def set_origin_to_bottom(obj):
     obj.location.z -= min_z
     bpy.ops.object.transform_apply(location=True, rotation=False, scale=False)
 
-def export_fbx(output_filepath):
-    """Exports all scene meshes to an FBX file configured for Unity coordinate system."""
+def unwrap_mesh(obj):
+    """Smart-project a UV set so the mesh is not exported with empty coordinates."""
+    if obj is None or obj.type != 'MESH':
+        return
+    bpy.ops.object.select_all(action='DESELECT')
+    obj.select_set(True)
+    bpy.context.view_layer.objects.active = obj
+    bpy.ops.object.mode_set(mode='EDIT')
+    bpy.ops.mesh.select_all(action='SELECT')
+    bpy.ops.uv.smart_project(angle_limit=1.151917, island_margin=0.02)
+    bpy.ops.object.mode_set(mode='OBJECT')
+
+
+def prepare_character(mesh):
+    """UV the joined body and skin it to the shared humanoid armature."""
+    unwrap_mesh(mesh)
+    attach_humanoid(mesh)
+
+
+def attach_humanoid(mesh):
+    from character_rig import humanoid_bones, locomotion_clips
+
+    if mesh is None:
+        return None
+    armature = bpy.data.armatures.new("Humanoid")
+    arm_obj = bpy.data.objects.new(mesh.name + "_Rig", armature)
+    bpy.context.scene.collection.objects.link(arm_obj)
+    bpy.context.view_layer.objects.active = arm_obj
+    bpy.ops.object.mode_set(mode='EDIT')
+    created = {}
+    for name, parent, head, tail in humanoid_bones():
+        bone = armature.edit_bones.new(name)
+        bone.head = head
+        bone.tail = tail
+        bone.use_connect = False
+        created[name] = bone
+    for name, parent, _head, _tail in humanoid_bones():
+        if parent is not None:
+            created[name].parent = created[parent]
+    bpy.ops.object.mode_set(mode='OBJECT')
+
+    bpy.ops.object.select_all(action='DESELECT')
+    mesh.select_set(True)
+    arm_obj.select_set(True)
+    bpy.context.view_layer.objects.active = arm_obj
+    bpy.ops.object.parent_set(type='ARMATURE_AUTO')
+    _key_clips(arm_obj, locomotion_clips())
+    return arm_obj
+
+
+def _key_clips(arm_obj, clips):
+    bpy.context.view_layer.objects.active = arm_obj
+    bpy.ops.object.mode_set(mode='POSE')
+    if arm_obj.animation_data is None:
+        arm_obj.animation_data_create()
+    for clip_name, keys in clips.items():
+        action = bpy.data.actions.new(clip_name)
+        arm_obj.animation_data.action = action
+        action.use_fake_user = True
+        for bone_name, frame, rotation in keys:
+            bone = arm_obj.pose.bones.get(bone_name)
+            if bone is None:
+                continue
+            bone.rotation_mode = 'XYZ'
+            bone.rotation_euler = (
+                math.radians(rotation[0]),
+                math.radians(rotation[1]),
+                math.radians(rotation[2]),
+            )
+            bone.keyframe_insert(data_path="rotation_euler", frame=frame)
+    bpy.ops.object.mode_set(mode='OBJECT')
+
+
+def export_fbx(output_filepath, animated=False):
+    """Exports the scene to an FBX file configured for Unity's coordinate system."""
     os.makedirs(os.path.dirname(output_filepath), exist_ok=True)
+    for obj in list(bpy.context.scene.objects):
+        if obj.type == 'MESH' and not animated:
+            unwrap_mesh(obj)
     bpy.ops.object.select_all(action='SELECT')
     bpy.ops.export_scene.fbx(
         filepath=output_filepath,
@@ -154,6 +230,11 @@ def export_fbx(output_filepath):
         axis_forward='-Z',
         axis_up='Y',
         bake_space_transform=True,
-        object_types={'MESH'}
+        object_types={'MESH', 'ARMATURE'} if animated else {'MESH'},
+        add_leaf_bones=False,
+        bake_anim=animated,
+        bake_anim_use_all_actions=animated,
+        bake_anim_use_nla_strips=False,
+        bake_anim_simplify_factor=0.0,
     )
     print(f"[Blender] Successfully exported: {output_filepath}")
