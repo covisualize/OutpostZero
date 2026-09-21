@@ -34,7 +34,8 @@ class ManifestTests(unittest.TestCase):
         unrigged = []
         for relative in manifest["assets"]:
             path = os.path.join(root, relative)
-            text = open(path, "rb").read().decode("latin1", errors="ignore")
+            with open(path, "rb") as handle:
+                text = handle.read().decode("latin1", errors="ignore")
             if "LayerElementUV" not in text:
                 bare.append(relative)
             if "/Characters/" in relative and "Hips" not in text:
