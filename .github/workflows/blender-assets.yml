@@ -1,0 +1,47 @@
+name: Blender assets
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  paths:
+    name: Repo-relative path tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test models_dir resolution
+        working-directory: BlenderScripts
+        run: python3 -m unittest test_paths.py
+
+  generate:
+    name: Headless Blender 4.2 asset build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Blender 4.2 LTS
+        run: |
+          set -euo pipefail
+          curl -L "https://download.blender.org/release/Blender4.2/blender-4.2.11-linux-x64.tar.xz" -o /tmp/blender.tar.xz
+          mkdir -p "$HOME/blender"
+          tar -xJf /tmp/blender.tar.xz -C "$HOME/blender" --strip-components=1
+          echo "$HOME/blender" >> "$GITHUB_PATH"
+      - name: Build assets
+        run: blender -b -P BlenderScripts/build_all_assets.py
+      - name: Fail if the generated set drifts from the committed models
+        run: |
+          set -euo pipefail
+          missing=0
+          while IFS= read -r meta; do
+            fbx="${meta%.meta}"
+            if [ ! -f "$fbx" ]; then
+              echo "Missing FBX for $meta"
+              missing=1
+            fi
+          done < <(find Assets/Models -name '*.fbx.meta')
+          exit "$missing"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: blender-fbx
+          path: Assets/Models
+          if-no-files-found: error

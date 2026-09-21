@@ -393,7 +393,7 @@ MonoBehaviour:
   sightAngle: 110
   visionMask:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 256
   hearingSensitivity: 1
   wanderSpeed: 1.8
   chaseSpeed: 5.6
@@ -2033,7 +2033,7 @@ MonoBehaviour:
   bulletPrefab: {fileID: 0}
   hitMask:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 384
   spreadAngle: 2.5
   projectilesPerShot: 1
   muzzleFlash: {fileID: 0}
@@ -2189,7 +2189,7 @@ MonoBehaviour:
   sightAngle: 110
   visionMask:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 256
   hearingSensitivity: 1
   wanderSpeed: 1.8
   chaseSpeed: 3.8
@@ -3504,7 +3504,7 @@ MonoBehaviour:
   sightAngle: 110
   visionMask:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 256
   hearingSensitivity: 1
   wanderSpeed: 1.8
   chaseSpeed: 2.6
@@ -4102,7 +4102,7 @@ MonoBehaviour:
   knockbackForce: 6
   hitMask:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 384
   audioSource: {fileID: 0}
   swingSound: {fileID: 0}
   hitFleshSound: {fileID: 0}
@@ -4438,7 +4438,7 @@ MonoBehaviour:
   bulletPrefab: {fileID: 0}
   hitMask:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 384
   spreadAngle: 8.5
   projectilesPerShot: 7
   muzzleFlash: {fileID: 0}

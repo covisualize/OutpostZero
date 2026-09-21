@@ -40,6 +40,21 @@ namespace OutpostZero.Combat
             ownerGameObject = owner != null ? owner.gameObject : null;
         }
 
+        public virtual void Configure(WeaponDefinition definition)
+        {
+            if (definition == null) return;
+
+            weaponName = definition.displayName;
+            weaponType = definition.weaponType;
+            baseDamage = definition.baseDamage;
+            attackRate = Mathf.Max(0.1f, definition.attackRate);
+            range = definition.range;
+            staminaCost = definition.staminaCost;
+            noiseRadius = definition.noiseRadius;
+            noiseIntensity = definition.noiseIntensity;
+            noiseType = definition.noiseType;
+        }
+
         public virtual bool CanAttack()
         {
             return Time.time >= nextAttackTime;

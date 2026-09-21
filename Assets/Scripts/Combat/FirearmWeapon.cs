@@ -37,8 +37,38 @@ namespace OutpostZero.Combat
         public event Action OnReloadStarted;
         public event Action OnReloadCompleted;
 
+        private void Reset()
+        {
+            hitMask = GameLayers.WeaponHitMask;
+        }
+
+        private void OnValidate()
+        {
+            hitMask = GameLayers.Resolve(hitMask, GameLayers.WeaponHitMask);
+        }
+
+        private void Awake()
+        {
+            hitMask = GameLayers.Resolve(hitMask, GameLayers.WeaponHitMask);
+        }
+
+        public override void Configure(WeaponDefinition definition)
+        {
+            base.Configure(definition);
+            if (definition == null) return;
+
+            maxMagazine = Mathf.Max(1, definition.maxMagazine);
+            currentAmmo = maxMagazine;
+            reserveAmmo = Mathf.Max(0, definition.reserveAmmo);
+            reloadDuration = definition.reloadDuration;
+            spreadAngle = definition.spreadAngle;
+            projectilesPerShot = Mathf.Max(1, definition.projectilesPerShot);
+            hitMask = GameLayers.WeaponHitMask;
+        }
+
         private void Start()
         {
+            hitMask = GameLayers.Resolve(hitMask, GameLayers.WeaponHitMask);
             if (muzzlePoint == null)
             {
                 muzzlePoint = transform;

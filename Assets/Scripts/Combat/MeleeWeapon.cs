@@ -16,11 +16,32 @@ namespace OutpostZero.Combat
         [SerializeField] private AudioClip swingSound;
         [SerializeField] private AudioClip hitFleshSound;
 
-        private void Awake()
+        private void Reset()
         {
+            hitMask = GameLayers.WeaponHitMask;
             weaponType = WeaponType.Melee;
             noiseType = NoiseType.MeleeSwing;
-            if (noiseRadius <= 0f) noiseRadius = 3f; // Very quiet
+        }
+
+        private void OnValidate()
+        {
+            hitMask = GameLayers.Resolve(hitMask, GameLayers.WeaponHitMask);
+        }
+
+        private void Awake()
+        {
+            hitMask = GameLayers.Resolve(hitMask, GameLayers.WeaponHitMask);
+            weaponType = WeaponType.Melee;
+            noiseType = NoiseType.MeleeSwing;
+            if (noiseRadius <= 0f) noiseRadius = 3f;
+        }
+
+        public override void Configure(WeaponDefinition definition)
+        {
+            base.Configure(definition);
+            weaponType = WeaponType.Melee;
+            noiseType = NoiseType.MeleeSwing;
+            hitMask = GameLayers.WeaponHitMask;
         }
 
         public override bool TryAttack(Vector3 targetDirection)

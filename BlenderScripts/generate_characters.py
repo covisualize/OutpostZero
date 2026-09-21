@@ -7,12 +7,13 @@ script_dir = os.path.dirname(os.path.abspath(__file__))
 if script_dir not in sys.path:
     sys.path.append(script_dir)
 
+from blender_paths import models_dir
 from blender_utils import (
     reset_scene, get_or_create_material, create_box, create_cylinder, 
     create_sphere, create_cone, join_objects, set_origin_to_bottom, export_fbx
 )
 
-MODELS_DIR = r"C:\Users\User\.gemini\antigravity\scratch\OutpostZero\Assets\Models\Characters"
+MODELS_DIR = models_dir("Characters")
 
 def generate_player_leader():
     reset_scene()

@@ -12,6 +12,7 @@ namespace OutpostZero.Combat
 
         [Header("State")]
         [SerializeField] private bool isDead = false;
+        [SerializeField] private bool verboseLogging = false;
 
         public float CurrentHealth => currentHealth;
         public float MaxHealth => maxHealth;
@@ -37,7 +38,13 @@ namespace OutpostZero.Combat
             float netDamage = amount * (100f / (100f + Mathf.Max(0f, armorRating)));
             currentHealth = Mathf.Max(0f, currentHealth - netDamage);
 
-            Debug.Log($"[HealthSystem] {gameObject.name} TakeDamage by {(attacker != null ? attacker.name : "null")}: amount={amount}, netDamage={netDamage}, currentHealth={currentHealth}\n{UnityEngine.StackTraceUtility.ExtractStackTrace()}");
+#if OUTPOST_VERBOSE_COMBAT
+            verboseLogging = true;
+#endif
+            if (verboseLogging)
+            {
+                Debug.Log($"[HealthSystem] {gameObject.name} took {netDamage:0.0} damage ({currentHealth:0.0} left).");
+            }
 
             OnDamaged?.Invoke(netDamage, hitPoint);
             OnHealthChanged?.Invoke(currentHealth, maxHealth);
@@ -61,9 +68,20 @@ namespace OutpostZero.Combat
             if (isDead) return;
             isDead = true;
 
-            Debug.LogWarning($"[HealthSystem] {gameObject.name} Died! HitPoint: {hitPoint}, Attacker: {(attacker != null ? attacker.name : "null")}\n{UnityEngine.StackTraceUtility.ExtractStackTrace()}");
+            if (verboseLogging)
+            {
+                Debug.LogWarning($"[HealthSystem] {gameObject.name} died.");
+            }
 
             OnDeath?.Invoke(hitPoint, hitDirection, attacker);
+        }
+
+        public void Configure(float max, float armor = 0f)
+        {
+            maxHealth = Mathf.Max(1f, max);
+            currentHealth = maxHealth;
+            armorRating = armor;
+            isDead = false;
         }
 
         public void ResetHealth()

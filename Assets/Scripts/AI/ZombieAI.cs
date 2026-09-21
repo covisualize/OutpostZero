@@ -4,6 +4,7 @@ using UnityEngine.AI;
 using OutpostZero.Core;
 using OutpostZero.Sensory;
 using OutpostZero.Combat;
+using OutpostZero.Player;
 
 namespace OutpostZero.AI
 {
@@ -61,27 +62,87 @@ namespace OutpostZero.AI
         public Vector3 Position => transform.position;
         public float HearingSensitivity => hearingSensitivity;
 
+        private void Reset()
+        {
+            visionMask = GameLayers.VisionOcclusionMask;
+        }
+
+        private void OnValidate()
+        {
+            visionMask = GameLayers.Resolve(visionMask, GameLayers.VisionOcclusionMask);
+        }
+
         private void Awake()
         {
+            visionMask = GameLayers.Resolve(visionMask, GameLayers.VisionOcclusionMask);
             agent = GetComponent<NavMeshAgent>();
             healthSystem = GetComponent<HealthSystem>();
             spawnOrigin = transform.position;
 
             healthSystem.OnDeath += HandleDeath;
             healthSystem.OnDamaged += HandleDamaged;
+            GameLayers.ApplyRecursively(gameObject, GameLayers.Enemy);
         }
 
-        private void Start()
+        public void Configure(ZombieArchetype archetype)
+        {
+            if (archetype == null) return;
+
+            wanderSpeed = archetype.wanderSpeed;
+            chaseSpeed = archetype.chaseSpeed;
+            attackDamage = archetype.attackDamage;
+            attackCooldown = archetype.attackCooldown;
+            attackRange = archetype.attackRange;
+            sightRange = archetype.sightRange;
+            sightAngle = archetype.sightAngle;
+            hearingSensitivity = archetype.hearingSensitivity;
+            hordeAlertRadius = archetype.hordeAlertRadius;
+            visionMask = GameLayers.VisionOcclusionMask;
+
+            if (agent == null) agent = GetComponent<NavMeshAgent>();
+            if (agent != null)
+            {
+                agent.speed = chaseSpeed;
+            }
+
+            if (healthSystem == null) healthSystem = GetComponent<HealthSystem>();
+            if (healthSystem != null)
+            {
+                healthSystem.Configure(archetype.maxHealth, archetype.armor);
+            }
+        }
+
+        public void ResetForSpawn()
+        {
+            currentTarget = null;
+            spawnOrigin = transform.position;
+            if (healthSystem != null)
+            {
+                healthSystem.ResetHealth();
+            }
+            if (agent != null)
+            {
+                agent.enabled = true;
+                agent.isStopped = false;
+            }
+            currentState = ZombieState.Idle;
+            SetState(ZombieState.Wander);
+        }
+
+        private void OnEnable()
         {
             if (NoiseManager.Instance != null)
             {
                 NoiseManager.Instance.RegisterListener(this);
             }
+        }
 
+        private void Start()
+        {
             SetState(ZombieState.Wander);
         }
 
-        private void OnDestroy()
+        private void OnDisable()
         {
             if (NoiseManager.Instance != null)
             {
@@ -277,7 +338,7 @@ namespace OutpostZero.AI
             if (currentState == ZombieState.Chase || currentState == ZombieState.Attack) return;
 
             // Look for Player
-            var player = FindObjectOfType<Player.PlayerController>();
+            var player = PlayerRegistry.Current;
             if (player == null) return;
 
             Vector3 eyePos = transform.position + Vector3.up * 1.5f;
@@ -354,7 +415,7 @@ namespace OutpostZero.AI
             if (currentState != ZombieState.Chase && currentState != ZombieState.Attack)
             {
                 // Turn around towards damage source
-                var player = FindObjectOfType<Player.PlayerController>();
+                var player = PlayerRegistry.Current;
                 if (player != null)
                 {
                     currentTarget = player.transform;
@@ -372,16 +433,20 @@ namespace OutpostZero.AI
                 GameManager.Instance.RecordZombieKill();
             }
 
-            // Drop scrap or loot chance
             if (Random.value < 0.45f)
             {
-                if (GameManager.Instance != null)
-                {
-                    GameManager.Instance.AddScrap(Random.Range(2, 6));
-                }
+                LootPickup.Spawn(LootKind.Scrap, Random.Range(2, 6), transform.position);
             }
 
-            Destroy(gameObject, 4f); // Clean up corpse after delay
+            var pool = ZombiePool.Instance;
+            if (pool != null)
+            {
+                pool.Release(gameObject, 4f);
+            }
+            else
+            {
+                Destroy(gameObject, 4f);
+            }
         }
 
         private void OnDrawGizmosSelected()
