@@ -85,13 +85,25 @@ namespace OutpostZero.Player
         public static bool ReloadPressed => Pressed(Key.R) || PadDown(pad => pad.buttonWest.wasPressedThisFrame);
         public static bool InteractPressed => Pressed(Key.E) || PadDown(pad => pad.buttonSouth.wasPressedThisFrame);
         public static bool MedkitPressed => Pressed(Key.Q) || PadDown(pad => pad.buttonNorth.wasPressedThisFrame);
-        public static bool FlashlightPressed => Pressed(Key.F);
-        public static bool CrouchHeld => Held(Key.C) || Held(Key.LeftCtrl);
-        public static bool SprintHeld => Held(Key.LeftShift);
+        public static bool FlashlightPressed => Pressed(Key.F) || PadDown(pad => pad.dpadUp.wasPressedThisFrame);
+        public static bool CrouchHeld => Held(Key.C) || Held(Key.LeftCtrl) || PadHeld(pad => pad.rightStickButton.isPressed);
+        public static bool SprintHeld => Held(Key.LeftShift) || PadHeld(pad => pad.leftStickButton.isPressed);
         public static bool InventoryPressed => Pressed(Key.Tab) || Pressed(Key.I) || PadDown(pad => pad.selectButton.wasPressedThisFrame);
         public static bool ThrowPressed => Pressed(Key.G) || PadDown(pad => pad.buttonEast.wasPressedThisFrame);
         public static bool TakedownPressed => Pressed(Key.V);
-        public static bool BuildPressed => Pressed(Key.B);
+        public static bool BuildPressed => Pressed(Key.B) || PadDown(pad => pad.dpadDown.wasPressedThisFrame);
+
+        public static int WeaponCycle
+        {
+            get
+            {
+                var pad = Gamepad.current;
+                if (pad == null) return 0;
+                if (pad.dpadRight.wasPressedThisFrame) return 1;
+                if (pad.dpadLeft.wasPressedThisFrame) return -1;
+                return 0;
+            }
+        }
 
         public static bool WeaponSlotPressed(int index)
         {
@@ -122,6 +134,12 @@ namespace OutpostZero.Player
         private static bool Down(UnityEngine.InputSystem.Controls.KeyControl key) => key != null && key.isPressed;
 
         private static bool PadDown(System.Func<Gamepad, bool> read)
+        {
+            var pad = Gamepad.current;
+            return pad != null && read(pad);
+        }
+
+        private static bool PadHeld(System.Func<Gamepad, bool> read)
         {
             var pad = Gamepad.current;
             return pad != null && read(pad);

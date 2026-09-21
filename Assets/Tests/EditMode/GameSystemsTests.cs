@@ -28,6 +28,7 @@ namespace OutpostZero.Tests.EditMode
                 hour = 6.5f,
                 colonyScrap = 22,
                 language = "es",
+                districtIndex = 2,
                 survivors = new[]
                 {
                     new SurvivorSave { id = "mara", displayName = "Mara Quill", alive = false, leader = false, morale = 10f, task = "Fallen" }
@@ -43,6 +44,7 @@ namespace OutpostZero.Tests.EditMode
             Assert.AreEqual(4, loaded.day);
             Assert.AreEqual(22, loaded.colonyScrap);
             Assert.AreEqual("es", loaded.language);
+            Assert.AreEqual(2, loaded.districtIndex);
             Assert.AreEqual("mara", loaded.survivors[0].id);
             Assert.IsFalse(loaded.survivors[0].alive);
             Assert.AreEqual("Barricade", loaded.modules[0].kind);

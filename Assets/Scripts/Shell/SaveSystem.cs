@@ -81,7 +81,11 @@ namespace OutpostZero.Shell
                 data.water = ColonyStorage.Instance.Water;
             }
             if (GameManager.Instance != null) data.kills = GameManager.Instance.ZombiesKilled;
-            if (WorldMapService.Instance != null) data.districtsCleared = WorldMapService.Instance.ClearedCount;
+            if (WorldMapService.Instance != null)
+            {
+                data.districtsCleared = WorldMapService.Instance.ClearedCount;
+                data.districtIndex = WorldMapService.Instance.CurrentIndex;
+            }
             if (FactionTrade.Instance != null) data.factionStanding = FactionTrade.Instance.Standing;
             if (TutorialDirector.Instance != null) data.tutorialDone = TutorialDirector.Instance.Finished;
             if (SettingsService.Instance != null)
@@ -132,6 +136,7 @@ namespace OutpostZero.Shell
             SettingsService.Instance?.ApplySnapshot(data.shake, data.volume, data.textScale, data.subtitles, data.language);
             TutorialDirector.Instance?.SetFinished(data.tutorialDone);
             WorldMapService.Instance?.RestoreCleared(data.districtsCleared);
+            if (data.districtIndex > data.districtsCleared) WorldMapService.Instance?.SelectIndex(data.districtIndex);
             if (data.survivors != null && data.survivors.Length > 0 && SurvivorRoster.Instance != null)
             {
                 var list = new List<Survivor>();

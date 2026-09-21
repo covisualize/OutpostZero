@@ -26,6 +26,7 @@ namespace OutpostZero.Shell
 
         public IReadOnlyList<District> Districts => districts;
         public District Current => districts.Count == 0 ? null : districts[Mathf.Clamp(currentIndex, 0, districts.Count - 1)];
+        public int CurrentIndex => districts.Count == 0 ? 0 : Mathf.Clamp(currentIndex, 0, districts.Count - 1);
         public int ClearedCount
         {
             get
@@ -58,6 +59,14 @@ namespace OutpostZero.Shell
                 new District { id = "north_gate", displayName = "North Gate", encounter = "Final push to clear the ring" }
             };
             currentIndex = 0;
+        }
+
+        public void SelectIndex(int index)
+        {
+            if (districts.Count == 0) Seed();
+            index = Mathf.Clamp(index, 0, districts.Count - 1);
+            if (districts[index].cleared) return;
+            currentIndex = index;
         }
 
         public bool Select(string id)

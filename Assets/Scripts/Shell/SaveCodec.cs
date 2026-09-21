@@ -35,6 +35,7 @@ namespace OutpostZero.Shell
         public int water;
         public int kills;
         public int districtsCleared;
+        public int districtIndex;
         public int factionStanding;
         public bool tutorialDone;
         public string language = "en";

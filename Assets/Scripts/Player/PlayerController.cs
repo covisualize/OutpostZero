@@ -163,6 +163,8 @@ namespace OutpostZero.Player
             float scroll = ExpeditionInput.Scroll;
             if (scroll > 0.05f) CycleWeapon(1);
             else if (scroll < -0.05f) CycleWeapon(-1);
+            int padCycle = ExpeditionInput.WeaponCycle;
+            if (padCycle != 0) CycleWeapon(padCycle);
         }
 
         private void HandleMovement()
