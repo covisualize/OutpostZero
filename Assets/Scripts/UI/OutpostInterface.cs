@@ -421,6 +421,8 @@ namespace OutpostZero.UI
             parent.Add(SliderRow("Volume", settings.MasterVolume, settings.SetVolume));
             parent.Add(SliderRow("Effects", settings.SfxVolume, settings.SetSfx));
             parent.Add(SliderRow("Music", settings.MusicVolume, settings.SetMusic));
+            parent.Add(SliderRow("Ambience", settings.AmbienceVolume, settings.SetAmbience));
+            parent.Add(SliderRow("Interface", settings.UiVolume, settings.SetUi));
             parent.Add(SliderRow("Field of view", settings.FieldOfView, 40f, 75f, settings.SetFieldOfView));
             parent.Add(SliderRow("Text", settings.TextScale, 0.8f, 1.6f, settings.SetTextScale));
             parent.Add(Button(settings.Subtitles ? "Subtitles on" : "Subtitles off", () => settings.SetSubtitles(!settings.Subtitles)));
@@ -699,7 +701,11 @@ namespace OutpostZero.UI
 
         private static Button Button(string text, System.Action action)
         {
-            var button = new Button(action) { text = text };
+            var button = new Button(() =>
+            {
+                AudioManager.Instance?.Play("ui", 0.4f);
+                action?.Invoke();
+            }) { text = text };
             button.style.height = 30;
             button.style.marginRight = 4;
             button.style.marginBottom = 4;

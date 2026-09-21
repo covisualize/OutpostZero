@@ -44,6 +44,8 @@ namespace OutpostZero.Shell
         public int districtIndex;
         public float sfxVolume = 1f;
         public float musicVolume = 0.7f;
+        public float ambienceVolume = 0.8f;
+        public float uiVolume = 1f;
         public int quality = 1;
         public int vsync = 1;
         public float fieldOfView = 55f;

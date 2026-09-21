@@ -107,6 +107,8 @@ namespace OutpostZero.Shell
                 data.language = SettingsService.Instance.Language;
                 data.sfxVolume = SettingsService.Instance.SfxVolume;
                 data.musicVolume = SettingsService.Instance.MusicVolume;
+                data.ambienceVolume = SettingsService.Instance.AmbienceVolume;
+                data.uiVolume = SettingsService.Instance.UiVolume;
                 data.quality = SettingsService.Instance.Quality;
                 data.vsync = SettingsService.Instance.VSync ? 1 : 0;
                 data.fieldOfView = SettingsService.Instance.FieldOfView;
@@ -160,7 +162,7 @@ namespace OutpostZero.Shell
             ColonyStorage.Instance?.Set(data.colonyScrap, data.food, data.water);
             FactionTrade.Instance?.Restore(data.factionStanding, data.factions, data.quests);
             SettingsService.Instance?.ApplySnapshot(data.shake, data.volume, data.textScale, data.subtitles, data.language);
-            SettingsService.Instance?.ApplyPresentation(data.sfxVolume, data.musicVolume, data.quality, data.vsync, data.fieldOfView, data.bindings);
+            SettingsService.Instance?.ApplyPresentation(data.sfxVolume, data.musicVolume, data.quality, data.vsync, data.fieldOfView, data.bindings, data.ambienceVolume, data.uiVolume);
             SettingsService.Instance?.SetMerciful(data.mercy != 0);
             SurvivorRoster.Instance?.RestoreStory(data.memorial, data.corpses);
             TutorialDirector.Instance?.SetFinished(data.tutorialDone);

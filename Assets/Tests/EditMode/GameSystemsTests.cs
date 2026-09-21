@@ -669,5 +669,51 @@ namespace OutpostZero.Tests.EditMode
             Assert.IsFalse(QualityProfile.Culls("Dress_skyline", 90f));
             Assert.IsFalse(QualityProfile.Culls("Player", 90f));
         }
+
+        [Test]
+        public void AudioBusesDuckWhenPausedPoisonedOrDead()
+        {
+            Assert.AreEqual(MixBus.Music, AudioMix.BusOf("ambient"));
+            Assert.AreEqual(MixBus.Music, AudioMix.BusOf("pulse"));
+            Assert.AreEqual(MixBus.Ui, AudioMix.BusOf("ui"));
+            Assert.AreEqual(MixBus.Ambience, AudioMix.BusOf("rain"));
+            Assert.AreEqual(MixBus.Ambience, AudioMix.BusOf("wind"));
+            Assert.AreEqual(MixBus.Sfx, AudioMix.BusOf("gun"));
+            Assert.AreEqual(MixBus.Sfx, AudioMix.BusOf("step_metal"));
+
+            Assert.AreEqual(0.8f, AudioMix.Gain("gun", 0.8f, 1f, 0.7f, 1f, 0.8f, 1f, MixSnapshot.Normal), 0.001f);
+            Assert.AreEqual(0.4f, AudioMix.Gain("gun", 0.8f, 1f, 0.7f, 0.5f, 0.8f, 1f, MixSnapshot.Normal), 0.001f);
+            Assert.AreEqual(0.4f, AudioMix.Gain("gun", 0.8f, 0.5f, 0.7f, 1f, 0.8f, 1f, MixSnapshot.Normal), 0.001f);
+            Assert.AreEqual(0f, AudioMix.Gain("gun", 0.8f, 0f, 1f, 1f, 1f, 1f, MixSnapshot.Normal), 0.001f);
+            Assert.AreEqual(0.07f, AudioMix.Gain("ambient", 0.1f, 1f, 0.7f, 0f, 1f, 1f, MixSnapshot.Normal), 0.001f);
+            Assert.AreEqual(0.0245f, AudioMix.Gain("ambient", 0.1f, 1f, 0.7f, 1f, 1f, 1f, MixSnapshot.Paused), 0.001f);
+            Assert.AreEqual(0.36f, AudioMix.Gain("gun", 0.8f, 1f, 1f, 1f, 1f, 1f, MixSnapshot.Paused), 0.001f);
+            Assert.AreEqual(0.5f, AudioMix.Gain("ui", 0.5f, 1f, 0.2f, 0.2f, 0.2f, 1f, MixSnapshot.Paused), 0.001f);
+            Assert.AreEqual(0.12f, AudioMix.Gain("gun", 0.8f, 1f, 1f, 1f, 1f, 1f, MixSnapshot.Death), 0.001f);
+            Assert.AreEqual(0.4025f, AudioMix.Gain("rain", 0.35f, 1f, 1f, 1f, 1f, 1f, MixSnapshot.Toxic), 0.001f);
+            Assert.AreEqual(1f, AudioMix.Gain("rain", 1f, 1f, 1f, 1f, 1f, 1f, MixSnapshot.Toxic), 0.001f);
+
+            Assert.AreEqual(AudioMix.OpenHz, AudioMix.LowpassHz(MixSnapshot.Normal));
+            Assert.AreEqual(AudioMix.PausedHz, AudioMix.LowpassHz(MixSnapshot.Paused));
+            Assert.AreEqual(AudioMix.ToxicHz, AudioMix.LowpassHz(MixSnapshot.Toxic));
+            Assert.AreEqual(AudioMix.DeathHz, AudioMix.LowpassHz(MixSnapshot.Death));
+
+            Assert.AreEqual(MixSnapshot.Death, AudioMix.SnapshotFor(GameState.GameOver, false));
+            Assert.AreEqual(MixSnapshot.Paused, AudioMix.SnapshotFor(GameState.Paused, true));
+            Assert.AreEqual(MixSnapshot.Paused, AudioMix.SnapshotFor(GameState.MainMenu, false));
+            Assert.AreEqual(MixSnapshot.Paused, AudioMix.SnapshotFor(GameState.Victory, false));
+            Assert.AreEqual(MixSnapshot.Paused, AudioMix.SnapshotFor(GameState.SuccessionScreen, false));
+            Assert.AreEqual(MixSnapshot.Toxic, AudioMix.SnapshotFor(GameState.ExpeditionActive, true));
+            Assert.AreEqual(MixSnapshot.Normal, AudioMix.SnapshotFor(GameState.ExpeditionActive, false));
+            Assert.AreEqual(MixSnapshot.Normal, AudioMix.SnapshotFor(GameState.RaidActive, false));
+
+            Assert.AreEqual("step_metal", AudioMix.StepId("Kit_manhole"));
+            Assert.AreEqual("step_wood", AudioMix.StepId("wall_boarded"));
+            Assert.AreEqual("step_water", AudioMix.StepId("puddle"));
+            Assert.AreEqual("step_hard", AudioMix.StepId("Road_Straight"));
+            Assert.AreEqual("step_hard", AudioMix.StepId("sidewalk_corner"));
+            Assert.AreEqual("step", AudioMix.StepId("Ground"));
+            Assert.AreEqual("step", AudioMix.StepId(null));
+        }
     }
 }

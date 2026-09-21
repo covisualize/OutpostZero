@@ -3,6 +3,7 @@ using UnityEngine;
 using OutpostZero.AI;
 using OutpostZero.Combat;
 using OutpostZero.Core;
+using OutpostZero.Graphics;
 using OutpostZero.Player;
 using OutpostZero.Sensory;
 
@@ -15,8 +16,8 @@ namespace OutpostZero.Shell
     {
         public static float SpatialBlend(string id)
         {
-            if (id == "ambient" || id == "pulse" || id == "ui") return 0f;
-            if (id == "step" || id == "step_hard") return 0.35f;
+            if (id == "ambient" || id == "pulse" || id == "ui" || id == "rain" || id == "wind") return 0f;
+            if (id != null && id.StartsWith("step")) return 0.35f;
             return 1f;
         }
 
@@ -39,6 +40,8 @@ namespace OutpostZero.Shell
         private readonly Dictionary<string, AudioClip> clips = new Dictionary<string, AudioClip>();
         private readonly List<AudioSource> pool = new List<AudioSource>();
         private AudioSource ambient;
+        private AudioSource weather;
+        private string weatherId = "";
         private NoiseManager subscribedNoise;
         private float nextStep;
         private bool peaked;
@@ -57,6 +60,10 @@ namespace OutpostZero.Shell
             ambient.volume = 0.12f;
             ambient.clip = GetClip("ambient");
             ambient.Play();
+            weather = gameObject.AddComponent<AudioSource>();
+            weather.loop = true;
+            weather.spatialBlend = 0f;
+            weather.playOnAwake = false;
         }
 
         private void OnEnable()
@@ -85,9 +92,14 @@ namespace OutpostZero.Shell
             }
 
             float tension = HordeDirector.Instance != null ? HordeDirector.Instance.Tension : 0f;
-            float music = SettingsService.Instance != null ? SettingsService.Instance.MusicVolume : 0.7f;
-            ambient.volume = music * (0.08f + tension / 500f);
+            var snapshot = CurrentSnapshot();
+            Levels(out float music, out float sfx, out float ambience, out float ui);
+            float bed = 0.08f + tension / 500f;
+            // The listener already carries master, so each bus is scaled on its own.
+            ambient.volume = AudioMix.Gain("ambient", bed, 1f, music, sfx, ambience, ui, snapshot);
             ambient.pitch = Mathf.Lerp(0.82f, 1.35f, tension / 100f);
+            ApplyLowpass(ambient, snapshot);
+            UpdateWeather(snapshot, music, sfx, ambience, ui);
             if (tension >= 75f && !peaked)
             {
                 peaked = true;
@@ -114,8 +126,62 @@ namespace OutpostZero.Shell
             source.maxDistance = AudioSpace.MaxDistance(id);
             source.rolloffMode = AudioRolloffMode.Linear;
             source.pitch = pitch > 0f ? pitch : Random.Range(0.94f, 1.06f);
-            float sfx = SettingsService.Instance != null ? SettingsService.Instance.SfxVolume : 1f;
-            source.PlayOneShot(GetClip(id), volume * sfx);
+            var snapshot = CurrentSnapshot();
+            Levels(out float music, out float sfx, out float ambience, out float ui);
+            ApplyLowpass(source, snapshot);
+            source.PlayOneShot(GetClip(id), AudioMix.Gain(id, volume, 1f, music, sfx, ambience, ui, snapshot));
+        }
+
+        private void UpdateWeather(MixSnapshot snapshot, float music, float sfx, float ambience, float ui)
+        {
+            var kind = WeatherController.Instance != null ? WeatherController.Instance.Kind : WeatherKind.Clear;
+            string id = kind == WeatherKind.Rain ? "rain" : kind == WeatherKind.Fog ? "wind" : "";
+            if (id != weatherId)
+            {
+                weatherId = id;
+                if (string.IsNullOrEmpty(id))
+                {
+                    weather.Stop();
+                    weather.volume = 0f;
+                }
+                else
+                {
+                    weather.clip = GetClip(id);
+                    weather.Play();
+                }
+            }
+            if (!string.IsNullOrEmpty(weatherId))
+                weather.volume = AudioMix.Gain(weatherId, 0.35f, 1f, music, sfx, ambience, ui, snapshot);
+            ApplyLowpass(weather, snapshot);
+        }
+
+        private static MixSnapshot CurrentSnapshot()
+        {
+            bool toxic = false;
+            var player = PlayerRegistry.Current;
+            if (player != null)
+            {
+                var effects = player.GetComponent<StatusEffectController>();
+                toxic = effects != null && effects.IsPoisoned;
+            }
+            var state = GameManager.Instance != null ? GameManager.Instance.CurrentState : GameState.ExpeditionActive;
+            return AudioMix.SnapshotFor(state, toxic);
+        }
+
+        private static void Levels(out float music, out float sfx, out float ambience, out float ui)
+        {
+            var settings = SettingsService.Instance;
+            music = settings != null ? settings.MusicVolume : 0.7f;
+            sfx = settings != null ? settings.SfxVolume : 1f;
+            ambience = settings != null ? settings.AmbienceVolume : 0.8f;
+            ui = settings != null ? settings.UiVolume : 1f;
+        }
+
+        private static void ApplyLowpass(AudioSource source, MixSnapshot snapshot)
+        {
+            var filter = source.GetComponent<AudioLowPassFilter>();
+            if (filter == null) filter = source.gameObject.AddComponent<AudioLowPassFilter>();
+            filter.cutoffFrequency = AudioMix.LowpassHz(snapshot);
         }
 
         private void Step()
@@ -127,13 +193,15 @@ namespace OutpostZero.Shell
             if (Time.time < nextStep) return;
             float interval = player.IsSprinting ? 0.28f : player.IsCrouching ? 0.55f : 0.42f;
             nextStep = Time.time + interval;
-            bool road = false;
+            string surface = "";
             if (Physics.Raycast(player.transform.position + Vector3.up, Vector3.down, out var hit, 2.2f, GameLayers.VisionOcclusionMask, QueryTriggerInteraction.Ignore))
             {
-                road = hit.collider.name.Contains("Road") || hit.collider.name.Contains("Street");
+                surface = hit.collider.name;
             }
-            float pitch = road ? Random.Range(1.05f, 1.2f) : Random.Range(0.85f, 1f);
-            PlayAt(road ? "step_hard" : "step", player.transform.position, player.IsCrouching ? 0.12f : 0.28f, pitch);
+            string step = AudioMix.StepId(surface);
+            bool hard = step == "step_hard" || step == "step_metal";
+            float pitch = hard ? Random.Range(1.05f, 1.2f) : Random.Range(0.85f, 1f);
+            PlayAt(step, player.transform.position, player.IsCrouching ? 0.12f : 0.28f, pitch);
         }
 
         private void OnShot(Vector3 muzzle, WeaponBase weapon)
@@ -172,11 +240,17 @@ namespace OutpostZero.Shell
             return extra;
         }
 
+        private static bool StepTone(string id)
+        {
+            return id == "step" || id == "step_hard" || id == "step_metal" || id == "step_wood" || id == "step_water";
+        }
+
         private AudioClip GetClip(string id)
         {
             if (clips.TryGetValue(id, out var clip)) return clip;
             int rate = 22050;
-            float seconds = id == "ambient" ? 2f : id == "boom" ? 0.45f : 0.18f;
+            bool loop = id == "ambient" || id == "rain" || id == "wind";
+            float seconds = loop ? 2f : id == "boom" ? 0.45f : 0.18f;
             int samples = Mathf.CeilToInt(rate * seconds);
             var data = new float[samples];
             var random = new System.Random(id.GetHashCode());
@@ -184,9 +258,9 @@ namespace OutpostZero.Shell
             {
                 float t = i / (float)samples;
                 float noise = (float)(random.NextDouble() * 2.0 - 1.0);
-                float envelope = id == "ambient" ? 0.25f : Mathf.Exp(-t * (id == "boom" ? 4f : 10f));
-                float tone = id == "scream" ? Mathf.Sin(t * 90f) : id == "pulse" ? Mathf.Sin(t * 28f) : id == "step" || id == "step_hard" ? noise * Mathf.Sin(t * 18f) : id == "ui" ? Mathf.Sin(t * 40f) : noise;
-                data[i] = tone * envelope * (id == "ambient" ? 0.2f : 0.6f);
+                float envelope = loop ? 0.25f : Mathf.Exp(-t * (id == "boom" ? 4f : 10f));
+                float tone = id == "scream" ? Mathf.Sin(t * 90f) : id == "pulse" ? Mathf.Sin(t * 28f) : id == "rain" ? noise : id == "wind" ? noise * Mathf.Sin(t * 6f) : StepTone(id) ? noise * Mathf.Sin(t * 18f) : id == "ui" ? Mathf.Sin(t * 40f) : noise;
+                data[i] = tone * envelope * (loop ? 0.2f : 0.6f);
             }
             clip = AudioClip.Create(id, samples, 1, rate, false);
             clip.SetData(data, 0);

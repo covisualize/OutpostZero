@@ -20,6 +20,8 @@ namespace OutpostZero.Core
         [SerializeField] private string language = "en";
         [SerializeField] private float sfxVolume = 1f;
         [SerializeField] private float musicVolume = 0.7f;
+        [SerializeField] private float ambienceVolume = 0.8f;
+        [SerializeField] private float uiVolume = 1f;
         [SerializeField] private int quality = 1;
         [SerializeField] private int vsync = 1;
         [SerializeField] private float fieldOfView = 55f;
@@ -29,6 +31,8 @@ namespace OutpostZero.Core
         public float MasterVolume => masterVolume;
         public float SfxVolume => sfxVolume;
         public float MusicVolume => musicVolume;
+        public float AmbienceVolume => ambienceVolume;
+        public float UiVolume => uiVolume;
         public float TextScale => textScale;
         public bool Subtitles => subtitles;
         public int ColorblindMode => colorblindMode;
@@ -103,6 +107,18 @@ namespace OutpostZero.Core
             OnChanged?.Invoke();
         }
 
+        public void SetAmbience(float value)
+        {
+            ambienceVolume = Mathf.Clamp01(value);
+            OnChanged?.Invoke();
+        }
+
+        public void SetUi(float value)
+        {
+            uiVolume = Mathf.Clamp01(value);
+            OnChanged?.Invoke();
+        }
+
         public void SetFieldOfView(float value)
         {
             fieldOfView = Mathf.Clamp(value, 40f, 75f);
@@ -148,10 +164,12 @@ namespace OutpostZero.Core
             OnChanged?.Invoke();
         }
 
-        public void ApplyPresentation(float sfx, float music, int tier, int sync, float fov, string bindings)
+        public void ApplyPresentation(float sfx, float music, int tier, int sync, float fov, string bindings, float ambience = 0f, float ui = 0f)
         {
             sfxVolume = Mathf.Clamp01(sfx <= 0f ? 1f : sfx);
             musicVolume = Mathf.Clamp01(music <= 0f ? 0.7f : music);
+            ambienceVolume = Mathf.Clamp01(ambience <= 0f ? 0.8f : ambience);
+            uiVolume = Mathf.Clamp01(ui <= 0f ? 1f : ui);
             quality = Mathf.Clamp(tier, 0, 3);
             vsync = sync == 0 ? 0 : 1;
             fieldOfView = Mathf.Clamp(fov < 40f ? 55f : fov, 40f, 75f);
