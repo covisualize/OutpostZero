@@ -39,6 +39,13 @@ namespace OutpostZero.AI
             directorOwnsSpawns = true;
         }
 
+        public int MaxAlive => maxAliveZombies;
+
+        public void ApplyCap(int max)
+        {
+            maxAliveZombies = Mathf.Max(4, max);
+        }
+
         public void Configure(GameObject prefab, GameObject[] variants, int initial, int maxAlive)
         {
             zombiePrefab = prefab;

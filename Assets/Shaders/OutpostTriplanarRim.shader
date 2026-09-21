@@ -28,6 +28,7 @@ Shader "OutpostZero/TriplanarRim"
             HLSLPROGRAM
             #pragma vertex vert
             #pragma fragment frag
+            #pragma multi_compile_instancing
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
 
@@ -36,6 +37,7 @@ Shader "OutpostZero/TriplanarRim"
                 float4 positionOS : POSITION;
                 float3 normalOS : NORMAL;
                 float2 uv : TEXCOORD0;
+                UNITY_VERTEX_INPUT_INSTANCE_ID
             };
 
             struct Varyings
@@ -44,6 +46,7 @@ Shader "OutpostZero/TriplanarRim"
                 float3 positionWS : TEXCOORD0;
                 float3 normalWS : TEXCOORD1;
                 float2 uv : TEXCOORD2;
+                UNITY_VERTEX_INPUT_INSTANCE_ID
             };
 
             CBUFFER_START(UnityPerMaterial)
@@ -99,6 +102,8 @@ Shader "OutpostZero/TriplanarRim"
             Varyings vert(Attributes input)
             {
                 Varyings output;
+                UNITY_SETUP_INSTANCE_ID(input);
+                UNITY_TRANSFER_INSTANCE_ID(input, output);
                 VertexPositionInputs pos = GetVertexPositionInputs(input.positionOS.xyz);
                 output.positionCS = pos.positionCS;
                 output.positionWS = pos.positionWS;
@@ -109,6 +114,7 @@ Shader "OutpostZero/TriplanarRim"
 
             half4 frag(Varyings input) : SV_Target
             {
+                UNITY_SETUP_INSTANCE_ID(input);
                 float3 normal = normalize(input.normalWS);
                 float noise = Triplanar(input.positionWS, normal);
                 clip(noise - _Dissolve);

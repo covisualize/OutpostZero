@@ -1,4 +1,5 @@
 using UnityEngine;
+using OutpostZero.Core;
 
 namespace OutpostZero.Graphics
 {
@@ -91,6 +92,7 @@ namespace OutpostZero.Graphics
                 applied = kind;
                 PushWetness(WeatherSurface.Wetness(kind));
             }
+            ApplyBudget(QualityProfile.For(SettingsService.Instance != null ? SettingsService.Instance.Quality : 1).Particles);
         }
 
         private static void PushWetness(float wetness)
@@ -107,6 +109,22 @@ namespace OutpostZero.Graphics
             }
         }
 
+        public void ApplyBudget(int particles)
+        {
+            int rainCap = Mathf.Max(40, particles);
+            int debrisCap = Mathf.Max(20, particles / 4);
+            if (rain != null)
+            {
+                var main = rain.main;
+                main.maxParticles = rainCap;
+            }
+            if (debris != null)
+            {
+                var main = debris.main;
+                main.maxParticles = debrisCap;
+            }
+        }
+
         private void EnsureRain()
         {
             if (rain != null) return;
@@ -117,7 +135,7 @@ namespace OutpostZero.Graphics
             main.startLifetime = 1.2f;
             main.startSpeed = 12f;
             main.startSize = 0.05f;
-            main.maxParticles = 400;
+            main.maxParticles = QualityProfile.For(1).Particles;
             main.simulationSpace = ParticleSystemSimulationSpace.World;
             var emission = rain.emission;
             emission.rateOverTime = 80f;

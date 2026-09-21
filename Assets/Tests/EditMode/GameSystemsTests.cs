@@ -629,5 +629,45 @@ namespace OutpostZero.Tests.EditMode
             Assert.IsFalse(CharacterLook.Wounded(0f, 0f));
             Assert.Greater(CharacterLook.EyeHeight("brute"), CharacterLook.EyeHeight("runner"));
         }
+
+        [Test]
+        public void QualityTiersCapTheHordeAndStaggerSight()
+        {
+            var low = QualityProfile.For(0);
+            var medium = QualityProfile.For(1);
+            var high = QualityProfile.For(2);
+            var ultra = QualityProfile.For(4);
+            Assert.AreEqual("Low", low.Name);
+            Assert.AreEqual(16, low.Zombies);
+            Assert.IsFalse(low.Ssao);
+            Assert.IsFalse(low.DepthOfField);
+            Assert.Greater(low.FrameMs, 30f);
+            Assert.AreEqual(32, medium.Zombies);
+            Assert.IsTrue(medium.Ssao);
+            Assert.IsFalse(medium.DepthOfField);
+            Assert.IsTrue(high.DepthOfField);
+            Assert.AreEqual("Ultra", ultra.Name);
+            Assert.AreEqual(40, ultra.Zombies);
+            Assert.Less(low.ShadowDistance, medium.ShadowDistance);
+            Assert.Less(medium.Decals, high.Decals);
+
+            int due = 0;
+            for (int token = 0; token < 32; token++)
+            {
+                if (QualityProfile.SightDue(token, 0)) due++;
+            }
+            Assert.AreEqual(QualityProfile.SightPerFrame, due);
+            Assert.IsTrue(QualityProfile.SightDue(1, 1));
+            Assert.IsFalse(QualityProfile.SightDue(1, 0));
+
+            Assert.AreEqual(0, QualityProfile.Lod(10f));
+            Assert.AreEqual(1, QualityProfile.Lod(40f));
+            Assert.AreEqual(-1, QualityProfile.Lod(60f));
+            Assert.IsTrue(QualityProfile.Culls("KitBlock", 70f));
+            Assert.IsTrue(QualityProfile.Culls("Dress_rubble", 70f));
+            Assert.IsFalse(QualityProfile.Culls("Dress_rubble", 10f));
+            Assert.IsFalse(QualityProfile.Culls("Dress_skyline", 90f));
+            Assert.IsFalse(QualityProfile.Culls("Player", 90f));
+        }
     }
 }

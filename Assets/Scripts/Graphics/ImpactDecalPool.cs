@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using OutpostZero.Combat;
+using OutpostZero.Core;
 
 namespace OutpostZero.Graphics
 {
@@ -96,7 +97,8 @@ namespace OutpostZero.Graphics
             {
                 if (decal.Object != null && !decal.Object.activeSelf) return decal;
             }
-            if (pool.Count >= 48)
+            int cap = QualityProfile.For(SettingsService.Instance != null ? SettingsService.Instance.Quality : 1).Decals;
+            if (pool.Count >= cap)
             {
                 Decal oldest = pool[0];
                 for (int i = 1; i < pool.Count; i++)

@@ -64,6 +64,7 @@ namespace OutpostZero.AI
         private Vector3 spawnOrigin;
         [SerializeField] private ZombieSpecialAbility specialAbility;
         private string archetypeId = "";
+        private int sightToken;
 
         public Vector3 Position => transform.position;
         public float HearingSensitivity => hearingSensitivity;
@@ -88,6 +89,7 @@ namespace OutpostZero.AI
             healthSystem.OnDeath += HandleDeath;
             healthSystem.OnDamaged += HandleDamaged;
             GameLayers.ApplyRecursively(gameObject, GameLayers.Enemy);
+            sightToken = QualityProfile.NextToken();
         }
 
         public void Configure(ZombieArchetype archetype)
@@ -194,7 +196,17 @@ namespace OutpostZero.AI
                 if (gameState != GameState.ExpeditionActive && gameState != GameState.RaidActive) return;
             }
 
-            CheckSight();
+            if (currentState != ZombieState.Chase && currentState != ZombieState.Attack && QualityProfile.SightDue(sightToken, Time.frameCount))
+            {
+                CheckSight();
+            }
+            if (agent != null && PlayerRegistry.Current != null)
+            {
+                float reach = Vector3.Distance(transform.position, PlayerRegistry.Current.transform.position);
+                agent.obstacleAvoidanceType = reach > 18f
+                    ? ObstacleAvoidanceType.LowQualityObstacleAvoidance
+                    : ObstacleAvoidanceType.HighQualityObstacleAvoidance;
+            }
 
             switch (currentState)
             {

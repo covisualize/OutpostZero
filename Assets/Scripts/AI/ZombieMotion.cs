@@ -23,6 +23,7 @@ namespace OutpostZero.AI
         {
             if (brain == null) return;
             if (animator == null) animator = GetComponentInChildren<Animator>();
+            if (animator != null) animator.cullingMode = AnimatorCullingMode.CullUpdateTransforms;
             if (animator != null && animator.runtimeAnimatorController != null)
             {
                 DriveRig();

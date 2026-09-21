@@ -426,8 +426,8 @@ namespace OutpostZero.UI
             parent.Add(Button(settings.Subtitles ? "Subtitles on" : "Subtitles off", () => settings.SetSubtitles(!settings.Subtitles)));
             parent.Add(Button("Colorblind mode " + settings.ColorblindMode, settings.CycleColorblind));
             parent.Add(Button(settings.Language == "es" ? "Idioma: ES" : "Language: EN", () => settings.SetLanguage(settings.Language == "es" ? "en" : "es")));
-            string[] tiers = { "Low", "Medium", "High" };
-            parent.Add(Button("Quality: " + tiers[Mathf.Clamp(settings.Quality, 0, 2)], settings.CycleQuality));
+            string[] tiers = { "Low", "Medium", "High", "Ultra" };
+            parent.Add(Button("Quality: " + tiers[Mathf.Clamp(settings.Quality, 0, 3)], settings.CycleQuality));
             parent.Add(Button(settings.VSync ? "VSync on" : "VSync off", settings.ToggleVSync));
             parent.Add(Button(settings.Merciful ? "Death: merciful" : "Death: permadeath", settings.ToggleMerciful));
             parent.Add(Body("Click an action, then press a key. Escape cancels."));

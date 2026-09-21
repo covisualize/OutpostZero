@@ -1,5 +1,6 @@
 using UnityEngine;
 using OutpostZero.AI;
+using OutpostZero.Core;
 
 namespace OutpostZero.Graphics
 {
@@ -17,14 +18,15 @@ namespace OutpostZero.Graphics
 
         private void Update()
         {
+            var tier = QualityProfile.For(SettingsService.Instance != null ? SettingsService.Instance.Quality : 1);
             float ms = Time.unscaledDeltaTime * 1000f;
             int zombies = FindObjectsByType<ZombieAI>(FindObjectsSortMode.None).Length;
-            if (ms > FrameBudgetMs * 1.5f || zombies > ZombieBudget) overFrames++;
+            if (ms > tier.FrameMs * 1.5f || zombies > tier.Zombies) overFrames++;
             else overFrames = 0;
             if (!reported && overFrames > 90)
             {
                 reported = true;
-                Debug.LogWarning($"[PerfBudget] Frame {ms:0.0} ms, zombies {zombies}. Budget is {FrameBudgetMs} ms and {ZombieBudget} alive.");
+                Debug.LogWarning($"[PerfBudget] Frame {ms:0.0} ms, zombies {zombies}. Budget is {tier.FrameMs} ms and {tier.Zombies} alive.");
             }
         }
     }

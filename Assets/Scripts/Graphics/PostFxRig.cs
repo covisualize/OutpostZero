@@ -64,10 +64,11 @@ namespace OutpostZero.Graphics
         private void ApplyTier(int tier, bool aiming)
         {
             if (bloom == null) return;
-            bloom.intensity.Override(tier == 0 ? 0.12f : tier == 2 ? 0.55f : 0.35f);
-            vignette.intensity.Override(tier == 0 ? 0.16f : 0.28f);
-            grain.active = tier == 2;
-            depth.active = aiming && tier > 0;
+            var budget = QualityProfile.For(tier);
+            bloom.intensity.Override(budget.Bloom);
+            vignette.intensity.Override(tier <= 0 ? 0.16f : 0.28f);
+            grain.active = budget.Grain;
+            depth.active = aiming && budget.DepthOfField;
         }
     }
 }

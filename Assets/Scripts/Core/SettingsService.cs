@@ -1,5 +1,9 @@
 using System;
 using UnityEngine;
+using UnityEngine.Rendering;
+using UnityEngine.Rendering.Universal;
+using OutpostZero.AI;
+using OutpostZero.Graphics;
 
 namespace OutpostZero.Core
 {
@@ -107,7 +111,7 @@ namespace OutpostZero.Core
 
         public void CycleQuality()
         {
-            quality = (quality + 1) % 3;
+            quality = (quality + 1) % 4;
             ApplyDisplay();
             OnChanged?.Invoke();
         }
@@ -148,7 +152,7 @@ namespace OutpostZero.Core
         {
             sfxVolume = Mathf.Clamp01(sfx <= 0f ? 1f : sfx);
             musicVolume = Mathf.Clamp01(music <= 0f ? 0.7f : music);
-            quality = Mathf.Clamp(tier, 0, 2);
+            quality = Mathf.Clamp(tier, 0, 3);
             vsync = sync == 0 ? 0 : 1;
             fieldOfView = Mathf.Clamp(fov < 40f ? 55f : fov, 40f, 75f);
             OutpostZero.Player.ControlBindings.Unpack(bindings);
@@ -164,8 +168,19 @@ namespace OutpostZero.Core
 
         private void ApplyDisplay()
         {
+            var tier = QualityProfile.For(quality);
             QualitySettings.vSyncCount = vsync;
             Application.targetFrameRate = vsync == 0 ? 60 : -1;
+            QualitySettings.shadowDistance = tier.ShadowDistance;
+            QualitySettings.antiAliasing = tier.Msaa;
+            if (GraphicsSettings.currentRenderPipeline is UniversalRenderPipelineAsset pipeline)
+            {
+                pipeline.renderScale = tier.RenderScale;
+                pipeline.msaaSampleCount = tier.Msaa;
+            }
+            var spawners = FindObjectsByType<ZombieSpawner>(FindObjectsSortMode.None);
+            for (int i = 0; i < spawners.Length; i++) spawners[i].ApplyCap(tier.Zombies);
+            WeatherController.Instance?.ApplyBudget(tier.Particles);
         }
     }
 }

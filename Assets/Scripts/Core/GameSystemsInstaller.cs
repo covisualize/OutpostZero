@@ -40,6 +40,7 @@ namespace OutpostZero.Core
             Add<PostFxRig>(host.gameObject);
             Add<UrpMaterialPass>(host.gameObject);
             Add<PerfBudget>(host.gameObject);
+            Add<LodGovernor>(host.gameObject);
             Add<WorldMapService>(host.gameObject);
             Add<TutorialDirector>(host.gameObject);
             Add<CodexDirector>(host.gameObject);
