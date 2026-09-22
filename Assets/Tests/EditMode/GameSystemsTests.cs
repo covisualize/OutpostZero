@@ -4591,6 +4591,24 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void AFinishedRunAndAFrameCapFollowTheLanguage()
+        {
+            var held = RunBoard.Make("Bo", 9, 2, 0, 3, true);
+            var fell = RunBoard.Make("Ada", 3, 4, 1, 1, false);
+            Assert.AreEqual("Held  day 9  kills 2  lost 0  streets 3", RunBoard.Line(held));
+            Assert.AreEqual("Fell  day 3  kills 4  lost 1  streets 1", RunBoard.Line(fell, "en"));
+            Assert.AreEqual("Aguantó  día 9  bajas 2  perdidos 0  calles 3", RunBoard.Line(held, "es"));
+            Assert.AreEqual("Cayó  día 3  bajas 4  perdidos 1  calles 1", RunBoard.Line(fell, "es"));
+            Assert.AreEqual("Auto", PlayOptions.FrameName(0));
+            Assert.AreEqual("30 fps", PlayOptions.FrameName(1, "en"));
+            Assert.AreEqual("60 fps", PlayOptions.FrameName(2, "es"));
+            Assert.AreEqual("120 fps", PlayOptions.FrameName(3));
+            Assert.AreEqual("Uncapped", PlayOptions.FrameName(4, "en"));
+            Assert.AreEqual("Sin tope", PlayOptions.FrameName(4, "es"));
+            Assert.AreEqual("Auto", PlayOptions.FrameName(-1, "es"));
+        }
+
+        [Test]
         public void StreetLampsFollowTheDarkAndNoonStaysOut()
         {
             Assert.AreEqual(0f, DayNightCycle.HourToNight(12f), 0.001f);

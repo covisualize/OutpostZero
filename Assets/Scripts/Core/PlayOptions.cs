@@ -58,11 +58,18 @@ namespace OutpostZero.Core
 
         public static string FrameName(int stored)
         {
-            if (stored == 1) return "30 fps";
-            if (stored == 2) return "60 fps";
-            if (stored == 3) return "120 fps";
-            if (stored == 4) return "Uncapped";
-            return "Auto";
+            return FrameName(stored, "en");
+        }
+
+        public static string FrameName(int stored, string language)
+        {
+            string key = stored == 1 ? "frame.30"
+                : stored == 2 ? "frame.60"
+                : stored == 3 ? "frame.120"
+                : stored == 4 ? "frame.uncapped"
+                : "frame.auto";
+            if (string.IsNullOrEmpty(language)) return OutpostZero.Shell.Loc.T(key);
+            return OutpostZero.Shell.Loc.T(key, language);
         }
     }
 }

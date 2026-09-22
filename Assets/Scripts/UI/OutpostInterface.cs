@@ -710,7 +710,7 @@ namespace OutpostZero.UI
                 return;
             }
             int count = runs.Length < 4 ? runs.Length : 4;
-            for (int i = 0; i < count; i++) menu.Add(Body(RunBoard.Line(runs[i])));
+            for (int i = 0; i < count; i++) menu.Add(Body(RunBoard.Line(runs[i], null)));
         }
 
         private void BuildSettings(VisualElement parent)
@@ -734,7 +734,7 @@ namespace OutpostZero.UI
             int tier = Mathf.Clamp(settings.Quality, 0, 3);
             parent.Add(Button(Loc.T("set.quality") + " " + Loc.T("set.tier" + tier), settings.CycleQuality));
             parent.Add(Button(settings.VSync ? Loc.T("set.vsync_on") : Loc.T("set.vsync_off"), settings.ToggleVSync));
-            parent.Add(Button(Loc.T("set.frame") + " " + PlayOptions.FrameName(settings.FrameCap), settings.CycleFrameCap));
+            parent.Add(Button(Loc.T("set.frame") + " " + PlayOptions.FrameName(settings.FrameCap, null), settings.CycleFrameCap));
             parent.Add(Button(Loc.T("set.resolution") + " " + DisplayModes.Name(settings.Resolution), settings.CycleResolution));
             parent.Add(Button(settings.AimAssist == 0 ? Loc.T("set.aim_off") : settings.AimAssist == 2 ? Loc.T("set.aim_strong") : Loc.T("set.aim_light"), settings.CycleAim));
             parent.Add(Button(settings.InvertLook ? Loc.T("set.invert") : Loc.T("set.look"), settings.ToggleInvert));
