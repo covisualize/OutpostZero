@@ -316,7 +316,9 @@ namespace OutpostZero.Tests.EditMode
         public void MedicalCacheRollsSupplies()
         {
             var grants = LootTables.Roll("medical", 3);
-            Assert.AreEqual(2, grants.Length);
+            Assert.AreEqual(3, grants.Length);
+            Assert.AreEqual("antibiotics", grants[2].ItemId);
+            Assert.LessOrEqual(grants[2].Count, 1);
             Assert.IsTrue(grants[0].ItemId == "medkit" || grants[0].ItemId == "bandage");
             Assert.AreEqual("water", grants[1].ItemId);
             Assert.AreEqual(1, grants[1].Count);
@@ -1761,7 +1763,7 @@ namespace OutpostZero.Tests.EditMode
             Assert.AreEqual("west", Presentation.Compass(-9f, 0f, "en"));
             Assert.AreEqual("northeast", Presentation.Compass(6f, 6f, "en"));
             Assert.AreEqual("here", Presentation.Compass(0f, 0f, "en"));
-            Assert.AreEqual("[Zombie scream, norte]", Presentation.Caption(NoiseType.ZombieScream, 0f, 4f, "es"));
+            Assert.AreEqual("[Grito, norte]", Presentation.Caption(NoiseType.ZombieScream, 0f, 4f, "es"));
             Assert.AreEqual("[Gunshot, west]", Presentation.Caption(NoiseType.GunshotLoud, -5f, 0f, "en"));
             Assert.AreEqual("[Explosion, here]", Presentation.Caption(NoiseType.Explosion, 0f, 0f, "en"));
             Assert.AreEqual("", Presentation.Caption(NoiseType.WalkFootstep, 1f, 0f, "en"));
@@ -4774,7 +4776,7 @@ namespace OutpostZero.Tests.EditMode
             Assert.AreEqual(0.65f, SkyGrade.Sun(0.5f), 0.001f);
             Assert.AreEqual(0.08f, SkyGrade.NightSky.b, 0.001f);
             Assert.Less(SkyGrade.NightSky.r, SkyGrade.NightSky.b);
-            Assert.AreEqual(SkyGrade.NightSky, SkyGrade.Sky(1f));
+            Assert.IsTrue(SkyGrade.NightSky == SkyGrade.Sky(1f));
             Assert.AreEqual(SkyGrade.DaySky, SkyGrade.Sky(0f));
             Assert.AreEqual(1.05f, SkyGrade.Exposure(0f), 0.001f);
             Assert.AreEqual(0.35f, SkyGrade.Exposure(1f), 0.001f);
