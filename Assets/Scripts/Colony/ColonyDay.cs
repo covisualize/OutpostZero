@@ -24,6 +24,7 @@ namespace OutpostZero.Colony
         public int opinion = 18;
         public int injury;
         public int leadership;
+        public float fatigue;
     }
 
     /// <summary>
@@ -139,6 +140,7 @@ namespace OutpostZero.Colony
                 var person = people[i];
                 if (person == null || !person.alive) continue;
 
+                person.fatigue = ShiftWear.After(person.fatigue, person.task, cot);
                 person.morale -= stain;
                 float hungerBefore = person.hunger;
                 person.hunger = Clamp(person.hunger - TraitHook.HungerDrop(person.trait, person.aside, person.mark));

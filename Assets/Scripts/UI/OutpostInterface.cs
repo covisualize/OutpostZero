@@ -839,6 +839,7 @@ namespace OutpostZero.UI
                         + "  " + Loc.Mood(mood)
                         + "  " + Loc.T("camp.food") + " " + Mathf.RoundToInt(survivor.hunger)
                         + " " + Loc.T("camp.water") + " " + Mathf.RoundToInt(survivor.thirst)
+                        + (survivor.fatigue > 0f ? "  " + Loc.T("camp.wear") + " " + Mathf.RoundToInt(survivor.fatigue) + (NeedsPressure.Tired(survivor.fatigue) ? " " + Loc.T("camp.tired") : "") : "")
                         + "  " + survivor.bond
                         + "  " + Loc.T("camp.opinion") + " " + survivor.opinion
                         + Bonds(survivor.kin)

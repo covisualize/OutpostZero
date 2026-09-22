@@ -603,6 +603,40 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void ARestDayTakesTheWearOffAndATiredShiftPaysLess()
+        {
+            Assert.AreEqual(22f, ShiftWear.After(0f, "Guard", false), 0.001f);
+            Assert.AreEqual(8f, ShiftWear.After(0f, "Lead", false), 0.001f);
+            Assert.AreEqual(0f, ShiftWear.After(0f, "Fallen", false), 0.001f);
+            Assert.AreEqual(0f, ShiftWear.After(30f, "Rest", false), 0.001f);
+            Assert.AreEqual(40f, ShiftWear.After(80f, "Rest", false), 0.001f);
+            Assert.AreEqual(10f, ShiftWear.After(80f, "Rest", true), 0.001f);
+            Assert.AreEqual(100f, ShiftWear.After(90f, "Scavenge", false), 0.001f);
+            Assert.AreEqual(4, ShiftWear.Short(4, 75f));
+            Assert.AreEqual(3, ShiftWear.Short(4, 76f));
+            Assert.AreEqual(1, ShiftWear.Short(1, 90f));
+            Assert.AreEqual(0, ShiftWear.Short(0, 90f));
+            Assert.AreEqual("Worn out", Loc.T("camp.tired"));
+            Assert.AreEqual("Agotado", Loc.T("camp.tired", "es"));
+            Assert.AreEqual("Cansancio", Loc.T("camp.wear", "es"));
+            var worked = new List<ColonistDay>
+            {
+                new ColonistDay { id = "ada", task = "Guard", hunger = 90f, thirst = 90f, morale = 50f, fatigue = 80f }
+            };
+            int food = 2;
+            int water = 2;
+            int raw = 0;
+            ColonyDay.Simulate(worked, ref food, ref water, false, false, "", 0, ref raw);
+            Assert.AreEqual(100f, worked[0].fatigue, 0.001f);
+            var rested = new List<ColonistDay>
+            {
+                new ColonistDay { id = "ada", task = "Rest", hunger = 90f, thirst = 90f, morale = 50f, fatigue = 80f }
+            };
+            ColonyDay.Simulate(rested, ref food, ref water, true, false, "", 0, ref raw);
+            Assert.AreEqual(10f, rested[0].fatigue, 0.001f);
+        }
+
+        [Test]
         public void MistSitsOnTheStreetWhenTheAirIsThick()
         {
             Assert.IsTrue(MistBank.Shows(WeatherKind.Fog, 0f));

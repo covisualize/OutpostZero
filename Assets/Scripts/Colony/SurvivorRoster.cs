@@ -20,6 +20,7 @@ namespace OutpostZero.Colony
         public float morale = 70f;
         public float hunger = 78f;
         public float thirst = 78f;
+        public float fatigue;
         public int opinion = 18;
         public int injury;
         public int combat;
@@ -426,7 +427,7 @@ namespace OutpostZero.Colony
                 {
                     case "Scavenge":
                         bool scrounge = TraitHook.Holds(survivor.trait, survivor.aside, survivor.mark, "Scrounger");
-                        int scrap = Pay(4 + (scrounge ? 3 : 0), survivor.morale, survivor.trait, survivor.aside, survivor.mark);
+                        int scrap = Pay(4 + (scrounge ? 3 : 0), survivor.morale, survivor.trait, survivor.aside, survivor.mark, survivor.fatigue);
                         if (scrap > 0)
                         {
                             survivor.scavenge = Practice.Gain(survivor.scavenge);
@@ -447,7 +448,7 @@ namespace OutpostZero.Colony
                         }
                         break;
                     case "Cook":
-                        int hands = Pay(2, survivor.morale, survivor.trait, survivor.aside, survivor.mark);
+                        int hands = Pay(2, survivor.morale, survivor.trait, survivor.aside, survivor.mark, survivor.fatigue);
                         bool fire = GridBuilder.Instance != null && GridBuilder.Instance.HasKind("Campfire");
                         int raw = storage != null ? storage.Raw : 0;
                         CookPot.Serve(fire, raw, hands, out int spent, out int served, out int lift);
@@ -462,7 +463,7 @@ namespace OutpostZero.Colony
                         if (lift > 0) survivor.morale = Mathf.Min(100f, survivor.morale + lift + TraitHook.CookPlate(survivor.trait, survivor.aside, survivor.mark, spent > 0));
                         break;
                     case "Guard":
-                        int watch = Pay(1, survivor.morale, survivor.trait, survivor.aside, survivor.mark);
+                        int watch = Pay(1, survivor.morale, survivor.trait, survivor.aside, survivor.mark, survivor.fatigue);
                         if (watch > 0)
                         {
                             survivor.combat = Practice.Gain(survivor.combat);
@@ -499,12 +500,13 @@ namespace OutpostZero.Colony
                             survivor.engineering = Practice.Gain(survivor.engineering);
                             pace += Practice.Bonus(survivor.engineering);
                             pace += BuildDepth.Raise(survivor.engineering);
+                            pace = ShiftWear.Short(pace, survivor.fatigue);
                         }
                         if (pace > 0 && GridBuilder.Instance != null && (GridBuilder.Instance.Raise(pace) || GridBuilder.Instance.Patch(pace) || GridBuilder.Instance.Lift(pace)))
                             survivor.morale = Mathf.Max(0f, survivor.morale - 2f);
                         break;
                     case "Clear":
-                        int haul = YardDead.Hands(survivor.morale);
+                        int haul = ShiftWear.Short(YardDead.Hands(survivor.morale), survivor.fatigue);
                         if (haul > 0 && storage != null && storage.TakeBodies(haul) > 0)
                             survivor.morale = Mathf.Max(0f, survivor.morale - 2f);
                         break;
@@ -563,11 +565,17 @@ namespace OutpostZero.Colony
 
         private static int Pay(int amount, float morale, string trait, string aside, string mark)
         {
+            return Pay(amount, morale, trait, aside, mark, 0f);
+        }
+
+        private static int Pay(int amount, float morale, string trait, string aside, string mark, float fatigue)
+        {
             float scale = ColonyDay.OutputScale(morale, trait, aside, mark);
             if (scale <= 0f) return 0;
-            if (scale > 1f) return amount + 1;
-            if (scale < 1f) return Math.Max(1, amount - 1);
-            return amount;
+            int paid = amount;
+            if (scale > 1f) paid = amount + 1;
+            else if (scale < 1f) paid = Math.Max(1, amount - 1);
+            return ShiftWear.Short(paid, fatigue);
         }
 
         private List<ColonistDay> Snapshot()
@@ -593,7 +601,8 @@ namespace OutpostZero.Colony
                     thirst = survivor.thirst,
                     opinion = survivor.opinion,
                     injury = survivor.injury,
-                    leadership = survivor.leadership
+                    leadership = survivor.leadership,
+                    fatigue = survivor.fatigue
                 });
             }
             return days;
@@ -614,6 +623,7 @@ namespace OutpostZero.Colony
                 survivor.opinion = day.opinion;
                 survivor.kin = day.kin ?? "";
                 survivor.injury = day.injury;
+                survivor.fatigue = day.fatigue;
             }
         }
 
