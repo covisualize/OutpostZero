@@ -1573,5 +1573,23 @@ namespace OutpostZero.Tests.EditMode
             Assert.AreEqual(0.4f, HitStun.Resist(0.4f, false), 0.001f);
             Assert.AreEqual(0.05f, HitStun.Resist(0.01f, true), 0.001f);
         }
+
+        [Test]
+        public void AChaseIsABangAndASearchIsAQuestion()
+        {
+            Assert.AreEqual("!", ThreatMark.Glyph(ZombieAI.ZombieState.Chase));
+            Assert.AreEqual("!", ThreatMark.Glyph(ZombieAI.ZombieState.Attack));
+            Assert.AreEqual("?", ThreatMark.Glyph(ZombieAI.ZombieState.InvestigateNoise));
+            Assert.AreEqual("?", ThreatMark.Glyph(ZombieAI.ZombieState.Searching));
+            Assert.AreEqual("", ThreatMark.Glyph(ZombieAI.ZombieState.Wander));
+            Assert.AreEqual("", ThreatMark.Glyph(ZombieAI.ZombieState.Idle));
+            Assert.IsTrue(ThreatMark.Near(28f));
+            Assert.IsFalse(ThreatMark.Near(28.1f));
+            Assert.IsFalse(ThreatMark.Near(-1f));
+            Assert.AreEqual("! ! ?", ThreatMark.Line(2, 1));
+            Assert.AreEqual("? ?", ThreatMark.Line(0, 2));
+            Assert.AreEqual("", ThreatMark.Line(0, 0));
+            Assert.AreEqual("! ! ! ! ? ? +", ThreatMark.Line(5, 3));
+        }
     }
 }

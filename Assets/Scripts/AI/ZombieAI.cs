@@ -30,6 +30,23 @@ namespace OutpostZero.AI
         [SerializeField] private ZombieState currentState = ZombieState.Wander;
         public ZombieState CurrentState => currentState;
 
+        public static void CountAlerts(float x, float z, out int bangs, out int questions)
+        {
+            bangs = 0;
+            questions = 0;
+            for (int i = 0; i < aliveCrowd.Count; i++)
+            {
+                var zombie = aliveCrowd[i];
+                if (zombie == null || zombie.currentState == ZombieState.Dead) continue;
+                float dx = zombie.transform.position.x - x;
+                float dz = zombie.transform.position.z - z;
+                if (!ThreatMark.Near((float)System.Math.Sqrt(dx * dx + dz * dz))) continue;
+                string glyph = ThreatMark.Glyph(zombie.currentState);
+                if (glyph == "!") bangs++;
+                else if (glyph == "?") questions++;
+            }
+        }
+
         [Header("Sensory Perception")]
         [SerializeField] private float sightRange = 14f;
         [SerializeField] private float sightAngle = 110f;

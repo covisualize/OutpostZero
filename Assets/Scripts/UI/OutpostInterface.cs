@@ -36,6 +36,7 @@ namespace OutpostZero.UI
         private Label compass;
         private Label hurt;
         private Label feed;
+        private Label threats;
         private VisualElement veil;
         private VisualElement noiseFill;
         private VisualElement healthFill;
@@ -124,7 +125,11 @@ namespace OutpostZero.UI
             bottom.style.top = StyleKeyword.Auto;
             weapon = Body();
             noiseFill = Bar();
+            threats = Body();
+            threats.style.unityFontStyleAndWeight = FontStyle.Bold;
+            threats.style.display = DisplayStyle.None;
             bottom.Add(weapon);
+            bottom.Add(threats);
             bottom.Add(noiseFill);
             root.Add(bottom);
 
@@ -330,6 +335,12 @@ namespace OutpostZero.UI
             }
 
             float noise = hud != null ? hud.NoiseLevel : 0f;
+            int bangs = 0;
+            int questions = 0;
+            if (player != null) ZombieAI.CountAlerts(player.transform.position.x, player.transform.position.z, out bangs, out questions);
+            threats.text = ThreatMark.Line(bangs, questions);
+            threats.style.display = string.IsNullOrEmpty(threats.text) ? DisplayStyle.None : DisplayStyle.Flex;
+            threats.style.color = bangs > 0 ? new Color(0.95f, 0.35f, 0.28f) : new Color(0.95f, 0.8f, 0.35f);
             noiseFill.style.width = Length.Percent(noise * 100f);
             int vision = SettingsService.Instance != null ? SettingsService.Instance.ColorblindMode : 0;
             if (vision == 1) noiseFill.style.backgroundColor = Color.Lerp(new Color(0.2f, 0.45f, 0.95f), new Color(0.95f, 0.85f, 0.15f), noise);
