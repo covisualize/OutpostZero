@@ -755,7 +755,8 @@ namespace OutpostZero.UI
             {
                 camp.Add(Body(Loc.T("camp.scrap") + " " + storage.Scrap + "  " + Loc.T("camp.food") + " " + storage.Food + "  " + Loc.T("camp.water") + " " + storage.Water
                     + "  " + Loc.T("camp.cloth") + " " + storage.Cloth + "  " + Loc.T("camp.chem") + " " + storage.Chemicals                     + "  " + Loc.T("camp.tape") + " " + storage.Tape + "  " + Loc.T("camp.raw") + " " + storage.Raw + "  " + Loc.T("camp.rounds") + " " + storage.Rounds
-                    + "  " + (services != null && services.GeneratorOnline ? Loc.T("camp.gen_on") : Loc.T("camp.gen_off"))));
+                    + "  " + (services != null && services.GeneratorOnline ? Loc.T("camp.gen_on") : Loc.T("camp.gen_off"))
+                    + (services != null ? "  " + Loc.T("camp.fuel") + " " + FuelTank.Label(services.FuelHours) : "")));
                 camp.Add(Body(Loc.T("camp.room") + " " + storage.Used + "/" + storage.Room));
                 if (storage.Bodies > 0) camp.Add(Body(Loc.T("camp.bodies") + " " + storage.Bodies));
             }

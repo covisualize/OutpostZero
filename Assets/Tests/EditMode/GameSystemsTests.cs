@@ -2493,6 +2493,36 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void TheGeneratorKeepsItsFuelOnTheExistingSave()
+        {
+            Assert.IsTrue(FuelTank.Lit(true, 0.1f));
+            Assert.IsFalse(FuelTank.Lit(true, 0f));
+            Assert.IsFalse(FuelTank.Lit(false, 10f));
+            Assert.AreEqual(10f, FuelTank.Drink(10f, 200f, false, 0.8f), 0.001f);
+            Assert.AreEqual(10f, FuelTank.Drink(10f, 200f, true, 0.45f), 0.001f);
+            Assert.AreEqual(5f, FuelTank.Drink(10f, 200f, true, 0.46f), 0.001f);
+            Assert.AreEqual(0f, FuelTank.Drink(1f, 400f, true, 1f), 0.001f);
+            Assert.AreEqual(10f, FuelTank.Pour(2f, 8f), 0.001f);
+            Assert.AreEqual(2f, FuelTank.Pour(2f, 0f), 0.001f);
+            Assert.AreEqual(100, FuelTank.Pack(10f));
+            Assert.AreEqual(45, FuelTank.Pack(4.5f));
+            Assert.AreEqual(4.5f, FuelTank.Unpack(45, 1), 0.001f);
+            Assert.AreEqual(0f, FuelTank.Unpack(0, 1), 0.001f);
+            Assert.AreEqual(10f, FuelTank.Unpack(0, 0), 0.001f);
+            Assert.AreEqual("4.5", FuelTank.Label(4.5f));
+
+            var data = new SaveGameData { fuel = 45, fuelSet = 1 };
+            Assert.IsTrue(SaveCodec.TryDeserialize(SaveCodec.Serialize(data), out var loaded, out var error), error);
+            Assert.AreEqual(45, loaded.fuel);
+            Assert.AreEqual(1, loaded.fuelSet);
+            Assert.IsTrue(SaveCodec.TryDeserialize("{\"schemaVersion\":1}", out var legacy, out var legacyError), legacyError);
+            Assert.AreEqual(0, legacy.fuel);
+            Assert.AreEqual(0, legacy.fuelSet);
+            Assert.AreEqual(FuelTank.Start, FuelTank.Unpack(legacy.fuel, legacy.fuelSet), 0.001f);
+            Assert.AreEqual("Combustible", Loc.T("camp.fuel", "es"));
+        }
+
+        [Test]
         public void DemolishingAModuleReturnsHalfTheScrap()
         {
             Assert.AreEqual(3, ScrapRefund.Half(6));

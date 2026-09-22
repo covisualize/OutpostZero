@@ -23,7 +23,7 @@ namespace OutpostZero.Colony
         private bool lightsOn;
         private float scanIn;
 
-        public bool GeneratorOnline => generatorPresent && fuelHours > 0f;
+        public bool GeneratorOnline => FuelTank.Lit(generatorPresent, fuelHours);
         public bool WaterOnline => waterPresent;
         public bool CotOnline => cotPresent;
         public bool WatchtowerOnline => towerPresent;
@@ -43,7 +43,12 @@ namespace OutpostZero.Colony
 
         public void Refuel(float hours)
         {
-            fuelHours += hours;
+            fuelHours = FuelTank.Pour(fuelHours, hours);
+        }
+
+        public void SetFuel(float hours)
+        {
+            fuelHours = FuelTank.Clamp(hours);
         }
 
         private void Update()
@@ -55,10 +60,7 @@ namespace OutpostZero.Colony
             }
 
             float night = Graphics.DayNightCycle.Instance != null ? Graphics.DayNightCycle.Instance.NightFactor : 0f;
-            if (GeneratorOnline && night > 0.45f)
-            {
-                fuelHours = Mathf.Max(0f, fuelHours - Time.deltaTime / 3600f * 90f);
-            }
+            fuelHours = FuelTank.Drink(fuelHours, Time.deltaTime, generatorPresent, night);
 
             ApplyLights();
 
