@@ -716,6 +716,28 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void AMetalStepCarriesFartherThanDirt()
+        {
+            Assert.AreEqual(1.35f, StepReach.Metal, 0.001f);
+            Assert.AreEqual(1.12f, StepReach.Hard, 0.001f);
+            Assert.AreEqual(0.9f, StepReach.Wood, 0.001f);
+            Assert.AreEqual(0.75f, StepReach.Gravel, 0.001f);
+            Assert.AreEqual(1.18f, StepReach.Water, 0.001f);
+            Assert.AreEqual(8.1f, StepReach.Radius(6f, "step_metal"), 0.001f);
+            Assert.AreEqual(6.72f, StepReach.Radius(6f, "step_hard"), 0.001f);
+            Assert.AreEqual(5.4f, StepReach.Radius(6f, "step_wood"), 0.001f);
+            Assert.AreEqual(4.5f, StepReach.Radius(6f, "step_gravel"), 0.001f);
+            Assert.AreEqual(7.08f, StepReach.Radius(6f, "step_water"), 0.001f);
+            Assert.AreEqual(6f, StepReach.Radius(6f, "step"), 0.001f);
+            Assert.AreEqual(6f, StepReach.Radius(6f, null), 0.001f);
+            Assert.AreEqual(17.55f, StepReach.Radius(13f, "step_metal"), 0.001f);
+            Assert.AreEqual(1.5f, StepReach.Radius(2f, "step_gravel"), 0.001f);
+            Assert.AreEqual(0f, StepReach.Radius(-1f, "step_metal"), 0.001f);
+            Assert.AreEqual(8.1f, StepReach.Radius(6f, AudioMix.StepId("Dress_manhole")), 0.001f);
+            Assert.AreEqual(4.5f, StepReach.Radius(6f, AudioMix.StepId("gravel_lot")), 0.001f);
+        }
+
+        [Test]
         public void StreetWearComesHomeAndARestedCardGoesBackOut()
         {
             Assert.AreEqual(40f, BodyCarry.Clamp(40f), 0.001f);

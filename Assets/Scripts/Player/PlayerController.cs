@@ -615,6 +615,10 @@ namespace OutpostZero.Player
             if (sky != null) wetness = OutpostZero.Graphics.WeatherSurface.Wetness(sky.Kind);
             bool splash = OutpostZero.Graphics.PuddleStep.Inside(transform.position.x, transform.position.z, wetness);
             radius = OutpostZero.Graphics.PuddleStep.Radius(radius, splash, IsCrouching);
+            string surface = "";
+            if (Physics.Raycast(transform.position + Vector3.up, Vector3.down, out RaycastHit ground, 2.2f, GameLayers.VisionOcclusionMask, QueryTriggerInteraction.Ignore))
+                surface = ground.collider != null ? ground.collider.name : "";
+            radius = StepReach.Radius(radius, AudioMix.StepId(surface));
 
             if (NoiseManager.Instance != null && radius > 0f)
             {
