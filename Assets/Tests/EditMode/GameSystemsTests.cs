@@ -2754,6 +2754,36 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void GuardsStandOnTheLineThatIsBeingHit()
+        {
+            Assert.AreEqual("Rest", GuardStand.Face("Guard", 5f, 0));
+            Assert.AreEqual("Medic", GuardStand.Face("Guard", 60f, 2));
+            Assert.AreEqual("Guard", GuardStand.Face("Guard", 60f, 0));
+            Assert.AreEqual("Rest", GuardStand.Face("Cook", 60f, 0));
+            Assert.AreEqual("Medic", GuardStand.Face("Medic", 60f, 0));
+            var kinds = new[] { "Barricade", "Barricade", "Watchtower" };
+            var x = new[] { -6f, -8f, -4f };
+            var z = new[] { -8f, -6f, -4f };
+            var sites = new[] { 0, 0, 0 };
+            var integrity = new[] { 40, 90, 100 };
+            Assert.AreEqual(0, GuardStand.Pick("gate", kinds, x, z, sites, integrity, 0));
+            Assert.AreEqual(1, GuardStand.Pick("gate", kinds, x, z, sites, integrity, 1));
+            Assert.AreEqual(0, GuardStand.Pick("gate", kinds, x, z, sites, integrity, 2));
+            integrity[0] = 0;
+            integrity[1] = 0;
+            Assert.AreEqual(2, GuardStand.Pick("gate", kinds, x, z, sites, integrity, 0));
+            GuardStand.Mark("gate", 0, kinds, x, z, sites, integrity, out float px, out float pz);
+            Assert.AreEqual(-4f, px, 0.01f);
+            Assert.AreEqual(-4f, pz, 0.01f);
+            kinds[2] = "Crate";
+            Assert.AreEqual(-1, GuardStand.Pick("gate", kinds, x, z, sites, integrity, 0));
+            GuardStand.Mark("gate", 0, kinds, x, z, sites, integrity, out float fx, out float fz);
+            Assert.AreEqual(-9.1f, fx, 0.01f);
+            Assert.AreEqual(-12f, fz, 0.01f);
+            Assert.AreEqual("Los guardias sostienen la línea", Loc.T("camp.line", "es"));
+        }
+
+        [Test]
         public void DemolishingAModuleReturnsHalfTheScrap()
         {
             Assert.AreEqual(3, ScrapRefund.Half(6));

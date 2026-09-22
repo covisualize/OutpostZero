@@ -10,12 +10,39 @@ namespace OutpostZero.Colony
     /// </summary>
     public class CampPopulation : MonoBehaviour
     {
+        public static CampPopulation Instance { get; private set; }
+
         private readonly Dictionary<string, Transform> bodies = new Dictionary<string, Transform>();
+
+        private void Awake()
+        {
+            if (Instance != null && Instance != this)
+            {
+                Destroy(this);
+                return;
+            }
+            Instance = this;
+        }
+
+        private void OnDestroy()
+        {
+            if (Instance == this) Instance = null;
+        }
+
+        public bool TryStand(string id, out Vector3 position)
+        {
+            position = Vector3.zero;
+            if (string.IsNullOrEmpty(id) || !bodies.TryGetValue(id, out var body) || body == null) return false;
+            position = body.position;
+            return true;
+        }
 
         private void Update()
         {
-            bool camp = GameManager.Instance != null && GameManager.Instance.CurrentState == GameState.CampManagement;
-            if (!camp)
+            var state = GameManager.Instance != null ? GameManager.Instance.CurrentState : GameState.MainMenu;
+            bool camp = state == GameState.CampManagement;
+            bool raid = state == GameState.RaidActive;
+            if (!camp && !raid)
             {
                 if (bodies.Count > 0) Clear();
                 return;
@@ -23,6 +50,7 @@ namespace OutpostZero.Colony
 
             var roster = SurvivorRoster.Instance;
             if (roster == null) return;
+            string approach = NightRaidController.Instance != null ? NightRaidController.Instance.Approach : "gate";
             int index = 0;
             foreach (var survivor in roster.Survivors)
             {
@@ -33,10 +61,15 @@ namespace OutpostZero.Colony
                 }
                 var body = Ensure(survivor.id, survivor.displayName);
                 Tint(body, survivor.morale);
-                string action = CampRoutine.Choose(survivor.task, survivor.hunger, survivor.thirst, survivor.morale, survivor.injury);
+                string action = raid
+                    ? GuardStand.Face(survivor.task, survivor.morale, survivor.injury)
+                    : CampRoutine.Choose(survivor.task, survivor.hunger, survivor.thirst, survivor.morale, survivor.injury);
                 index++;
-                Vector3 goal = Station(action, index - 1);
-                body.position = Vector3.MoveTowards(body.position, goal, 1.4f * Time.deltaTime);
+                Vector3 goal = raid && action == "Guard"
+                    ? Line(approach, index - 1)
+                    : Station(action, index - 1);
+                float pace = raid ? 3.6f : 1.4f;
+                body.position = Vector3.MoveTowards(body.position, goal, pace * Time.deltaTime);
                 Vector3 face = goal - body.position;
                 face.y = 0f;
                 if (face.sqrMagnitude > 0.01f) body.rotation = Quaternion.LookRotation(face);
@@ -74,6 +107,28 @@ namespace OutpostZero.Colony
             block.SetColor("_BaseColor", tint);
             block.SetColor("_Color", tint);
             renderer.SetPropertyBlock(block);
+        }
+
+        private static Vector3 Line(string approach, int index)
+        {
+            var grid = GridBuilder.Instance;
+            int count = grid != null ? grid.Placed.Count : 0;
+            var kinds = new string[count];
+            var sites = new int[count];
+            var integrity = new int[count];
+            var xs = new float[count];
+            var zs = new float[count];
+            for (int i = 0; i < count; i++)
+            {
+                var module = grid.Placed[i];
+                kinds[i] = module.kind;
+                sites[i] = module.site;
+                integrity[i] = module.integrity;
+                xs[i] = module.x;
+                zs[i] = module.z;
+            }
+            GuardStand.Mark(approach, index, kinds, xs, zs, sites, integrity, out float x, out float z);
+            return new Vector3(x, 1f, z);
         }
 
         private static Vector3 Station(string task, int index)

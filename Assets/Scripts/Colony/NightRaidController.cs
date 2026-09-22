@@ -29,6 +29,7 @@ namespace OutpostZero.Colony
         private int calledDay = -1;
         private bool breached;
 
+        public string Approach => approach;
         public bool Running => running;
         public bool Warning => warning;
         public float WarningLeft => warning ? UnityEngine.Mathf.Max(0f, warningEnds - UnityEngine.Time.time) : 0f;
@@ -92,6 +93,7 @@ namespace OutpostZero.Colony
             string openLine = tower ? "Broadcast night — hold the tower" : "Night raid from the " + approach;
             if (GridBuilder.Instance != null && GridBuilder.Instance.BarricadeCount() > 0)
                 openLine += "  " + Loc.T("camp.chew");
+            if (GuardsOnTheLine() > 0) openLine += "  " + Loc.T("camp.line");
             GameplayFeedback.Toast(openLine);
         }
 
@@ -326,55 +328,90 @@ namespace OutpostZero.Colony
         private void TickGuards()
         {
             if (Time.time < nextGuard) return;
-            int guards = 0;
+            var crew = new System.Collections.Generic.List<Survivor>();
             if (SurvivorRoster.Instance != null)
             {
                 foreach (var survivor in SurvivorRoster.Instance.Survivors)
                 {
-                    if (survivor.alive && survivor.task == "Guard") guards++;
+                    if (survivor == null || !survivor.alive || survivor.leader) continue;
+                    if (GuardStand.Face(survivor.task, survivor.morale, survivor.injury) != "Guard") continue;
+                    crew.Add(survivor);
                 }
             }
-            if (!GuardVolley.Ready(GuardVolley.Interval, guards)) return;
-            Vector3 origin = GuardOrigin();
-            var horde = Object.FindObjectsByType<ZombieAI>(FindObjectsSortMode.None);
-            var living = new System.Collections.Generic.List<ZombieAI>();
-            var distance = new System.Collections.Generic.List<float>();
-            for (int i = 0; i < horde.Length; i++)
-            {
-                var zombie = horde[i];
-                if (zombie == null || zombie.CurrentState == ZombieAI.ZombieState.Dead) continue;
-                float dx = zombie.transform.position.x - origin.x;
-                float dz = zombie.transform.position.z - origin.z;
-                living.Add(zombie);
-                distance.Add((float)System.Math.Sqrt(dx * dx + dz * dz));
-            }
-            int mark = GuardVolley.Pick(distance.ToArray());
             int stored = ColonyStorage.Instance != null ? ColonyStorage.Instance.Rounds : 0;
-            int spent = GuardVolley.Rounds(guards, stored);
-            if (mark < 0 || spent <= 0)
+            int budget = GuardVolley.Rounds(crew.Count, stored);
+            if (!GuardVolley.Ready(GuardVolley.Interval, crew.Count) || budget <= 0)
             {
                 nextGuard = Time.time + GuardVolley.Interval;
                 return;
             }
-            ColonyStorage.Instance?.TakeRounds(spent);
-            var target = living[mark];
-            var health = target.GetComponent<HealthSystem>();
-            if (health != null && !health.IsDead)
-                health.TakeDamage(GuardVolley.Fired(guards, stored), target.transform.position, (origin - target.transform.position).normalized, gameObject);
+            var horde = Object.FindObjectsByType<ZombieAI>(FindObjectsSortMode.None);
+            var living = new System.Collections.Generic.List<ZombieAI>();
+            for (int i = 0; i < horde.Length; i++)
+            {
+                if (horde[i] != null && horde[i].CurrentState != ZombieAI.ZombieState.Dead) living.Add(horde[i]);
+            }
+            int shots = 0;
+            for (int g = 0; g < crew.Count && shots < budget; g++)
+            {
+                Vector3 origin = GuardPost(g);
+                var distance = new float[living.Count];
+                for (int i = 0; i < living.Count; i++)
+                {
+                    float dx = living[i].transform.position.x - origin.x;
+                    float dz = living[i].transform.position.z - origin.z;
+                    distance[i] = (float)System.Math.Sqrt(dx * dx + dz * dz);
+                }
+                int mark = GuardVolley.Pick(distance);
+                if (mark < 0) continue;
+                if (ColonyStorage.Instance == null || ColonyStorage.Instance.TakeRounds(1) <= 0) break;
+                shots++;
+                var target = living[mark];
+                Vector3 aim = target.transform.position + Vector3.up * 1.1f;
+                Vector3 direction = aim - origin;
+                var health = target.GetComponent<HealthSystem>();
+                if (health != null && !health.IsDead)
+                    health.TakeDamage(GuardVolley.Damage, aim, direction.normalized, gameObject);
+                Vector3 eject = Vector3.Cross(direction.sqrMagnitude > 0.01f ? direction.normalized : Vector3.forward, Vector3.up);
+                CombatVfx.Shot(origin, direction, aim, eject);
+                if (Sensory.NoiseManager.Instance != null)
+                    Sensory.NoiseManager.Instance.EmitNoise(origin, 14f, 0.45f, NoiseType.GunshotQuiet, gameObject);
+            }
             nextGuard = Time.time + GuardVolley.Interval;
         }
 
-        private static Vector3 GuardOrigin()
+        private int GuardsOnTheLine()
         {
-            if (GridBuilder.Instance != null)
+            int count = 0;
+            if (SurvivorRoster.Instance == null) return 0;
+            foreach (var survivor in SurvivorRoster.Instance.Survivors)
             {
-                foreach (var module in GridBuilder.Instance.Placed)
-                {
-                    if (module.kind == "Watchtower" && BuildSite.Ready(module.site, module.integrity))
-                        return new Vector3(module.x, 2.2f, module.z);
-                }
+                if (survivor == null || !survivor.alive || survivor.leader) continue;
+                if (GuardStand.Face(survivor.task, survivor.morale, survivor.injury) == "Guard") count++;
             }
-            return new Vector3(-12f, 1.6f, -12f);
+            return count;
+        }
+
+        private Vector3 GuardPost(int slot)
+        {
+            var grid = GridBuilder.Instance;
+            int count = grid != null ? grid.Placed.Count : 0;
+            var kinds = new string[count];
+            var sites = new int[count];
+            var integrity = new int[count];
+            var xs = new float[count];
+            var zs = new float[count];
+            for (int i = 0; i < count; i++)
+            {
+                var module = grid.Placed[i];
+                kinds[i] = module.kind;
+                sites[i] = module.site;
+                integrity[i] = module.integrity;
+                xs[i] = module.x;
+                zs[i] = module.z;
+            }
+            GuardStand.Mark(approach, slot, kinds, xs, zs, sites, integrity, out float x, out float z);
+            return new Vector3(x, 1.6f, z);
         }
 
         private static Vector3 TurretOrigin()
