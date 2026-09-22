@@ -150,10 +150,16 @@ namespace OutpostZero.Colony
             CampYield.Advance(plots);
             bool rain = WeatherController.Instance != null && SkyBand.Rains(WeatherController.Instance.Kind);
             CampYield.Produce(plots, rain, out int food, out int water);
+            WeatherKind sky = WeatherController.Instance != null ? WeatherController.Instance.Kind : WeatherKind.Clear;
+            int caught = 0;
+            for (int i = 0; i < placed.Count; i++)
+                caught += RainCatch.Extra(placed[i].kind, placed[i].integrity, placed[i].site, sky);
+            water += caught;
             for (int i = 0; i < placed.Count; i++) placed[i].age = plots[i].Age;
             if (ColonyStorage.Instance == null) return;
             if (food > 0) ColonyStorage.Instance.AddFood(food);
             if (water > 0) ColonyStorage.Instance.AddWater(water);
+            if (caught > 0) GameplayFeedback.Toast(RainCatch.Line(sky, null));
         }
 
         public void TryPlaceAtPointer()

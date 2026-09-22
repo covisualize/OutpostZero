@@ -6014,6 +6014,39 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void AStormFillsTheCollectorAndAClearDayLeavesIt()
+        {
+            Assert.AreEqual(1, RainCatch.RainExtra);
+            Assert.AreEqual(2, RainCatch.StormExtra);
+            Assert.AreEqual(1, RainCatch.Extra("Water", 100, 0, WeatherKind.Rain));
+            Assert.AreEqual(2, RainCatch.Extra("Water", 100, 0, WeatherKind.Storm));
+            Assert.AreEqual(0, RainCatch.Extra("Water", 100, 0, WeatherKind.Clear));
+            Assert.AreEqual(0, RainCatch.Extra("Water", 100, 0, WeatherKind.Fog));
+            Assert.AreEqual(0, RainCatch.Extra("Water", 100, 0, WeatherKind.Overcast));
+            Assert.AreEqual(0, RainCatch.Extra("Water", 0, 0, WeatherKind.Storm));
+            Assert.AreEqual(0, RainCatch.Extra("Water", 40, 1, WeatherKind.Rain));
+            Assert.AreEqual(0, RainCatch.Extra("Purifier", 100, 0, WeatherKind.Storm));
+            Assert.AreEqual(0, RainCatch.Extra("Farm", 100, 0, WeatherKind.Rain));
+            Assert.AreEqual("The collector caught the rain", RainCatch.Line(WeatherKind.Rain, "en"));
+            Assert.AreEqual("El colector atrapó la lluvia", RainCatch.Line(WeatherKind.Rain, "es"));
+            Assert.AreEqual("The collector caught the storm", RainCatch.Line(WeatherKind.Storm, "en"));
+            Assert.AreEqual("El colector atrapó la tormenta", RainCatch.Line(WeatherKind.Storm, "es"));
+            Assert.AreEqual("", RainCatch.Line(WeatherKind.Clear, "en"));
+            var plots = new[]
+            {
+                new CampYield.Plot { Kind = "Purifier", Integrity = 100 },
+                new CampYield.Plot { Kind = "Water", Integrity = 100 }
+            };
+            CampYield.Produce(plots, false, out _, out int dry);
+            CampYield.Produce(plots, true, out _, out int wet);
+            Assert.AreEqual(3, dry);
+            Assert.AreEqual(4, wet);
+            Assert.AreEqual(1, CampYield.CollectorWater);
+            Assert.AreEqual(2, CampYield.PurifierWater);
+            Assert.AreEqual(1, CampYield.RainBonus);
+        }
+
+        [Test]
         public void AZombieWithoutARigStillAttacksAndFalls()
         {
             Assert.AreEqual(14f, PoseSheet.Lean(ZombieAI.ZombieState.Chase, 0f), 0.001f);
