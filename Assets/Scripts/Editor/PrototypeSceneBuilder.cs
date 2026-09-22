@@ -345,6 +345,7 @@ namespace OutpostZero.EditorTools
                 {
                     foreach (var r in renderers)
                     {
+                        if (ModelSidecar.IsLowerLod(r.gameObject.name)) continue;
                         var mf = r.GetComponent<MeshFilter>();
                         if (mf != null && mf.sharedMesh != null)
                         {

@@ -6,7 +6,9 @@ using UnityEngine;
 namespace OutpostZero.EditorTools
 {
     /// <summary>
-    /// Turns each imported model into a prefab with a collider the first time it arrives.
+    /// Turns each imported model into a prefab the first time it arrives. The pipeline's
+    /// &lt;id&gt;.meta.json sidecar picks the collider and names the source materials that are
+    /// remapped onto the baked surface material, so LOD copies share it too.
     /// </summary>
     public class FbxPrefabPostprocessor : AssetPostprocessor
     {
@@ -29,6 +31,24 @@ namespace OutpostZero.EditorTools
                 importer.avatarSetup = ModelImporterAvatarSetup.CreateFromThisModel;
                 importer.animationCompression = ModelImporterAnimationCompression.Off;
             }
+            RemapToBaked(importer, assetPath, ModelSidecar.Load(assetPath));
+        }
+
+        private static void RemapToBaked(ModelImporter importer, string fbxPath, ModelSidecar sidecar)
+        {
+            if (sidecar == null || sidecar.materials == null) return;
+            var baked = AssetDatabase.LoadAssetAtPath<Material>(BakedPath(fbxPath));
+            if (baked == null) return;
+            foreach (string source in sidecar.materials)
+            {
+                if (string.IsNullOrEmpty(source)) continue;
+                importer.AddRemap(new AssetImporter.SourceAssetIdentifier(typeof(Material), source), baked);
+            }
+        }
+
+        private static string BakedPath(string fbxPath)
+        {
+            return "Assets/Materials/Baked/" + Path.GetFileNameWithoutExtension(fbxPath) + ".mat";
         }
 
         private static void OnPostprocessAllAssets(string[] imported, string[] deleted, string[] moved, string[] movedFrom)
@@ -57,17 +77,7 @@ namespace OutpostZero.EditorTools
                             renderer.sharedMaterial = baked;
                     }
                     if (instance.GetComponentInChildren<Collider>() == null)
-                    {
-                        var box = instance.AddComponent<BoxCollider>();
-                        var renderers = instance.GetComponentsInChildren<Renderer>();
-                        if (renderers.Length > 0)
-                        {
-                            var bounds = renderers[0].bounds;
-                            for (int i = 1; i < renderers.Length; i++) bounds.Encapsulate(renderers[i].bounds);
-                            box.center = instance.transform.InverseTransformPoint(bounds.center);
-                            box.size = bounds.size;
-                        }
-                    }
+                        ModelSidecar.AddCollider(instance, ModelSidecar.ColliderOf(ModelSidecar.Load(path)));
                     PrefabUtility.SaveAsPrefabAsset(instance, prefabPath);
                     Object.DestroyImmediate(instance);
                 }
@@ -91,7 +101,7 @@ namespace OutpostZero.EditorTools
             if (shader == null) return null;
             const string folder = "Assets/Materials/Baked";
             Directory.CreateDirectory(folder);
-            string materialPath = folder + "/" + stem + ".mat";
+            string materialPath = BakedPath(fbxPath);
             var material = AssetDatabase.LoadAssetAtPath<Material>(materialPath);
             if (material == null)
             {
