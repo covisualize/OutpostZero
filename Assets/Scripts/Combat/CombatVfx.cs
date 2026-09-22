@@ -77,6 +77,7 @@ namespace OutpostZero.Combat
         private static void Leave(Vector3 origin, HazardKind kind)
         {
             if (BlastWake.Ring(kind)) Ring(origin);
+            if (BlastBall.Shows(kind)) Ball(origin);
             if (BlastWake.Smokes(kind)) Column(origin);
             var go = new GameObject("Blast_" + BlastWake.Wake(kind));
             Seat(go);
@@ -120,6 +121,43 @@ namespace OutpostZero.Combat
             var renderer = ring.GetComponent<Renderer>();
             if (renderer != null) renderer.material.color = new Color(1f, 0.55f, 0.15f, 0.45f);
             ring.AddComponent<BurstFade>().Arm(4.2f, BlastWake.RingTime);
+        }
+
+        private static void Ball(Vector3 origin)
+        {
+            var root = new GameObject("Fireball");
+            Seat(root);
+            root.transform.position = origin + Vector3.up * 0.8f;
+            var sheet = GameObject.CreatePrimitive(PrimitiveType.Quad);
+            sheet.name = "FireballSheet";
+            Object.Destroy(sheet.GetComponent<Collider>());
+            sheet.transform.SetParent(root.transform, false);
+            var renderer = sheet.GetComponent<Renderer>();
+            if (renderer != null)
+            {
+                renderer.sharedMaterial = SpriteMaterial();
+                renderer.material.color = FrameColor(0);
+            }
+            sheet.AddComponent<FireSheet>().Arm(renderer);
+            Object.Destroy(root, BlastBall.Life);
+
+            var warp = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            warp.name = "WarpRing";
+            Seat(warp);
+            Object.Destroy(warp.GetComponent<Collider>());
+            warp.transform.position = new Vector3(origin.x, 0.12f, origin.z);
+            warp.transform.localScale = new Vector3(0.4f, 0.01f, 0.4f);
+            var warpRenderer = warp.GetComponent<Renderer>();
+            if (warpRenderer != null) warpRenderer.material.color = new Color(0.85f, 0.9f, 1f, 0.28f);
+            warp.AddComponent<BurstFade>().Arm(BlastBall.WarpScale(1f), BlastBall.WarpTime);
+        }
+
+        private static Color FrameColor(int frame)
+        {
+            if (frame <= 0) return new Color(1f, 0.95f, 0.7f, 0.95f);
+            if (frame == 1) return new Color(1f, 0.55f, 0.12f, 0.9f);
+            if (frame == 2) return new Color(0.85f, 0.22f, 0.05f, 0.75f);
+            return new Color(0.25f, 0.08f, 0.04f, 0.35f);
         }
 
         private static void Column(Vector3 origin)
@@ -353,6 +391,31 @@ namespace OutpostZero.Combat
             if (shader == null) shader = Shader.Find("Unlit/Color");
             spriteMaterial = new Material(shader);
             return spriteMaterial;
+        }
+
+        private sealed class FireSheet : MonoBehaviour
+        {
+            private float born;
+            private Renderer sheet;
+
+            public void Arm(Renderer target)
+            {
+                born = Time.time;
+                sheet = target;
+            }
+
+            private void Update()
+            {
+                float life = BlastBall.Life > 0f ? BlastBall.Life : 0.02f;
+                float t = (Time.time - born) / life;
+                if (t < 0f) t = 0f;
+                if (t > 1f) t = 1f;
+                float scale = BlastBall.Scale(t);
+                transform.localScale = new Vector3(scale, scale, 1f);
+                if (sheet != null) sheet.material.color = FrameColor(BlastBall.Frame(t));
+                var cam = Camera.main;
+                if (cam != null) transform.rotation = Quaternion.LookRotation(transform.position - cam.transform.position);
+            }
         }
 
         private sealed class BlastRemain : MonoBehaviour

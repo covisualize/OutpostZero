@@ -3298,6 +3298,33 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void APowderBlastOpensAFireball()
+        {
+            Assert.IsTrue(BlastBall.Shows(HazardKind.Explosive));
+            Assert.IsFalse(BlastBall.Shows(HazardKind.Toxic));
+            Assert.IsFalse(BlastBall.Shows(HazardKind.Oil));
+            Assert.AreEqual(4, BlastBall.Frames);
+            Assert.AreEqual(0.48f, BlastBall.Life, 0.001f);
+            Assert.AreEqual(0, BlastBall.Frame(0f));
+            Assert.AreEqual(0, BlastBall.Frame(-0.2f));
+            Assert.AreEqual(0, BlastBall.Frame(0.24f));
+            Assert.AreEqual(1, BlastBall.Frame(0.25f));
+            Assert.AreEqual(2, BlastBall.Frame(0.5f));
+            Assert.AreEqual(3, BlastBall.Frame(0.75f));
+            Assert.AreEqual(3, BlastBall.Frame(0.99f));
+            Assert.AreEqual(3, BlastBall.Frame(2f));
+            Assert.AreEqual(0.6f, BlastBall.Scale(0f), 0.001f);
+            Assert.AreEqual(0.6f, BlastBall.Scale(-1f), 0.001f);
+            Assert.AreEqual(2f, BlastBall.Scale(0.5f), 0.001f);
+            Assert.AreEqual(3.4f, BlastBall.Scale(1f), 0.001f);
+            Assert.AreEqual(3.4f, BlastBall.Scale(2f), 0.001f);
+            Assert.AreEqual(0.4f, BlastBall.WarpScale(0f), 0.001f);
+            Assert.AreEqual(6.6f, BlastBall.WarpScale(1f), 0.001f);
+            Assert.AreEqual(6.2f, BlastBall.Warp, 0.001f);
+            Assert.AreEqual(0.36f, BlastBall.WarpTime, 0.001f);
+        }
+
+        [Test]
         public void AFireDriftsEmbersAndABrokenLampSpitsSparks()
         {
             Assert.IsFalse(YardGlow.EmbersDue(false, 10f, 0f));
