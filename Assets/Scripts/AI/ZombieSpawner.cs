@@ -3,6 +3,7 @@ using UnityEngine;
 using UnityEngine.AI;
 using OutpostZero.Sensory;
 using OutpostZero.Core;
+using OutpostZero.Colony;
 
 namespace OutpostZero.AI
 {
@@ -123,6 +124,37 @@ namespace OutpostZero.AI
         private void SpawnInitialHorde()
         {
             SpawnZombies(initialCount);
+        }
+
+        public void SpawnRaid(int count, string approach)
+        {
+            GameObject defaultPrefab = zombiePrefab;
+            if (defaultPrefab == null && zombiePrefabVariants != null && zombiePrefabVariants.Length > 0)
+            {
+                defaultPrefab = zombiePrefabVariants[0];
+            }
+            if (defaultPrefab == null) return;
+            if (count < 1) count = 1;
+
+            for (int i = 0; i < count; i++)
+            {
+                if (activeZombies.Count >= maxAliveZombies) break;
+                RaidDrop.Point(approach, i, count, out float dropX, out float dropZ);
+                Vector3 candidate = new Vector3(dropX, 0f, dropZ);
+                Vector3 pos = candidate;
+                if (NavMesh.SamplePosition(candidate, out NavMeshHit hit, 6f, NavMesh.AllAreas)) pos = hit.position;
+                GameObject chosenPrefab = ChoosePrefab(defaultPrefab);
+                Quaternion rotation = Quaternion.Euler(0f, Random.Range(0f, 360f), 0f);
+                GameObject zombie = pool != null
+                    ? pool.Rent(chosenPrefab, pos, rotation)
+                    : Instantiate(chosenPrefab, pos, rotation);
+                if (zombie == null) continue;
+                zombie.SetActive(true);
+                activeZombies.Add(zombie);
+                var ai = zombie.GetComponent<ZombieAI>();
+                if (ai != null && GridBuilder.Instance != null && GridBuilder.Instance.BoardFor(approach, i, out float boardX, out float boardZ))
+                    ai.PostAt(boardX, boardZ);
+            }
         }
 
         public void SpawnZombies(int count)

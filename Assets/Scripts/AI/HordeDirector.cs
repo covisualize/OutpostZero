@@ -144,9 +144,19 @@ namespace OutpostZero.AI
 
         public void BeginRaid(int zombies)
         {
+            BeginRaid(zombies, "");
+        }
+
+        public void BeginRaid(int zombies, string approach)
+        {
             tension = 90f;
             state = TensionState.Peak;
-            if (spawner != null) spawner.SpawnZombies(Mathf.Max(1, zombies));
+            int count = Mathf.Max(1, zombies);
+            if (spawner != null)
+            {
+                if (string.IsNullOrEmpty(approach)) spawner.SpawnZombies(count);
+                else spawner.SpawnRaid(count, approach);
+            }
             OnTensionStateChanged?.Invoke(state);
         }
     }

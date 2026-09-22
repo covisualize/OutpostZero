@@ -424,6 +424,63 @@ namespace OutpostZero.Colony
             return true;
         }
 
+        public bool BoardStands(float x, float z)
+        {
+            for (int i = 0; i < placed.Count; i++)
+            {
+                var module = placed[i];
+                if (module.kind != "Barricade" || !BuildSite.Ready(module.site, module.integrity)) continue;
+                float dx = module.x - x;
+                float dz = module.z - z;
+                if (dx * dx + dz * dz <= 0.16f) return true;
+            }
+            return false;
+        }
+
+        public bool BoardFor(string approach, int slot, out float x, out float z)
+        {
+            x = 0f;
+            z = 0f;
+            RaidPlan.AnchorOf(approach, out float ax, out float az);
+            int covered = 0;
+            for (int i = 0; i < placed.Count; i++)
+            {
+                var module = placed[i];
+                if (module.kind != "Barricade" || !BuildSite.Ready(module.site, module.integrity)) continue;
+                if (RaidPlan.Covers(ax, az, module.x, module.z)) covered++;
+            }
+            int ready = covered;
+            if (ready == 0)
+            {
+                for (int i = 0; i < placed.Count; i++)
+                {
+                    var module = placed[i];
+                    if (module.kind == "Barricade" && BuildSite.Ready(module.site, module.integrity)) ready++;
+                }
+            }
+            if (ready == 0) return false;
+            var scores = new int[ready];
+            var px = new float[ready];
+            var pz = new float[ready];
+            int cursor = 0;
+            for (int i = 0; i < placed.Count; i++)
+            {
+                var module = placed[i];
+                if (module.kind != "Barricade" || !BuildSite.Ready(module.site, module.integrity)) continue;
+                if (covered > 0 && !RaidPlan.Covers(ax, az, module.x, module.z)) continue;
+                scores[cursor] = module.integrity;
+                px[cursor] = module.x;
+                pz[cursor] = module.z;
+                cursor++;
+            }
+            var order = new int[ready];
+            BoardBite.Rank(scores, order);
+            int pick = BoardBite.Assign(slot, ready);
+            x = px[order[pick]];
+            z = pz[order[pick]];
+            return true;
+        }
+
         public bool Chip(PlacedModule module, int amount)
         {
             if (module == null || !placed.Contains(module)) return false;

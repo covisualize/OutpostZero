@@ -2727,6 +2727,33 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void ARaidStepsPastTheBoardsAndChewsTheWeakOne()
+        {
+            RaidDrop.Point("gate", 0, 1, out float x, out float z);
+            Assert.AreEqual(-10.8f, x, 0.05f);
+            Assert.AreEqual(-14.4f, z, 0.05f);
+            RaidDrop.Point("alley", 0, 1, out float alleyX, out float alleyZ);
+            Assert.Less(alleyX, -20f);
+            Assert.Less(alleyZ, -12f);
+            Assert.AreEqual(-1, BoardBite.Assign(0, 0));
+            Assert.AreEqual(0, BoardBite.Assign(0, 2));
+            Assert.AreEqual(1, BoardBite.Assign(1, 2));
+            Assert.AreEqual(0, BoardBite.Assign(2, 2));
+            var integrity = new[] { 80, 20, 50 };
+            var order = new int[3];
+            BoardBite.Rank(integrity, order);
+            Assert.AreEqual(1, order[0]);
+            Assert.AreEqual(2, order[1]);
+            Assert.AreEqual(0, order[2]);
+            Assert.IsTrue(BoardBite.InReach(-6f, -8f, -6f, -9.5f));
+            Assert.IsFalse(BoardBite.InReach(0f, 0f, -6f, -8f));
+            Assert.IsFalse(BoardBite.CrowdChews(0));
+            Assert.IsTrue(BoardBite.CrowdChews(3));
+            Assert.AreEqual(2, BoardBite.Chip);
+            Assert.AreEqual("Muerden las tablas", Loc.T("camp.chew", "es"));
+        }
+
+        [Test]
         public void DemolishingAModuleReturnsHalfTheScrap()
         {
             Assert.AreEqual(3, ScrapRefund.Half(6));

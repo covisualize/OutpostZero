@@ -8,6 +8,7 @@ using OutpostZero.Combat;
 using OutpostZero.Graphics;
 using OutpostZero.Player;
 using OutpostZero.Expedition;
+using OutpostZero.Colony;
 
 namespace OutpostZero.AI
 {
@@ -87,6 +88,10 @@ namespace OutpostZero.AI
         private float dashX;
         private float dashZ = 1f;
         private Vector3 spawnOrigin;
+        private bool posted;
+        private float postX;
+        private float postZ;
+        private float nextBite;
         private static readonly List<ZombieAI> aliveCrowd = new List<ZombieAI>();
         private static readonly float[] crowdX = new float[48];
         private static readonly float[] crowdZ = new float[48];
@@ -98,6 +103,35 @@ namespace OutpostZero.AI
         public float HearingSensitivity => hearingSensitivity;
 
         public string WatchTarget => currentTarget != null ? currentTarget.name : "";
+        public bool Posted => posted;
+
+        public static int PostedCount()
+        {
+            int count = 0;
+            for (int i = 0; i < aliveCrowd.Count; i++)
+            {
+                var zombie = aliveCrowd[i];
+                if (zombie == null || !zombie.posted) continue;
+                if (zombie.currentState == ZombieState.Dead) continue;
+                if (zombie.healthSystem != null && zombie.healthSystem.IsDead) continue;
+                count++;
+            }
+            return count;
+        }
+
+        public void PostAt(float x, float z)
+        {
+            posted = true;
+            postX = x;
+            postZ = z;
+            nextBite = 0f;
+        }
+
+        private void ClearPost()
+        {
+            posted = false;
+            if (agent != null && agent.enabled) agent.isStopped = false;
+        }
 
         public float AbilityWait(float now)
         {
@@ -186,6 +220,7 @@ namespace OutpostZero.AI
                 agent.isStopped = false;
             }
             currentState = ZombieState.Idle;
+            posted = false;
             abilityClock = new SpecialBeat.Clock();
             lostSight = 0f;
             searchSweep = new SearchMemory.Sweep();
@@ -252,6 +287,13 @@ namespace OutpostZero.AI
                 if (gameState != GameState.ExpeditionActive && gameState != GameState.RaidActive) return;
             }
 
+            if (posted)
+            {
+                if (GameManager.Instance == null || GameManager.Instance.CurrentState != GameState.RaidActive || !Gnaw())
+                    ClearPost();
+                else
+                    return;
+            }
             if (currentState != ZombieState.Chase && currentState != ZombieState.Attack && QualityProfile.SightDue(sightToken, Time.frameCount))
             {
                 CheckSight();
@@ -419,6 +461,41 @@ namespace OutpostZero.AI
                 }
             }
             lastKnownPosition = dest;
+        }
+
+        private bool Gnaw()
+        {
+            if (GridBuilder.Instance == null || !GridBuilder.Instance.BoardStands(postX, postZ))
+            {
+                ClearPost();
+                return false;
+            }
+            Vector3 spot = new Vector3(postX, transform.position.y, postZ);
+            if (!BoardBite.InReach(transform.position.x, transform.position.z, postX, postZ))
+            {
+                if (agent != null && agent.enabled && agent.isOnNavMesh)
+                {
+                    agent.isStopped = false;
+                    agent.SetDestination(spot);
+                }
+                else
+                {
+                    Vector3 step = spot - transform.position;
+                    step.y = 0f;
+                    if (step.sqrMagnitude > 0.01f)
+                        transform.position += step.normalized * chaseSpeed * Time.deltaTime;
+                }
+                return true;
+            }
+            if (agent != null && agent.enabled) agent.isStopped = true;
+            if (Time.time < nextBite) return true;
+            nextBite = Time.time + BoardBite.Gap;
+            if (GridBuilder.Instance.StrikeAt(postX, postZ, BoardBite.Chip))
+            {
+                ClearPost();
+                return false;
+            }
+            return posted;
         }
 
         private void UpdateChase()

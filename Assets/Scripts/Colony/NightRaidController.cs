@@ -88,8 +88,11 @@ namespace OutpostZero.Colony
             nextGuard = Time.time + GuardVolley.Interval;
             GameManager.Instance.SetState(GameState.RaidActive);
             int spawn = RaidPlan.SpawnCount(day, towers) + (tower ? 4 : 0);
-            if (HordeDirector.Instance != null) HordeDirector.Instance.BeginRaid(spawn);
-            GameplayFeedback.Toast(tower ? "Broadcast night — hold the tower" : "Night raid from the " + approach);
+            if (HordeDirector.Instance != null) HordeDirector.Instance.BeginRaid(spawn, approach);
+            string openLine = tower ? "Broadcast night — hold the tower" : "Night raid from the " + approach;
+            if (GridBuilder.Instance != null && GridBuilder.Instance.BarricadeCount() > 0)
+                openLine += "  " + Loc.T("camp.chew");
+            GameplayFeedback.Toast(openLine);
         }
 
         public bool HoldWatch(float added)
@@ -176,12 +179,16 @@ namespace OutpostZero.Colony
                 int hit = RaidPlan.Strike(pressure, guards, cover);
                 int blow = RaidBreach.Blow(hit, RaidBreach.Brute(phase));
                 bool walls = GridBuilder.Instance != null && GridBuilder.Instance.BarricadeCount() > 0;
-                if (walls)
+                if (BoardBite.CrowdChews(ZombieAI.PostedCount()))
+                {
+                    blow = 0;
+                }
+                if (walls && blow > 0)
                 {
                     if (GridBuilder.Instance.StrikeFrom(approach, blow))
                         SurvivorRoster.Instance?.WoundFromRaid(raidDay + phase);
                 }
-                else if (RaidBreach.Brute(phase) && !breached)
+                else if (blow > 0 && RaidBreach.Brute(phase) && !breached)
                 {
                     breached = true;
                     SurvivorRoster.Instance?.WoundFromRaid(raidDay + phase);
@@ -446,7 +453,7 @@ namespace OutpostZero.Colony
             if (lamps > 0) line += "  " + Loc.T("camp.lamps");
             GameplayFeedback.Toast(line);
             int extra = RaidPlan.Reinforcements(index);
-            if (extra > 0 && HordeDirector.Instance != null) HordeDirector.Instance.BeginRaid(extra);
+            if (extra > 0 && HordeDirector.Instance != null) HordeDirector.Instance.BeginRaid(extra, approach);
         }
     }
 }
