@@ -97,6 +97,8 @@ namespace OutpostZero.Tests.EditMode
             Assert.AreEqual("missing.key", Loc.T("missing.key", "es"));
             Assert.AreEqual("Medkit", Loc.Item("medkit"));
             Assert.AreEqual("Botiquín", Loc.Item("medkit", "es"));
+            Assert.AreEqual("Flare", Loc.Item("flare"));
+            Assert.AreEqual("Bengala", Loc.Item("flare", "es"));
             Assert.AreEqual("Ash Market", Loc.District("ash_market"));
             Assert.AreEqual("Mercado de ceniza", Loc.District("ash_market", "es"));
             Assert.AreEqual("Rest", Loc.Task("Rest"));
@@ -1900,6 +1902,21 @@ namespace OutpostZero.Tests.EditMode
             {
                 AiWatch.Close();
             }
+        }
+
+        [Test]
+        public void AFlareBurnsForTwentySecondsAndPulsesTheSearch()
+        {
+            Assert.IsTrue(FlareClock.Lit(0f));
+            Assert.IsTrue(FlareClock.Lit(19.9f));
+            Assert.IsFalse(FlareClock.Lit(20f));
+            Assert.IsFalse(FlareClock.Lit(-0.1f));
+            Assert.IsTrue(FlareClock.PulseDue(-1f, 0f));
+            Assert.IsFalse(FlareClock.PulseDue(0f, 0.4f));
+            Assert.IsTrue(FlareClock.PulseDue(2.4f, 2.6f));
+            Assert.IsFalse(FlareClock.PulseDue(19.9f, 20.1f));
+            Assert.AreEqual(ItemUse.Flare, ItemCatalog.Find("flare").Use);
+            Assert.AreEqual("Pulls a search for 20s", ItemBrief.Effect(ItemCatalog.Find("flare")));
         }
 
         [Test]

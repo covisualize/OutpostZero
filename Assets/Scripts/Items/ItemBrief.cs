@@ -40,6 +40,7 @@ namespace OutpostZero.Items
             if (record.Use == ItemUse.Relief) return Loc.T("unit.relief");
             if (record.Use == ItemUse.Lure) return Loc.T("unit.lure");
             if (record.Use == ItemUse.Molotov) return Loc.T("unit.molotov");
+            if (record.Use == ItemUse.Flare) return Loc.T("unit.flare");
             if (record.Id == "cloth") return Loc.T("unit.cloth");
             if (record.Id == "chemicals") return Loc.T("unit.chemicals");
             if (record.Id == "tape") return Loc.T("unit.tape");

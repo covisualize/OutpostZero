@@ -105,6 +105,11 @@ namespace OutpostZero.Player
                 Launch(false);
                 return;
             }
+            if (inventory != null && inventory.TryConsume("flare"))
+            {
+                LaunchFlare();
+                return;
+            }
             GameplayFeedback.Toast("No throwable");
         }
 
@@ -120,18 +125,49 @@ namespace OutpostZero.Player
             var thrown = lure.AddComponent<ThrownHazard>();
             thrown.Configure(molotov);
         }
+
+        private void LaunchFlare()
+        {
+            var lure = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            lure.name = "Flare";
+            lure.transform.position = transform.position + Vector3.up * 1.4f + transform.forward;
+            lure.transform.localScale = Vector3.one * 0.18f;
+            var body = lure.AddComponent<Rigidbody>();
+            body.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
+            body.AddForce(transform.forward * ThrowArc.Forward + Vector3.up * ThrowArc.Lift, ForceMode.VelocityChange);
+            lure.AddComponent<ThrownHazard>().ConfigureFlare();
+        }
     }
 
     public class ThrownHazard : MonoBehaviour
     {
         [SerializeField] private bool molotov;
+        [SerializeField] private bool flare;
         private bool popped;
+        private float age = -1f;
 
         public void Configure(bool fire) => molotov = fire;
 
+        public void ConfigureFlare() => flare = true;
+
         private void Start()
         {
-            Invoke(nameof(Pop), molotov ? 1.1f : 0.7f);
+            Invoke(nameof(Pop), flare ? 0.8f : molotov ? 1.1f : 0.7f);
+        }
+
+        private void Update()
+        {
+            if (!flare || !popped) return;
+            float next = age + Time.deltaTime;
+            if (FlareClock.PulseDue(age, next)) EmitCall();
+            age = next;
+            if (!FlareClock.Lit(age)) Destroy(gameObject);
+        }
+
+        private void EmitCall()
+        {
+            if (Sensory.NoiseManager.Instance == null) return;
+            Sensory.NoiseManager.Instance.EmitNoise(transform.position, FlareClock.Radius, 0.8f, NoiseType.ObjectBroken, gameObject);
         }
 
         private void OnCollisionEnter(Collision collision)
@@ -143,6 +179,22 @@ namespace OutpostZero.Player
         {
             if (popped) return;
             popped = true;
+            if (flare)
+            {
+                age = 0f;
+                EmitCall();
+                var glow = gameObject.AddComponent<Light>();
+                glow.type = LightType.Point;
+                glow.range = 9f;
+                glow.intensity = 2.2f;
+                glow.color = new Color(1f, 0.55f, 0.2f);
+                var body = GetComponent<Rigidbody>();
+                if (body != null) body.isKinematic = true;
+                var solid = GetComponent<Collider>();
+                if (solid != null) solid.enabled = false;
+                GameplayFeedback.Toast("Flare lit");
+                return;
+            }
             Vector3 origin = transform.position;
             if (Sensory.NoiseManager.Instance != null)
             {

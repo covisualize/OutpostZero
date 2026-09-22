@@ -14,7 +14,8 @@ namespace OutpostZero.Items
         Molotov,
         Material,
         Cure,
-        Relief
+        Relief,
+        Flare
     }
 
     public sealed class ItemRecord
@@ -53,7 +54,8 @@ namespace OutpostZero.Items
             new ItemRecord { Id = "chemicals", DisplayName = "Chemicals", Category = Core.ItemCategory.ScrapMaterial, Weight = 0.2f, Use = ItemUse.Material },
             new ItemRecord { Id = "tape", DisplayName = "Duct Tape", Category = Core.ItemCategory.ScrapMaterial, Weight = 0.1f, Use = ItemUse.Material },
             new ItemRecord { Id = "noise_lure", DisplayName = "Noise Lure", Category = Core.ItemCategory.KeyItem, Weight = 0.2f, Use = ItemUse.Lure },
-            new ItemRecord { Id = "molotov", DisplayName = "Molotov", Category = Core.ItemCategory.Fuel, Weight = 0.6f, Use = ItemUse.Molotov }
+            new ItemRecord { Id = "molotov", DisplayName = "Molotov", Category = Core.ItemCategory.Fuel, Weight = 0.6f, Use = ItemUse.Molotov },
+            new ItemRecord { Id = "flare", DisplayName = "Flare", Category = Core.ItemCategory.KeyItem, Weight = 0.3f, Use = ItemUse.Flare }
         };
 
         public static IReadOnlyList<ItemRecord> All => records;
@@ -107,7 +109,8 @@ namespace OutpostZero.Items
                 new Grant { ItemId = "scrap", Count = 2 + rng.Next(0, 5) },
                 new Grant { ItemId = rng.NextDouble() > 0.55 ? "canned_food" : "water", Count = 1 },
                 new Grant { ItemId = "cloth", Count = 1 },
-                new Grant { ItemId = rng.NextDouble() > 0.6 ? "chemicals" : "tape", Count = 1 }
+                new Grant { ItemId = rng.NextDouble() > 0.6 ? "chemicals" : "tape", Count = 1 },
+                new Grant { ItemId = "flare", Count = rng.NextDouble() > 0.72 ? 1 : 0 }
             };
         }
     }
