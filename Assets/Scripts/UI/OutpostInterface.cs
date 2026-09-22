@@ -787,6 +787,7 @@ namespace OutpostZero.UI
                         + "  " + Loc.T("camp.opinion") + " " + survivor.opinion
                         + (skills.Length > 0 ? "  " + skills : "")
                         + (leads.Length > 0 ? "  " + leads : "")
+                        + (LifeLine.Line(survivor.age, survivor.past, null).Length > 0 ? "  " + LifeLine.Line(survivor.age, survivor.past, null) : "")
                         + "  \"" + Loc.Bark(doing, survivor.morale) + "\""));
                     if (!survivor.alive) continue;
                     string id = survivor.id;

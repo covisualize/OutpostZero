@@ -20,6 +20,8 @@ namespace OutpostZero.Shell
         public string bond;
         public string practice = "";
         public int leadership;
+        public int age;
+        public string past = "";
     }
 
     [Serializable]

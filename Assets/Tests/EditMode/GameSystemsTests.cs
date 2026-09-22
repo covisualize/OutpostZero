@@ -3185,6 +3185,26 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void AYoungNightRestsMoreAndAnOldSaveStaysAtEight()
+        {
+            Assert.AreEqual(8, LifeLine.Rest(0));
+            Assert.AreEqual(10, LifeLine.Rest(22));
+            Assert.AreEqual(10, LifeLine.Rest(28));
+            Assert.AreEqual(8, LifeLine.Rest(29));
+            Assert.AreEqual(8, LifeLine.Rest(51));
+            Assert.AreEqual(5, LifeLine.Rest(52));
+            Assert.AreEqual(5, LifeLine.Rest(61));
+            int years = LifeLine.YearsOf("mara_quil");
+            Assert.GreaterOrEqual(years, 22);
+            Assert.LessOrEqual(years, 61);
+            Assert.AreEqual(years, LifeLine.YearsOf("mara_quil"));
+            Assert.AreNotEqual(LifeLine.Past("mara_quil"), LifeLine.Past("jonas_reed"));
+            Assert.AreEqual("", LifeLine.Line(0, "past.nurse", "es"));
+            Assert.AreEqual("34  Enfermera", LifeLine.Line(34, "past.nurse", "es"));
+            Assert.AreEqual("Soldado", Loc.T("past.soldier", "es"));
+        }
+
+        [Test]
         public void GoreOffDropsBloodAndAShotgunSpraysTheWall()
         {
             Assert.AreEqual(0, GoreMark.Splats(0, false, true));

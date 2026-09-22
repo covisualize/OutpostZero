@@ -28,6 +28,8 @@ namespace OutpostZero.Colony
         public int leadership;
         public string task = "Rest";
         public string bond = "";
+        public int age;
+        public string past = "";
     }
 
     public class SurvivorRoster : MonoBehaviour
@@ -139,7 +141,9 @@ namespace OutpostZero.Colony
                 cooking = draft.Cooking,
                 scavenge = draft.Scavenge,
                 task = draft.Leader ? "Lead" : "Rest",
-                bond = draft.Bond
+                bond = draft.Bond,
+                age = LifeLine.YearsOf(draft.Id),
+                past = LifeLine.Past(draft.Id)
             };
         }
 
@@ -416,7 +420,7 @@ namespace OutpostZero.Colony
                         if (watch > 0 && storage != null) storage.AddSecurity(watch);
                         break;
                     case "Rest":
-                        survivor.morale = Mathf.Min(100f, survivor.morale + 8f);
+                        survivor.morale = Mathf.Min(100f, survivor.morale + LifeLine.Rest(survivor.age));
                         break;
                     case "Medic":
                         if (ColonyDay.OutputScale(survivor.morale) <= 0f) break;

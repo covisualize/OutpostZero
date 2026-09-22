@@ -282,7 +282,9 @@ namespace OutpostZero.Shell
                         task = survivor.task,
                         bond = survivor.bond,
                         practice = Practice.Pack(survivor.combat, survivor.medicine, survivor.engineering, survivor.cooking, survivor.scavenge),
-                        leadership = survivor.leadership
+                        leadership = survivor.leadership,
+                        age = survivor.age,
+                        past = survivor.past
                     });
                 }
                 data.survivors = list.ToArray();
@@ -357,7 +359,9 @@ namespace OutpostZero.Shell
                         engineering = ReadPractice(saved.practice, 2),
                         cooking = ReadPractice(saved.practice, 3),
                         scavenge = ReadPractice(saved.practice, 4),
-                        leadership = saved.leadership < 0 ? 0 : saved.leadership
+                        leadership = saved.leadership < 0 ? 0 : saved.leadership,
+                        age = saved.age < 0 ? 0 : saved.age,
+                        past = saved.past ?? ""
                     });
                 }
                 SurvivorRoster.Instance.Replace(list);
