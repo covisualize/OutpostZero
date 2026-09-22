@@ -6373,6 +6373,42 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void ACloseZombieBitesTheFollowerAndTheBiteComesHome()
+        {
+            Assert.AreEqual(1.2f, FollowBite.Reach, 0.001f);
+            Assert.AreEqual(2.4f, FollowBite.Gap, 0.001f);
+            Assert.AreEqual(1, FollowBite.Wound);
+            Assert.AreEqual(3, FollowBite.Cap);
+            Assert.IsTrue(FollowBite.Due(0f, 10f, 1.2f));
+            Assert.IsTrue(FollowBite.Due(0f, 10f, 0f));
+            Assert.IsFalse(FollowBite.Due(0f, 10f, 1.21f));
+            Assert.IsFalse(FollowBite.Due(0f, 10f, 1.5f));
+            Assert.IsTrue(StreetAid.Due(0f, 10f, 1.5f));
+            Assert.IsFalse(FollowBite.Due(4f, 6f, 1f));
+            Assert.IsTrue(FollowBite.Due(4f, 6.4f, 1f));
+            Assert.IsFalse(FollowBite.Due(6f, 5f, 1f));
+            Assert.AreEqual(1, FollowBite.After(0));
+            Assert.AreEqual(2, FollowBite.After(1));
+            Assert.AreEqual(3, FollowBite.After(2));
+            Assert.AreEqual(3, FollowBite.After(3));
+            Assert.AreEqual(3, FollowBite.After(9));
+            Assert.AreEqual(1, FollowBite.After(-1));
+            Assert.AreEqual(0, FollowBite.Bring(0));
+            Assert.AreEqual(1, FollowBite.Bring(1));
+            Assert.AreEqual(3, FollowBite.Bring(3));
+            Assert.AreEqual(3, FollowBite.Bring(9));
+            Assert.AreEqual(0, FollowBite.Bring(-2));
+            Assert.AreEqual(1, HomeSick.Carry(0, 1));
+            Assert.AreEqual(3, HomeSick.Carry(0, 9));
+            Assert.AreEqual("Maya is bitten", FollowBite.Line("Maya", "en"));
+            Assert.AreEqual("Maya recibe una mordedura", FollowBite.Line("Maya", "es"));
+            Assert.AreEqual("Survivor is bitten", FollowBite.Line("", "en"));
+            Assert.AreEqual(1.6f, StreetAid.Reach, 0.001f);
+            Assert.AreEqual(14f, StreetAid.Damage, 0.001f);
+            Assert.AreEqual(7f, StraggleCall.Near, 0.001f);
+        }
+
+        [Test]
         public void AZombieWithoutARigStillAttacksAndFalls()
         {
             Assert.AreEqual(14f, PoseSheet.Lean(ZombieAI.ZombieState.Chase, 0f), 0.001f);

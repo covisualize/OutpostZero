@@ -23,6 +23,8 @@ namespace OutpostZero.Expedition
         private bool joined;
         private float lastCry;
         private float lastAid;
+        private float lastBite;
+        private int bites;
 
         public string Name => personName;
         public bool Following => following;
@@ -96,6 +98,14 @@ namespace OutpostZero.Expedition
                 }
             }
 
+            if (FollowBite.Due(lastBite, Time.time, ZombieAI.Nearest(nextX, nextZ)))
+            {
+                lastBite = Time.time;
+                int before = bites;
+                bites = FollowBite.After(bites);
+                if (bites > before) GameplayFeedback.Toast(FollowBite.Line(personName, null));
+            }
+
             var gate = ExtractionZone.Current;
             if (gate == null) return;
             var spot = gate.transform.position;
@@ -109,7 +119,7 @@ namespace OutpostZero.Expedition
         {
             if (joined) return;
             var roster = SurvivorRoster.Instance;
-            if (roster == null || !roster.Adopt(personId, personName, Trait()))
+            if (roster == null || !roster.Adopt(personId, personName, Trait(), bites))
             {
                 GameplayFeedback.Toast(FightSay.Roster(null));
                 joined = true;

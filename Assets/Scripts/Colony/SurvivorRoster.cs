@@ -727,9 +727,16 @@ namespace OutpostZero.Colony
 
         public bool Adopt(string id, string name, string trait)
         {
+            return Adopt(id, name, trait, 0);
+        }
+
+        public bool Adopt(string id, string name, string trait, int injury)
+        {
             if (string.IsNullOrEmpty(id) || Has(id)) return false;
             if (survivors.Count >= RescueBook.RosterCap) return false;
-            survivors.Add(Make(id, name, trait, false, "Found on the street"));
+            var person = Make(id, name, trait, false, "Found on the street");
+            person.injury = OutpostZero.Expedition.FollowBite.Bring(injury);
+            survivors.Add(person);
             OnRosterChanged?.Invoke();
             return true;
         }
