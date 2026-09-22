@@ -1,6 +1,8 @@
 using UnityEngine;
+using UnityEngine.Rendering;
 using OutpostZero.Colony;
 using OutpostZero.Core;
+using OutpostZero.Expedition;
 
 namespace OutpostZero.Graphics
 {
@@ -48,10 +50,20 @@ namespace OutpostZero.Graphics
             float angle = (hour / 24f) * 360f - 90f;
             sun.transform.rotation = Quaternion.Euler(angle, 35f, 0f);
             bool raid = GameManager.Instance != null && GameManager.Instance.CurrentState == GameState.RaidActive;
-            NightFactor = raid ? 1f : HourToNight(hour);
-            sun.intensity = Mathf.Lerp(1.15f, 0.08f, NightFactor);
-            sun.color = Color.Lerp(new Color(1f, 0.96f, 0.9f), new Color(0.45f, 0.55f, 0.85f), NightFactor);
-            RenderSettings.ambientIntensity = Mathf.Lerp(1f, 0.25f, NightFactor);
+            float clock = HourToNight(hour);
+            float job = 0f;
+            var tracker = ObjectiveTracker.Instance;
+            if (tracker != null)
+                job = SkyGrade.JobNight(SkyGrade.Job(tracker.Kills, tracker.KillGoal, tracker.Scrap, tracker.ScrapGoal));
+            NightFactor = raid ? 1f : Mathf.Max(clock, job);
+            sun.intensity = SkyGrade.Sun(NightFactor);
+            sun.color = SkyGrade.SunTint(NightFactor);
+            RenderSettings.ambientMode = AmbientMode.Trilight;
+            RenderSettings.ambientSkyColor = SkyGrade.Sky(NightFactor);
+            RenderSettings.ambientEquatorColor = SkyGrade.Equator(NightFactor);
+            RenderSettings.ambientGroundColor = SkyGrade.Ground(NightFactor);
+            RenderSettings.ambientIntensity = 1f;
+            if (RenderSettings.skybox != null) RenderSettings.skybox.SetFloat("_Exposure", SkyGrade.Exposure(NightFactor));
             HoldAlarm(raid);
         }
 

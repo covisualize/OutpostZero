@@ -3721,6 +3721,30 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void NightBringsAMoonAndTheQuotaPullsDuskForward()
+        {
+            Assert.AreEqual(0f, DayNightCycle.HourToNight(12f), 0.001f);
+            Assert.AreEqual(1f, DayNightCycle.HourToNight(23f), 0.001f);
+            Assert.AreEqual(1.15f, SkyGrade.Sun(0f), 0.001f);
+            Assert.AreEqual(0.15f, SkyGrade.Sun(1f), 0.001f);
+            Assert.AreEqual(0.65f, SkyGrade.Sun(0.5f), 0.001f);
+            Assert.AreEqual(0.08f, SkyGrade.NightSky.b, 0.001f);
+            Assert.Less(SkyGrade.NightSky.r, SkyGrade.NightSky.b);
+            Assert.AreEqual(SkyGrade.NightSky, SkyGrade.Sky(1f));
+            Assert.AreEqual(SkyGrade.DaySky, SkyGrade.Sky(0f));
+            Assert.AreEqual(1.05f, SkyGrade.Exposure(0f), 0.001f);
+            Assert.AreEqual(0.35f, SkyGrade.Exposure(1f), 0.001f);
+            Assert.AreEqual(0f, SkyGrade.Job(0f, 8f, 0f, 15f), 0.001f);
+            Assert.AreEqual(1f, SkyGrade.Job(8f, 8f, 15f, 15f), 0.001f);
+            Assert.AreEqual(0.5f, SkyGrade.Job(4f, 8f, 7.5f, 15f), 0.001f);
+            Assert.AreEqual(0f, SkyGrade.JobNight(0.69f), 0.001f);
+            Assert.AreEqual(0f, SkyGrade.JobNight(0.70f), 0.001f);
+            Assert.AreEqual(0.5f, SkyGrade.JobNight(0.85f), 0.001f);
+            Assert.AreEqual(1f, SkyGrade.JobNight(1f), 0.001f);
+            Assert.AreEqual(1f, SkyGrade.JobNight(1.4f), 0.001f);
+        }
+
+        [Test]
         public void ADeepBuilderRaisesExtraAndAFourthShiftDoesNot()
         {
             Assert.AreEqual(0, BuildDepth.Raise(4));
