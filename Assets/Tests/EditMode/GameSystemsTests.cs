@@ -10,6 +10,7 @@ using OutpostZero.Expedition;
 using OutpostZero.Graphics;
 using OutpostZero.Items;
 using OutpostZero.Player;
+using OutpostZero.Sensory;
 using OutpostZero.Shell;
 
 namespace OutpostZero.Tests.EditMode
@@ -1867,6 +1868,37 @@ namespace OutpostZero.Tests.EditMode
                 Assert.IsTrue(found, kinds[i]);
                 Assert.IsTrue(floor);
                 Assert.IsTrue(RoomPlan.Covers(dressed[0], annexX, annexZ));
+            }
+        }
+
+        [Test]
+        public void AScreamStopsAtAWallAndTheWatchListsTheChase()
+        {
+            Assert.AreEqual(0f, HearGate.Perceived(0f, 10f, 1f, true, NoiseType.ZombieScream), 0.001f);
+            Assert.AreEqual(1f, HearGate.Perceived(0f, 10f, 1f, false, NoiseType.ZombieScream), 0.001f);
+            Assert.AreEqual(0.2f, HearGate.Perceived(8f, 10f, 1f, false, NoiseType.ZombieScream), 0.001f);
+            Assert.AreEqual(0f, HearGate.Perceived(9.5f, 10f, 1f, false, NoiseType.ZombieScream), 0.001f);
+            Assert.AreEqual(0f, HearGate.Perceived(11f, 10f, 1f, false, NoiseType.ZombieScream), 0.001f);
+            Assert.AreEqual(0.09f, HearGate.Perceived(8f, 10f, 1f, true, NoiseType.GunshotLoud), 0.001f);
+            Assert.AreEqual(0f, HearGate.Perceived(9f, 10f, 1f, true, NoiseType.GunshotLoud), 0.001f);
+            Assert.AreEqual(0f, HearGate.Perceived(1f, 0f, 1f, false, NoiseType.ZombieScream), 0.001f);
+
+            Assert.AreEqual("Chase  Player  1.3", AiWatch.Line("Chase", "Player", 1.26f));
+            Assert.AreEqual("Chase  -  0.0", AiWatch.Line("Chase", "", -1f));
+            AiWatch.Close();
+            try
+            {
+                Assert.AreEqual("", AiWatch.Page(new[] { "Chase  Player  1.3" }, 6));
+                AiWatch.Toggle();
+                Assert.IsTrue(AiWatch.Open);
+                Assert.AreEqual("watch", AiWatch.Page(null, 6));
+                Assert.AreEqual("watch\nChase  Player  1.3", AiWatch.Page(new[] { "Chase  Player  1.3" }, 6));
+                var many = new[] { "a", "b", "c", "d", "e", "f", "g" };
+                Assert.AreEqual("watch\na\nb\nc\nd\ne\nf\n+", AiWatch.Page(many, 6));
+            }
+            finally
+            {
+                AiWatch.Close();
             }
         }
 

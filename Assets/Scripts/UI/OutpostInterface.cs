@@ -37,6 +37,7 @@ namespace OutpostZero.UI
         private Label hurt;
         private Label feed;
         private Label threats;
+        private Label watch;
         private VisualElement veil;
         private VisualElement noiseFill;
         private Label noiseMark;
@@ -59,6 +60,8 @@ namespace OutpostZero.UI
 
         private void Update()
         {
+            if (ExpeditionInput.WatchPressed) AiWatch.Toggle();
+
             if (padListen >= 0)
             {
                 if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
@@ -189,6 +192,17 @@ namespace OutpostZero.UI
             compass.style.unityTextAlign = TextAnchor.MiddleCenter;
             compass.pickingMode = PickingMode.Ignore;
             root.Add(compass);
+
+            watch = Body();
+            watch.style.position = Position.Absolute;
+            watch.style.top = 12;
+            watch.style.right = 16;
+            watch.style.width = 280;
+            watch.style.whiteSpace = WhiteSpace.PreWrap;
+            watch.style.backgroundColor = new Color(0.05f, 0.06f, 0.08f, 0.82f);
+            watch.style.display = DisplayStyle.None;
+            watch.pickingMode = PickingMode.Ignore;
+            root.Add(watch);
 
             hurt = Body();
             hurt.style.position = Position.Absolute;
@@ -395,6 +409,22 @@ namespace OutpostZero.UI
             noiseFill.style.height = NoiseCue.Height(vision, noise);
             noiseMark.text = NoiseCue.Mark(vision, noise);
             noiseMark.style.display = string.IsNullOrEmpty(noiseMark.text) ? DisplayStyle.None : DisplayStyle.Flex;
+            if (watch != null)
+            {
+                if (!AiWatch.Open)
+                {
+                    watch.style.display = DisplayStyle.None;
+                }
+                else
+                {
+                    var rows = new string[12];
+                    int count = ZombieAI.CopyWatch(rows, Time.time);
+                    var shown = new string[count];
+                    for (int i = 0; i < count; i++) shown[i] = rows[i];
+                    watch.text = AiWatch.Page(shown, 6);
+                    watch.style.display = DisplayStyle.Flex;
+                }
+            }
             toast.text = hud != null ? hud.Toast ?? "" : "";
             toast.style.display = string.IsNullOrEmpty(toast.text) ? DisplayStyle.None : DisplayStyle.Flex;
 

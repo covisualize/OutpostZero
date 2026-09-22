@@ -97,6 +97,27 @@ namespace OutpostZero.AI
         public Vector3 Position => transform.position;
         public float HearingSensitivity => hearingSensitivity;
 
+        public string WatchTarget => currentTarget != null ? currentTarget.name : "";
+
+        public float AbilityWait(float now)
+        {
+            float left = abilityClock.Ready - now;
+            return left > 0f ? left : 0f;
+        }
+
+        public static int CopyWatch(string[] into, float now)
+        {
+            if (into == null) return 0;
+            int n = 0;
+            for (int i = 0; i < aliveCrowd.Count && n < into.Length; i++)
+            {
+                var zombie = aliveCrowd[i];
+                if (zombie == null || zombie.currentState == ZombieState.Dead) continue;
+                into[n++] = AiWatch.Line(zombie.currentState.ToString(), zombie.WatchTarget, zombie.AbilityWait(now));
+            }
+            return n;
+        }
+
         private void Reset()
         {
             visionMask = GameLayers.VisionOcclusionMask;
@@ -691,7 +712,7 @@ namespace OutpostZero.AI
         private void AlertNearbyZombies()
         {
             if (NoiseManager.Instance == null || currentTarget == null) return;
-            NoiseManager.Instance.EmitNoise(transform.position + Vector3.up * 1.2f, hordeAlertRadius, 1f, NoiseType.ZombieScream, currentTarget.gameObject);
+            NoiseManager.Instance.EmitNoise(transform.position, hordeAlertRadius, 1f, NoiseType.ZombieScream, currentTarget.gameObject);
         }
 
         private void HandleDamaged(float amount, Vector3 hitPoint)
