@@ -82,7 +82,31 @@ namespace OutpostZero.Combat
             Seat(go);
             go.transform.position = new Vector3(origin.x, 0.02f, origin.z);
             go.AddComponent<BlastRemain>().Arm(kind);
+            if (BlastChunk.Throws(kind)) Chunks(origin);
             OutpostZero.Shell.AudioManager.Instance?.PlayAt(BlastWake.Sound(kind), origin, BlastWake.Volume(kind));
+        }
+
+        private static void Chunks(Vector3 origin)
+        {
+            var root = new GameObject("BlastChunks");
+            Seat(root);
+            root.transform.position = origin;
+            for (int i = 0; i < BlastChunk.Count; i++)
+            {
+                float rad = i * (6.2831853f / BlastChunk.Count);
+                var chunk = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                chunk.name = "BarrelBit";
+                Object.Destroy(chunk.GetComponent<Collider>());
+                chunk.transform.SetParent(root.transform, false);
+                chunk.transform.localScale = Vector3.one * 0.12f;
+                chunk.transform.localPosition = Vector3.up * 0.3f;
+                var renderer = chunk.GetComponent<Renderer>();
+                if (renderer != null) renderer.material.color = new Color(0.28f, 0.16f, 0.1f, 1f);
+                var body = chunk.AddComponent<Rigidbody>();
+                body.mass = 0.2f;
+                body.AddForce(new Vector3(UnityEngine.Mathf.Cos(rad), 0.8f, UnityEngine.Mathf.Sin(rad)) * BlastChunk.Speed, ForceMode.Impulse);
+            }
+            Object.Destroy(root, BlastChunk.Life);
         }
 
         private static void Ring(Vector3 origin)
