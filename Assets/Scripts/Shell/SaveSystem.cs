@@ -280,7 +280,8 @@ namespace OutpostZero.Shell
                         injury = survivor.injury,
                         needsTracked = true,
                         task = survivor.task,
-                        bond = survivor.bond
+                        bond = survivor.bond,
+                        practice = Practice.Pack(survivor.combat, survivor.medicine, survivor.engineering, survivor.cooking, survivor.scavenge)
                     });
                 }
                 data.survivors = list.ToArray();
@@ -349,7 +350,12 @@ namespace OutpostZero.Shell
                         opinion = saved.needsTracked ? saved.opinion : (string.IsNullOrEmpty(saved.bond) ? 0 : 18),
                         injury = saved.needsTracked ? saved.injury : 0,
                         task = string.IsNullOrEmpty(saved.task) ? "Rest" : saved.task,
-                        bond = saved.bond
+                        bond = saved.bond,
+                        combat = ReadPractice(saved.practice, 0),
+                        medicine = ReadPractice(saved.practice, 1),
+                        engineering = ReadPractice(saved.practice, 2),
+                        cooking = ReadPractice(saved.practice, 3),
+                        scavenge = ReadPractice(saved.practice, 4)
                     });
                 }
                 SurvivorRoster.Instance.Replace(list);
@@ -367,6 +373,17 @@ namespace OutpostZero.Shell
                 GridBuilder.Instance.Restore(modules.ToArray());
             }
             if (GameManager.Instance != null) GameManager.Instance.SetState(GameState.CampManagement);
+        }
+
+        private static int ReadPractice(string packed, int index)
+        {
+            Practice.Unpack(packed, out int combat, out int medicine, out int engineering, out int cooking, out int scavenge);
+            if (index == 0) return combat;
+            if (index == 1) return medicine;
+            if (index == 2) return engineering;
+            if (index == 3) return cooking;
+            if (index == 4) return scavenge;
+            return 0;
         }
     }
 }

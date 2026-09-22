@@ -20,6 +20,11 @@ namespace OutpostZero.Colony
         public float thirst = 78f;
         public int opinion = 18;
         public int injury;
+        public int combat;
+        public int medicine;
+        public int engineering;
+        public int cooking;
+        public int scavenge;
         public string task = "Rest";
         public string bond = "";
     }
@@ -329,6 +334,11 @@ namespace OutpostZero.Colony
                 {
                     case "Scavenge":
                         int scrap = Pay(4 + (survivor.trait == "Scrounger" ? 3 : 0), survivor.morale);
+                        if (scrap > 0)
+                        {
+                            survivor.scavenge = Practice.Gain(survivor.scavenge);
+                            scrap += Practice.Bonus(survivor.scavenge);
+                        }
                         if (scrap > 0 && storage != null) storage.AddScrap(scrap);
                         if (scrap > 0) survivor.morale = Mathf.Max(0f, survivor.morale - 4f);
                         if (storage != null)
@@ -346,13 +356,23 @@ namespace OutpostZero.Colony
                         bool fire = GridBuilder.Instance != null && GridBuilder.Instance.HasKind("Campfire");
                         int raw = storage != null ? storage.Raw : 0;
                         CookPot.Serve(fire, raw, hands, out int spent, out int served, out int lift);
+                        if (hands > 0)
+                        {
+                            survivor.cooking = Practice.Gain(survivor.cooking);
+                            served += Practice.Bonus(survivor.cooking);
+                        }
                         if (spent > 0 && storage != null) storage.TakeRaw(spent);
                         if (served > 0 && storage != null) storage.AddFood(served);
                         if (lift > 0) survivor.morale = Mathf.Min(100f, survivor.morale + lift);
                         break;
                     case "Guard":
                         int watch = Pay(1, survivor.morale);
-                        if (watch > 0) survivor.morale = Mathf.Max(0f, survivor.morale - 2f);
+                        if (watch > 0)
+                        {
+                            survivor.combat = Practice.Gain(survivor.combat);
+                            watch += Practice.Bonus(survivor.combat);
+                            survivor.morale = Mathf.Max(0f, survivor.morale - 2f);
+                        }
                         if (watch > 0 && storage != null) storage.AddSecurity(watch);
                         break;
                     case "Rest":
@@ -360,9 +380,10 @@ namespace OutpostZero.Colony
                         break;
                     case "Medic":
                         if (ColonyDay.OutputScale(survivor.morale) <= 0f) break;
+                        survivor.medicine = Practice.Gain(survivor.medicine);
                         survivor.morale = Mathf.Min(100f, survivor.morale + 2f);
                         var leader = PlayerRegistry.Current;
-                        leader?.GetComponent<Combat.HealthSystem>()?.Heal(12f);
+                        leader?.GetComponent<Combat.HealthSystem>()?.Heal(12f + Practice.Bonus(survivor.medicine) * 6f);
                         leader?.GetComponent<StatusEffectController>()?.ClearInjury();
                         for (int i = 0; i < survivors.Count; i++)
                         {
@@ -371,6 +392,11 @@ namespace OutpostZero.Colony
                         break;
                     case "Build":
                         int pace = BuildSite.Shift(survivor.trait, survivor.morale);
+                        if (pace > 0)
+                        {
+                            survivor.engineering = Practice.Gain(survivor.engineering);
+                            pace += Practice.Bonus(survivor.engineering);
+                        }
                         if (pace > 0 && GridBuilder.Instance != null && (GridBuilder.Instance.Raise(pace) || GridBuilder.Instance.Patch(pace) || GridBuilder.Instance.Lift(pace)))
                             survivor.morale = Mathf.Max(0f, survivor.morale - 2f);
                         break;

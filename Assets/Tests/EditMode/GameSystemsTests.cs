@@ -2895,6 +2895,36 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void TheFourthShiftPaysAndAnOldSaveStaysAtZero()
+        {
+            Assert.AreEqual(4, Practice.Gain(3));
+            Assert.AreEqual(8, Practice.Gain(8));
+            Assert.AreEqual(1, Practice.Gain(-1));
+            Assert.AreEqual(0, Practice.Bonus(3));
+            Assert.AreEqual(1, Practice.Bonus(4));
+            Assert.AreEqual(1, Practice.Bonus(8));
+            Practice.Unpack(Practice.Pack(4, 0, 1, 0, 2), out int combat, out int medicine, out int engineering, out int cooking, out int scavenge);
+            Assert.AreEqual(4, combat);
+            Assert.AreEqual(0, medicine);
+            Assert.AreEqual(1, engineering);
+            Assert.AreEqual(0, cooking);
+            Assert.AreEqual(2, scavenge);
+            Practice.Unpack(null, out combat, out medicine, out engineering, out cooking, out scavenge);
+            Assert.AreEqual(0, combat);
+            Assert.AreEqual(0, medicine);
+            Assert.AreEqual(0, engineering);
+            Assert.AreEqual(0, cooking);
+            Assert.AreEqual(0, scavenge);
+            Practice.Unpack("", out combat, out medicine, out engineering, out cooking, out scavenge);
+            Assert.AreEqual(0, combat);
+            Practice.Unpack("4", out combat, out medicine, out engineering, out cooking, out scavenge);
+            Assert.AreEqual(4, combat);
+            Assert.AreEqual(0, scavenge);
+            Assert.AreEqual("Vigilar 4  Construir 1  Rebuscar 2", Practice.Line(4, 0, 1, 0, 2, "es"));
+            Assert.AreEqual("", Practice.Line(0, 0, 0, 0, 0, "es"));
+        }
+
+        [Test]
         public void DemolishingAModuleReturnsHalfTheScrap()
         {
             Assert.AreEqual(3, ScrapRefund.Half(6));

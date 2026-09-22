@@ -776,12 +776,14 @@ namespace OutpostZero.UI
                     string mood = ColonyDay.Mood(survivor.morale);
                     string doing = CampRoutine.Choose(survivor.task, survivor.hunger, survivor.thirst, survivor.morale, survivor.injury);
                     string post = doing == survivor.task ? Loc.Task(survivor.task) : Loc.Task(survivor.task) + " → " + Loc.Task(doing);
+                    string skills = Practice.Line(survivor.combat, survivor.medicine, survivor.engineering, survivor.cooking, survivor.scavenge, null);
                     camp.Add(Body(flag + " " + survivor.displayName + " (" + Loc.Trait(survivor.trait) + ") " + post
                         + "  " + Loc.Mood(mood)
                         + "  " + Loc.T("camp.food") + " " + Mathf.RoundToInt(survivor.hunger)
                         + " " + Loc.T("camp.water") + " " + Mathf.RoundToInt(survivor.thirst)
                         + "  " + survivor.bond
                         + "  " + Loc.T("camp.opinion") + " " + survivor.opinion
+                        + (skills.Length > 0 ? "  " + skills : "")
                         + "  \"" + Loc.Bark(doing, survivor.morale) + "\""));
                     if (!survivor.alive) continue;
                     string id = survivor.id;
