@@ -24,6 +24,7 @@ namespace OutpostZero.Colony
         private int raidTowers;
         private float nextTurret;
         private float nextTrap;
+        private float nextGuard;
 
         public bool Running => running;
         public float Remaining => running ? Mathf.Max(0f, endsAt - Time.time) : 0f;
@@ -69,6 +70,7 @@ namespace OutpostZero.Colony
             nextStrike = Time.time + strikeInterval;
             nextTurret = Time.time + TurretBeat.Interval;
             nextTrap = Time.time + TrapHit.Gap;
+            nextGuard = Time.time + GuardVolley.Interval;
             GameManager.Instance.SetState(GameState.RaidActive);
             int spawn = RaidPlan.SpawnCount(day, towers) + (tower ? 4 : 0);
             if (HordeDirector.Instance != null) HordeDirector.Instance.BeginRaid(spawn);
@@ -85,6 +87,7 @@ namespace OutpostZero.Colony
             }
             TickTurret();
             TickTraps();
+            TickGuards();
             float elapsed = duration - Remaining;
             int nextPhase = RaidPlan.PhaseAt(elapsed, duration);
             if (nextPhase != phase) ApplyWave(nextPhase, true);
@@ -223,6 +226,57 @@ namespace OutpostZero.Colony
                     health.TakeDamage(TrapHit.Damage, target.transform.position, new Vector3(target.transform.position.x - spike.x, 0f, target.transform.position.z - spike.z), gameObject);
                 GridBuilder.Instance.Chip(spike, TrapHit.Wear);
             }
+        }
+
+        private void TickGuards()
+        {
+            if (Time.time < nextGuard) return;
+            int guards = 0;
+            if (SurvivorRoster.Instance != null)
+            {
+                foreach (var survivor in SurvivorRoster.Instance.Survivors)
+                {
+                    if (survivor.alive && survivor.task == "Guard") guards++;
+                }
+            }
+            if (!GuardVolley.Ready(GuardVolley.Interval, guards)) return;
+            Vector3 origin = GuardOrigin();
+            var horde = Object.FindObjectsByType<ZombieAI>(FindObjectsSortMode.None);
+            var living = new System.Collections.Generic.List<ZombieAI>();
+            var distance = new System.Collections.Generic.List<float>();
+            for (int i = 0; i < horde.Length; i++)
+            {
+                var zombie = horde[i];
+                if (zombie == null || zombie.CurrentState == ZombieAI.ZombieState.Dead) continue;
+                float dx = zombie.transform.position.x - origin.x;
+                float dz = zombie.transform.position.z - origin.z;
+                living.Add(zombie);
+                distance.Add((float)System.Math.Sqrt(dx * dx + dz * dz));
+            }
+            int mark = GuardVolley.Pick(distance.ToArray());
+            if (mark < 0)
+            {
+                nextGuard = Time.time + GuardVolley.Interval;
+                return;
+            }
+            var target = living[mark];
+            var health = target.GetComponent<HealthSystem>();
+            if (health != null && !health.IsDead)
+                health.TakeDamage(GuardVolley.Hit(guards), target.transform.position, (origin - target.transform.position).normalized, gameObject);
+            nextGuard = Time.time + GuardVolley.Interval;
+        }
+
+        private static Vector3 GuardOrigin()
+        {
+            if (GridBuilder.Instance != null)
+            {
+                foreach (var module in GridBuilder.Instance.Placed)
+                {
+                    if (module.kind == "Watchtower" && module.integrity > 0)
+                        return new Vector3(module.x, 2.2f, module.z);
+                }
+            }
+            return new Vector3(-12f, 1.6f, -12f);
         }
 
         private static Vector3 TurretOrigin()

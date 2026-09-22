@@ -2005,6 +2005,25 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void GuardsOnDutyFireTogetherDuringARaid()
+        {
+            Assert.IsFalse(GuardVolley.Ready(1.39f, 1));
+            Assert.IsTrue(GuardVolley.Ready(1.4f, 1));
+            Assert.IsFalse(GuardVolley.Ready(3f, 0));
+            Assert.IsFalse(GuardVolley.Ready(-1f, 2));
+            Assert.AreEqual(0, GuardVolley.Crew(0));
+            Assert.AreEqual(0, GuardVolley.Crew(-2));
+            Assert.AreEqual(2, GuardVolley.Crew(2));
+            Assert.AreEqual(3, GuardVolley.Crew(5));
+            Assert.AreEqual(16f, GuardVolley.Hit(2), 0.001f);
+            Assert.AreEqual(24f, GuardVolley.Hit(4), 0.001f);
+            Assert.AreEqual(2, GuardVolley.Pick(new[] { 20f, 16f, 4f }));
+            Assert.AreEqual(0, GuardVolley.Pick(new[] { 16f }));
+            Assert.AreEqual(-1, GuardVolley.Pick(new[] { 16.1f }));
+            Assert.AreEqual(-1, GuardVolley.Pick(null));
+        }
+
+        [Test]
         public void AnEastGridKeepsAWalkFromTheSpawnToTheFarGate()
         {
             var ash = RoadGraph.Build(1701, "ash_market");
