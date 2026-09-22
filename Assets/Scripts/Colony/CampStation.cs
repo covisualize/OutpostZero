@@ -2,6 +2,7 @@ using UnityEngine;
 using OutpostZero.Core;
 using OutpostZero.Items;
 using OutpostZero.Player;
+using OutpostZero.Shell;
 
 namespace OutpostZero.Colony
 {
@@ -50,12 +51,14 @@ namespace OutpostZero.Colony
                 case StationKind.Campfire:
                     var needs = inventory != null ? inventory.GetComponent<SurvivalNeeds>() : null;
                     needs?.Eat(25f);
-                    needs?.Rest(30f);
                     if (ColonyStorage.Instance != null && ColonyStorage.Instance.Food > 0)
                     {
                         ColonyStorage.Instance.AddFood(-1);
                     }
                     if (NightRaidController.Instance != null && NightRaidController.Instance.HoldTheNight()) return;
+                    bool cot = CampServices.Instance != null && CampServices.Instance.CotOnline;
+                    needs?.Rest(NightRest.Amount(cot));
+                    GameplayFeedback.Toast(Loc.T(cot ? "camp.cot_sleep" : "camp.slept"));
                     WorldClock.Instance?.SleepUntilMorning();
                     SurvivorRoster.Instance?.TickTasks();
                     SurvivorRoster.Instance?.EndDay(false);

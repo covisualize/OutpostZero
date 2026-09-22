@@ -2881,6 +2881,20 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void ASleptNightTakesTheExhaustionOffAndACotTakesMore()
+        {
+            Assert.AreEqual(40f, NightRest.Amount(false), 0.001f);
+            Assert.AreEqual(70f, NightRest.Amount(true), 0.001f);
+            Assert.AreEqual(40f, NightRest.Wake(80f, false), 0.001f);
+            Assert.AreEqual(10f, NightRest.Wake(80f, true), 0.001f);
+            Assert.AreEqual(0f, NightRest.Wake(20f, false), 0.001f);
+            Assert.AreEqual(0f, NightRest.Wake(-4f, true), 0.001f);
+            Assert.AreEqual(30f, NightRest.Wake(100f, true), 0.001f);
+            Assert.AreEqual("Duermes", Loc.T("camp.slept", "es"));
+            Assert.AreEqual("La cama sostiene la noche", Loc.T("camp.cot_sleep", "es"));
+        }
+
+        [Test]
         public void DemolishingAModuleReturnsHalfTheScrap()
         {
             Assert.AreEqual(3, ScrapRefund.Half(6));
