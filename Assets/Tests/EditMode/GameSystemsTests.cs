@@ -3708,6 +3708,15 @@ namespace OutpostZero.Tests.EditMode
             Assert.AreEqual(6f, FirePatch.Damage, 0.001f);
             Assert.AreEqual(14f, OilBurn.Damage, 0.001f);
             Assert.AreEqual(8f, OilBurn.Duration, 0.001f);
+            Assert.AreEqual(42f, PipeBlast.Damage, 0.001f);
+            Assert.AreEqual(4.2f, PipeBlast.Radius, 0.001f);
+            Assert.AreEqual(1.6f, PipeBlast.Shove, 0.001f);
+            Assert.AreEqual(0.55f, PipeBlast.Stun, 0.001f);
+            Assert.AreEqual(0.55f, HitStun.Resist(PipeBlast.Stun, false), 0.001f);
+            Assert.AreEqual(0.165f, HitStun.Resist(PipeBlast.Stun, true), 0.001f);
+            Assert.IsTrue(BlastBall.Shows(HazardKind.Explosive));
+            Assert.IsTrue(BlastWake.Ring(HazardKind.Explosive));
+            Assert.IsFalse(BlastBall.Shows(HazardKind.Oil));
             var street = LootTables.Roll("street", 2);
             Assert.AreEqual(7, street.Length);
             Assert.AreEqual("raw_food", street[6].ItemId);

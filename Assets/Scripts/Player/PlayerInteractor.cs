@@ -240,7 +240,13 @@ namespace OutpostZero.Player
                     {
                         damageable.TakeDamage(PipeBlast.Damage, hit.bounds.center, (hit.transform.position - blast).normalized, gameObject);
                     }
+                    var zombie = hit.GetComponentInParent<ZombieAI>();
+                    if (zombie != null)
+                    {
+                        zombie.ApplyImpulse(hit.transform.position - blast, PipeBlast.Shove, PipeBlast.Stun);
+                    }
                 }
+                CombatVfx.Burst(blast, HazardKind.Explosive);
                 CombatEvents.RaiseHit(blast, Vector3.up, gameObject);
                 GameplayFeedback.Toast("Pipe bomb burst");
                 Destroy(gameObject);
