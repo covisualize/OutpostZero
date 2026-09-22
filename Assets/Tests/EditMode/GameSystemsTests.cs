@@ -6409,6 +6409,36 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void ABittenFollowerSlowsAndACriticalOneStopsSwinging()
+        {
+            Assert.AreEqual(0.85f, FollowLimp.Bite, 0.001f);
+            Assert.AreEqual(0.62f, FollowLimp.Fever, 0.001f);
+            Assert.AreEqual(0.4f, FollowLimp.Critical, 0.001f);
+            Assert.AreEqual(3, FollowLimp.Still);
+            Assert.AreEqual(4.2f, FollowLimp.Pace(4.2f, 0), 0.001f);
+            Assert.AreEqual(4.2f, FollowLimp.Pace(4.2f, -1), 0.001f);
+            Assert.AreEqual(3.57f, FollowLimp.Pace(4.2f, 1), 0.001f);
+            Assert.AreEqual(2.604f, FollowLimp.Pace(4.2f, 2), 0.001f);
+            Assert.AreEqual(1.68f, FollowLimp.Pace(4.2f, 3), 0.001f);
+            Assert.AreEqual(1.68f, FollowLimp.Pace(4.2f, 9), 0.001f);
+            Assert.AreEqual(0f, FollowLimp.Pace(-2f, 2), 0.001f);
+            Assert.IsTrue(FollowLimp.Swings(0));
+            Assert.IsTrue(FollowLimp.Swings(1));
+            Assert.IsTrue(FollowLimp.Swings(2));
+            Assert.IsFalse(FollowLimp.Swings(3));
+            Assert.IsFalse(FollowLimp.Swings(9));
+            Assert.AreEqual("Maya can barely keep up", FollowLimp.Line("Maya", "en"));
+            Assert.AreEqual("Maya apenas puede seguir", FollowLimp.Line("Maya", "es"));
+            Assert.AreEqual("Survivor can barely keep up", FollowLimp.Line("", "en"));
+            Assert.AreEqual(1.6f, RescueBook.FollowGap, 0.001f);
+            Assert.AreEqual(14f, RescueBook.CatchUp, 0.001f);
+            Assert.AreEqual(1.6f, StreetAid.Reach, 0.001f);
+            Assert.AreEqual(1.2f, FollowBite.Reach, 0.001f);
+            Assert.AreEqual(3, FollowBite.Cap);
+            Assert.AreEqual("Maya is bitten", FollowBite.Line("Maya", "en"));
+        }
+
+        [Test]
         public void AZombieWithoutARigStillAttacksAndFalls()
         {
             Assert.AreEqual(14f, PoseSheet.Lean(ZombieAI.ZombieState.Chase, 0f), 0.001f);

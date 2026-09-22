@@ -69,7 +69,7 @@ namespace OutpostZero.Expedition
             var player = PlayerRegistry.Current;
             if (player == null) return;
             var lead = player.transform.position;
-            RescueBook.Step(transform.position.x, transform.position.z, lead.x, lead.z, 4.2f, Time.deltaTime, out float nextX, out float nextZ);
+            RescueBook.Step(transform.position.x, transform.position.z, lead.x, lead.z, FollowLimp.Pace(4.2f, bites), Time.deltaTime, out float nextX, out float nextZ);
             transform.position = new Vector3(nextX, transform.position.y, nextZ);
             if (StraggleCall.Due(lastCry, Time.time, ZombieAI.Nearest(nextX, nextZ)))
             {
@@ -80,7 +80,7 @@ namespace OutpostZero.Expedition
                     NoiseManager.Instance.EmitNoise(transform.position, StraggleCall.Radius, 0.8f, NoiseType.ZombieScream, gameObject);
             }
 
-            if (StreetAid.Due(lastAid, Time.time, ZombieAI.Nearest(nextX, nextZ)))
+            if (FollowLimp.Swings(bites) && StreetAid.Due(lastAid, Time.time, ZombieAI.Nearest(nextX, nextZ)))
             {
                 var foe = ZombieAI.Closest(nextX, nextZ, StreetAid.Reach);
                 if (foe != null)
@@ -103,7 +103,8 @@ namespace OutpostZero.Expedition
                 lastBite = Time.time;
                 int before = bites;
                 bites = FollowBite.After(bites);
-                if (bites > before) GameplayFeedback.Toast(FollowBite.Line(personName, null));
+                if (bites > before)
+                    GameplayFeedback.Toast(bites >= FollowBite.Cap ? FollowLimp.Line(personName, null) : FollowBite.Line(personName, null));
             }
 
             var gate = ExtractionZone.Current;
