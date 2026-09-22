@@ -49,6 +49,52 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void BalanceRowsMatchTheirHeadersAndStayInvariant()
+        {
+            var culture = System.Threading.Thread.CurrentThread.CurrentCulture;
+            try
+            {
+                System.Threading.Thread.CurrentThread.CurrentCulture = new System.Globalization.CultureInfo("de-DE");
+                var row = new BalanceLog.ExpeditionRow
+                {
+                    Run = BalanceLog.RunId(4821, 2), Day = 5, District = "old_market", Difficulty = 2, Weather = "Fog", Leader = "s1",
+                    End = "Extracted", Kills = 12, KillGoal = 10, Scrap = 40, ScrapGoal = 30, Seconds = 365.25f,
+                    AmmoStart = 60, AmmoEnd = 22, ItemsStart = 4, ItemsEnd = 9, Health = 71.5f, Hunger = 50f, Thirst = 40.125f, Fatigue = 12f, Infection = 0f, Alive = 4, Deaths = 1,
+                };
+                string line = BalanceLog.Line(row);
+                Assert.AreEqual(BalanceLog.ExpeditionHeader.Split(',').Length, line.Split(',').Length, line);
+                StringAssert.StartsWith("s4821-d2,5,old_market,2,Fog,s1,Extracted,12,10,40,30,365.25,60,22,4,9,71.5,50,40.13,", line);
+                Assert.AreEqual(38, row.AmmoSpent);
+                Assert.AreEqual(0, new BalanceLog.ExpeditionRow { AmmoStart = 5, AmmoEnd = 9 }.AmmoSpent);
+
+                string day = BalanceLog.Line(new BalanceLog.DayRow { Run = "s1-d2", Day = 3, Alive = 5, Deaths = 0, Morale = 66.666f, Food = 12, Water = 9, Scrap = 80, Shots = 2, Expeditions = 1, Kills = 30 });
+                Assert.AreEqual("s1-d2,3,5,0,66.67,12,9,80,2,1,30", day);
+                Assert.AreEqual(BalanceLog.DayHeader.Split(',').Length, day.Split(',').Length);
+            }
+            finally
+            {
+                System.Threading.Thread.CurrentThread.CurrentCulture = culture;
+            }
+            Assert.AreEqual("\"a, \"\"b\"\"\"", BalanceLog.Cell("a, \"b\""));
+            Assert.AreEqual("plain", BalanceLog.Cell("plain"));
+            Assert.AreEqual("", BalanceLog.Cell(null));
+        }
+
+        [Test]
+        public void SavesCanBePointedAtAScratchFolder()
+        {
+            try
+            {
+                SaveSystem.RootOverride = Path.Combine("scratch", "soak");
+                Assert.AreEqual(Path.Combine("scratch", "soak"), SaveSystem.Root);
+            }
+            finally
+            {
+                SaveSystem.RootOverride = null;
+            }
+        }
+
+        [Test]
         public void ScreenStackPopsInnermostFirst()
         {
             var stack = new ScreenStack();

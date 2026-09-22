@@ -15,6 +15,9 @@ namespace OutpostZero.Colony
         public float Hour => hour;
         public event Action OnClockChanged;
 
+        /// <summary>Raised with the day that ended and the day that began.</summary>
+        public static event Action<int, int> DayTurned;
+
         private void Awake()
         {
             if (Instance != null && Instance != this)
@@ -44,6 +47,7 @@ namespace OutpostZero.Colony
             }
             if (day != from && ColonyStorage.Instance != null)
                 ColonyStorage.Instance.SetShots(RaidCall.Carry(ColonyStorage.Instance.Shots, from, day));
+            if (day != from) DayTurned?.Invoke(from, day);
             OnClockChanged?.Invoke();
         }
 
@@ -54,6 +58,7 @@ namespace OutpostZero.Colony
             hour = 6.5f;
             if (ColonyStorage.Instance != null)
                 ColonyStorage.Instance.SetShots(RaidCall.Carry(ColonyStorage.Instance.Shots, from, day));
+            DayTurned?.Invoke(from, day);
             OnClockChanged?.Invoke();
             GameplayFeedback.Toast(ClockFace.Morning(day, null));
         }

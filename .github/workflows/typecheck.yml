@@ -16,6 +16,8 @@ jobs:
           fetch-depth: 0
       - name: Release tool tests
         run: python3 -m unittest discover -s Tools/Release -v
+      - name: Balance tool tests
+        run: python3 -m unittest discover -s Tools/Balance -v
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.0.x

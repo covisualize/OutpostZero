@@ -162,6 +162,7 @@ namespace OutpostZero.Core
             ObjectiveTracker.Instance?.ResetProgress();
             WorldMapService.Instance?.ApplyOpening();
             Expedition = OpenContext();
+            BalanceTelemetry.ExpeditionStarted();
             SetState(GameState.ExpeditionActive);
         }
 
@@ -190,6 +191,7 @@ namespace OutpostZero.Core
         {
             var tracker = ObjectiveTracker.Instance;
             LastOutcome = ExpeditionLedger.Close(Expedition, end, zombiesKilled, tracker != null ? tracker.KillGoal : 1, scrapLooted, tracker != null ? tracker.ScrapGoal : 1, expeditionTimer);
+            BalanceTelemetry.ExpeditionEnded(Expedition, LastOutcome);
             outcomeAnnounced = false;
             Expedition = default;
         }
