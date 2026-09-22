@@ -318,7 +318,14 @@ namespace OutpostZero.UI
             feed.text = GameManager.Instance != null ? GameManager.Instance.KillFeed : "";
             feed.style.display = string.IsNullOrEmpty(feed.text) ? DisplayStyle.None : DisplayStyle.Flex;
 
-            if (player != null && player.ActiveWeapon is FirearmWeapon gun)
+            if (player != null && player.WheelOpen)
+            {
+                weapon.style.whiteSpace = WhiteSpace.PreWrap;
+                weapon.style.color = new Color(0.82f, 0.9f, 1f);
+                weapon.style.opacity = 1f;
+                weapon.text = player.WheelLine();
+            }
+            else if (player != null && player.ActiveWeapon is FirearmWeapon gun)
             {
                 bool low = MagPulse.Low(gun.CurrentAmmo, gun.MaxMagazine, gun.IsReloading);
                 string reload = gun.IsReloading ? "  reload " + Mathf.RoundToInt(gun.ReloadFill * 100f) + "%" : low ? "  low" : "";

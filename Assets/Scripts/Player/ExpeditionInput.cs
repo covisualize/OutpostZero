@@ -87,7 +87,7 @@ namespace OutpostZero.Player
             get
             {
                 var pad = Gamepad.current;
-                if (pad != null && (pad.leftTrigger.isPressed || pad.leftShoulder.isPressed)) return true;
+                if (pad != null && pad.leftTrigger.isPressed) return true;
                 return Mouse.current != null ? Mouse.current.rightButton.isPressed : Input.GetMouseButton(1);
             }
         }
@@ -104,6 +104,18 @@ namespace OutpostZero.Player
         public static bool ThrowPressed => Pressed(ControlBindings.Action.Throw) || PadDown(pad => pad.buttonEast.wasPressedThisFrame);
         public static bool TakedownPressed => Pressed(ControlBindings.Action.Takedown);
         public static bool BuildPressed => Pressed(ControlBindings.Action.Build) || PadDown(pad => pad.dpadDown.wasPressedThisFrame);
+
+        public static bool WheelHeld
+        {
+            get
+            {
+                var pad = Gamepad.current;
+                if (pad != null && pad.leftShoulder.isPressed) return true;
+                if (Mouse.current != null && Mouse.current.middleButton.isPressed) return true;
+                if (Mouse.current == null && Input.GetMouseButton(2)) return true;
+                return Held(Key.Z);
+            }
+        }
 
         public static int WeaponCycle
         {
@@ -190,6 +202,7 @@ namespace OutpostZero.Player
                 case Key.G: return KeyCode.G;
                 case Key.V: return KeyCode.V;
                 case Key.B: return KeyCode.B;
+                case Key.Z: return KeyCode.Z;
                 case Key.Digit1: return KeyCode.Alpha1;
                 case Key.Digit2: return KeyCode.Alpha2;
                 case Key.Digit3: return KeyCode.Alpha3;

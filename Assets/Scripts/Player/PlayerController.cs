@@ -1,4 +1,5 @@
 using System;
+using System.Text;
 using UnityEngine;
 using OutpostZero.AI;
 using OutpostZero.Core;
@@ -56,6 +57,9 @@ namespace OutpostZero.Player
         public bool IsAimingDownSights { get; private set; }
         private bool sprintLatch;
         public bool FlashlightOn => flashlightOn;
+        public bool WheelOpen { get; private set; }
+        public int WheelSlot { get; private set; } = -1;
+        private float wheelHold;
         public float CurrentStamina => currentStamina;
         public float MaxStamina => maxStamina;
         public WeaponBase ActiveWeapon => (equippedWeapons != null && equippedWeapons.Length > activeWeaponIndex) ? equippedWeapons[activeWeaponIndex] : null;
@@ -254,12 +258,15 @@ namespace OutpostZero.Player
                 if (firearm.IsReloading) CodexDirector.Hear("reload");
             }
 
-            IsAimingDownSights = ExpeditionInput.AimHeld;
+            IsAimingDownSights = ExpeditionInput.AimHeld && !WheelOpen;
             if (IsAimingDownSights) CodexDirector.Hear("aim");
 
-            for (int i = 0; i < 4; i++)
+            if (!TrackWheel())
             {
-                if (ExpeditionInput.WeaponSlotPressed(i)) SelectWeapon(i);
+                for (int i = 0; i < 4; i++)
+                {
+                    if (ExpeditionInput.WeaponSlotPressed(i)) SelectWeapon(i);
+                }
             }
 
             if (inventory != null)
@@ -270,11 +277,76 @@ namespace OutpostZero.Player
                 }
             }
 
+            if (WheelOpen) return;
+
             float scroll = ExpeditionInput.Scroll;
             if (scroll > 0.05f) CycleWeapon(1);
             else if (scroll < -0.05f) CycleWeapon(-1);
             int padCycle = ExpeditionInput.WeaponCycle;
             if (padCycle != 0) CycleWeapon(padCycle);
+        }
+
+        private bool TrackWheel()
+        {
+            bool held = ExpeditionInput.WheelHeld;
+            if (held)
+            {
+                wheelHold += Time.deltaTime;
+                if (!WeaponWheel.Shown(true, wheelHold)) return true;
+                WheelOpen = true;
+                ReadWheelPoint(out float x, out float y);
+                int picked = WeaponWheel.Pick(x, y);
+                if (picked >= 0) WheelSlot = picked;
+                return true;
+            }
+
+            bool wasOpen = WheelOpen;
+            int highlight = WheelSlot;
+            float heldFor = wheelHold;
+            wheelHold = 0f;
+            WheelOpen = false;
+            WheelSlot = -1;
+            if (!wasOpen && !WeaponWheel.Shown(true, heldFor)) return false;
+
+            int pick = WeaponWheel.Release(highlight, activeWeaponIndex);
+            if (equippedWeapons != null && pick != activeWeaponIndex && pick >= 0 && pick < equippedWeapons.Length && equippedWeapons[pick] != null)
+            {
+                SelectWeapon(pick);
+            }
+            return true;
+        }
+
+        private void ReadWheelPoint(out float x, out float y)
+        {
+            Vector2 aim = ExpeditionInput.AimStick;
+            x = aim.x;
+            y = aim.y;
+            if (x * x + y * y >= WeaponWheel.Deadzone * WeaponWheel.Deadzone) return;
+            if (Screen.width > 1 && Screen.height > 1)
+            {
+                Vector2 pointer = ExpeditionInput.Pointer;
+                float span = Screen.height * 0.5f;
+                x = (pointer.x - Screen.width * 0.5f) / span;
+                y = (pointer.y - Screen.height * 0.5f) / span;
+                return;
+            }
+            Vector2 move = ExpeditionInput.Move;
+            x = move.x;
+            y = move.y;
+        }
+
+        public string WheelLine()
+        {
+            if (!WheelOpen || equippedWeapons == null) return "";
+            var builder = new StringBuilder();
+            int count = equippedWeapons.Length < WeaponWheel.Slots ? equippedWeapons.Length : WeaponWheel.Slots;
+            for (int i = 0; i < count; i++)
+            {
+                if (i > 0) builder.Append('\n');
+                string name = equippedWeapons[i] != null ? equippedWeapons[i].WeaponName : "";
+                builder.Append(WeaponWheel.Row(i, name, i == WheelSlot));
+            }
+            return builder.ToString();
         }
 
         private void HandleMovement()
@@ -463,7 +535,7 @@ namespace OutpostZero.Player
 
         private void HandleWeapons()
         {
-            if (ActiveWeapon == null) return;
+            if (WheelOpen || ActiveWeapon == null) return;
 
             bool automatic = ActiveWeapon is FirearmWeapon gun && gun.Automatic;
             bool fire = ActiveWeapon is FirearmWeapon

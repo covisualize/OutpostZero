@@ -1610,5 +1610,24 @@ namespace OutpostZero.Tests.EditMode
             Assert.Greater(mid, 0.7f);
             Assert.Less(mid, 0.95f);
         }
+
+        [Test]
+        public void AWeaponWheelPutsTheFirstGunUpAndIgnoresAQuietStick()
+        {
+            Assert.AreEqual(0, WeaponWheel.Pick(0f, 1f));
+            Assert.AreEqual(1, WeaponWheel.Pick(1f, 0f));
+            Assert.AreEqual(2, WeaponWheel.Pick(0f, -1f));
+            Assert.AreEqual(3, WeaponWheel.Pick(-1f, 0f));
+            Assert.AreEqual(0, WeaponWheel.Pick(0.3f, 0.9f));
+            Assert.AreEqual(1, WeaponWheel.Pick(0.9f, 0.3f));
+            Assert.AreEqual(-1, WeaponWheel.Pick(0.2f, 0.2f));
+            Assert.IsFalse(WeaponWheel.Shown(true, 0.15f));
+            Assert.IsTrue(WeaponWheel.Shown(true, 0.16f));
+            Assert.IsFalse(WeaponWheel.Shown(false, 1f));
+            Assert.AreEqual(2, WeaponWheel.Release(-1, 2));
+            Assert.AreEqual(1, WeaponWheel.Release(1, 2));
+            Assert.AreEqual("> 1  Pistol", WeaponWheel.Row(0, "Pistol", true));
+            Assert.AreEqual("  3  empty", WeaponWheel.Row(2, "", false));
+        }
     }
 }
