@@ -1,3 +1,6 @@
+using UnityEngine;
+using OutpostZero.Graphics;
+
 namespace OutpostZero.Colony
 {
     /// <summary>
@@ -52,6 +55,77 @@ namespace OutpostZero.Colony
             float next = interval + lamps * 0.35f;
             if (next > 3.1f) return 3.1f;
             return next;
+        }
+    }
+
+    /// <summary>
+    /// The sanctuary generator carries two floodlights. They shine only while it has fuel.
+    /// </summary>
+    public static class YardFlood
+    {
+        public const int Count = 2;
+        public const float Height = 3.2f;
+        public const float Pitch = 55f;
+        public const float Yaw = 35f;
+        public const float Spread = 70f;
+        public const float Intensity = 3.4f;
+        public static readonly Color Tint = new Color(1f, 0.93f, 0.75f);
+
+        public static bool Lit(bool fueled)
+        {
+            return fueled;
+        }
+
+        public static Vector3 Local(int index)
+        {
+            float side = index <= 0 ? -1.6f : 1.6f;
+            return new Vector3(side, Height, 0.4f);
+        }
+
+        public static Vector3 Aim(int index)
+        {
+            float yaw = index <= 0 ? -Yaw : Yaw;
+            return new Vector3(Pitch, yaw, 0f);
+        }
+
+        public static void Raise(GameObject host)
+        {
+            if (host == null || host.GetComponentInChildren<YardFloodLamp>() != null) return;
+            for (int i = 0; i < Count; i++)
+            {
+                var go = new GameObject("SanctuaryFlood");
+                go.transform.SetParent(host.transform, false);
+                go.transform.localPosition = Local(i);
+                go.transform.localRotation = Quaternion.Euler(Aim(i));
+                var light = go.AddComponent<Light>();
+                light.type = LightType.Spot;
+                light.range = FloodBeam.Radius;
+                light.spotAngle = Spread;
+                light.intensity = Intensity;
+                light.color = Tint;
+                light.shadows = LightShadows.Soft;
+                go.AddComponent<LightSource>().Configure(FloodBeam.Radius);
+                go.AddComponent<YardFloodLamp>();
+            }
+        }
+    }
+
+    public class YardFloodLamp : MonoBehaviour
+    {
+        private Light bulb;
+        private LightSource sight;
+
+        private void Awake()
+        {
+            bulb = GetComponent<Light>();
+            sight = GetComponent<LightSource>();
+        }
+
+        private void LateUpdate()
+        {
+            bool on = YardFlood.Lit(CampServices.Instance != null && CampServices.Instance.GeneratorOnline);
+            if (bulb != null) bulb.enabled = on;
+            if (sight != null) sight.enabled = on;
         }
     }
 }

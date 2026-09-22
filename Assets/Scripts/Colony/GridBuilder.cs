@@ -348,6 +348,7 @@ namespace OutpostZero.Colony
                 source.Configure(FloodBeam.Radius);
                 source.enabled = false;
             }
+            if (module.kind == "Generator") YardFlood.Raise(view);
             if (module.kind == "Campfire")
             {
                 var ember = view.AddComponent<Light>();

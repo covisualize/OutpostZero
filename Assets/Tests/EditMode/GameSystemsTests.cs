@@ -2367,6 +2367,18 @@ namespace OutpostZero.Tests.EditMode
             Assert.AreEqual(2, BuildSite.Need("Lamp"));
             Assert.AreEqual(13, GridBuilder.Cost(ModuleKind.Lamp));
             Assert.AreEqual("Foco", Loc.T("camp.lamp", "es"));
+            Assert.AreEqual(2, YardFlood.Count);
+            Assert.IsTrue(YardFlood.Lit(true));
+            Assert.IsFalse(YardFlood.Lit(false));
+            Assert.AreEqual(-1.6f, YardFlood.Local(0).x, 0.001f);
+            Assert.AreEqual(3.2f, YardFlood.Local(0).y, 0.001f);
+            Assert.AreEqual(1.6f, YardFlood.Local(1).x, 0.001f);
+            Assert.AreEqual(55f, YardFlood.Aim(0).x, 0.001f);
+            Assert.AreEqual(-35f, YardFlood.Aim(0).y, 0.001f);
+            Assert.AreEqual(35f, YardFlood.Aim(1).y, 0.001f);
+            Assert.AreEqual(FloodBeam.Radius, 14f, 0.001f);
+            Assert.AreEqual(70f, YardFlood.Spread, 0.001f);
+            Assert.AreEqual(3.4f, YardFlood.Intensity, 0.001f);
         }
 
         [Test]

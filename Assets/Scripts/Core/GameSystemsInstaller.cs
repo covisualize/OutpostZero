@@ -150,6 +150,7 @@ namespace OutpostZero.Core
 
             if (name.StartsWith("Building_")) WallSeal.Seal(go);
             if (name.Contains("StreetLamp")) SodiumLamp.Raise(go);
+            if (name.Contains("Generator")) YardFlood.Raise(go);
             if (name.Contains("Sedan") || name.Contains("Truck") || name.Contains("Vehicle")) HazardBlink.Raise(go);
 
             if ((name.Contains("Crate") || name.Contains("Dumpster")) && go.GetComponent<LootContainer>() == null)
