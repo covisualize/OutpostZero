@@ -657,6 +657,37 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void ACloseFriendWalksOverWhenBothAreResting()
+        {
+            var ids = new[] { "ellis", "jonas", "mara" };
+            var rest = new[] { "Rest", "Rest", "Rest" };
+            var here = new[] { true, true, true };
+            Assert.AreEqual("", YardVisit.Host("ellis", "Rest", "jonas:40", 0f, ids, rest, here));
+            Assert.AreEqual("ellis", YardVisit.Host("jonas", "Rest", "ellis:40", 0f, ids, rest, here));
+            Assert.AreEqual("ellis", YardVisit.Host("jonas", "Rest", "ellis:40|mara:50", 0f, ids, rest, here));
+            Assert.AreEqual("ellis", YardVisit.Host("mara", "Rest", "ellis:40|jonas:40", 0f, ids, rest, here));
+            Assert.AreEqual("jonas", YardVisit.Host("mara", "Rest", "jonas:40", 0f, ids, rest, here));
+            Assert.AreEqual("", YardVisit.Host("jonas", "Guard", "ellis:40", 0f, ids, rest, here));
+            Assert.AreEqual("", YardVisit.Host("jonas", "Rest", "ellis:39", 0f, ids, rest, here));
+            Assert.AreEqual("", YardVisit.Host("jonas", "Rest", "ellis:40", 76f, ids, rest, here));
+            Assert.AreEqual("ellis", YardVisit.Host("jonas", "Rest", "ellis:40", 75f, ids, rest, here));
+            var working = new[] { "Guard", "Rest", "Rest" };
+            Assert.AreEqual("", YardVisit.Host("jonas", "Rest", "ellis:40", 0f, ids, working, here));
+            var gone = new[] { false, true, true };
+            Assert.AreEqual("", YardVisit.Host("jonas", "Rest", "ellis:40|mara:40", 0f, ids, rest, gone));
+            YardVisit.Stand(-14f, -15f, out float x, out float z);
+            Assert.AreEqual(-13.2f, x, 0.001f);
+            Assert.AreEqual(-15f, z, 0.001f);
+            Assert.AreEqual(0.8f, YardVisit.Beside, 0.001f);
+            Assert.AreEqual(6f, YardPose.Lean("Visit", 0f), 0.001f);
+            Assert.AreEqual(1f, YardPose.Scale("Visit"), 0.001f);
+            Assert.AreEqual(0.72f, YardPose.Scale("Rest"), 0.001f);
+            Assert.AreEqual("Good to see you.", CampRoutine.Bark("Visit", 50f));
+            Assert.AreEqual("Me alegra verte.", Loc.T("bark.visit", "es"));
+            Assert.AreEqual("Visita", Loc.Task("Visit", "es"));
+        }
+
+        [Test]
         public void MistSitsOnTheStreetWhenTheAirIsThick()
         {
             Assert.IsTrue(MistBank.Shows(WeatherKind.Fog, 0f));

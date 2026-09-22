@@ -50,6 +50,25 @@ namespace OutpostZero.Colony
 
             var roster = SurvivorRoster.Instance;
             if (roster == null) return;
+            int mates = 0;
+            foreach (var survivor in roster.Survivors)
+            {
+                if (survivor != null && survivor.alive && !survivor.leader) mates++;
+            }
+            var ids = new string[mates];
+            var actions = new string[mates];
+            var present = new bool[mates];
+            int filled = 0;
+            foreach (var survivor in roster.Survivors)
+            {
+                if (survivor == null || !survivor.alive || survivor.leader) continue;
+                ids[filled] = survivor.id;
+                present[filled] = true;
+                actions[filled] = raid
+                    ? GuardStand.Face(survivor.task, survivor.morale, survivor.injury)
+                    : CampRoutine.Choose(survivor.task, survivor.hunger, survivor.thirst, survivor.morale, survivor.injury, survivor.fatigue);
+                filled++;
+            }
             int index = 0;
             int guardSlot = 0;
             foreach (var survivor in roster.Survivors)
@@ -61,9 +80,7 @@ namespace OutpostZero.Colony
                 }
                 var body = Ensure(survivor.id, survivor.displayName);
                 Tint(body, survivor.morale, survivor.trait, survivor.aside, survivor.mark);
-                string action = raid
-                    ? GuardStand.Face(survivor.task, survivor.morale, survivor.injury)
-                    : CampRoutine.Choose(survivor.task, survivor.hunger, survivor.thirst, survivor.morale, survivor.injury, survivor.fatigue);
+                string action = actions[index];
                 index++;
                 Vector3 goal;
                 if (raid && action == "Guard")
@@ -75,6 +92,16 @@ namespace OutpostZero.Colony
                     guardSlot++;
                 }
                 else goal = Station(action, index - 1);
+                if (!raid)
+                {
+                    string host = YardVisit.Host(survivor.id, action, survivor.kin, survivor.fatigue, ids, actions, present);
+                    if (host.Length > 0 && TryStand(host, out Vector3 hostAt))
+                    {
+                        YardVisit.Stand(hostAt.x, hostAt.z, out float visitX, out float visitZ);
+                        goal = new Vector3(visitX, 1f, visitZ);
+                        action = "Visit";
+                    }
+                }
                 float pace = ShiftWear.Stride(survivor.fatigue, raid);
                 body.position = Vector3.MoveTowards(body.position, goal, pace * Time.deltaTime);
                 Vector3 face = goal - body.position;

@@ -827,11 +827,26 @@ namespace OutpostZero.UI
                     camp.Add(Body(Loc.T("camp.memorial")));
                     for (int i = 0; i < roster.Memorials.Count; i++) camp.Add(Body(SuccessionLedger.Card(roster.Memorials[i])));
                 }
+                int mates = 0;
+                foreach (var survivor in roster.Survivors) mates++;
+                var mateIds = new string[mates];
+                var mateActs = new string[mates];
+                var mateHere = new bool[mates];
+                int mate = 0;
+                foreach (var survivor in roster.Survivors)
+                {
+                    mateIds[mate] = survivor.id;
+                    mateHere[mate] = survivor.alive && !survivor.leader;
+                    mateActs[mate] = CampRoutine.Choose(survivor.task, survivor.hunger, survivor.thirst, survivor.morale, survivor.injury, survivor.fatigue);
+                    mate++;
+                }
                 foreach (var survivor in roster.Survivors)
                 {
                     string flag = survivor.leader ? "*" : survivor.alive ? "" : "x";
                     string mood = ColonyDay.Mood(survivor.morale, survivor.trait, survivor.aside, survivor.mark);
                     string doing = CampRoutine.Choose(survivor.task, survivor.hunger, survivor.thirst, survivor.morale, survivor.injury, survivor.fatigue);
+                    string host = YardVisit.Host(survivor.id, doing, survivor.kin, survivor.fatigue, mateIds, mateActs, mateHere);
+                    if (host.Length > 0) doing = "Visit";
                     string post = doing == survivor.task ? Loc.Task(survivor.task) : Loc.Task(survivor.task) + " → " + Loc.Task(doing);
                     string skills = Practice.Line(survivor.combat, survivor.medicine, survivor.engineering, survivor.cooking, survivor.scavenge, null);
                     string leads = Heir.Line(survivor.leadership, null);

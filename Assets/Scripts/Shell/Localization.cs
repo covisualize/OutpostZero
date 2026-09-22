@@ -358,6 +358,8 @@ namespace OutpostZero.Shell
             { "bark.clear", "I'll haul them." },
             { "bark.hold", "We'll hold." },
             { "bark.rest", "Resting." },
+            { "bark.visit", "Good to see you." },
+            { "task.visit", "Visit" },
             { "bark.tired", "My legs are done." },
             { "recipe.bandage", "Bandage" },
             { "recipe.medkit", "Medkit" },
@@ -776,6 +778,8 @@ namespace OutpostZero.Shell
             { "bark.clear", "Los retiro." },
             { "bark.hold", "Aguantaremos." },
             { "bark.rest", "Descansando." },
+            { "bark.visit", "Me alegra verte." },
+            { "task.visit", "Visita" },
             { "bark.tired", "Las piernas no dan más." },
             { "recipe.bandage", "Vendaje" },
             { "recipe.medkit", "Botiquín" },
@@ -929,6 +933,7 @@ namespace OutpostZero.Shell
         public static string Bark(string action, float morale, float fatigue)
         {
             string key = morale < 10f ? "bark.cant"
+                : action == "Visit" ? "bark.visit"
                 : action == "Rest" && OutpostZero.Player.NeedsPressure.Tired(fatigue) ? "bark.tired"
                 : action == "Cook" ? "bark.cook"
                 : action == "Guard" ? "bark.guard"

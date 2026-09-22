@@ -27,6 +27,7 @@ namespace OutpostZero.Colony
 
         public static float Lean(string action, float age)
         {
+            if (action == "Visit") return 6f;
             if (action == "Rest") return RestLean;
             if (action == "Guard") return GuardLean;
             if (action == "Cook") return CookLean * Stir(age);

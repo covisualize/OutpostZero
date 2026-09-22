@@ -32,6 +32,7 @@ namespace OutpostZero.Colony
         public static string Bark(string action, float morale, float fatigue)
         {
             if (morale < 10f) return "I can't do this.";
+            if (action == "Visit") return "Good to see you.";
             if (action == "Rest" && OutpostZero.Player.NeedsPressure.Tired(fatigue)) return "My legs are done.";
             if (action == "Cook") return "Fire's lit.";
             if (action == "Guard") return "Watching the gate.";
