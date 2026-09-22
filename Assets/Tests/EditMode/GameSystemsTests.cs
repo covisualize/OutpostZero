@@ -265,7 +265,7 @@ namespace OutpostZero.Tests.EditMode
             };
 
             Assert.IsTrue(SaveCodec.TryDeserialize(SaveCodec.Serialize(data), out var loaded, out var error), error);
-            Assert.AreEqual(1, loaded.schemaVersion);
+            Assert.AreEqual(SaveCodec.CurrentSchema, loaded.schemaVersion);
             Assert.AreEqual(4, loaded.day);
             Assert.AreEqual(22, loaded.colonyScrap);
             Assert.AreEqual(4, loaded.raw);
@@ -561,7 +561,7 @@ namespace OutpostZero.Tests.EditMode
             Assert.IsFalse(found[0].recovered);
             var saved = new SaveGameData { memorial = memorial, corpses = bodies, mercy = 0 };
             Assert.IsTrue(SaveCodec.TryDeserialize(SaveCodec.Serialize(saved), out var loaded, out var error), error);
-            Assert.AreEqual(1, loaded.schemaVersion);
+            Assert.AreEqual(SaveCodec.CurrentSchema, loaded.schemaVersion);
             Assert.AreEqual(memorial, loaded.memorial);
             Assert.AreEqual(bodies, loaded.corpses);
             Assert.AreEqual(0, loaded.mercy);
@@ -861,7 +861,7 @@ namespace OutpostZero.Tests.EditMode
             Assert.AreEqual(1f, WeaponMod.Combine(null).damage);
             var saved = new SaveGameData { weaponMods = packed };
             Assert.IsTrue(SaveCodec.TryDeserialize(SaveCodec.Serialize(saved), out var loaded, out var error), error);
-            Assert.AreEqual(1, loaded.schemaVersion);
+            Assert.AreEqual(SaveCodec.CurrentSchema, loaded.schemaVersion);
             Assert.AreEqual(packed, loaded.weaponMods);
             Assert.AreEqual(0, WeaponMod.SplitSlots(null).Length);
         }
@@ -1405,7 +1405,7 @@ namespace OutpostZero.Tests.EditMode
 
             var saved = new SaveGameData { factionStanding = 12, factions = packed, quests = quests };
             Assert.IsTrue(SaveCodec.TryDeserialize(SaveCodec.Serialize(saved), out var loaded, out var error), error);
-            Assert.AreEqual(1, loaded.schemaVersion);
+            Assert.AreEqual(SaveCodec.CurrentSchema, loaded.schemaVersion);
             Assert.AreEqual(packed, loaded.factions);
             Assert.AreEqual(quests, loaded.quests);
             Assert.AreEqual(12, loaded.factionStanding);
@@ -1818,7 +1818,7 @@ namespace OutpostZero.Tests.EditMode
             Assert.AreEqual(0, StreetLedger.Count("", "ash_market"));
             var data = new SaveGameData { street = packed };
             Assert.IsTrue(SaveCodec.TryDeserialize(SaveCodec.Serialize(data), out var loaded, out var error), error);
-            Assert.AreEqual(1, loaded.schemaVersion);
+            Assert.AreEqual(SaveCodec.CurrentSchema, loaded.schemaVersion);
             Assert.AreEqual(packed, loaded.street);
             Assert.IsTrue(SaveCodec.TryDeserialize("{\"schemaVersion\":1}", out var legacy, out var legacyError), legacyError);
             Assert.IsTrue(string.IsNullOrEmpty(legacy.street));
@@ -2004,7 +2004,7 @@ namespace OutpostZero.Tests.EditMode
             var data = new SaveGameData { day = 4, hour = 6.5f, slot = 2 };
             string json = SaveCodec.Serialize(data);
             Assert.IsTrue(SaveCodec.TryDeserialize(json, out var loaded, out var error), error);
-            Assert.AreEqual(1, loaded.schemaVersion);
+            Assert.AreEqual(SaveCodec.CurrentSchema, loaded.schemaVersion);
             Assert.AreEqual(4, loaded.day);
             Assert.AreEqual(2, loaded.slot);
             Assert.IsFalse(string.IsNullOrEmpty(loaded.seal));
@@ -2021,7 +2021,7 @@ namespace OutpostZero.Tests.EditMode
             Assert.AreEqual(2, kept.day);
             Assert.AreEqual("", kept.seal);
 
-            var future = new SaveGameData { schemaVersion = 2 };
+            var future = new SaveGameData { schemaVersion = SaveCodec.CurrentSchema + 1 };
             Assert.IsFalse(SaveCodec.TryDeserialize(JsonUtility.ToJson(future), out _, out error));
             Assert.AreEqual("schema", error);
         }
@@ -4344,7 +4344,7 @@ namespace OutpostZero.Tests.EditMode
             Assert.AreEqual(1.1f, ColonyDay.OutputScale(65f, "Cook", "Optimist"), 0.001f);
             var saved = new SaveGameData { survivors = new[] { new SurvivorSave { id = "ada", trait = "Cook", aside = "Loner" } } };
             Assert.IsTrue(SaveCodec.TryDeserialize(SaveCodec.Serialize(saved), out var loaded, out var error), error);
-            Assert.AreEqual(1, loaded.schemaVersion);
+            Assert.AreEqual(SaveCodec.CurrentSchema, loaded.schemaVersion);
             Assert.AreEqual("Loner", loaded.survivors[0].aside);
             Assert.IsTrue(SaveCodec.TryDeserialize("{\"schemaVersion\":1,\"survivors\":[{\"id\":\"ada\",\"trait\":\"Cook\"}]}", out var old, out error), error);
             Assert.IsNull(old.survivors[0].aside);
@@ -4409,7 +4409,7 @@ namespace OutpostZero.Tests.EditMode
             var saved = new SaveGameData { survivors = new[] { new SurvivorSave { id = "ada", trait = "Cook", aside = "Loner", mark = "Optimist" } } };
             Assert.IsTrue(SaveCodec.TryDeserialize(SaveCodec.Serialize(saved), out var loaded, out var error), error);
             Assert.AreEqual("Optimist", loaded.survivors[0].mark);
-            Assert.AreEqual(1, loaded.schemaVersion);
+            Assert.AreEqual(SaveCodec.CurrentSchema, loaded.schemaVersion);
         }
 
         [Test]

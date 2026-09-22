@@ -1,0 +1,35 @@
+{
+    "schemaVersion": 1,
+    "day": 6,
+    "hour": 26.5,
+    "colonyScrap": 41,
+    "food": 12,
+    "water": 9,
+    "cloth": 3,
+    "chemicals": 1,
+    "tape": 2,
+    "raw": 5,
+    "rounds": 30,
+    "fuel": 0,
+    "fuelSet": 0,
+    "kills": 14,
+    "lifetimeKills": 58,
+    "districtsCleared": 2,
+    "districtIndex": 2,
+    "difficulty": 2,
+    "worldSeed": 1337,
+    "quality": 1,
+    "language": "es",
+    "tutorialDone": true,
+    "memorial": "Jonah Reyes|3",
+    "survivors": [
+        { "id": "mara", "displayName": "Mara Quill", "trait": "Medic", "alive": true, "leader": true, "morale": 64.0, "hunger": 40.0, "thirst": 35.0, "fatigue": 140.0, "fatigueKnown": 1, "opinion": 5, "injury": 1, "needsTracked": true, "task": "Heal", "bond": "tomas" },
+        { "id": "tomas", "displayName": "Tomas Ward", "trait": "Scavenger", "alive": true, "leader": false, "morale": 51.0, "task": "", "bond": "mara" },
+        { "id": "jonah", "displayName": "Jonah Reyes", "trait": "Guard", "alive": false, "leader": false, "morale": 0.0, "task": "Fallen" }
+    ],
+    "modules": [
+        { "kind": "Barricade", "x": 2.0, "z": -4.0, "rotation": 1, "integrity": 140, "age": 3 },
+        { "kind": "", "x": 0.0, "z": 0.0 },
+        { "kind": "Generator", "x": -6.0, "z": 2.0, "rotation": 0, "integrity": 80, "age": 5, "tier": 1 }
+    ]
+}

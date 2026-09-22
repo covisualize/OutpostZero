@@ -47,7 +47,7 @@ namespace OutpostZero.Shell
     [Serializable]
     public class SaveGameData
     {
-        public int schemaVersion = 1;
+        public int schemaVersion = SaveCodec.CurrentSchema;
         public int day = 1;
         public float hour = 18.5f;
         public int colonyScrap;
@@ -124,7 +124,7 @@ namespace OutpostZero.Shell
 
     public static class SaveCodec
     {
-        public const int CurrentSchema = 1;
+        public const int CurrentSchema = 2;
 
         public static string Serialize(SaveGameData data)
         {
@@ -154,7 +154,7 @@ namespace OutpostZero.Shell
                 error = ex.Message;
                 return false;
             }
-            if (data == null || data.schemaVersion != CurrentSchema)
+            if (data == null || !SaveMigrations.CanUpgrade(data.schemaVersion))
             {
                 error = "schema";
                 return false;
@@ -171,6 +171,7 @@ namespace OutpostZero.Shell
                     return false;
                 }
             }
+            data = SaveMigrations.Upgrade(data);
             return true;
         }
     }
