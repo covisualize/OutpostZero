@@ -22,9 +22,14 @@ namespace OutpostZero.Shell
             slot = SaveSlots.Manual(index);
         }
 
+        /// <summary>Tests and soak runs point saves at a scratch folder so they never touch the player's slots.</summary>
+        public static string RootOverride { get; set; }
+
+        public static string Root => string.IsNullOrEmpty(RootOverride) ? Application.persistentDataPath : RootOverride;
+
         public string PathFor(int index)
         {
-            return Path.Combine(Application.persistentDataPath, SaveSlots.FileName(index));
+            return Path.Combine(Root, SaveSlots.FileName(index));
         }
 
         private void Awake()
@@ -130,7 +135,7 @@ namespace OutpostZero.Shell
             {
                 string json = SaveCodec.Serialize(data);
                 string tmp = path + ".tmp";
-                Directory.CreateDirectory(Path.GetDirectoryName(path) ?? Application.persistentDataPath);
+                Directory.CreateDirectory(Path.GetDirectoryName(path) ?? Root);
                 File.WriteAllText(tmp, json);
                 if (File.Exists(path)) File.Copy(path, path + ".bak", true);
                 File.Copy(tmp, path, true);

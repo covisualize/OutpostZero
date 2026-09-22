@@ -1,0 +1,44 @@
+name: Soak
+
+# Scripted PlayMode play at 4x time scale (SoakTests): no logged errors or exceptions, and managed
+# memory within 10 % of the warm-up. Nightly for the full 30 minutes, or on demand with a shorter run.
+
+on:
+  schedule:
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+    inputs:
+      minutes:
+        description: Minutes of scripted play
+        default: '30'
+
+jobs:
+  soak:
+    name: PlayMode soak
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/cache@v4
+        with:
+          path: Library
+          key: Library-PlayMode-${{ hashFiles('Packages/manifest.json', 'Packages/packages-lock.json', 'ProjectSettings/ProjectVersion.txt') }}
+          restore-keys: |
+            Library-PlayMode-
+      - uses: game-ci/unity-test-runner@v4
+        id: tests
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          unityVersion: 6000.0.83f1
+          testMode: PlayMode
+          projectPath: .
+          githubToken: ${{ secrets.GITHUB_TOKEN }}
+          customParameters: -testCategory "Soak" -soakMinutes ${{ github.event.inputs.minutes || '30' }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: soak-results
+          path: ${{ steps.tests.outputs.artifactsPath }}
