@@ -699,6 +699,23 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void AStepInAPuddleCarriesFartherUnlessYouCrouch()
+        {
+            Assert.IsTrue(PuddleStep.Inside(2.2f, 6f, 0.65f));
+            Assert.IsFalse(PuddleStep.Inside(2.2f, 6f, 0.64f));
+            Assert.IsFalse(PuddleStep.Inside(0f, 0f, 0.85f));
+            Assert.IsTrue(PuddleStep.Inside(2.9f, 6f, 0.65f));
+            Assert.IsFalse(PuddleStep.Inside(2.91f, 6f, 0.65f));
+            Assert.AreEqual(8.7f, PuddleStep.Radius(6f, true, false), 0.001f);
+            Assert.AreEqual(6f, PuddleStep.Radius(6f, true, true), 0.001f);
+            Assert.AreEqual(18.85f, PuddleStep.Radius(13f, true, false), 0.001f);
+            Assert.AreEqual(2f, PuddleStep.Radius(2f, false, false), 0.001f);
+            Assert.AreEqual(0f, PuddleStep.Radius(-1f, true, false), 0.001f);
+            Assert.AreEqual(1.45f, PuddleStep.Splash, 0.001f);
+            Assert.AreEqual(0.65f, WeatherSurface.Wetness(WeatherKind.Rain), 0.001f);
+        }
+
+        [Test]
         public void MistSitsOnTheStreetWhenTheAirIsThick()
         {
             Assert.IsTrue(MistBank.Shows(WeatherKind.Fog, 0f));

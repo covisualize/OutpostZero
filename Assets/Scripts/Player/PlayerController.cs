@@ -597,6 +597,12 @@ namespace OutpostZero.Player
 
             nextFootstepTime = Time.time + interval;
 
+            float wetness = 0f;
+            var sky = OutpostZero.Graphics.WeatherController.Instance;
+            if (sky != null) wetness = OutpostZero.Graphics.WeatherSurface.Wetness(sky.Kind);
+            bool splash = OutpostZero.Graphics.PuddleStep.Inside(transform.position.x, transform.position.z, wetness);
+            radius = OutpostZero.Graphics.PuddleStep.Radius(radius, splash, IsCrouching);
+
             if (NoiseManager.Instance != null && radius > 0f)
             {
                 NoiseManager.Instance.EmitNoise(transform.position, radius, 0.7f, nType, gameObject);
