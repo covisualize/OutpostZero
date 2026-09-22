@@ -810,7 +810,7 @@ namespace OutpostZero.UI
             bool endlessNights = WorldMapService.Instance != null && WorldMapService.Instance.Endless;
             camp.Add(Body(RaidPlan.Due(raidDay, raidSecurity, endlessNights) ? Loc.T("camp.raid_yes") : Loc.T("camp.raid_no")));
             camp.Add(Button(Loc.T("camp.endure"), () => NightRaidController.Instance?.Begin()));
-            camp.Add(Body(Loc.T("camp.build") + " " + (GridBuilder.Instance != null ? GridBuilder.Instance.Selected.ToString() : "")));
+            camp.Add(Body(Loc.T("camp.build") + " " + (GridBuilder.Instance != null ? GridBuilder.Instance.Selected + "  " + GridBuilder.Instance.Facing : "")));
             var build = new VisualElement { style = { flexDirection = FlexDirection.Row } };
             build.Add(Button(Loc.T("camp.barricade"), () => GridBuilder.Instance?.Select(ModuleKind.Barricade)));
             build.Add(Button(Loc.T("camp.cot"), () => GridBuilder.Instance?.Select(ModuleKind.Cot)));
@@ -1087,7 +1087,7 @@ namespace OutpostZero.UI
             }
             if (GridBuilder.Instance != null)
             {
-                builder.Append(GridBuilder.Instance.Selected);
+                builder.Append(GridBuilder.Instance.Selected).Append(GridBuilder.Instance.Facing);
                 foreach (var module in GridBuilder.Instance.Placed) builder.Append(module.kind).Append(module.age).Append(module.integrity);
             }
             if (CampServices.Instance != null) builder.Append(CampServices.Instance.GeneratorOnline);

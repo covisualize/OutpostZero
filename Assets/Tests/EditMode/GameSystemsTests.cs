@@ -2024,6 +2024,22 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void DemolishingAModuleReturnsHalfTheScrap()
+        {
+            Assert.AreEqual(3, ScrapRefund.Half(6));
+            Assert.AreEqual(4, ScrapRefund.Half(9));
+            Assert.AreEqual(11, ScrapRefund.Half(22));
+            Assert.AreEqual(0, ScrapRefund.Half(1));
+            Assert.AreEqual(0, ScrapRefund.Half(0));
+            Assert.AreEqual(0, ScrapRefund.Half(-4));
+            Assert.AreEqual(90, ScrapRefund.Turn(0));
+            Assert.AreEqual(180, ScrapRefund.Turn(90));
+            Assert.AreEqual(270, ScrapRefund.Turn(180));
+            Assert.AreEqual(0, ScrapRefund.Turn(270));
+            Assert.AreEqual(90, ScrapRefund.Turn(-30));
+        }
+
+        [Test]
         public void AnEastGridKeepsAWalkFromTheSpawnToTheFarGate()
         {
             var ash = RoadGraph.Build(1701, "ash_market");

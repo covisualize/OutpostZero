@@ -46,10 +46,12 @@ namespace OutpostZero.Colony
         private readonly List<GameObject> views = new List<GameObject>();
         private ModuleKind selected = ModuleKind.Barricade;
         private bool buildMode;
+        private int facing;
         private float nextOil;
 
         public bool BuildMode => buildMode;
         public ModuleKind Selected => selected;
+        public int Facing => facing;
         public IReadOnlyList<PlacedModule> Placed => placed;
 
         private void Awake()
@@ -71,9 +73,16 @@ namespace OutpostZero.Colony
                 buildMode = !buildMode;
                 GameplayFeedback.Toast(buildMode ? "Build mode: click the yard" : "Build mode off");
             }
-            if (!buildMode || !PointerPressed()) return;
+            if (!buildMode) return;
+            var keyboard = UnityEngine.InputSystem.Keyboard.current;
+            if (keyboard != null && keyboard.rKey.wasPressedThisFrame)
+            {
+                facing = ScrapRefund.Turn(facing);
+                GameplayFeedback.Toast("Facing " + facing);
+            }
             if (Player.ExpeditionInput.Pointer.x > Screen.width - 400f) return;
-            TryPlaceAtPointer();
+            if (PointerRight()) TryDemolishAtPointer();
+            else if (PointerPressed()) TryPlaceAtPointer();
         }
 
         private static bool PointerPressed()
@@ -81,7 +90,43 @@ namespace OutpostZero.Colony
             return UnityEngine.InputSystem.Mouse.current != null && UnityEngine.InputSystem.Mouse.current.leftButton.wasPressedThisFrame;
         }
 
+        private static bool PointerRight()
+        {
+            return UnityEngine.InputSystem.Mouse.current != null && UnityEngine.InputSystem.Mouse.current.rightButton.wasPressedThisFrame;
+        }
+
         public void Select(ModuleKind kind) => selected = kind;
+
+        public bool TryDemolish(float worldX, float worldZ)
+        {
+            float x = Mathf.Round(worldX / cell) * cell;
+            float z = Mathf.Round(worldZ / cell) * cell;
+            PlacedModule target = null;
+            for (int i = 0; i < placed.Count; i++)
+            {
+                var module = placed[i];
+                if (Mathf.Abs(module.x - x) < 0.01f && Mathf.Abs(module.z - z) < 0.01f) target = module;
+            }
+            if (target == null) return false;
+            int refund = 0;
+            if (System.Enum.TryParse(target.kind, out ModuleKind kind)) refund = ScrapRefund.Half(Cost(kind));
+            placed.Remove(target);
+            RefreshViews();
+            if (refund > 0) ColonyStorage.Instance?.AddScrap(refund);
+            GameplayFeedback.Toast("Recovered " + refund + " scrap");
+            return true;
+        }
+
+        private void TryDemolishAtPointer()
+        {
+            var cam = Camera.main;
+            if (cam == null) return;
+            Ray ray = cam.ScreenPointToRay(Player.ExpeditionInput.Pointer);
+            var plane = new Plane(Vector3.up, Vector3.zero);
+            if (!plane.Raycast(ray, out float enter)) return;
+            Vector3 point = ray.GetPoint(enter);
+            TryDemolish(point.x, point.z);
+        }
 
         public void Grow()
         {
@@ -128,7 +173,7 @@ namespace OutpostZero.Colony
                 GameplayFeedback.Toast("Need " + cost + " camp scrap");
                 return false;
             }
-            var record = new PlacedModule { kind = kind.ToString(), x = x, z = z, rotation = 0, integrity = 100 };
+            var record = new PlacedModule { kind = kind.ToString(), x = x, z = z, rotation = facing, integrity = 100 };
             placed.Add(record);
             SpawnView(record);
             GameplayFeedback.Toast("Placed " + kind);
