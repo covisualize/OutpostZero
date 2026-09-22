@@ -7,16 +7,13 @@ script_dir = os.path.dirname(os.path.abspath(__file__))
 if script_dir not in sys.path:
     sys.path.append(script_dir)
 
-from blender_paths import models_dir
 from blender_utils import (
-    reset_scene, get_or_create_material, create_box, create_cylinder, 
-    create_sphere, create_cone, join_objects, set_origin_to_bottom, export_fbx
+    get_or_create_material, create_box, create_cylinder, 
+    create_sphere, create_cone, join_objects
 )
 
-MODELS_DIR = models_dir("Weapons")
 
-def generate_pistol():
-    reset_scene()
+def build_pistol(ctx):
     parts = []
 
     mat_metal_dark = get_or_create_material("Mat_Gun_Steel", (0.16, 0.17, 0.19, 1.0), metallic=0.9, roughness=0.3)
@@ -24,7 +21,7 @@ def generate_pistol():
     mat_grip_polymer = get_or_create_material("Mat_Gun_Polymer", (0.08, 0.08, 0.09, 1.0), metallic=0.1, roughness=0.7)
 
     # Scale: ~0.22m long pistol
-    # 1. Slide
+    # Slide
     slide = create_box("PistolSlide", (0, 0.04, 0.06), (0.038, 0.22, 0.042), mat_metal_dark, bevel_radius=0.003)
     ejection_port = create_box("EjectionPort", (0.016, 0.02, 0.07), (0.012, 0.048, 0.018), mat_metal_silver)
     parts.extend([slide, ejection_port])
@@ -35,7 +32,7 @@ def generate_pistol():
     barrel_tip = create_cylinder("BarrelTip", (0, 0.145, 0.06), 0.012, 0.025, vertices=12, material=mat_metal_silver, rotation=(math.radians(90), 0, 0))
     parts.extend([front_sight, rear_sight, barrel_tip])
 
-    # 2. Lower Frame & Grip
+    # Lower Frame & Grip
     frame = create_box("PistolFrame", (0, 0.03, 0.035), (0.034, 0.20, 0.024), mat_grip_polymer)
     rail = create_box("TacticalRail", (0, 0.09, 0.018), (0.028, 0.07, 0.012), mat_metal_dark)
     grip = create_box("PistolGrip", (0, -0.045, -0.045), (0.032, 0.065, 0.14), mat_grip_polymer, rotation=(math.radians(16), 0, 0))
@@ -45,10 +42,10 @@ def generate_pistol():
     parts.extend([frame, rail, grip, trigger_guard, trigger, mag_base])
 
     final_mesh = join_objects(parts, "Weapon_Pistol_9mm")
-    export_fbx(os.path.join(MODELS_DIR, "Weapon_Pistol_9mm.fbx"))
+    return final_mesh
 
-def generate_shotgun():
-    reset_scene()
+
+def build_shotgun(ctx):
     parts = []
 
     mat_metal = get_or_create_material("Mat_Shotgun_Metal", (0.15, 0.15, 0.17, 1.0), metallic=0.9, roughness=0.35)
@@ -56,22 +53,22 @@ def generate_shotgun():
     mat_rubber = get_or_create_material("Mat_Shotgun_RecoilPad", (0.06, 0.06, 0.06, 1.0), metallic=0.0, roughness=0.9)
 
     # Scale: ~0.95m total length
-    # 1. Receiver
+    # Receiver
     receiver = create_box("Receiver", (0, 0, 0.04), (0.045, 0.24, 0.075), mat_metal, bevel_radius=0.004)
     parts.append(receiver)
 
-    # 2. Barrel & Magazine Tube
+    # Barrel & Magazine Tube
     barrel = create_cylinder("Barrel", (0, 0.38, 0.065), 0.016, 0.58, vertices=14, material=mat_metal, rotation=(math.radians(90), 0, 0))
     mag_tube = create_cylinder("MagTube", (0, 0.34, 0.032), 0.015, 0.50, vertices=14, material=mat_metal, rotation=(math.radians(90), 0, 0))
     barrel_clamp = create_box("BarrelClamp", (0, 0.54, 0.048), (0.038, 0.024, 0.052), mat_metal)
     bead_sight = create_sphere("BeadSight", (0, 0.65, 0.082), 0.006, segments=8, rings=6, material=mat_metal)
     parts.extend([barrel, mag_tube, barrel_clamp, bead_sight])
 
-    # 3. Pump Slide / Fore-end
+    # Pump Slide / Fore-end
     pump = create_cylinder("PumpSlide", (0, 0.26, 0.032), 0.024, 0.18, vertices=12, material=mat_wood_poly, rotation=(math.radians(90), 0, 0))
     parts.append(pump)
 
-    # 4. Stock & Grip
+    # Stock & Grip
     grip_neck = create_box("GripNeck", (0, -0.16, 0.01), (0.038, 0.12, 0.06), mat_wood_poly, rotation=(math.radians(18), 0, 0))
     stock_body = create_box("StockBody", (0, -0.32, -0.01), (0.042, 0.26, 0.12), mat_wood_poly, rotation=(math.radians(8), 0, 0))
     recoil_pad = create_box("RecoilPad", (0, -0.45, -0.02), (0.045, 0.028, 0.13), mat_rubber)
@@ -79,10 +76,10 @@ def generate_shotgun():
     parts.extend([grip_neck, stock_body, recoil_pad, trigger_guard])
 
     final_mesh = join_objects(parts, "Weapon_Shotgun_Pump")
-    export_fbx(os.path.join(MODELS_DIR, "Weapon_Shotgun_Pump.fbx"))
+    return final_mesh
 
-def generate_machete():
-    reset_scene()
+
+def build_machete(ctx):
     parts = []
 
     mat_blade = get_or_create_material("Mat_Blade_Steel", (0.80, 0.82, 0.86, 1.0), metallic=0.98, roughness=0.18)
@@ -90,25 +87,25 @@ def generate_machete():
     mat_guard = get_or_create_material("Mat_Machete_Guard", (0.22, 0.22, 0.24, 1.0), metallic=0.85, roughness=0.4)
 
     # Scale: ~0.55m total length
-    # 1. Blade (angled bolo tip)
+    # Blade (angled bolo tip)
     blade_main = create_box("BladeMain", (0, 0.18, 0.02), (0.008, 0.32, 0.065), mat_blade)
     blade_tip = create_box("BladeTip", (0, 0.36, 0.03), (0.007, 0.12, 0.085), mat_blade, rotation=(math.radians(12), 0, 0))
     parts.extend([blade_main, blade_tip])
 
-    # 2. Guard
+    # Guard
     crossguard = create_box("Crossguard", (0, 0.015, 0.02), (0.026, 0.024, 0.09), mat_guard)
     parts.append(crossguard)
 
-    # 3. Handle & Pommel
+    # Handle & Pommel
     handle = create_cylinder("Handle", (0, -0.08, 0.018), 0.018, 0.16, vertices=12, material=mat_handle, rotation=(math.radians(90), 0, 0))
     pommel = create_sphere("PommelRing", (0, -0.165, 0.018), 0.024, segments=10, rings=8, material=mat_guard)
     parts.extend([handle, pommel])
 
     final_mesh = join_objects(parts, "Weapon_Machete")
-    export_fbx(os.path.join(MODELS_DIR, "Weapon_Machete.fbx"))
+    return final_mesh
 
-def generate_assault_rifle():
-    reset_scene()
+
+def build_assault_rifle(ctx):
     parts = []
 
     mat_metal = get_or_create_material("Mat_Rifle_Gunmetal", (0.14, 0.15, 0.16, 1.0), metallic=0.92, roughness=0.3)
@@ -138,26 +135,25 @@ def generate_assault_rifle():
     parts.extend([stock, pistol_grip])
 
     final_mesh = join_objects(parts, "Weapon_AssaultRifle")
-    export_fbx(os.path.join(MODELS_DIR, "Weapon_AssaultRifle.fbx"))
+    return final_mesh
 
-def generate_loot_ammo_boxes():
-    # 1. 9mm Ammo Box
-    reset_scene()
+
+def build_ammo_box_9mm(ctx):
+    # 9mm Ammo Box
     mat_box9 = get_or_create_material("Mat_Ammo_9mm_Box", (0.28, 0.35, 0.22, 1.0), roughness=0.6) # Military olive
     mat_brass = get_or_create_material("Mat_Brass_Bullet", (0.85, 0.72, 0.28, 1.0), metallic=0.9, roughness=0.25)
     box = create_box("AmmoBox9mm", (0, 0, 0.08), (0.18, 0.12, 0.16), mat_box9, bevel_radius=0.008)
-    set_origin_to_bottom(box)
-    export_fbx(os.path.join(MODELS_DIR, "Loot_AmmoBox_9mm.fbx"))
+    return box
 
-    # 2. Shotgun Shell Box
-    reset_scene()
+
+def build_ammo_box_shotgun(ctx):
+    # Shotgun Shell Box
     mat_box12 = get_or_create_material("Mat_Ammo_Shotgun_Box", (0.65, 0.18, 0.14, 1.0), roughness=0.7) # Red box
     box_sg = create_box("AmmoBoxShotgun", (0, 0, 0.09), (0.20, 0.14, 0.18), mat_box12, bevel_radius=0.008)
-    set_origin_to_bottom(box_sg)
-    export_fbx(os.path.join(MODELS_DIR, "Loot_AmmoBox_Shotgun.fbx"))
+    return box_sg
 
-def generate_medkit():
-    reset_scene()
+
+def build_medkit(ctx):
     parts = []
     mat_case = get_or_create_material("Mat_Medkit_White", (0.88, 0.88, 0.90, 1.0), roughness=0.4)
     mat_red = get_or_create_material("Mat_Medkit_Cross", (0.85, 0.08, 0.08, 1.0), roughness=0.3)
@@ -179,11 +175,10 @@ def generate_medkit():
     parts.extend([handle, clasp_l, clasp_r])
 
     final_mesh = join_objects(parts, "Loot_Medkit")
-    set_origin_to_bottom(final_mesh)
-    export_fbx(os.path.join(MODELS_DIR, "Loot_Medkit.fbx"))
+    return final_mesh
 
-def generate_scrap_pile():
-    reset_scene()
+
+def build_scrap_pile(ctx):
     parts = []
     mat_rusty = get_or_create_material("Mat_Rust_Metal", (0.42, 0.24, 0.16, 1.0), metallic=0.6, roughness=0.85)
     mat_steel = get_or_create_material("Mat_Scrap_Steel", (0.55, 0.58, 0.62, 1.0), metallic=0.9, roughness=0.45)
@@ -196,16 +191,9 @@ def generate_scrap_pile():
     parts.extend([pipe1, pipe2, plate1, gear1])
 
     final_mesh = join_objects(parts, "Loot_ScrapPile")
-    set_origin_to_bottom(final_mesh)
-    export_fbx(os.path.join(MODELS_DIR, "Loot_ScrapPile.fbx"))
+    return final_mesh
+
 
 if __name__ == "__main__":
-    print("[WeaponGenerator] Generating weapons and loot items...")
-    generate_pistol()
-    generate_shotgun()
-    generate_machete()
-    generate_assault_rifle()
-    generate_loot_ammo_boxes()
-    generate_medkit()
-    generate_scrap_pile()
-    print("[WeaponGenerator] Weapons and loot items generated successfully!")
+    import pipeline
+    sys.exit(pipeline.main(["--category", "Weapons"]))

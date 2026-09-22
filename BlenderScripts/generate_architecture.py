@@ -7,16 +7,13 @@ script_dir = os.path.dirname(os.path.abspath(__file__))
 if script_dir not in sys.path:
     sys.path.append(script_dir)
 
-from blender_paths import models_dir
 from blender_utils import (
-    reset_scene, get_or_create_material, create_box, create_cylinder, 
-    create_sphere, create_cone, join_objects, set_origin_to_bottom, export_fbx
+    get_or_create_material, create_box, create_cylinder, 
+    create_sphere, create_cone, join_objects
 )
 
-MODELS_DIR = models_dir("Environment")
 
-def generate_road_straight():
-    reset_scene()
+def build_road_straight(ctx):
     parts = []
 
     mat_asphalt = get_or_create_material("Mat_Road_Asphalt", (0.16, 0.17, 0.18, 1.0), roughness=0.9)
@@ -44,11 +41,10 @@ def generate_road_straight():
     parts.extend([curb_r, walk_r])
 
     final_mesh = join_objects(parts, "Road_Tile_Straight")
-    set_origin_to_bottom(final_mesh)
-    export_fbx(os.path.join(MODELS_DIR, "Road_Tile_Straight.fbx"))
+    return final_mesh
 
-def generate_road_intersection():
-    reset_scene()
+
+def build_road_intersection(ctx):
     parts_x = []
 
     mat_asphalt = get_or_create_material("Mat_Road_Asphalt", (0.16, 0.17, 0.18, 1.0), roughness=0.9)
@@ -77,11 +73,10 @@ def generate_road_intersection():
         parts_x.extend([z_n, z_s, z_w, z_e])
 
     final_mesh_x = join_objects(parts_x, "Road_Tile_Intersection")
-    set_origin_to_bottom(final_mesh_x)
-    export_fbx(os.path.join(MODELS_DIR, "Road_Tile_Intersection.fbx"))
+    return final_mesh_x
 
-def generate_storefront_building():
-    reset_scene()
+
+def build_storefront_building(ctx):
     parts = []
 
     mat_brick = get_or_create_material("Mat_Bldg_Brick", (0.54, 0.26, 0.20, 1.0), roughness=0.9)
@@ -123,11 +118,10 @@ def generate_storefront_building():
     parts.extend([roof_parapet, ac_unit, ac_fan])
 
     final_mesh = join_objects(parts, "Building_Storefront_2Story")
-    set_origin_to_bottom(final_mesh)
-    export_fbx(os.path.join(MODELS_DIR, "Building_Storefront_2Story.fbx"))
+    return final_mesh
 
-def generate_industrial_warehouse():
-    reset_scene()
+
+def build_industrial_warehouse(ctx):
     parts = []
 
     mat_corrugated = get_or_create_material("Mat_Corrugated_Steel", (0.40, 0.44, 0.46, 1.0), metallic=0.75, roughness=0.55)
@@ -159,11 +153,10 @@ def generate_industrial_warehouse():
     parts.extend([vent1, vent_cap1])
 
     final_mesh = join_objects(parts, "Building_Warehouse_Depot")
-    set_origin_to_bottom(final_mesh)
-    export_fbx(os.path.join(MODELS_DIR, "Building_Warehouse_Depot.fbx"))
+    return final_mesh
 
-def generate_ruin_wall_corner():
-    reset_scene()
+
+def build_ruin_wall_corner(ctx):
     parts = []
 
     mat_brick = get_or_create_material("Mat_Ruin_Brick", (0.50, 0.22, 0.18, 1.0), roughness=0.95)
@@ -186,14 +179,9 @@ def generate_ruin_wall_corner():
     parts.extend([rubble1, rubble2])
 
     final_mesh = join_objects(parts, "Ruin_Wall_Corner")
-    set_origin_to_bottom(final_mesh)
-    export_fbx(os.path.join(MODELS_DIR, "Ruin_Wall_Corner.fbx"))
+    return final_mesh
+
 
 if __name__ == "__main__":
-    print("[ArchitectureGenerator] Generating modular architecture & buildings...")
-    generate_road_straight()
-    generate_road_intersection()
-    generate_storefront_building()
-    generate_industrial_warehouse()
-    generate_ruin_wall_corner()
-    print("[ArchitectureGenerator] Architecture models generated successfully!")
+    import pipeline
+    sys.exit(pipeline.main(["--category", "Environment"]))

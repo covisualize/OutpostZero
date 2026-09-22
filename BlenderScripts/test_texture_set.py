@@ -3,7 +3,11 @@
 import json
 import os
 import tempfile
+import sys
 import unittest
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from pipeline_plan import asset_paths
 
 from texture_set import (
     ICON_SIZE,
@@ -102,7 +106,7 @@ class TextureSetTests(unittest.TestCase):
         self.assertEqual(manifest["textures"], list(SUFFIXES))
         self.assertEqual(manifest["textureSize"], SIZE)
         missing = []
-        for relative in manifest["assets"]:
+        for relative in asset_paths(manifest):
             stem = relative[:-4]
             for suffix in SUFFIXES:
                 path = os.path.join(root, stem + "_" + suffix + ".png")

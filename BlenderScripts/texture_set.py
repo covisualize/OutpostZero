@@ -396,7 +396,8 @@ def bake_manifest(root):
     with open(manifest_path, encoding="utf-8") as handle:
         manifest = json.load(handle)
     written = []
-    for relative in manifest["assets"]:
+    from pipeline_plan import asset_paths
+    for relative in asset_paths(manifest):
         written.extend(write_set(os.path.join(root, relative)))
     return written
 

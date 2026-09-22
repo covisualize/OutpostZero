@@ -7,16 +7,13 @@ script_dir = os.path.dirname(os.path.abspath(__file__))
 if script_dir not in sys.path:
     sys.path.append(script_dir)
 
-from blender_paths import models_dir
 from blender_utils import (
-    reset_scene, get_or_create_material, create_box, create_cylinder, 
-    create_sphere, create_cone, join_objects, set_origin_to_bottom, export_fbx
+    get_or_create_material, create_box, create_cylinder, 
+    create_sphere, create_cone, join_objects
 )
 
-MODELS_DIR = models_dir("BaseBuilding")
 
-def generate_workbench():
-    reset_scene()
+def build_workbench(ctx):
     parts = []
 
     mat_wood = get_or_create_material("Mat_Bench_Timber", (0.46, 0.32, 0.20, 1.0), roughness=0.88)
@@ -47,11 +44,10 @@ def generate_workbench():
     parts.extend([vise_base, vise_jaws])
 
     final_mesh = join_objects(parts, "Base_CraftingWorkbench")
-    set_origin_to_bottom(final_mesh)
-    export_fbx(os.path.join(MODELS_DIR, "Base_CraftingWorkbench.fbx"))
+    return final_mesh
 
-def generate_campfire_cooker():
-    reset_scene()
+
+def build_campfire_cooker(ctx):
     parts = []
 
     mat_stone = get_or_create_material("Mat_Fire_Stones", (0.42, 0.40, 0.38, 1.0), roughness=0.95)
@@ -90,11 +86,10 @@ def generate_campfire_cooker():
     parts.extend([pot, pot_lid])
 
     final_mesh = join_objects(parts, "Base_Campfire_Cooker")
-    set_origin_to_bottom(final_mesh)
-    export_fbx(os.path.join(MODELS_DIR, "Base_Campfire_Cooker.fbx"))
+    return final_mesh
 
-def generate_generator():
-    reset_scene()
+
+def build_generator(ctx):
     parts = []
 
     mat_frame = get_or_create_material("Mat_Gen_FrameRed", (0.68, 0.18, 0.15, 1.0), metallic=0.7, roughness=0.5)
@@ -124,11 +119,10 @@ def generate_generator():
     parts.extend([panel, gauge])
 
     final_mesh = join_objects(parts, "Base_Generator_Diesel")
-    set_origin_to_bottom(final_mesh)
-    export_fbx(os.path.join(MODELS_DIR, "Base_Generator_Diesel.fbx"))
+    return final_mesh
 
-def generate_medical_cot():
-    reset_scene()
+
+def build_medical_cot(ctx):
     parts = []
 
     mat_tubing = get_or_create_material("Mat_Cot_MetalTube", (0.55, 0.55, 0.58, 1.0), metallic=0.9, roughness=0.3)
@@ -154,11 +148,10 @@ def generate_medical_cot():
     parts.extend([canvas, pillow, blanket])
 
     final_mesh = join_objects(parts, "Base_MedicalCot")
-    set_origin_to_bottom(final_mesh)
-    export_fbx(os.path.join(MODELS_DIR, "Base_MedicalCot.fbx"))
+    return final_mesh
 
-def generate_watchtower():
-    reset_scene()
+
+def build_watchtower(ctx):
     parts = []
 
     mat_timbers = get_or_create_material("Mat_Tower_Timber", (0.36, 0.24, 0.15, 1.0), roughness=0.9)
@@ -189,11 +182,10 @@ def generate_watchtower():
     parts.append(roof)
 
     final_mesh = join_objects(parts, "Base_Watchtower")
-    set_origin_to_bottom(final_mesh)
-    export_fbx(os.path.join(MODELS_DIR, "Base_Watchtower.fbx"))
+    return final_mesh
 
-def generate_water_collector():
-    reset_scene()
+
+def build_water_collector(ctx):
     parts = []
 
     mat_barrel = get_or_create_material("Mat_Water_BarrelBlue", (0.16, 0.35, 0.58, 1.0), metallic=0.4, roughness=0.6)
@@ -218,15 +210,9 @@ def generate_water_collector():
     parts.append(spigot)
 
     final_mesh = join_objects(parts, "Base_WaterCollector")
-    set_origin_to_bottom(final_mesh)
-    export_fbx(os.path.join(MODELS_DIR, "Base_WaterCollector.fbx"))
+    return final_mesh
+
 
 if __name__ == "__main__":
-    print("[BaseBuildingGenerator] Generating sanctuary & base building props...")
-    generate_workbench()
-    generate_campfire_cooker()
-    generate_generator()
-    generate_medical_cot()
-    generate_watchtower()
-    generate_water_collector()
-    print("[BaseBuildingGenerator] Base building props generated successfully!")
+    import pipeline
+    sys.exit(pipeline.main(["--category", "BaseBuilding"]))
