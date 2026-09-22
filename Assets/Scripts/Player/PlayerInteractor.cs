@@ -3,6 +3,7 @@ using OutpostZero.AI;
 using OutpostZero.Combat;
 using OutpostZero.Core;
 using OutpostZero.Items;
+using OutpostZero.Shell;
 
 namespace OutpostZero.Player
 {
@@ -122,29 +123,25 @@ namespace OutpostZero.Player
             return QuietKill.Victim(crouched, dead, alert, distance, dot);
         }
 
+        public bool ThrowId(string id)
+        {
+            int kind = TossKind.Of(id);
+            if (kind == TossKind.None) return false;
+            if (inventory == null || !inventory.TryConsume(id)) return false;
+            if (kind == TossKind.Fire) Launch(true);
+            else if (kind == TossKind.Flare) LaunchFlare();
+            else if (kind == TossKind.Bomb) LaunchBomb();
+            else Launch(false);
+            return true;
+        }
+
         private void ThrowHeldItem()
         {
-            if (inventory != null && inventory.TryConsume("molotov"))
-            {
-                Launch(true);
-                return;
-            }
-            if (inventory != null && inventory.TryConsume("noise_lure"))
-            {
-                Launch(false);
-                return;
-            }
-            if (inventory != null && inventory.TryConsume("flare"))
-            {
-                LaunchFlare();
-                return;
-            }
-            if (inventory != null && inventory.TryConsume("pipe_bomb"))
-            {
-                LaunchBomb();
-                return;
-            }
-            GameplayFeedback.Toast("No throwable");
+            if (ThrowId("molotov")) return;
+            if (ThrowId("noise_lure")) return;
+            if (ThrowId("flare")) return;
+            if (ThrowId("pipe_bomb")) return;
+            GameplayFeedback.Toast(Loc.T("toss.none"));
         }
 
         private void Launch(bool molotov)

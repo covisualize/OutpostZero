@@ -209,6 +209,16 @@ namespace OutpostZero.Player
                 GameplayFeedback.Toast("Painkillers");
                 return true;
             }
+            if (TossKind.Throws(record.Id))
+            {
+                var hands = GetComponent<PlayerInteractor>();
+                if (hands == null || !hands.ThrowId(record.Id))
+                {
+                    GameplayFeedback.Toast(Loc.T("toss.none"));
+                    return false;
+                }
+                return true;
+            }
             if (record.Id == "cell")
             {
                 var body = GetComponent<PlayerController>();

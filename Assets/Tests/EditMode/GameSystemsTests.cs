@@ -3675,6 +3675,29 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void ABeltMolotovLeavesTheHandAndACellStaysInThePack()
+        {
+            Assert.AreEqual(TossKind.Fire, TossKind.Of("molotov"));
+            Assert.AreEqual(TossKind.Lure, TossKind.Of("noise_lure"));
+            Assert.AreEqual(TossKind.Flare, TossKind.Of("flare"));
+            Assert.AreEqual(TossKind.Bomb, TossKind.Of("pipe_bomb"));
+            Assert.AreEqual(TossKind.None, TossKind.Of("cell"));
+            Assert.AreEqual(TossKind.None, TossKind.Of("medkit"));
+            Assert.AreEqual(TossKind.None, TossKind.Of(null));
+            Assert.AreEqual(TossKind.None, TossKind.Of(""));
+            Assert.IsTrue(TossKind.Throws("molotov"));
+            Assert.IsFalse(TossKind.Throws("cell"));
+            Assert.AreEqual(18f, ThrowArc.NoiseRadius(false), 0.01f);
+            Assert.AreEqual(42f, PipeBlast.Damage, 0.001f);
+            Assert.AreEqual(1.2f, PipeBlast.Fuse, 0.001f);
+            Assert.AreEqual(20f, FlareClock.Duration, 0.001f);
+            Assert.AreEqual("Nada que lanzar", Loc.T("toss.none", "es"));
+            var street = LootTables.Roll("street", 2);
+            Assert.AreEqual(7, street.Length);
+            Assert.AreEqual("raw_food", street[6].ItemId);
+        }
+
+        [Test]
         public void AZombieWithoutARigStillAttacksAndFalls()
         {
             Assert.AreEqual(14f, PoseSheet.Lean(ZombieAI.ZombieState.Chase, 0f), 0.001f);
