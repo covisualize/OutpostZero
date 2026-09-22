@@ -1461,5 +1461,29 @@ namespace OutpostZero.Tests.EditMode
             Assert.AreEqual("5 Bandage   6 Water Bottle   7 Canned Food   8 Molotov", ItemBelt.Line(slots));
             Assert.AreEqual("5 -   6 -   7 -   8 -", ItemBelt.Line(ItemBelt.Fresh()));
         }
+
+        [Test]
+        public void ACompassPutsTheGateOnTheRightAndAHitFromTheEast()
+        {
+            Assert.AreEqual("N   Gate right", StreetHeading.Readout(0f, 1f, 0f, 0f, false, 0f, 0f, true, 10f, 0f));
+            Assert.AreEqual("N   Gate behind", StreetHeading.Readout(0f, 1f, 0f, 0f, false, 0f, 0f, true, 0f, -10f));
+            Assert.AreEqual("E   POI left", StreetHeading.Readout(1f, 0f, 0f, 0f, true, 0f, 12f, false, 0f, 0f));
+            Assert.IsTrue(StreetHeading.OnStrip(0f, 80f, out float center));
+            Assert.AreEqual(0f, center, 0.01f);
+            Assert.IsTrue(StreetHeading.OnStrip(-45f, 80f, out float left));
+            Assert.AreEqual(-40f, left, 0.01f);
+            Assert.IsFalse(StreetHeading.OnStrip(120f, 80f, out _));
+            Assert.AreEqual("front", StreetHeading.Sector(StreetHeading.Incoming(0f, 1f, 0f, -1f)));
+            Assert.AreEqual("right", StreetHeading.Sector(StreetHeading.Incoming(0f, 1f, -1f, 0f)));
+            Assert.AreEqual(0.825f, HealthGhost.Follow(1f, 0f, 0.5f), 0.001f);
+            Assert.AreEqual(0.8f, HealthGhost.Follow(0.2f, 0.8f, 0.1f), 0.001f);
+            Assert.AreEqual(0.2f, HealthGhost.Follow(0.2f, 0.2f, 0.5f), 0.001f);
+            var tape = new KillTape();
+            tape.Note(KillTape.Name("walker"));
+            tape.Note(KillTape.Name("runner"));
+            tape.Note(KillTape.Name("brute"));
+            tape.Note(KillTape.Name("walker"));
+            Assert.AreEqual("Runner\nBrute\nWalker", tape.Text());
+        }
     }
 }

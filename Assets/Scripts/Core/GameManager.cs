@@ -24,6 +24,9 @@ namespace OutpostZero.Core
 
         private GameState resumeState = GameState.ExpeditionActive;
         private Scene gameplayScene;
+        private KillTape killTape;
+
+        public string KillFeed => killTape.Text();
 
         public float ExpeditionTime => expeditionTimer;
         public int ZombiesKilled => zombiesKilled;
@@ -129,6 +132,7 @@ namespace OutpostZero.Core
             zombiesKilled = 0;
             scrapLooted = 0;
             expeditionTimer = 0f;
+            killTape = default;
             OnZombiesKilledChanged?.Invoke(zombiesKilled);
             OnScrapLootedChanged?.Invoke(scrapLooted);
             ObjectiveTracker.Instance?.ResetProgress();
@@ -140,6 +144,7 @@ namespace OutpostZero.Core
         {
             zombiesKilled++;
             lifetimeKills++;
+            killTape.Note(KillTape.Name(archetypeId));
             OnZombiesKilledChanged?.Invoke(zombiesKilled);
             if (!string.IsNullOrEmpty(archetypeId)) CodexDirector.Instance?.Unlock("zombie." + archetypeId);
         }
@@ -224,6 +229,7 @@ namespace OutpostZero.Core
             lifetimeKills = 0;
             scrapLooted = 0;
             expeditionTimer = 0f;
+            killTape = default;
             OnZombiesKilledChanged?.Invoke(zombiesKilled);
             OnScrapLootedChanged?.Invoke(scrapLooted);
             var player = PlayerRegistry.Current;
@@ -258,6 +264,7 @@ namespace OutpostZero.Core
             lifetimeKills = 0;
             scrapLooted = 0;
             expeditionTimer = 0f;
+            killTape = default;
             currentState = GameState.ExpeditionActive;
             SceneManager.LoadScene(gameplayScene.buildIndex >= 0 ? gameplayScene.buildIndex : SceneManager.GetActiveScene().buildIndex);
         }

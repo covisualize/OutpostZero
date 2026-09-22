@@ -33,8 +33,13 @@ namespace OutpostZero.UI
         private Label weapon;
         private Label tutorial;
         private Label toast;
+        private Label compass;
+        private Label hurt;
+        private Label feed;
         private VisualElement noiseFill;
         private VisualElement healthFill;
+        private VisualElement ghostFill;
+        private float ghostRatio = 1f;
         private string menuKey = "";
         private string campKey = "";
         private string packKey = "";
@@ -77,9 +82,27 @@ namespace OutpostZero.UI
             var left = Column(16, 16, 420);
             vitals = Body();
             objectives = Body();
-            healthFill = Bar();
+            var healthTrack = new VisualElement();
+            healthTrack.style.height = 8;
+            healthTrack.style.width = Length.Percent(40);
+            healthTrack.style.marginBottom = 6;
+            healthTrack.style.backgroundColor = new Color(0.12f, 0.12f, 0.12f);
+            ghostFill = new VisualElement();
+            ghostFill.style.position = Position.Absolute;
+            ghostFill.style.left = 0;
+            ghostFill.style.top = 0;
+            ghostFill.style.height = 8;
+            ghostFill.style.backgroundColor = new Color(0.45f, 0.18f, 0.14f);
+            healthFill = new VisualElement();
+            healthFill.style.position = Position.Absolute;
+            healthFill.style.left = 0;
+            healthFill.style.top = 0;
+            healthFill.style.height = 8;
+            healthFill.style.backgroundColor = new Color(0.75f, 0.2f, 0.16f);
+            healthTrack.Add(ghostFill);
+            healthTrack.Add(healthFill);
             left.Add(vitals);
-            left.Add(healthFill);
+            left.Add(healthTrack);
             left.Add(objectives);
             root.Add(left);
 
@@ -111,6 +134,36 @@ namespace OutpostZero.UI
             toast.style.backgroundColor = new Color(0.12f, 0.1f, 0.08f, 0.9f);
             toast.pickingMode = PickingMode.Ignore;
             root.Add(toast);
+
+            compass = Body();
+            compass.style.position = Position.Absolute;
+            compass.style.top = 12;
+            compass.style.left = Length.Percent(28);
+            compass.style.width = Length.Percent(44);
+            compass.style.unityTextAlign = TextAnchor.MiddleCenter;
+            compass.pickingMode = PickingMode.Ignore;
+            root.Add(compass);
+
+            hurt = Body();
+            hurt.style.position = Position.Absolute;
+            hurt.style.top = Length.Percent(42);
+            hurt.style.left = Length.Percent(36);
+            hurt.style.width = Length.Percent(28);
+            hurt.style.unityTextAlign = TextAnchor.MiddleCenter;
+            hurt.style.backgroundColor = new Color(0.45f, 0.08f, 0.06f, 0.82f);
+            hurt.pickingMode = PickingMode.Ignore;
+            hurt.style.display = DisplayStyle.None;
+            root.Add(hurt);
+
+            feed = Body();
+            feed.style.position = Position.Absolute;
+            feed.style.top = 16;
+            feed.style.right = 16;
+            feed.style.width = 180;
+            feed.style.unityTextAlign = TextAnchor.UpperRight;
+            feed.style.whiteSpace = WhiteSpace.PreWrap;
+            feed.pickingMode = PickingMode.Ignore;
+            root.Add(feed);
 
             damageLayer = new VisualElement();
             damageLayer.pickingMode = PickingMode.Ignore;
@@ -167,7 +220,10 @@ namespace OutpostZero.UI
             if (life != null)
             {
                 vitalText.AppendLine(Loc.T("hud.health") + " " + Mathf.CeilToInt(life.CurrentHealth) + " / " + Mathf.CeilToInt(life.MaxHealth));
-                healthFill.style.width = Length.Percent(100f * life.CurrentHealth / Mathf.Max(1f, life.MaxHealth));
+                float actual = life.CurrentHealth / Mathf.Max(1f, life.MaxHealth);
+                ghostRatio = HealthGhost.Follow(ghostRatio, actual, 0.05f);
+                ghostFill.style.width = Length.Percent(ghostRatio * 100f);
+                healthFill.style.width = Length.Percent(actual * 100f);
             }
             if (player != null) vitalText.AppendLine(Loc.T("hud.stamina") + " " + Mathf.CeilToInt(player.CurrentStamina));
             if (needs != null)
@@ -203,6 +259,41 @@ namespace OutpostZero.UI
             var gate = ExtractionZone.Current;
             if (gate != null && gate.Holding) objectiveText.AppendLine("Hold to extract " + Mathf.CeilToInt(ExtractWatch.HoldSeconds - gate.Hold) + "s");
             objectives.text = objectiveText.ToString();
+
+            var flow = GameManager.Instance != null ? GameManager.Instance.CurrentState : GameState.ExpeditionActive;
+            bool street = flow == GameState.ExpeditionActive || flow == GameState.RaidActive;
+            compass.style.display = street ? DisplayStyle.Flex : DisplayStyle.None;
+            if (street && player != null)
+            {
+                var poi = FindFirstObjectByType<DistrictPoi>();
+                bool showPoi = poi != null && (tracker == null || !tracker.PoiFound);
+                var face = player.transform.forward;
+                var at = player.transform.position;
+                compass.text = StreetHeading.Readout(
+                    face.x, face.z, at.x, at.z,
+                    showPoi, showPoi ? poi.transform.position.x : 0f, showPoi ? poi.transform.position.z : 0f,
+                    gate != null, gate != null ? gate.transform.position.x : 0f, gate != null ? gate.transform.position.z : 0f);
+            }
+            else compass.text = "";
+
+            hurt.style.display = DisplayStyle.None;
+            if (street && life != null && player != null && Time.time - life.LastHitTime < 1.2f)
+            {
+                var hit = life.LastHitDirection;
+                if (hit.sqrMagnitude > 0.0001f)
+                {
+                    var face = player.transform.forward;
+                    string sector = StreetHeading.Sector(StreetHeading.Incoming(face.x, face.z, hit.x, hit.z));
+                    hurt.text = sector == "front" ? "Hit from the front"
+                        : sector == "back" ? "Hit from behind"
+                        : sector == "left" ? "Hit from the left"
+                        : "Hit from the right";
+                    hurt.style.display = DisplayStyle.Flex;
+                }
+            }
+
+            feed.text = GameManager.Instance != null ? GameManager.Instance.KillFeed : "";
+            feed.style.display = string.IsNullOrEmpty(feed.text) ? DisplayStyle.None : DisplayStyle.Flex;
 
             if (player != null && player.ActiveWeapon is FirearmWeapon gun)
             {
