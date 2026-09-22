@@ -65,7 +65,9 @@ namespace OutpostZero.UI
                 if (BootPlan.InBudget(cold)) Debug.Log("Cold start reached the menu in " + cold.ToString("0.00") + " s");
                 else Debug.LogWarning("Cold start took " + cold.ToString("0.00") + " s, over the " + BootPlan.Budget + " s budget");
             }
+            var from = Current;
             Current = step;
+            SceneEntries.Dispatch(from, step, Debug.LogException);
             yield return new WaitForSecondsRealtime(0.12f);
             card?.Hide();
             Busy = false;
