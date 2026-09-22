@@ -158,7 +158,11 @@ namespace OutpostZero.Colony
                     person.opinion += 2;
                     person.kin = KinBoard.Warm(person.kin, people, person.id, person.task, false);
                 }
-                if (TraitHook.Holds(person.trait, person.aside, "Volatile")) person.opinion -= MealTable.FeudShift(6, leaderPresent, leadSkill);
+                if (TraitHook.Holds(person.trait, person.aside, "Volatile"))
+                {
+                    person.opinion -= MealTable.FeudShift(6, leaderPresent, leadSkill);
+                    person.kin = KinBoard.ChillToward(person.kin, people, person.id, leaderPresent, leadSkill);
+                }
                 if (opinionBefore < 40 && person.opinion >= 40) Once(events, "friendship");
 
                 if (person.injury > 0 && (cot || medic))
@@ -207,7 +211,7 @@ namespace OutpostZero.Colony
                 }
             }
 
-            if (MealTable.Argument(volatilePresent, living, leaderPresent)) Once(events, "argument");
+            if (MealTable.Argument(volatilePresent, living, leaderPresent) || KinBoard.Quarrel(people, leaderPresent)) Once(events, "argument");
             if (expeditionWon && Average(people) > 70f) Once(events, "celebration");
             return events.ToArray();
         }

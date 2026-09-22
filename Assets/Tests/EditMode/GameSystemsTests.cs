@@ -2382,6 +2382,23 @@ namespace OutpostZero.Tests.EditMode
             Assert.IsTrue(MealTable.Argument(true, 2, false));
             Assert.IsFalse(MealTable.Argument(true, 2, true));
             Assert.IsFalse(MealTable.Argument(true, 1, false));
+            Assert.IsFalse(KinBoard.Quarrel(null, false));
+            var cold = new List<ColonistDay>
+            {
+                new ColonistDay { id = "ada", task = "Rest", kin = "ben:-20", morale = 50f, hunger = 90f, thirst = 90f },
+                new ColonistDay { id = "ben", task = "Scavenge", morale = 50f, hunger = 90f, thirst = 90f }
+            };
+            Assert.IsTrue(KinBoard.Quarrel(cold, false));
+            Assert.IsFalse(KinBoard.Quarrel(cold, true));
+            cold[0].kin = "ben:-19";
+            Assert.IsFalse(KinBoard.Quarrel(cold, false));
+            cold[0].kin = "ben:-20";
+            int coldFood = 0;
+            int coldWater = 0;
+            var coldNotes = ColonyDay.Simulate(cold, ref coldFood, ref coldWater, false, false, "");
+            Assert.Contains("argument", coldNotes);
+            Assert.AreEqual(6, MealTable.FeudShift(6, false));
+            Assert.AreEqual(3, MealTable.FeudShift(6, true));
 
             var ward = new List<ColonistDay>
             {

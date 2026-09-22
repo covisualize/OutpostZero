@@ -13,6 +13,8 @@ namespace OutpostZero.Colony
         public const int Cap = 100;
         public const int CloseAt = 40;
         public const int Warmth = 2;
+        public const int Cold = -20;
+        public const int Chill = 6;
 
         public static int Read(string book, string id)
         {
@@ -59,6 +61,43 @@ namespace OutpostZero.Colony
         public static string Shift(string book, string id, int delta)
         {
             return Write(book, id, Read(book, id) + delta);
+        }
+
+        public static string ChillToward(string book, IList<ColonistDay> people, string selfId, bool leaderPresent, int leadership)
+        {
+            if (people == null || string.IsNullOrEmpty(selfId)) return book ?? "";
+            int drop = MealTable.FeudShift(Chill, leaderPresent, leadership);
+            if (drop <= 0) return book ?? "";
+            for (int i = 0; i < people.Count; i++)
+            {
+                var other = people[i];
+                if (other == null || !other.alive || other.id == selfId || string.IsNullOrEmpty(other.id)) continue;
+                book = Shift(book, other.id, -drop);
+            }
+            return book ?? "";
+        }
+
+        public static bool Quarrel(IList<ColonistDay> people, bool leaderPresent)
+        {
+            if (leaderPresent || people == null) return false;
+            int living = 0;
+            for (int i = 0; i < people.Count; i++)
+            {
+                if (people[i] != null && people[i].alive) living++;
+            }
+            if (living < 2) return false;
+            for (int i = 0; i < people.Count; i++)
+            {
+                var person = people[i];
+                if (person == null || !person.alive) continue;
+                for (int j = 0; j < people.Count; j++)
+                {
+                    var other = people[j];
+                    if (other == null || !other.alive || other.id == person.id) continue;
+                    if (Read(person.kin, other.id) <= Cold) return true;
+                }
+            }
+            return false;
         }
 
         public static bool Close(string book, string id)
