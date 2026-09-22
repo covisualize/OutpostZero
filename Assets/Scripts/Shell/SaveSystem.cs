@@ -207,7 +207,12 @@ namespace OutpostZero.Shell
             }
             if (TutorialDirector.Instance != null) data.tutorialDone = TutorialDirector.Instance.Finished;
             if (CodexDirector.Instance != null) data.codex = CodexDirector.Instance.Packed;
-            if (OutpostZero.Player.PlayerRegistry.Current != null) data.weaponMods = OutpostZero.Player.PlayerRegistry.Current.PackMods();
+            if (OutpostZero.Player.PlayerRegistry.Current != null)
+            {
+                data.weaponMods = OutpostZero.Player.PlayerRegistry.Current.PackMods();
+                var inventory = OutpostZero.Player.PlayerRegistry.Current.GetComponent<OutpostZero.Player.PlayerInventory>();
+                if (inventory != null) data.packTier = inventory.PackTier;
+            }
             if (SurvivorRoster.Instance != null)
             {
                 data.memorial = SurvivorRoster.Instance.PackMemorials();
@@ -301,6 +306,7 @@ namespace OutpostZero.Shell
             TutorialDirector.Instance?.SetFinished(data.tutorialDone);
             CodexDirector.Instance?.Restore(data.codex);
             OutpostZero.Player.PlayerRegistry.Current?.RestoreMods(data.weaponMods);
+            OutpostZero.Player.PlayerRegistry.Current?.GetComponent<OutpostZero.Player.PlayerInventory>()?.SetPackTier(data.packTier);
             WorldMapService.Instance?.RestoreCleared(data.districtsCleared);
             WorldMapService.Instance?.RestoreCampaign(data.radio, data.difficulty, data.broadcast, data.worldSeed, data.endless);
             if (data.districtIndex > data.districtsCleared) WorldMapService.Instance?.SelectIndex(data.districtIndex);

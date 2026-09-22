@@ -23,6 +23,7 @@ namespace OutpostZero.Player
     {
         [Header("Backpack Limits")]
         [SerializeField] private float maxWeightCapacity = 35f; // kg
+        [SerializeField] private int packTier = 1;
         [SerializeField] private float currentWeight = 0f;
 
         [Header("Quick Ammo Stores")]
@@ -39,8 +40,9 @@ namespace OutpostZero.Player
         private readonly string[] belt = new[] { "", "", "", "" };
 
         public float CurrentWeight => currentWeight;
-        public float MaxWeightCapacity => maxWeightCapacity;
-        public float WeightRatio => currentWeight / Mathf.Max(0.01f, maxWeightCapacity);
+        public int PackTier => PackOps.Tier(packTier);
+        public float MaxWeightCapacity => PackOps.Limit(packTier);
+        public float WeightRatio => currentWeight / Mathf.Max(0.01f, MaxWeightCapacity);
         public int ScrapCount => scrapCount;
         public int MedicalKits => medicalKits;
         public IReadOnlyList<InventoryItem> Items => items;
@@ -86,13 +88,31 @@ namespace OutpostZero.Player
 
         private void Start()
         {
+            maxWeightCapacity = MaxWeightCapacity;
             RecalculateWeight();
+        }
+
+        public void SetPackTier(int tier)
+        {
+            packTier = PackOps.Tier(tier);
+            maxWeightCapacity = MaxWeightCapacity;
+            OnInventoryChanged?.Invoke();
+        }
+
+        public bool TryRaisePack(int benchTier, OutpostZero.Colony.ColonyStorage storage)
+        {
+            if (storage == null) return false;
+            if (!PackOps.CanRaise(packTier, benchTier, storage.Scrap, storage.Cloth, storage.Tape)) return false;
+            if (!storage.TrySpendBill(PackOps.RaiseScrap, PackOps.RaiseCloth, 0, PackOps.RaiseTape)) return false;
+            SetPackTier(2);
+            GameplayFeedback.Toast(OutpostZero.Shell.Loc.T("camp.pack_t2"));
+            return true;
         }
 
         public bool TryAddItem(string id, string name, ItemCategory category, int count, float unitWeight)
         {
             float addedWeight = count * unitWeight;
-            if (currentWeight + addedWeight > maxWeightCapacity)
+            if (!PackOps.Fits(currentWeight, MaxWeightCapacity, addedWeight))
             {
                 Debug.LogWarning($"[PlayerInventory] Cannot add {name} - Exceeds weight capacity!");
                 return false;

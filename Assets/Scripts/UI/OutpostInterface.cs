@@ -874,6 +874,17 @@ namespace OutpostZero.UI
                 for (int i = 0; i < known.Length; i++) plans += "  " + Loc.T("print." + known[i]);
                 camp.Add(Body(plans));
             }
+            var leaderPack = PlayerRegistry.Current != null ? PlayerRegistry.Current.GetComponent<PlayerInventory>() : null;
+            int carriedTier = leaderPack != null ? leaderPack.PackTier : 1;
+            if (carriedTier >= 2) camp.Add(Body(Loc.T("camp.pack_t2")));
+            else if (bench && benchTier >= 2)
+            {
+                camp.Add(Button(Loc.T("camp.pack_raise") + "  " + PackOps.RaiseScrap + "  " + Loc.T("camp.cloth") + " " + PackOps.RaiseCloth + "  " + Loc.T("camp.tape") + " " + PackOps.RaiseTape, () =>
+                {
+                    int tierNow = GridBuilder.Instance != null ? GridBuilder.Instance.BenchTier() : 1;
+                    PlayerRegistry.Current?.GetComponent<PlayerInventory>()?.TryRaisePack(tierNow, ColonyStorage.Instance);
+                }));
+            }
             if (bench && benchTier >= 2) camp.Add(Body(Loc.T("camp.bench_t2")));
             else if (bench && GridBuilder.Instance.BenchOrdered()) camp.Add(Body(Loc.T("camp.bench_raise") + " " + GridBuilder.Instance.BenchWork() + "/" + CraftGate.Hours));
             else if (bench) camp.Add(Button(Loc.T("camp.bench_raise") + "  " + CraftGate.UpgradeScrap, () => GridBuilder.Instance.OrderBench()));

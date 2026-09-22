@@ -9,6 +9,29 @@ namespace OutpostZero.Items
         public const float ScrapWeight = 0.1f;
         public const float MedkitWeight = 0.5f;
         public const float HeavyLine = 0.9f;
+        public const float BaseLimit = 35f;
+        public const float RaisedLimit = 50f;
+        public const int RaiseScrap = 12;
+        public const int RaiseCloth = 3;
+        public const int RaiseTape = 1;
+
+        public static int Tier(int stored)
+        {
+            return stored >= 2 ? 2 : 1;
+        }
+
+        public static float Limit(int tier)
+        {
+            return Tier(tier) >= 2 ? RaisedLimit : BaseLimit;
+        }
+
+        public static bool CanRaise(int tier, int benchTier, int scrap, int cloth, int tape)
+        {
+            if (Tier(tier) >= 2) return false;
+            if (benchTier < 2) return false;
+            if (scrap < RaiseScrap || cloth < RaiseCloth || tape < RaiseTape) return false;
+            return true;
+        }
 
         public static float Weight(float itemWeight, int scrap, int medkits)
         {

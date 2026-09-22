@@ -53,6 +53,7 @@ namespace OutpostZero.Shell
         public int fuel;
         public int fuelSet;
         public int shots;
+        public int packTier;
         public string prints = "";
         public int kills;
         public int lifetimeKills;

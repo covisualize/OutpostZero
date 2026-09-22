@@ -1374,6 +1374,27 @@ namespace OutpostZero.Tests.EditMode
             Assert.AreEqual(0, PackOps.SplitOff(1));
             Assert.AreEqual(2, PackOps.SplitOff(5));
             Assert.AreEqual(2, PackOps.SplitOff(4));
+            Assert.AreEqual(1, PackOps.Tier(0));
+            Assert.AreEqual(1, PackOps.Tier(1));
+            Assert.AreEqual(2, PackOps.Tier(2));
+            Assert.AreEqual(35f, PackOps.Limit(0), 0.001f);
+            Assert.AreEqual(50f, PackOps.Limit(2), 0.001f);
+            Assert.IsTrue(PackOps.Fits(48f, PackOps.RaisedLimit, 2f));
+            Assert.IsFalse(PackOps.Fits(49f, PackOps.RaisedLimit, 2f));
+            Assert.IsTrue(PackOps.CanRaise(1, 2, 12, 3, 1));
+            Assert.IsFalse(PackOps.CanRaise(1, 1, 12, 3, 1));
+            Assert.IsFalse(PackOps.CanRaise(2, 2, 12, 3, 1));
+            Assert.IsFalse(PackOps.CanRaise(1, 2, 11, 3, 1));
+            Assert.IsFalse(PackOps.CanRaise(1, 2, 12, 2, 1));
+            Assert.IsFalse(PackOps.CanRaise(1, 2, 12, 3, 0));
+            var packSave = new SaveGameData { packTier = 2 };
+            Assert.IsTrue(SaveCodec.TryDeserialize(SaveCodec.Serialize(packSave), out var packLoaded, out var packError), packError);
+            Assert.AreEqual(2, packLoaded.packTier);
+            Assert.IsTrue(SaveCodec.TryDeserialize("{\"schemaVersion\":1}", out var packLegacy, out var packLegacyError), packLegacyError);
+            Assert.AreEqual(0, packLegacy.packTier);
+            Assert.AreEqual(1, PackOps.Tier(packLegacy.packTier));
+            Assert.AreEqual("La mochila carga 50", Loc.T("camp.pack_t2", "es"));
+            Assert.AreEqual("Mochila de campo", Loc.T("camp.pack_raise", "es"));
 
             var crate = new[]
             {
