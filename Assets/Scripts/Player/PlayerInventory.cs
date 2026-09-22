@@ -192,14 +192,19 @@ namespace OutpostZero.Player
             if (record.Id == "antibiotics")
             {
                 var fever = GetComponent<StatusEffectController>();
-                if (fever == null || !Affliction.AntibioticsWork(fever.InfectionStage))
+                bool street = fever != null && Affliction.AntibioticsWork(fever.InfectionStage);
+                var leader = SurvivorRoster.Instance != null ? SurvivorRoster.Instance.Leader : null;
+                bool camp = leader != null && WoundEase.Helps(leader.injury);
+                if (!street && !camp)
                 {
                     GameplayFeedback.Toast(FieldHand.Fail(null));
                     return false;
                 }
                 if (!TryConsume(id)) return false;
-                fever.CureInfection();
-                GameplayFeedback.Toast(FieldHand.Breaks(null));
+                if (street) fever.CureInfection();
+                bool eased = SurvivorRoster.Instance != null && SurvivorRoster.Instance.EaseLeader();
+                if (eased && !street) GameplayFeedback.Toast(WoundEase.Line(null));
+                else GameplayFeedback.Toast(WoundEase.Note(FieldHand.Breaks(null), eased, null));
                 return true;
             }
             if (record.Id == "painkillers")
@@ -233,14 +238,19 @@ namespace OutpostZero.Player
                 return true;
             }
             if (!TryConsume(id)) return false;
-            if (record.Id == "bandage") GetComponent<StatusEffectController>()?.StopBleed();
+            bool eased = false;
+            if (record.Id == "bandage")
+            {
+                GetComponent<StatusEffectController>()?.StopBleed();
+                eased = SurvivorRoster.Instance != null && SurvivorRoster.Instance.EaseLeader();
+            }
             if (record.Heal > 0) GetComponent<Combat.HealthSystem>()?.Heal(record.Heal);
             var needs = GetComponent<SurvivalNeeds>();
             if (record.Hunger > 0f) needs?.Eat(record.Hunger);
             if (record.Thirst > 0f) needs?.Drink(record.Thirst);
             if (RationNoise.Calls(record.Hunger, record.Thirst) && OutpostZero.Sensory.NoiseManager.Instance != null)
                 OutpostZero.Sensory.NoiseManager.Instance.EmitNoise(transform.position, RationNoise.Radius, RationNoise.Loud, NoiseType.RationBite, gameObject);
-            GameplayFeedback.Toast(FieldHand.Spent(record.Id, null));
+            GameplayFeedback.Toast(WoundEase.Note(FieldHand.Spent(record.Id, null), eased, null));
             return true;
         }
 
@@ -432,20 +442,26 @@ namespace OutpostZero.Player
 
         public int LastDoseSkill { get; private set; }
 
+        public bool LastEase { get; private set; }
+
         public bool UseMedkit()
         {
+            LastEase = false;
             if (medicalKits <= 0) return false;
 
             var health = GetComponent<Combat.HealthSystem>();
             var effects = GetComponent<StatusEffectController>();
             bool wounded = effects != null && (effects.IsBleeding || effects.IsInfected);
-            if (health != null && health.CurrentHealth >= health.MaxHealth && !wounded) return false;
+            var leader = SurvivorRoster.Instance != null ? SurvivorRoster.Instance.Leader : null;
+            bool camp = leader != null && WoundEase.Helps(leader.injury);
+            if (health != null && health.CurrentHealth >= health.MaxHealth && !wounded && !camp) return false;
 
             medicalKits--;
             LastDoseSkill = SurvivorRoster.LeaderPractice("Medic");
             health?.Heal(FieldHand.Medkit(LastDoseSkill) + HandDepth.Heal(LastDoseSkill));
             effects?.StopBleed();
             effects?.CureInfection();
+            LastEase = SurvivorRoster.Instance != null && SurvivorRoster.Instance.EaseLeader();
             RecalculateWeight();
             OnInventoryChanged?.Invoke();
             return true;

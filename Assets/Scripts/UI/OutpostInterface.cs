@@ -1089,7 +1089,11 @@ namespace OutpostZero.UI
                 medLabel.text = Loc.Item("medkit") + " x" + inventory.MedicalKits;
                 medLabel.style.flexGrow = 1;
                 medRow.Add(medLabel);
-                medRow.Add(Button(Loc.T("camp.use"), () => inventory.UseMedkit()));
+                medRow.Add(Button(Loc.T("camp.use"), () =>
+                {
+                    if (inventory.UseMedkit())
+                        GameplayFeedback.Toast(WoundEase.Note(FieldHand.Dose(inventory.LastDoseSkill, null), inventory.LastEase, null));
+                }));
                 medRow.Add(Button(Loc.T("camp.info"), () => Inspect("medkit")));
                 string medMark = inventory.BeltMark("medkit");
                 medRow.Add(Button(string.IsNullOrEmpty(medMark) ? Loc.T("camp.belt") : Loc.T("camp.belt") + " " + medMark, () => inventory.ToggleBelt("medkit")));

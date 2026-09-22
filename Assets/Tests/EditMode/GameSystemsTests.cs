@@ -5968,6 +5968,32 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void AStreetDoseEasesTheCampWoundAndAClearLeaderStaysClear()
+        {
+            Assert.IsFalse(WoundEase.Helps(0));
+            Assert.IsFalse(WoundEase.Helps(-1));
+            Assert.IsTrue(WoundEase.Helps(1));
+            Assert.IsTrue(WoundEase.Helps(3));
+            Assert.AreEqual(0, WoundEase.After(0));
+            Assert.AreEqual(0, WoundEase.After(-2));
+            Assert.AreEqual(0, WoundEase.After(1));
+            Assert.AreEqual(1, WoundEase.After(2));
+            Assert.AreEqual(2, WoundEase.After(3));
+            Assert.AreEqual("The wound eases", WoundEase.Line("en"));
+            Assert.AreEqual("La herida cede", WoundEase.Line("es"));
+            Assert.AreEqual("Kit", WoundEase.Note("Kit", false, "en"));
+            Assert.AreEqual("Kit  The wound eases", WoundEase.Note("Kit", true, "en"));
+            Assert.AreEqual("Kit  La herida cede", WoundEase.Note("Kit", true, "es"));
+            Assert.AreEqual("The wound eases", WoundEase.Note("", true, "en"));
+            Assert.AreEqual(50, FieldHand.Medkit(0));
+            Assert.IsFalse(Affliction.AntibioticsWork(0));
+            Assert.IsTrue(Affliction.AntibioticsWork(1));
+            Assert.IsTrue(Affliction.AntibioticsWork(2));
+            Assert.IsFalse(Affliction.AntibioticsWork(3));
+            Assert.AreEqual(1.12f, WoundSway.Bite, 0.001f);
+        }
+
+        [Test]
         public void AZombieWithoutARigStillAttacksAndFalls()
         {
             Assert.AreEqual(14f, PoseSheet.Lean(ZombieAI.ZombieState.Chase, 0f), 0.001f);

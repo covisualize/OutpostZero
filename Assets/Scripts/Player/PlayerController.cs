@@ -397,7 +397,7 @@ namespace OutpostZero.Player
             {
                 if (inventory != null && inventory.UseMedkit())
                 {
-                    GameplayFeedback.Toast(FieldHand.Dose(inventory.LastDoseSkill, null));
+                    GameplayFeedback.Toast(WoundEase.Note(FieldHand.Dose(inventory.LastDoseSkill, null), inventory.LastEase, null));
                     CodexDirector.Hear("medkit");
                 }
             }

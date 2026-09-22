@@ -273,6 +273,15 @@ namespace OutpostZero.Colony
             return true;
         }
 
+        public bool EaseLeader()
+        {
+            var leader = Leader;
+            if (leader == null || !WoundEase.Helps(leader.injury)) return false;
+            leader.injury = WoundEase.After(leader.injury);
+            OnRosterChanged?.Invoke();
+            return true;
+        }
+
         public void Recover(int index)
         {
             if (index < 0 || index >= corpses.Count) return;
