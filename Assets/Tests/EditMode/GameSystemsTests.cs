@@ -250,6 +250,38 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void NewGameSeedTakesNumbersWordsOrRandom()
+        {
+            Assert.IsFalse(NewGamePlan.TryParse(null, out _));
+            Assert.IsFalse(NewGamePlan.TryParse("   ", out _));
+            Assert.IsFalse(NewGamePlan.TryParse("Random", out _));
+            Assert.IsTrue(NewGamePlan.TryParse(" 42 ", out int number));
+            Assert.AreEqual(42, number);
+            Assert.IsTrue(NewGamePlan.TryParse("0", out int zero));
+            Assert.AreEqual(DistrictGenerator.DefaultSeed, zero);
+            Assert.IsTrue(NewGamePlan.TryParse("Ashfall", out int word));
+            Assert.IsTrue(NewGamePlan.TryParse("ashfall", out int same));
+            Assert.AreEqual(word, same);
+            Assert.IsTrue(NewGamePlan.TryParse("lantern", out int other));
+            Assert.AreNotEqual(word, other);
+            Assert.AreNotEqual(0, NewGamePlan.Camp(word));
+            Assert.AreNotEqual(NewGamePlan.Roll(1000), NewGamePlan.Roll(1001));
+            Assert.AreNotEqual(0, NewGamePlan.Roll(0));
+        }
+
+        [Test]
+        public void VersionFileFeedsTheMenuStamp()
+        {
+            string path = Path.Combine(Directory.GetCurrentDirectory(), "Assets", "Resources", "version.json");
+            Assert.IsTrue(File.Exists(path), path);
+            Assert.AreEqual(SceneRoute.Version, BuildStamp.Parse(File.ReadAllText(path)));
+            Assert.AreEqual("1.2.3", BuildStamp.Parse("{ \"version\" : \"1.2.3\" }"));
+            Assert.AreEqual(SceneRoute.Version, BuildStamp.Parse("not json"));
+            Assert.AreEqual(SceneRoute.Version, BuildStamp.Parse(null));
+            Assert.AreNotEqual(Loc.T("new.title", "en"), Loc.T("new.title", "es"));
+        }
+
+        [Test]
         public void KitAssemblesAnEnterableThreeStoreyBlock()
         {
             string path = Path.Combine(Directory.GetCurrentDirectory(), "Assets", "Resources", "KitCatalog.json");

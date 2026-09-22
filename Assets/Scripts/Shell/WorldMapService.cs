@@ -121,6 +121,11 @@ namespace OutpostZero.Shell
             worldSeed = DistrictGenerator.Resolve(worldSeed) + 17;
         }
 
+        public void SetSeed(int seed)
+        {
+            worldSeed = DistrictGenerator.Resolve(seed);
+        }
+
         public void SelectIndex(int index)
         {
             if (districts.Count == 0) Seed();

@@ -258,14 +258,24 @@ namespace OutpostZero.Core
 
         public void BeginNewOutpost()
         {
+            BeginNewOutpost(null);
+        }
+
+        public void BeginNewOutpost(string seedText)
+        {
             ObjectiveTracker.Instance?.ResetProgress();
             int next = SettingsService.Instance != null ? SettingsService.Instance.NextDifficulty : 2;
             WorldMapService.Instance?.ResetMap(next);
             int camp = System.Environment.TickCount;
             if (camp == 0) camp = DistrictGenerator.DefaultSeed + 3;
-            if (WorldMapService.Instance != null)
+            if (NewGamePlan.TryParse(seedText, out int fixedSeed))
             {
-                WorldMapService.Instance.RerollSeed();
+                WorldMapService.Instance?.SetSeed(fixedSeed);
+                camp = NewGamePlan.Camp(fixedSeed);
+            }
+            else if (WorldMapService.Instance != null)
+            {
+                WorldMapService.Instance.SetSeed(NewGamePlan.Roll(camp));
                 camp = WorldMapService.Instance.WorldSeed ^ camp;
             }
             SurvivorRoster.Instance?.ResetRoster(camp);

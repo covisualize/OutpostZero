@@ -55,6 +55,8 @@ namespace OutpostZero.UI
         private bool settingsWasOpen;
         private bool credits;
         private bool slotsOpen;
+        private bool newOpen;
+        private string seedText = "";
         private bool codexOpen;
         private string codexId = "";
         private string inspected = "";
@@ -464,7 +466,7 @@ namespace OutpostZero.UI
             string language = SettingsService.Instance != null ? SettingsService.Instance.Language : "en";
             string discrete = SettingsService.Instance != null ? SettingsService.Instance.DiscreteKey : "";
             string tradeKey = FactionTrade.Instance != null ? FactionTrade.Instance.Signature : "";
-            string nextMenu = state + "|" + settings + "|" + trade + "|" + language + "|" + discrete + "|" + ControlBindings.Signature() + "|" + PadBindings.Signature() + "|" + listening + "|" + padListen + "|" + credits + "|" + slotsOpen + "|" + codexOpen + "|" + codexId + "|" + tradeKey;
+            string nextMenu = state + "|" + settings + "|" + trade + "|" + language + "|" + discrete + "|" + ControlBindings.Signature() + "|" + PadBindings.Signature() + "|" + listening + "|" + padListen + "|" + credits + "|" + slotsOpen + "|" + newOpen + "|" + NewGameSignature() + "|" + codexOpen + "|" + codexId + "|" + tradeKey;
             if (nextMenu != menuKey)
             {
                 menuKey = nextMenu;
@@ -657,7 +659,7 @@ namespace OutpostZero.UI
                     if (credits)
                     {
                         menu.Add(Title(Loc.T("menu.credits")));
-                        menu.Add(Body(Loc.T("menu.brand") + " " + SceneRoute.Version));
+                        menu.Add(Body(Loc.T("menu.brand") + " " + BuildStamp.Version));
                         menu.Add(Body(Loc.T("menu.blurb")));
                         menu.Add(Body(Loc.T("menu.tones")));
                         menu.Add(Body(SoundCredit.Count + " " + Loc.T("menu.tones_n")));
@@ -669,16 +671,20 @@ namespace OutpostZero.UI
                         DrawSlots(menu);
                         break;
                     }
+                    if (newOpen)
+                    {
+                        DrawNewGame(menu);
+                        break;
+                    }
                     menu.Add(Title(Loc.T("menu.title")));
-                    menu.Add(Body(Loc.T("menu.version") + " " + SceneRoute.Version));
+                    menu.Add(Body(Loc.T("menu.version") + " " + BuildStamp.Version));
                     menu.Add(Button(Loc.T("menu.continue"), () => Go(FlowStep.Sanctuary, () =>
                     {
                         if (SaveSystem.Instance == null || !SaveSystem.Instance.Load())
                             GameManager.Instance.SetState(GameState.MainMenu);
                     })));
                     menu.Add(Button(Loc.T("menu.saves"), () => slotsOpen = true));
-                    menu.Add(Button(Loc.T("set.next") + " " + Loc.Difficulty(SettingsService.Instance != null ? SettingsService.Instance.NextDifficulty : 2), () => SettingsService.Instance?.CycleDifficulty()));
-                    menu.Add(Button(Loc.T("menu.new"), () => Go(FlowStep.Sanctuary, () => GameManager.Instance.BeginNewOutpost())));
+                    menu.Add(Button(Loc.T("menu.new"), () => newOpen = true));
                     menu.Add(Button(Loc.T("menu.settings"), () => SettingsService.Instance?.TogglePanel()));
                     menu.Add(Button(Loc.T("menu.credits"), () => credits = true));
                     menu.Add(Button(Loc.T("menu.skip"), () => TutorialDirector.Instance?.Dismiss()));
@@ -686,6 +692,33 @@ namespace OutpostZero.UI
                     break;
             }
             menu.style.display = menu.childCount > 0 ? DisplayStyle.Flex : DisplayStyle.None;
+        }
+
+        private static string NewGameSignature()
+        {
+            var settings = SettingsService.Instance;
+            return settings != null ? settings.NextDifficulty + ":" + settings.Merciful : "";
+        }
+
+        private void DrawNewGame(VisualElement menu)
+        {
+            var settings = SettingsService.Instance;
+            menu.Add(Title(Loc.T("new.title")));
+            menu.Add(Button(Loc.T("set.next") + " " + Loc.Difficulty(settings != null ? settings.NextDifficulty : 2), () => settings?.CycleDifficulty()));
+            if (settings != null) menu.Add(Button(settings.Merciful ? Loc.T("set.merciful") : Loc.T("set.perma"), settings.ToggleMerciful));
+            menu.Add(Body(Loc.T("new.seed")));
+            var seed = new TextField { value = seedText, maxLength = NewGamePlan.MaxLength };
+            seed.style.width = 260;
+            seed.style.marginBottom = 6;
+            seed.RegisterValueChangedCallback(evt => seedText = evt.newValue ?? "");
+            menu.Add(seed);
+            menu.Add(Button(Loc.T("new.start"), () =>
+            {
+                newOpen = false;
+                string chosen = seedText;
+                Go(FlowStep.Sanctuary, () => GameManager.Instance.BeginNewOutpost(chosen));
+            }));
+            menu.Add(Button(Loc.T("menu.back"), () => newOpen = false));
         }
 
         private void DrawHaul(VisualElement menu)
