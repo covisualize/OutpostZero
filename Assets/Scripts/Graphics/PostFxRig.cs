@@ -72,8 +72,15 @@ namespace OutpostZero.Graphics
             if (bloom == null) return;
             var budget = QualityProfile.For(tier);
             bool raid = GameManager.Instance != null && GameManager.Instance.CurrentState == GameState.RaidActive;
+            bool poisoned = false;
+            if (PlayerRegistry.Current != null)
+            {
+                var effects = PlayerRegistry.Current.GetComponent<OutpostZero.Player.StatusEffectController>();
+                poisoned = effects != null && effects.IsPoisoned;
+            }
+            bool motion = SettingsService.Instance != null && SettingsService.Instance.MotionBlur;
             bloom.intensity.Override(budget.Bloom);
-            vignette.intensity.Override(RaidGrade.Vignette(raid, tier));
+            vignette.intensity.Override(PoisonVeil.Shade(RaidGrade.Vignette(raid, tier), poisoned));
             grain.active = raid || budget.Grain;
             depth.active = aiming && budget.DepthOfField;
             if (color != null)
@@ -81,9 +88,14 @@ namespace OutpostZero.Graphics
                 float bright = SettingsService.Instance != null ? SettingsService.Instance.Brightness : 1f;
                 color.postExposure.Override(RaidGrade.Exposure(bright, raid));
                 RaidGrade.Filter(raid, out float red, out float green, out float blue);
+                PoisonVeil.Tint(poisoned, red, green, blue, out red, out green, out blue);
                 color.colorFilter.Override(new Color(red, green, blue));
             }
-            if (blur != null) blur.active = SettingsService.Instance != null && SettingsService.Instance.MotionBlur;
+            if (blur != null)
+            {
+                blur.active = PoisonVeil.Soft(poisoned, motion);
+                blur.intensity.Override(PoisonVeil.BlurOf(poisoned, motion));
+            }
         }
     }
 }

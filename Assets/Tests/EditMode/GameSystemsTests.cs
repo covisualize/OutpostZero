@@ -5463,6 +5463,33 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void PoisonClosesTheViewAndAClearBodyKeepsTheGrade()
+        {
+            Assert.AreEqual(0.28f, RaidGrade.Vignette(false, 1), 0.001f);
+            Assert.AreEqual(0.46f, RaidGrade.Vignette(true, 1), 0.001f);
+            Assert.AreEqual(0.28f, PoisonVeil.Shade(0.28f, false), 0.001f);
+            Assert.AreEqual(0.52f, PoisonVeil.Shade(0.28f, true), 0.001f);
+            Assert.AreEqual(0.7f, PoisonVeil.Shade(0.46f, true), 0.001f);
+            Assert.AreEqual(0.78f, PoisonVeil.Shade(0.62f, true), 0.001f);
+            Assert.AreEqual(0.24f, PoisonVeil.Shade(-1f, true), 0.001f);
+            Assert.IsFalse(PoisonVeil.Soft(false, false));
+            Assert.IsTrue(PoisonVeil.Soft(true, false));
+            Assert.IsTrue(PoisonVeil.Soft(false, true));
+            Assert.AreEqual(0f, PoisonVeil.BlurOf(false, false), 0.001f);
+            Assert.AreEqual(0.35f, PoisonVeil.BlurOf(false, true), 0.001f);
+            Assert.AreEqual(0.62f, PoisonVeil.BlurOf(true, false), 0.001f);
+            Assert.AreEqual(0.62f, PoisonVeil.BlurOf(true, true), 0.001f);
+            PoisonVeil.Tint(false, 1f, 0.96f, 0.9f, out float r, out float g, out float b);
+            Assert.AreEqual(1f, r, 0.001f);
+            Assert.AreEqual(0.96f, g, 0.001f);
+            Assert.AreEqual(0.9f, b, 0.001f);
+            PoisonVeil.Tint(true, 1f, 0.96f, 0.9f, out r, out g, out b);
+            Assert.AreEqual(0.72f, r, 0.001f);
+            Assert.AreEqual(0.912f, g, 0.001f);
+            Assert.AreEqual(0.558f, b, 0.001f);
+        }
+
+        [Test]
         public void AZombieWithoutARigStillAttacksAndFalls()
         {
             Assert.AreEqual(14f, PoseSheet.Lean(ZombieAI.ZombieState.Chase, 0f), 0.001f);
