@@ -238,6 +238,8 @@ namespace OutpostZero.Player
             var needs = GetComponent<SurvivalNeeds>();
             if (record.Hunger > 0f) needs?.Eat(record.Hunger);
             if (record.Thirst > 0f) needs?.Drink(record.Thirst);
+            if (RationNoise.Calls(record.Hunger, record.Thirst) && OutpostZero.Sensory.NoiseManager.Instance != null)
+                OutpostZero.Sensory.NoiseManager.Instance.EmitNoise(transform.position, RationNoise.Radius, RationNoise.Loud, NoiseType.RationBite, gameObject);
             GameplayFeedback.Toast("Used " + record.DisplayName);
             return true;
         }

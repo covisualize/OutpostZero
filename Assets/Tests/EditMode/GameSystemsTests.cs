@@ -4278,6 +4278,25 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void OpeningARationCallsAnythingClose()
+        {
+            Assert.IsTrue(RationNoise.Calls(12f, 0f));
+            Assert.IsTrue(RationNoise.Calls(0f, 20f));
+            Assert.IsFalse(RationNoise.Calls(0f, 0f));
+            Assert.IsFalse(RationNoise.Calls(-4f, 0f));
+            Assert.AreEqual(2.6f, RationNoise.Radius, 0.001f);
+            Assert.AreEqual(0.22f, RationNoise.Loud, 0.001f);
+            Assert.Greater(RationNoise.Radius, 2f);
+            Assert.Less(RationNoise.Radius, ShellRing.Radius);
+            Assert.AreEqual("[Bite, east]", Presentation.Caption(NoiseType.RationBite, 1f, 0f, "en"));
+            Assert.AreEqual("[Bocado, este]", Presentation.Caption(NoiseType.RationBite, 1f, 0f, "es"));
+            Assert.AreEqual("", Presentation.Caption(NoiseType.WalkFootstep, 1f, 0f, "en"));
+            Assert.IsTrue(ClipBook.Has("bite"));
+            Assert.AreEqual(6f, AudioSpace.MaxDistance("bite"), 0.001f);
+            Assert.IsFalse(StormCover.Masks(10f, 10.6f, NoiseType.RationBite));
+        }
+
+        [Test]
         public void StreetLampsFollowTheDarkAndNoonStaysOut()
         {
             Assert.AreEqual(0f, DayNightCycle.HourToNight(12f), 0.001f);

@@ -101,6 +101,7 @@ namespace OutpostZero.Graphics
             if (type == NoiseType.BleedDrip) return es ? "[Goteo, " + where + "]" : "[Drip, " + where + "]";
             if (type == NoiseType.DoorSwing) return es ? "[Puerta, " + where + "]" : "[Door, " + where + "]";
             if (type == NoiseType.ShellClink) return es ? "[Casquillo, " + where + "]" : "[Shell, " + where + "]";
+            if (type == NoiseType.RationBite) return es ? "[Bocado, " + where + "]" : "[Bite, " + where + "]";
             return "";
         }
     }
