@@ -52,5 +52,24 @@ namespace OutpostZero.Expedition
             if (Count == 2) return First + "\n" + Second;
             return First + "\n" + Second + "\n" + Third;
         }
+
+        public static string Show(string text, string language)
+        {
+            if (string.IsNullOrEmpty(text)) return "";
+            string[] lines = text.Split('\n');
+            for (int i = 0; i < lines.Length; i++) lines[i] = Face(lines[i], language);
+            return string.Join("\n", lines);
+        }
+
+        private static string Face(string name, string language)
+        {
+            string key = name == "Walker" ? "tape.walker"
+                : name == "Runner" ? "tape.runner"
+                : name == "Brute" ? "tape.brute"
+                : "";
+            if (key.Length == 0) return name ?? "";
+            if (string.IsNullOrEmpty(language)) return Shell.Loc.T(key);
+            return Shell.Loc.T(key, language);
+        }
     }
 }

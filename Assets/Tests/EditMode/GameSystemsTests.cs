@@ -4536,6 +4536,34 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void ALoadingCardAndAKillTapeFollowTheLanguage()
+        {
+            Assert.AreEqual("WAKING THE GATE", SceneRoute.Title(FlowStep.Boot));
+            Assert.AreEqual("THE SANCTUARY", SceneRoute.Title(FlowStep.Sanctuary, "en"));
+            Assert.AreEqual("INTO THE DISTRICT", SceneRoute.Title(FlowStep.Expedition, "en"));
+            Assert.AreEqual("BACK INSIDE", SceneRoute.Title(FlowStep.Results, "en"));
+            Assert.AreEqual("OUTPOST ZERO", SceneRoute.Title(FlowStep.MainMenu, "en"));
+            Assert.AreEqual("DESPERTANDO LA PUERTA", SceneRoute.Title(FlowStep.Boot, "es"));
+            Assert.AreEqual("EL SANTUARIO", SceneRoute.Title(FlowStep.Sanctuary, "es"));
+            Assert.AreEqual("AL DISTRITO", SceneRoute.Title(FlowStep.Expedition, "es"));
+            Assert.AreEqual("DE VUELTA DENTRO", SceneRoute.Title(FlowStep.Results, "es"));
+            Assert.AreEqual("OUTPOST ZERO", SceneRoute.Title(FlowStep.MainMenu, "es"));
+            Assert.AreEqual(SceneRoute.Tips[0], SceneRoute.Tip(FlowStep.Boot, 0));
+            Assert.AreEqual(SceneRoute.Tips[0], SceneRoute.Tip(FlowStep.Boot, 0, "en"));
+            Assert.AreEqual("El ruido llega más lejos que el disparo.", SceneRoute.Tip(FlowStep.Boot, 0, "es"));
+            Assert.AreEqual(SceneRoute.Tips[9], SceneRoute.Tip(FlowStep.Expedition, 0, "en"));
+            Assert.AreEqual("Los barriles de aceite, tóxicos y de pólvora encadenan si los rompes.", SceneRoute.Tip(FlowStep.Expedition, 0, "es"));
+            Assert.AreEqual("Walker", KillTape.Name("walker"));
+            Assert.AreEqual("Runner\nBrute\nWalker", KillTape.Show("Runner\nBrute\nWalker", "en"));
+            Assert.AreEqual("Corredor\nBruto\nCaminante", KillTape.Show("Runner\nBrute\nWalker", "es"));
+            Assert.AreEqual("Relay", KillTape.Show("Relay", "es"));
+            Assert.AreEqual("", KillTape.Show("", "es"));
+            Assert.AreEqual("Take Assault Rifle", FightSay.Lift("rifle_assault", "Assault Rifle", "en"));
+            Assert.AreEqual("Llevar Rifle de asalto", FightSay.Lift("rifle_assault", "Assault Rifle", "es"));
+            Assert.AreEqual("Take Tactical 9mm Pistol", FightSay.Lift("pistol_9mm", "", "en"));
+        }
+
+        [Test]
         public void StreetLampsFollowTheDarkAndNoonStaysOut()
         {
             Assert.AreEqual(0f, DayNightCycle.HourToNight(12f), 0.001f);

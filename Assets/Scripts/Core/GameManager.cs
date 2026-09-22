@@ -27,7 +27,7 @@ namespace OutpostZero.Core
         private Scene gameplayScene;
         private KillTape killTape;
 
-        public string KillFeed => killTape.Text();
+        public string KillFeed => KillTape.Show(killTape.Text(), null);
 
         public float ExpeditionTime => expeditionTimer;
         public int ZombiesKilled => zombiesKilled;

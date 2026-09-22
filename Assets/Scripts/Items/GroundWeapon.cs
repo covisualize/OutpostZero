@@ -20,7 +20,7 @@ namespace OutpostZero.Items
             {
                 var spec = WeaponCard.Find(weaponId);
                 string name = string.IsNullOrEmpty(spec.Name) ? weaponId : spec.Name;
-                return "Take " + name;
+                return FightSay.Lift(weaponId, name, null);
             }
         }
 

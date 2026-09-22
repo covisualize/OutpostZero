@@ -75,9 +75,9 @@ namespace OutpostZero.UI
         {
             if (veil == null) return;
             veil.style.display = DisplayStyle.Flex;
-            title.text = SceneRoute.Title(step);
+            title.text = SceneRoute.Title(step, null);
             int tipIndex = Mathf.FloorToInt(progress * 3f);
-            tip.text = SceneRoute.Tip(step, tipIndex);
+            tip.text = SceneRoute.Tip(step, tipIndex, null);
             progressLabel.text = Mathf.RoundToInt(progress * 100f) + "%";
             fill.style.width = Length.Percent(Mathf.Clamp01(progress) * 100f);
         }

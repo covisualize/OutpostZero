@@ -23,6 +23,12 @@ namespace OutpostZero.Combat
             return Word("fight.took", language) + " " + Gun(id, name, language);
         }
 
+        public static string Lift(string id, string name, string language)
+        {
+            string word = string.IsNullOrEmpty(language) ? Shell.Loc.T("camp.take") : Shell.Loc.T("camp.take", language);
+            return word + " " + Gun(id, name, language);
+        }
+
         public static string Gun(string id, string name, string language)
         {
             string key = "fight.gun." + (id ?? "").ToLowerInvariant();
