@@ -1950,6 +1950,26 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void AStorageCrateRaisesTheCampRoom()
+        {
+            Assert.AreEqual(80, CampRoom.Room(0));
+            Assert.AreEqual(160, CampRoom.Room(2));
+            Assert.AreEqual(80, CampRoom.Room(-1));
+            Assert.AreEqual(18, CampRoom.Bulk(4, 1, 1, 1, 1, 1));
+            Assert.AreEqual(0, CampRoom.Bulk(-3, 0, 0, 0, 0, 0));
+            Assert.AreEqual(10, CampRoom.Fit(70, CampRoom.Scrap, 20, 80));
+            Assert.AreEqual(0, CampRoom.Fit(80, CampRoom.Scrap, 5, 80));
+            Assert.AreEqual(1, CampRoom.Fit(76, CampRoom.Chemicals, 2, 80));
+            Assert.AreEqual(0, CampRoom.Fit(78, CampRoom.Chemicals, 1, 80));
+            Assert.AreEqual(0, CampRoom.Fit(0, CampRoom.Scrap, 0, 80));
+            Assert.AreEqual(0, CampRoom.Fit(0, 0, 5, 80));
+            Assert.AreEqual(10, GridBuilder.Cost(ModuleKind.Crate));
+            Assert.AreEqual("Crate", Loc.T("camp.crate"));
+            Assert.AreEqual("Caja", Loc.T("camp.crate", "es"));
+            Assert.AreEqual("Almacén", Loc.T("camp.room", "es"));
+        }
+
+        [Test]
         public void AFarmFeedsTheCampAfterThreeMornings()
         {
             var plots = new[]

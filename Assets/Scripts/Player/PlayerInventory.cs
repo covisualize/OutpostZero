@@ -204,9 +204,9 @@ namespace OutpostZero.Player
             bool moved = false;
             if (scrapCount > 0)
             {
-                storage.AddScrap(scrapCount);
-                scrapCount = 0;
-                moved = true;
+                int movedScrap = storage.AddScrap(scrapCount);
+                scrapCount -= movedScrap;
+                if (movedScrap > 0) moved = true;
             }
             if (DepositMaterial(storage, "cloth")) moved = true;
             if (DepositMaterial(storage, "chemicals")) moved = true;
@@ -221,10 +221,13 @@ namespace OutpostZero.Player
             var existing = items.Find(item => item.ItemId == id);
             if (existing == null || existing.Quantity <= 0) return false;
             int count = existing.Quantity;
-            items.Remove(existing);
-            if (id == "cloth") storage.AddCloth(count);
-            else if (id == "chemicals") storage.AddChemicals(count);
-            else storage.AddTape(count);
+            int moved;
+            if (id == "cloth") moved = storage.AddCloth(count);
+            else if (id == "chemicals") moved = storage.AddChemicals(count);
+            else moved = storage.AddTape(count);
+            if (moved <= 0) return false;
+            existing.Quantity -= moved;
+            if (existing.Quantity <= 0) items.Remove(existing);
             return true;
         }
 

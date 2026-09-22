@@ -23,6 +23,8 @@ namespace OutpostZero.Colony
         public int Cloth => cloth;
         public int Chemicals => chemicals;
         public int Tape => tape;
+        public int Used => CampRoom.Bulk(scrap, food, water, cloth, chemicals, tape);
+        public int Room => CampRoom.Room(GridBuilder.Instance != null ? GridBuilder.Instance.CountKind("Crate") : 0);
         public event Action OnStorageChanged;
 
         private void Awake()
@@ -35,13 +37,18 @@ namespace OutpostZero.Colony
             Instance = this;
         }
 
-        public void AddScrap(int amount) => Change(ref scrap, amount);
-        public void AddFood(int amount) => Change(ref food, amount);
-        public void AddWater(int amount) => Change(ref water, amount);
-        public void AddSecurity(int amount) => Change(ref security, amount);
-        public void AddCloth(int amount) => Change(ref cloth, amount);
-        public void AddChemicals(int amount) => Change(ref chemicals, amount);
-        public void AddTape(int amount) => Change(ref tape, amount);
+        public int AddScrap(int amount) => Admit(ref scrap, amount, CampRoom.Scrap);
+        public int AddFood(int amount) => Admit(ref food, amount, CampRoom.Food);
+        public int AddWater(int amount) => Admit(ref water, amount, CampRoom.Water);
+        public void AddSecurity(int amount) => Shift(ref security, amount);
+        public int AddCloth(int amount) => Admit(ref cloth, amount, CampRoom.Cloth);
+        public int AddChemicals(int amount) => Admit(ref chemicals, amount, CampRoom.Chemicals);
+        public int AddTape(int amount) => Admit(ref tape, amount, CampRoom.Tape);
+
+        public void RestoreScrap(int amount) => Shift(ref scrap, amount);
+        public void RestoreCloth(int amount) => Shift(ref cloth, amount);
+        public void RestoreChemicals(int amount) => Shift(ref chemicals, amount);
+        public void RestoreTape(int amount) => Shift(ref tape, amount);
 
         public bool TrySpendBill(int scrapDue, int clothNeed, int chemicalNeed, int tapeNeed)
         {
@@ -91,7 +98,22 @@ namespace OutpostZero.Colony
             OnStorageChanged?.Invoke();
         }
 
-        private void Change(ref int field, int amount)
+        private int Admit(ref int field, int amount, int unit)
+        {
+            if (amount <= 0)
+            {
+                Shift(ref field, amount);
+                return 0;
+            }
+            int take = CampRoom.Fit(Used, unit, amount, Room);
+            if (take < amount) GameplayFeedback.Toast("Stores are full");
+            if (take <= 0) return 0;
+            field += take;
+            OnStorageChanged?.Invoke();
+            return take;
+        }
+
+        private void Shift(ref int field, int amount)
         {
             field = Mathf.Max(0, field + amount);
             OnStorageChanged?.Invoke();

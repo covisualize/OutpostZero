@@ -756,6 +756,7 @@ namespace OutpostZero.UI
                 camp.Add(Body(Loc.T("camp.scrap") + " " + storage.Scrap + "  " + Loc.T("camp.food") + " " + storage.Food + "  " + Loc.T("camp.water") + " " + storage.Water
                     + "  " + Loc.T("camp.cloth") + " " + storage.Cloth + "  " + Loc.T("camp.chem") + " " + storage.Chemicals + "  " + Loc.T("camp.tape") + " " + storage.Tape
                     + "  " + (services != null && services.GeneratorOnline ? Loc.T("camp.gen_on") : Loc.T("camp.gen_off"))));
+                camp.Add(Body(Loc.T("camp.room") + " " + storage.Used + "/" + storage.Room));
             }
             var roster = SurvivorRoster.Instance;
             if (roster != null)
@@ -824,6 +825,7 @@ namespace OutpostZero.UI
             build.Add(Button(Loc.T("camp.turret"), () => GridBuilder.Instance?.Select(ModuleKind.Turret)));
             build.Add(Button(Loc.T("camp.spikes"), () => GridBuilder.Instance?.Select(ModuleKind.Spikes)));
             build.Add(Button(Loc.T("camp.oil"), () => GridBuilder.Instance?.Select(ModuleKind.Oil)));
+            build.Add(Button(Loc.T("camp.crate"), () => GridBuilder.Instance?.Select(ModuleKind.Crate)));
             if (GridBuilder.Instance != null)
             {
                 int sprout = -1;

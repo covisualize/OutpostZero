@@ -127,10 +127,10 @@ namespace OutpostZero.Colony
         {
             var storage = ColonyStorage.Instance;
             if (storage == null) return;
-            if (scrap > 0) storage.AddScrap(scrap);
-            if (bill.Cloth > 0) storage.AddCloth(bill.Cloth);
-            if (bill.Chemicals > 0) storage.AddChemicals(bill.Chemicals);
-            if (bill.Tape > 0) storage.AddTape(bill.Tape);
+            if (scrap > 0) storage.RestoreScrap(scrap);
+            if (bill.Cloth > 0) storage.RestoreCloth(bill.Cloth);
+            if (bill.Chemicals > 0) storage.RestoreChemicals(bill.Chemicals);
+            if (bill.Tape > 0) storage.RestoreTape(bill.Tape);
         }
 
         public static int Priced(int scrap, bool workbench) => CraftBill.ScrapDue(scrap, workbench);

@@ -22,7 +22,8 @@ namespace OutpostZero.Colony
         Purifier,
         Turret,
         Spikes,
-        Oil
+        Oil,
+        Crate
     }
 
     [Serializable]
@@ -112,7 +113,7 @@ namespace OutpostZero.Colony
             if (System.Enum.TryParse(target.kind, out ModuleKind kind)) refund = ScrapRefund.Half(Cost(kind));
             placed.Remove(target);
             RefreshViews();
-            if (refund > 0) ColonyStorage.Instance?.AddScrap(refund);
+            if (refund > 0) ColonyStorage.Instance?.RestoreScrap(refund);
             GameplayFeedback.Toast("Recovered " + refund + " scrap");
             return true;
         }
@@ -456,6 +457,7 @@ namespace OutpostZero.Colony
                 case ModuleKind.Turret: return 22;
                 case ModuleKind.Spikes: return 8;
                 case ModuleKind.Oil: return 9;
+                case ModuleKind.Crate: return 10;
                 default: return 6;
             }
         }
@@ -476,6 +478,7 @@ namespace OutpostZero.Colony
                 case "Turret": return new Vector3(0.45f, 1.5f, 0.45f);
                 case "Spikes": return new Vector3(1.6f, 0.08f, 1.6f);
                 case "Oil": return new Vector3(2.4f, 0.06f, 2.4f);
+                case "Crate": return new Vector3(1.1f, 0.9f, 0.8f);
                 default: return new Vector3(1.8f * health, 1.1f * Mathf.Lerp(0.35f, 1f, health), 0.4f);
             }
         }
@@ -495,6 +498,7 @@ namespace OutpostZero.Colony
                 case "Turret": return new Color(0.22f, 0.24f, 0.28f);
                 case "Spikes": return new Color(0.35f, 0.36f, 0.38f);
                 case "Oil": return new Color(0.12f, 0.1f, 0.08f);
+                case "Crate": return new Color(0.42f, 0.3f, 0.18f);
                 default: return new Color(0.48f, 0.42f, 0.32f);
             }
         }

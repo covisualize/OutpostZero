@@ -77,13 +77,13 @@ namespace OutpostZero.Colony
             var inventory = PlayerRegistry.Current != null ? PlayerRegistry.Current.GetComponent<PlayerInventory>() : null;
             if (record == null || inventory == null)
             {
-                ColonyStorage.Instance.AddScrap(price);
+                ColonyStorage.Instance.RestoreScrap(price);
                 return false;
             }
             if (record.Use == ItemUse.Ammo) inventory.GrantAmmoPublic(record.AmmoType, record.AmmoAmount);
             else if (!inventory.TryAddItem(record.Id, record.DisplayName, record.Category, 1, record.Weight))
             {
-                ColonyStorage.Instance.AddScrap(price);
+                ColonyStorage.Instance.RestoreScrap(price);
                 GameplayFeedback.Toast("The pack is full");
                 return false;
             }
@@ -102,9 +102,16 @@ namespace OutpostZero.Colony
                 return false;
             }
             int payout = Mathf.Max(1, Price("bandage") / 2);
-            ColonyStorage.Instance?.AddScrap(payout);
+            int stored = ColonyStorage.Instance != null ? ColonyStorage.Instance.AddScrap(payout) : 0;
+            if (stored <= 0)
+            {
+                var record = ItemCatalog.Find("bandage");
+                if (record != null) inventory.TryAddItem(record.Id, record.DisplayName, record.Category, 1, record.Weight);
+                GameplayFeedback.Toast("Stores are full");
+                return false;
+            }
             CaravanBook.Shift(standing, faction, 1);
-            GameplayFeedback.Toast("Bartered a bandage for " + payout + " scrap");
+            GameplayFeedback.Toast("Bartered a bandage for " + stored + " scrap");
             return true;
         }
 
