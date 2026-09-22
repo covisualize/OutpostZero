@@ -362,6 +362,17 @@ namespace OutpostZero.Colony
             return null;
         }
 
+        public bool Has(string id) => Find(id) != null;
+
+        public bool Adopt(string id, string name, string trait)
+        {
+            if (string.IsNullOrEmpty(id) || Has(id)) return false;
+            if (survivors.Count >= RescueBook.RosterCap) return false;
+            survivors.Add(Make(id, name, trait, false, "Found on the street"));
+            OnRosterChanged?.Invoke();
+            return true;
+        }
+
         public void Replace(List<Survivor> loaded)
         {
             survivors = loaded ?? new List<Survivor>();

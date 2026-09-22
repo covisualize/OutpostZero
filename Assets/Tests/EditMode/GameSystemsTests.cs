@@ -1166,5 +1166,36 @@ namespace OutpostZero.Tests.EditMode
             Assert.AreEqual(9, many[0].Day);
             Assert.AreEqual(2, many[many.Length - 1].Day);
         }
+
+        [Test]
+        public void AStrandedSurvivorFollowsToTheGateAndJoinsOnce()
+        {
+            var hospital = RescueBook.For("old_hospital");
+            Assert.AreEqual("rescue_hospital", hospital.Id);
+            Assert.AreEqual("Imani Cole", hospital.Name);
+            Assert.AreEqual("Field Medic", hospital.Trait);
+            Assert.AreEqual("Dell Orth", RescueBook.For("police_station").Name);
+            Assert.AreEqual("Nia Pell", RescueBook.For("mall").Name);
+            Assert.IsTrue(string.IsNullOrEmpty(RescueBook.For("ash_market").Id));
+
+            Assert.IsFalse(RescueBook.CanJoin("", null, 4));
+            Assert.IsFalse(RescueBook.CanJoin("mara", null, 4));
+            Assert.IsFalse(RescueBook.CanJoin("rescue_hospital", null, 8));
+            Assert.IsFalse(RescueBook.CanJoin("rescue_hospital", new[] { "rescue_hospital" }, 4));
+            Assert.IsTrue(RescueBook.CanJoin("rescue_hospital", null, 4));
+
+            RescueBook.Step(0f, 0f, 0f, 6f, 4f, 1f, out float stepX, out float stepZ);
+            Assert.AreEqual(0f, stepX, 0.001f);
+            Assert.AreEqual(4f, stepZ, 0.001f);
+            RescueBook.Step(0f, 4.8f, 0f, 6f, 4f, 1f, out float stayX, out float stayZ);
+            Assert.AreEqual(0f, stayX, 0.001f);
+            Assert.AreEqual(4.8f, stayZ, 0.001f);
+            RescueBook.Step(0f, 0f, 0f, 20f, 4f, 1f, out float snapX, out float snapZ);
+            Assert.AreEqual(0f, snapX, 0.001f);
+            Assert.AreEqual(17f, snapZ, 0.001f);
+
+            Assert.IsTrue(RescueBook.AtGate(3f, 0f, 0f, 0f, 3.2f));
+            Assert.IsFalse(RescueBook.AtGate(4f, 0f, 0f, 0f, 3.2f));
+        }
     }
 }

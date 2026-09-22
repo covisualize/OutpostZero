@@ -43,6 +43,7 @@ namespace OutpostZero.Expedition
             RaiseBlocks(blocks);
             ObjectiveTracker.Instance?.ExpectPoi(blocks.PoiRole);
             ExtractionZone.MoveTo(new Vector3(blocks.ExtractX, 0.5f, blocks.ExtractZ));
+            RaiseRescue(districtId, blocks);
             KitStructure.Raise(districtId, root);
             RaiseCaravan();
             StreetDetail.RaiseStreet(districtId, root);
@@ -89,6 +90,21 @@ namespace OutpostZero.Expedition
             var exitCollider = exit.GetComponent<Collider>();
             if (exitCollider != null) Destroy(exitCollider);
             Paint(exit.GetComponent<Renderer>(), new Color(0.25f, 0.75f, 0.45f));
+        }
+
+        private void RaiseRescue(string districtId, DistrictBlocks.Plan plan)
+        {
+            var offer = RescueBook.For(districtId);
+            if (string.IsNullOrEmpty(offer.Id)) return;
+            if (SurvivorRoster.Instance != null && SurvivorRoster.Instance.Has(offer.Id)) return;
+
+            var person = GameObject.CreatePrimitive(PrimitiveType.Capsule);
+            person.name = "Rescue_" + offer.Id;
+            person.transform.SetParent(root, false);
+            person.transform.position = new Vector3(plan.PoiX - 2f, 1f, plan.PoiZ);
+            person.layer = GameLayers.Interactable;
+            Paint(person.GetComponent<Renderer>(), new Color(0.72f, 0.48f, 0.28f));
+            person.AddComponent<RescueFollower>().Configure(offer.Id, offer.Name);
         }
 
         private static Color BlockTint(string footprint)
