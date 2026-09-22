@@ -114,6 +114,20 @@ namespace OutpostZero.AI
         public string WatchTarget => currentTarget != null ? currentTarget.name : "";
         public bool Posted => posted;
 
+        /// <summary>Enabled zombies that are not dead. Allocation-free, safe to read every frame.</summary>
+        public static int AliveCount()
+        {
+            int count = 0;
+            for (int i = 0; i < aliveCrowd.Count; i++)
+            {
+                var zombie = aliveCrowd[i];
+                if (zombie == null || zombie.currentState == ZombieState.Dead) continue;
+                if (zombie.healthSystem != null && zombie.healthSystem.IsDead) continue;
+                count++;
+            }
+            return count;
+        }
+
         public static int PostedCount()
         {
             int count = 0;

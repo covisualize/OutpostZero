@@ -92,7 +92,7 @@ Play this in a player build, not the editor. Use Survivor difficulty and a fixed
 - [ ] PRO-42 **Play**: three Walkers side by side look different, and their eyes show at night before their bodies do.
 - [ ] PRO-43 **Play**: follow, aim zoom and impulse shake feel right, and the camp overview camera works while placing modules.
 - [ ] PRO-44 **Automated** (no `OnGUI`) and **Play**: the HUD is readable at every resolution in section 5, with no per-frame GC from UI.
-- [ ] PRO-45 **Play**: under 300 draw calls at Medium in the busiest raid, as shown in the Frame Debugger.
+- [ ] PRO-45 **Automated** (`PerfTests`, category `Perf`, in the PlayMode CI job: 30 zombies on the street for 600 frames, median within the Medium 16.6 ms budget, p95 within twice that, no frame over 250 ms, at most 16 KB GC per frame; the `[Perf]` log line keeps the numbers) and **Play**: under 300 draw calls at Medium in the busiest raid, as shown in the Frame Debugger.
 
 ### M3: Artifacts and asset pipeline
 
@@ -100,7 +100,7 @@ Play this in a player build, not the editor. Use Survivor difficulty and a fixed
 - [ ] PRO-47 **Automated** (textures and UVs per manifest entry) and **Play**: the flashlight reveals normal detail on the sedan and the brick wall.
 - [ ] PRO-48 **Play**: every character imports as Humanoid with no avatar errors, all clips play without tearing, and the Walker still shambles.
 - [ ] PRO-49 **Automated** (a kit assembles an enterable three-storey block) and **Play**: the storefront and warehouse interiors can be entered.
-- [ ] PRO-50 **Automated** (every item has a definition, prefab and icon) and **Play**: icons render in the pack.
+- [ ] PRO-50 **Automated** (`ItemDatabaseTests`: every item has a definition, FBX, prefab and 64 px rendered icon, all linked; `ItemDatabase.Get("ammo_9mm")`) and **Play**: icons render in the pack and a dropped item lands as its model, not a cube.
 - [ ] PRO-51 **Automated** (the scene builder has no FBX paths, and every builder id has a prefab) and **Play**: reimporting an FBX regenerates its prefab, and zombies and loot spawn from prefabs.
 - [ ] PRO-52 **Play**: deleting a texture or renaming an FBX turns CI red with a clear message, and the suite runs in under 60 s.
 - [ ] PRO-53 **Play**: pushing a `v*` tag produces three zips that launch to the menu, and the version in the menu matches the tag.
