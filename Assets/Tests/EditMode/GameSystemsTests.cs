@@ -49,6 +49,36 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void ScreenStackPopsInnermostFirst()
+        {
+            var stack = new ScreenStack();
+            Assert.AreEqual(MenuScreen.None, stack.Top);
+            Assert.AreEqual(MenuScreen.None, stack.Pop());
+            stack.Push(MenuScreen.Codex);
+            stack.Push(MenuScreen.Codex);
+            stack.Push(MenuScreen.None);
+            Assert.AreEqual(1, stack.Depth);
+            stack.Push(MenuScreen.CodexEntry);
+            Assert.AreEqual("Codex>CodexEntry", stack.Signature());
+            Assert.AreEqual(MenuScreen.CodexEntry, stack.Pop());
+            Assert.AreEqual(MenuScreen.Codex, stack.Top);
+            Assert.IsTrue(stack.Contains(MenuScreen.Codex));
+            stack.Clear();
+            Assert.AreEqual("", stack.Signature());
+        }
+
+        [Test]
+        public void BackClosesOverlaysBeforeTogglingPause()
+        {
+            Assert.AreEqual(BackAction.CloseSettings, BackRoute.For(true, true, 2, true));
+            Assert.AreEqual(BackAction.CloseTrade, BackRoute.For(false, true, 2, true));
+            Assert.AreEqual(BackAction.Pop, BackRoute.For(false, false, 1, true));
+            Assert.AreEqual(BackAction.Pop, BackRoute.For(false, false, 1, false));
+            Assert.AreEqual(BackAction.TogglePause, BackRoute.For(false, false, 0, true));
+            Assert.AreEqual(BackAction.None, BackRoute.For(false, false, 0, false));
+        }
+
+        [Test]
         public void ExpeditionEndRoutesTheFlow()
         {
             Assert.AreEqual(FlowStep.Results, ExpeditionLedger.After(ExpeditionEnd.Extracted));

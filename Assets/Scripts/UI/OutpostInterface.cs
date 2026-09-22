@@ -53,17 +53,16 @@ namespace OutpostZero.UI
         private int padListen = -1;
         private string settingsBaseline = "";
         private bool settingsWasOpen;
-        private bool credits;
-        private bool slotsOpen;
-        private bool newOpen;
+        private readonly ScreenStack screens = new ScreenStack();
+        private GameState screensState = GameState.MainMenu;
         private string seedText = "";
-        private bool codexOpen;
         private string codexId = "";
         private string inspected = "";
 
         private void Update()
         {
             if (ExpeditionInput.WatchPressed) AiWatch.Toggle();
+            if (listening < 0 && padListen < 0 && ExpeditionInput.PausePressed) Back();
 
             if (padListen >= 0)
             {
@@ -458,6 +457,12 @@ namespace OutpostZero.UI
             var shell = FindFirstObjectByType<GameShellUI>();
             bool inventory = shell != null && shell.InventoryOpen;
             var state = GameManager.Instance != null ? GameManager.Instance.CurrentState : GameState.ExpeditionActive;
+            if (state != screensState)
+            {
+                screensState = state;
+                screens.Clear();
+                codexId = "";
+            }
             bool settings = SettingsService.Instance != null && SettingsService.Instance.ShowSettings;
             if (settings && !settingsWasOpen) settingsBaseline = SettingsService.Instance.ExportSettings();
             if (!settings) settingsBaseline = "";
@@ -466,7 +471,7 @@ namespace OutpostZero.UI
             string language = SettingsService.Instance != null ? SettingsService.Instance.Language : "en";
             string discrete = SettingsService.Instance != null ? SettingsService.Instance.DiscreteKey : "";
             string tradeKey = FactionTrade.Instance != null ? FactionTrade.Instance.Signature : "";
-            string nextMenu = state + "|" + settings + "|" + trade + "|" + language + "|" + discrete + "|" + ControlBindings.Signature() + "|" + PadBindings.Signature() + "|" + listening + "|" + padListen + "|" + credits + "|" + slotsOpen + "|" + newOpen + "|" + NewGameSignature() + "|" + codexOpen + "|" + codexId + "|" + tradeKey;
+            string nextMenu = state + "|" + settings + "|" + trade + "|" + language + "|" + discrete + "|" + ControlBindings.Signature() + "|" + PadBindings.Signature() + "|" + listening + "|" + padListen + "|" + screens.Signature() + "|" + NewGameSignature() + "|" + codexId + "|" + tradeKey;
             if (nextMenu != menuKey)
             {
                 menuKey = nextMenu;
@@ -490,6 +495,46 @@ namespace OutpostZero.UI
             DrawPopups();
         }
 
+        private void Back()
+        {
+            var gm = GameManager.Instance;
+            var state = gm != null ? gm.CurrentState : GameState.ExpeditionActive;
+            bool settings = SettingsService.Instance != null && SettingsService.Instance.ShowSettings;
+            bool trade = FactionTrade.Instance != null && FactionTrade.Instance.Open;
+            bool pausable = gm != null && (state == GameState.Paused || state == GameState.ExpeditionActive || state == GameState.RaidActive || state == GameState.CampManagement);
+            switch (BackRoute.For(settings, trade, screens.Depth, pausable))
+            {
+                case BackAction.CloseSettings:
+                    SettingsService.Instance.TogglePanel();
+                    break;
+                case BackAction.CloseTrade:
+                    FactionTrade.Instance.Toggle();
+                    break;
+                case BackAction.Pop:
+                    if (screens.Pop() == MenuScreen.CodexEntry) codexId = "";
+                    break;
+                case BackAction.TogglePause:
+                    gm.TogglePause();
+                    break;
+            }
+        }
+
+        private void Open(MenuScreen screen) => screens.Push(screen);
+
+        private void Close()
+        {
+            if (screens.Pop() == MenuScreen.CodexEntry) codexId = "";
+        }
+
+        private static void Quit()
+        {
+#if UNITY_EDITOR
+            UnityEditor.EditorApplication.isPlaying = false;
+#else
+            Application.Quit();
+#endif
+        }
+
         private void DrawCodex(VisualElement parent)
         {
             string packed = CodexDirector.Instance != null ? CodexDirector.Instance.Packed : "";
@@ -502,7 +547,7 @@ namespace OutpostZero.UI
                 }
                 parent.Add(Title(selected != null && CodexBook.Visible(selected, packed) ? Loc.EntryTitle(selected.Id, selected.Title) : Loc.T("camp.unknown")));
                 parent.Add(Body(selected != null && CodexBook.Visible(selected, packed) ? Loc.EntryBody(selected.Id, selected.Body) : Loc.T("camp.unseen")));
-                parent.Add(Button(Loc.T("menu.back"), () => codexId = ""));
+                parent.Add(Button(Loc.T("menu.back"), Close));
                 return;
             }
             parent.Add(Title(Loc.T("menu.codex")));
@@ -511,9 +556,9 @@ namespace OutpostZero.UI
                 var entry = CodexBook.Entries[i];
                 string id = entry.Id;
                 bool visible = CodexBook.Visible(entry, packed);
-                parent.Add(Button(visible ? Loc.EntryTitle(entry.Id, entry.Title) : Loc.T("camp.unknown"), () => codexId = id));
+                parent.Add(Button(visible ? Loc.EntryTitle(entry.Id, entry.Title) : Loc.T("camp.unknown"), () => { codexId = id; Open(MenuScreen.CodexEntry); }));
             }
-            parent.Add(Button(Loc.T("set.close"), () => codexOpen = false));
+            parent.Add(Button(Loc.T("set.close"), Close));
         }
 
         private static void Go(FlowStep step, System.Action arrived)
@@ -593,20 +638,29 @@ namespace OutpostZero.UI
             switch (state)
             {
                 case GameState.Paused:
-                    if (codexOpen)
+                    if (screens.Top == MenuScreen.Codex || screens.Top == MenuScreen.CodexEntry)
                     {
                         DrawCodex(menu);
                         break;
                     }
                     menu.Add(Title(Loc.T("menu.pause")));
                     menu.Add(Button(Loc.T("menu.resume"), () => GameManager.Instance.TogglePause()));
+                    menu.Add(Button(Loc.T("menu.settings"), () => SettingsService.Instance?.TogglePanel()));
                     menu.Add(Button(Loc.T("menu.save"), () => SaveSystem.Instance?.Save()));
-                    menu.Add(Button(Loc.T("menu.codex"), () => { codexOpen = true; codexId = ""; }));
+                    menu.Add(Button(Loc.T("menu.codex"), () => { codexId = ""; Open(MenuScreen.Codex); }));
                     menu.Add(Button(Loc.T("menu.skip"), () => TutorialDirector.Instance?.Dismiss()));
                     menu.Add(Button(Loc.T("menu.camp"), () => Go(FlowStep.Sanctuary, () => GameManager.Instance.EnterCamp())));
-                    menu.Add(Button(Loc.T("menu.settings"), () => SettingsService.Instance?.TogglePanel()));
-                    menu.Add(Button(Loc.T("menu.main"), () => Go(FlowStep.MainMenu, () => GameManager.Instance.SetState(GameState.MainMenu))));
                     menu.Add(Button(Loc.T("menu.restart"), () => Go(FlowStep.Boot, () => GameManager.Instance.ReturnToBoot())));
+                    menu.Add(Button(Loc.T("menu.save_quit"), () =>
+                    {
+                        SaveSystem.Instance?.Save();
+                        Go(FlowStep.MainMenu, () => GameManager.Instance.SetState(GameState.MainMenu));
+                    }));
+                    menu.Add(Button(Loc.T("menu.quit"), () =>
+                    {
+                        SaveSystem.Instance?.Save();
+                        Quit();
+                    }));
                     break;
                 case GameState.SuccessionScreen:
                     menu.Add(Title(Loc.T("menu.leader")));
@@ -656,22 +710,22 @@ namespace OutpostZero.UI
                     menu.Add(Button(Loc.T("menu.new"), () => Go(FlowStep.Sanctuary, () => GameManager.Instance.BeginNewOutpost())));
                     break;
                 case GameState.MainMenu:
-                    if (credits)
+                    if (screens.Top == MenuScreen.Credits)
                     {
                         menu.Add(Title(Loc.T("menu.credits")));
                         menu.Add(Body(Loc.T("menu.brand") + " " + BuildStamp.Version));
                         menu.Add(Body(Loc.T("menu.blurb")));
                         menu.Add(Body(Loc.T("menu.tones")));
                         menu.Add(Body(SoundCredit.Count + " " + Loc.T("menu.tones_n")));
-                        menu.Add(Button(Loc.T("menu.back"), () => credits = false));
+                        menu.Add(Button(Loc.T("menu.back"), Close));
                         break;
                     }
-                    if (slotsOpen)
+                    if (screens.Top == MenuScreen.Saves)
                     {
                         DrawSlots(menu);
                         break;
                     }
-                    if (newOpen)
+                    if (screens.Top == MenuScreen.NewGame)
                     {
                         DrawNewGame(menu);
                         break;
@@ -683,12 +737,13 @@ namespace OutpostZero.UI
                         if (SaveSystem.Instance == null || !SaveSystem.Instance.Load())
                             GameManager.Instance.SetState(GameState.MainMenu);
                     })));
-                    menu.Add(Button(Loc.T("menu.saves"), () => slotsOpen = true));
-                    menu.Add(Button(Loc.T("menu.new"), () => newOpen = true));
+                    menu.Add(Button(Loc.T("menu.saves"), () => Open(MenuScreen.Saves)));
+                    menu.Add(Button(Loc.T("menu.new"), () => Open(MenuScreen.NewGame)));
                     menu.Add(Button(Loc.T("menu.settings"), () => SettingsService.Instance?.TogglePanel()));
-                    menu.Add(Button(Loc.T("menu.credits"), () => credits = true));
+                    menu.Add(Button(Loc.T("menu.credits"), () => Open(MenuScreen.Credits)));
                     menu.Add(Button(Loc.T("menu.skip"), () => TutorialDirector.Instance?.Dismiss()));
                     menu.Add(Button(Loc.T("menu.street"), () => Go(FlowStep.Expedition, () => GameManager.Instance.BeginExpedition())));
+                    menu.Add(Button(Loc.T("menu.quit"), Quit));
                     break;
             }
             menu.style.display = menu.childCount > 0 ? DisplayStyle.Flex : DisplayStyle.None;
@@ -714,11 +769,11 @@ namespace OutpostZero.UI
             menu.Add(seed);
             menu.Add(Button(Loc.T("new.start"), () =>
             {
-                newOpen = false;
+                screens.Clear();
                 string chosen = seedText;
                 Go(FlowStep.Sanctuary, () => GameManager.Instance.BeginNewOutpost(chosen));
             }));
-            menu.Add(Button(Loc.T("menu.back"), () => newOpen = false));
+            menu.Add(Button(Loc.T("menu.back"), Close));
         }
 
         private void DrawHaul(VisualElement menu)
@@ -1235,7 +1290,7 @@ namespace OutpostZero.UI
                 string label = MenuLine.Slot(i + 1, card.Day, card.Leader, card.Occupied, null);
                 menu.Add(Button(label, () =>
                 {
-                    slotsOpen = false;
+                    screens.Clear();
                     if (card.Occupied)
                     {
                         Go(FlowStep.Sanctuary, () =>
@@ -1260,7 +1315,7 @@ namespace OutpostZero.UI
             {
                 menu.Add(Button(MenuLine.Auto(auto.Day, auto.Leader, null), () =>
                 {
-                    slotsOpen = false;
+                    screens.Clear();
                     Go(FlowStep.Sanctuary, () =>
                     {
                         if (SaveSystem.Instance == null || !SaveSystem.Instance.LoadSlot(SaveSlots.AutoSlot))
@@ -1268,7 +1323,7 @@ namespace OutpostZero.UI
                     });
                 }));
             }
-            menu.Add(Button("Back", () => slotsOpen = false));
+            menu.Add(Button(Loc.T("menu.back"), Close));
         }
 
         private static string StormNote(CampServices services)

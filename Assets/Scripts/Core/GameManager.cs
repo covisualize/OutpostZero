@@ -87,11 +87,6 @@ namespace OutpostZero.Core
             {
                 expeditionTimer += Time.deltaTime;
             }
-
-            if (ExpeditionInput.PausePressed)
-            {
-                TogglePause();
-            }
         }
 
         public void SetState(GameState newState)
