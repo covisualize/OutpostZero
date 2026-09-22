@@ -110,6 +110,11 @@ namespace OutpostZero.Player
                 LaunchFlare();
                 return;
             }
+            if (inventory != null && inventory.TryConsume("pipe_bomb"))
+            {
+                LaunchBomb();
+                return;
+            }
             GameplayFeedback.Toast("No throwable");
         }
 
@@ -137,12 +142,25 @@ namespace OutpostZero.Player
             body.AddForce(transform.forward * ThrowArc.Forward + Vector3.up * ThrowArc.Lift, ForceMode.VelocityChange);
             lure.AddComponent<ThrownHazard>().ConfigureFlare();
         }
+
+        private void LaunchBomb()
+        {
+            var lure = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            lure.name = "PipeBomb";
+            lure.transform.position = transform.position + Vector3.up * 1.4f + transform.forward;
+            lure.transform.localScale = Vector3.one * 0.22f;
+            var body = lure.AddComponent<Rigidbody>();
+            body.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
+            body.AddForce(transform.forward * ThrowArc.Forward + Vector3.up * ThrowArc.Lift, ForceMode.VelocityChange);
+            lure.AddComponent<ThrownHazard>().ConfigureBomb();
+        }
     }
 
     public class ThrownHazard : MonoBehaviour
     {
         [SerializeField] private bool molotov;
         [SerializeField] private bool flare;
+        [SerializeField] private bool bomb;
         private bool popped;
         private float age = -1f;
 
@@ -150,9 +168,11 @@ namespace OutpostZero.Player
 
         public void ConfigureFlare() => flare = true;
 
+        public void ConfigureBomb() => bomb = true;
+
         private void Start()
         {
-            Invoke(nameof(Pop), flare ? 0.8f : molotov ? 1.1f : 0.7f);
+            Invoke(nameof(Pop), bomb ? PipeBlast.Fuse : flare ? 0.8f : molotov ? 1.1f : 0.7f);
         }
 
         private void Update()
@@ -179,6 +199,27 @@ namespace OutpostZero.Player
         {
             if (popped) return;
             popped = true;
+            if (bomb)
+            {
+                Vector3 blast = transform.position;
+                if (Sensory.NoiseManager.Instance != null)
+                {
+                    Sensory.NoiseManager.Instance.EmitNoise(blast, PipeBlast.Noise, 1f, NoiseType.Explosion, gameObject);
+                }
+                Collider[] caught = Physics.OverlapSphere(blast, PipeBlast.Radius);
+                foreach (var hit in caught)
+                {
+                    var damageable = hit.GetComponentInParent<IDamageable>();
+                    if (damageable != null && !damageable.IsDead)
+                    {
+                        damageable.TakeDamage(PipeBlast.Damage, hit.bounds.center, (hit.transform.position - blast).normalized, gameObject);
+                    }
+                }
+                CombatEvents.RaiseHit(blast, Vector3.up, gameObject);
+                GameplayFeedback.Toast("Pipe bomb burst");
+                Destroy(gameObject);
+                return;
+            }
             if (flare)
             {
                 age = 0f;

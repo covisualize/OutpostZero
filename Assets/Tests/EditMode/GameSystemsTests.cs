@@ -100,6 +100,8 @@ namespace OutpostZero.Tests.EditMode
             Assert.AreEqual("Botiquín", Loc.Item("medkit", "es"));
             Assert.AreEqual("Flare", Loc.Item("flare"));
             Assert.AreEqual("Bengala", Loc.Item("flare", "es"));
+            Assert.AreEqual("Pipe Bomb", Loc.Item("pipe_bomb"));
+            Assert.AreEqual("Bomba de tubo", Loc.Item("pipe_bomb", "es"));
             Assert.AreEqual("Ash Market", Loc.District("ash_market"));
             Assert.AreEqual("Mercado de ceniza", Loc.District("ash_market", "es"));
             Assert.AreEqual("Rest", Loc.Task("Rest"));
@@ -1918,6 +1920,33 @@ namespace OutpostZero.Tests.EditMode
             Assert.IsFalse(FlareClock.PulseDue(19.9f, 20.1f));
             Assert.AreEqual(ItemUse.Flare, ItemCatalog.Find("flare").Use);
             Assert.AreEqual("Pulls a search for 20s", ItemBrief.Effect(ItemCatalog.Find("flare")));
+        }
+
+        [Test]
+        public void APipeBombBlastsAnyoneInsideTheRadius()
+        {
+            Assert.IsTrue(PipeBlast.Inside(0f));
+            Assert.IsTrue(PipeBlast.Inside(4.2f));
+            Assert.IsFalse(PipeBlast.Inside(4.21f));
+            Assert.IsTrue(PipeBlast.Inside(-1f));
+            Assert.AreEqual(42f, PipeBlast.Damage, 0.001f);
+            Assert.AreEqual(24f, PipeBlast.Noise, 0.001f);
+            Assert.AreEqual(1.2f, PipeBlast.Fuse, 0.001f);
+            Assert.AreEqual(ItemUse.Bomb, ItemCatalog.Find("pipe_bomb").Use);
+            Assert.AreEqual(0.8f, ItemCatalog.Find("pipe_bomb").Weight, 0.001f);
+            Assert.AreEqual("Blast on impact", ItemBrief.Effect(ItemCatalog.Find("pipe_bomb")));
+            Assert.AreEqual("Estalla al impacto", Loc.T("unit.pipe_bomb", "es"));
+            Assert.IsTrue(CraftBill.TryOf("pipe_bomb", out var bill));
+            Assert.AreEqual(8, bill.Scrap);
+            Assert.AreEqual(0, bill.Cloth);
+            Assert.AreEqual(1, bill.Chemicals);
+            Assert.AreEqual(1, bill.Tape);
+            Assert.AreEqual(CraftBill.Workbench, bill.Station);
+            Assert.AreEqual("", bill.Skill);
+            Assert.AreEqual(7, CraftBill.ScrapDue(bill.Scrap, true));
+            var street = LootTables.Roll("street", 2);
+            Assert.AreEqual(6, street.Length);
+            Assert.AreEqual("pipe_bomb", street[5].ItemId);
         }
 
         [Test]
