@@ -233,7 +233,7 @@ namespace OutpostZero.Colony
                 return 0;
             }
             int take = CampRoom.Fit(Used, unit, amount, Room);
-            if (take < amount) GameplayFeedback.Toast("Stores are full");
+            if (take < amount) GameplayFeedback.Toast(YardSay.Stores(null));
             if (take <= 0) return 0;
             field += take;
             OnStorageChanged?.Invoke();

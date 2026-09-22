@@ -114,7 +114,7 @@ namespace OutpostZero.Colony
             {
                 var record = ItemCatalog.Find("bandage");
                 if (record != null) inventory.TryAddItem(record.Id, record.DisplayName, record.Category, 1, record.Weight);
-                GameplayFeedback.Toast("Stores are full");
+                GameplayFeedback.Toast(YardSay.Stores(null));
                 return false;
             }
             CaravanBook.Shift(standing, faction, 1);

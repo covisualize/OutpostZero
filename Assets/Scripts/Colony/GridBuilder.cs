@@ -81,14 +81,14 @@ namespace OutpostZero.Colony
             if (Player.ExpeditionInput.BuildPressed)
             {
                 buildMode = !buildMode;
-                GameplayFeedback.Toast(buildMode ? "Build mode: click the yard" : "Build mode off");
+                GameplayFeedback.Toast(YardSay.Mode(buildMode, null));
             }
             if (!buildMode) return;
             var keyboard = UnityEngine.InputSystem.Keyboard.current;
             if (keyboard != null && keyboard.rKey.wasPressedThisFrame)
             {
                 facing = ScrapRefund.Turn(facing);
-                GameplayFeedback.Toast("Facing " + facing);
+                GameplayFeedback.Toast(YardSay.Facing(facing, null));
             }
             if (Player.ExpeditionInput.Pointer.x > Screen.width - 400f) return;
             if (PointerRight()) TryDemolishAtPointer();
@@ -123,7 +123,7 @@ namespace OutpostZero.Colony
             placed.Remove(target);
             RefreshViews();
             if (refund > 0) ColonyStorage.Instance?.RestoreScrap(refund);
-            GameplayFeedback.Toast("Recovered " + refund + " scrap");
+            GameplayFeedback.Toast(YardSay.Recovered(refund, null));
             return true;
         }
 
@@ -173,20 +173,20 @@ namespace OutpostZero.Colony
             float z = Mathf.Round(world.z / cell) * cell;
             if (Occupied(placed, x, z))
             {
-                GameplayFeedback.Toast("That square is taken");
+                GameplayFeedback.Toast(YardSay.Taken(null));
                 return false;
             }
 
             int cost = Cost(kind);
             if (ColonyStorage.Instance == null || !ColonyStorage.Instance.TrySpendScrap(cost))
             {
-                GameplayFeedback.Toast("Need " + cost + " camp scrap");
+                GameplayFeedback.Toast(YardSay.Need(cost, null));
                 return false;
             }
             var record = new PlacedModule { kind = kind.ToString(), x = x, z = z, rotation = facing, integrity = 100, site = 1 };
             placed.Add(record);
             SpawnView(record);
-            GameplayFeedback.Toast("Site marked " + kind);
+            GameplayFeedback.Toast(YardSay.Marked(kind.ToString(), null));
             return true;
         }
 
@@ -200,7 +200,7 @@ namespace OutpostZero.Colony
                 module.site = nextSite;
                 module.hours = nextHours;
                 RefreshViews();
-                if (finished) GameplayFeedback.Toast(module.kind + " is up");
+                if (finished) GameplayFeedback.Toast(YardSay.Up(module.kind, null));
                 return true;
             }
             return false;
@@ -223,7 +223,7 @@ namespace OutpostZero.Colony
             bool whole = next >= 100;
             module.integrity = next;
             RefreshViews();
-            GameplayFeedback.Toast((whole ? "Patched " : "Mended ") + module.kind);
+            GameplayFeedback.Toast(YardSay.Mend(module.kind, whole, null));
             return true;
         }
 
@@ -431,7 +431,7 @@ namespace OutpostZero.Colony
             }
             placed.Remove(target);
             RefreshViews();
-            GameplayFeedback.Toast("A barricade gave way");
+            GameplayFeedback.Toast(YardSay.Barricade(null));
             return true;
         }
 
@@ -459,7 +459,7 @@ namespace OutpostZero.Colony
             }
             placed.Remove(target);
             RefreshViews();
-            GameplayFeedback.Toast("A barricade gave way");
+            GameplayFeedback.Toast(YardSay.Barricade(null));
             return true;
         }
 
@@ -531,7 +531,7 @@ namespace OutpostZero.Colony
             }
             placed.Remove(module);
             RefreshViews();
-            GameplayFeedback.Toast("The spikes broke");
+            GameplayFeedback.Toast(YardSay.Spikes(null));
             return true;
         }
 
@@ -549,7 +549,7 @@ namespace OutpostZero.Colony
             if (!caught) return;
             nextOil = now;
             RefreshViews();
-            GameplayFeedback.Toast("The oil catches");
+            GameplayFeedback.Toast(YardSay.Oil(null));
         }
 
         public void TickOil(float now)
@@ -653,7 +653,7 @@ namespace OutpostZero.Colony
             var storage = ColonyStorage.Instance;
             if (storage == null || !storage.TrySpendBill(CraftGate.UpgradeScrap, CraftGate.UpgradeCloth, 0, CraftGate.UpgradeTape))
             {
-                GameplayFeedback.Toast("Not enough camp supplies");
+                GameplayFeedback.Toast(YardSay.Short(null));
                 return false;
             }
             bench.job = 1;

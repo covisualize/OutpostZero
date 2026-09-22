@@ -4380,6 +4380,47 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void AYardLineFollowsTheLanguage()
+        {
+            Assert.AreEqual("Build mode: click the yard", YardSay.Mode(true, "en"));
+            Assert.AreEqual("Modo construir: pulsa el patio", YardSay.Mode(true, "es"));
+            Assert.AreEqual("Build mode off", YardSay.Mode(false, "en"));
+            Assert.AreEqual("Modo construir apagado", YardSay.Mode(false, "es"));
+            Assert.AreEqual("Facing 90", YardSay.Facing(90, "en"));
+            Assert.AreEqual("Orientación 0", YardSay.Facing(0, "es"));
+            Assert.AreEqual("Recovered 4 scrap", YardSay.Recovered(4, "en"));
+            Assert.AreEqual("Recovered 0 scrap", YardSay.Recovered(-2, "en"));
+            Assert.AreEqual("Recuperados 4 chatarra", YardSay.Recovered(4, "es"));
+            Assert.AreEqual("That square is taken", YardSay.Taken("en"));
+            Assert.AreEqual("Esa casilla está ocupada", YardSay.Taken("es"));
+            Assert.AreEqual("Need 8 camp scrap", YardSay.Need(8, "en"));
+            Assert.AreEqual("Need 0 camp scrap", YardSay.Need(-1, "en"));
+            Assert.AreEqual("Hacen falta 8 de chatarra", YardSay.Need(8, "es"));
+            Assert.AreEqual("Site marked Generator", YardSay.Marked("Generator", "en"));
+            Assert.AreEqual("Sitio marcado Generador", YardSay.Marked("Generator", "es"));
+            Assert.AreEqual("Site marked TradingPost", YardSay.Marked("TradingPost", "en"));
+            Assert.AreEqual("Sitio marcado Puesto", YardSay.Marked("TradingPost", "es"));
+            Assert.AreEqual("Site marked Relay", YardSay.Marked("Relay", "en"));
+            Assert.AreEqual("Generator is up", YardSay.Up("Generator", "en"));
+            Assert.AreEqual("Generador en pie", YardSay.Up("Generator", "es"));
+            Assert.AreEqual("Patched Barricade", YardSay.Mend("Barricade", true, "en"));
+            Assert.AreEqual("Parcheado Barricada", YardSay.Mend("Barricade", true, "es"));
+            Assert.AreEqual("Mended Cot", YardSay.Mend("Cot", false, "en"));
+            Assert.AreEqual("Arreglado Camilla", YardSay.Mend("Cot", false, "es"));
+            Assert.AreEqual("A barricade gave way", YardSay.Barricade("en"));
+            Assert.AreEqual("Una barricada cedió", YardSay.Barricade("es"));
+            Assert.AreEqual("The spikes broke", YardSay.Spikes("en"));
+            Assert.AreEqual("Los pinchos se rompieron", YardSay.Spikes("es"));
+            Assert.AreEqual("The oil catches", YardSay.Oil("en"));
+            Assert.AreEqual("El aceite prende", YardSay.Oil("es"));
+            Assert.AreEqual("Not enough camp supplies", YardSay.Short("en"));
+            Assert.AreEqual("Faltan suministros", YardSay.Short("es"));
+            Assert.AreEqual("Stores are full", YardSay.Stores("en"));
+            Assert.AreEqual("El almacén está lleno", YardSay.Stores("es"));
+            Assert.AreEqual("", YardSay.Kind("", "en"));
+        }
+
+        [Test]
         public void StreetLampsFollowTheDarkAndNoonStaysOut()
         {
             Assert.AreEqual(0f, DayNightCycle.HourToNight(12f), 0.001f);
