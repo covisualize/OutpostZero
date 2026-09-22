@@ -42,6 +42,7 @@ namespace OutpostZero.Core
         [SerializeField] private int sprintMode;
         [SerializeField] private int frameCap;
         [SerializeField] private int resolution;
+        [SerializeField] private int renderScale;
 
         public float ScreenShake => screenShake;
         public float MasterVolume => masterVolume;
@@ -72,11 +73,14 @@ namespace OutpostZero.Core
         public int SprintMode => sprintMode == 1 ? 1 : 0;
         public int FrameCap => frameCap < 0 || frameCap > 4 ? 0 : frameCap;
         public int Resolution => resolution < 0 || resolution >= DisplayModes.Count ? 0 : resolution;
-        public string DiscreteKey => (subtitles ? "1" : "0") + colorblindMode + quality + vsync + (merciful ? "1" : "0") + NextDifficulty + goreLevel + hitStop + damageNumbers + motionBlur + windowMode + AimAssist + (InvertLook ? 1 : 0) + CrouchMode + SprintMode + FrameCap + Resolution + (quietFlash ? "1" : "0");
+        public int RenderScaleStep => PlayOptions.ScaleStep(renderScale);
+        public string DiscreteKey => (subtitles ? "1" : "0") + colorblindMode + quality + vsync + (merciful ? "1" : "0") + NextDifficulty + goreLevel + hitStop + damageNumbers + motionBlur + windowMode + AimAssist + (InvertLook ? 1 : 0) + CrouchMode + SprintMode + FrameCap + Resolution + (quietFlash ? "1" : "0") + RenderScaleStep;
         public bool ShowSettings { get; private set; }
 
         public event Action OnChanged;
         private bool suppressWrite;
+        private bool hasFocus = true;
+        private string opened;
 
         private void Awake()
         {
@@ -100,7 +104,24 @@ namespace OutpostZero.Core
 
         private void OnFocus(bool focused)
         {
-            AudioListener.volume = focused ? masterVolume : 0f;
+            hasFocus = focused;
+            ApplyVolume();
+        }
+
+        /// <summary>
+        /// Every change applies and saves at once. Opening the panel marks where a revert returns to.
+        /// </summary>
+        public void BeginEdit() => opened = ExportSettings();
+
+        public bool HasUnsaved => SettingsDraft.Dirty(opened, ExportSettings());
+
+        public void KeepEdits() => opened = null;
+
+        public void RevertEdits()
+        {
+            string back = opened;
+            opened = null;
+            if (!string.IsNullOrEmpty(back)) ImportSettings(back);
         }
 
         public void SetShake(float value)
@@ -316,6 +337,13 @@ namespace OutpostZero.Core
             Raise();
         }
 
+        public void CycleRenderScale()
+        {
+            renderScale = PlayOptions.NextScale(renderScale);
+            ApplyDisplay();
+            Raise();
+        }
+
         public void ToggleVSync()
         {
             vsync = vsync == 0 ? 1 : 0;
@@ -353,7 +381,7 @@ namespace OutpostZero.Core
 
         private void ApplyVolume()
         {
-            AudioListener.volume = masterVolume;
+            AudioListener.volume = SettingsDraft.Heard(masterVolume, hasFocus);
         }
 
         private void ApplyDisplay()
@@ -366,7 +394,7 @@ namespace OutpostZero.Core
             QualitySettings.antiAliasing = tier.Msaa;
             if (GraphicsSettings.currentRenderPipeline is UniversalRenderPipelineAsset pipeline)
             {
-                pipeline.renderScale = tier.RenderScale;
+                pipeline.renderScale = PlayOptions.RenderScale(renderScale, tier.RenderScale);
                 pipeline.msaaSampleCount = tier.Msaa;
             }
             var spawners = FindObjectsByType<ZombieSpawner>(FindObjectsSortMode.None);
@@ -470,6 +498,7 @@ namespace OutpostZero.Core
                 sprint = SprintMode,
                 frame = FrameCap,
                 resolution = Resolution,
+                render = RenderScaleStep,
                 subtitles = subtitles,
                 merciful = merciful,
                 quietFlash = quietFlash,
@@ -506,6 +535,7 @@ namespace OutpostZero.Core
             sprintMode = snap.sprint == 1 ? 1 : 0;
             frameCap = snap.frame < 0 || snap.frame > 4 ? 0 : snap.frame;
             resolution = snap.resolution < 0 || snap.resolution >= DisplayModes.Count ? 0 : snap.resolution;
+            renderScale = PlayOptions.ScaleStep(snap.render);
             subtitles = snap.subtitles;
             merciful = snap.merciful;
             quietFlash = snap.quietFlash;

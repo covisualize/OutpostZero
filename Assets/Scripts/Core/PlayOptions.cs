@@ -56,6 +56,28 @@ namespace OutpostZero.Core
             return (stored + 1) % 5;
         }
 
+        public static readonly float[] Scales = { 0f, 0.5f, 0.67f, 0.75f, 0.85f, 1f };
+
+        public static int ScaleStep(int stored) => stored < 0 || stored >= Scales.Length ? 0 : stored;
+
+        public static int NextScale(int stored) => (ScaleStep(stored) + 1) % Scales.Length;
+
+        /// <summary>
+        /// Step 0 follows the quality tier; every other step overrides it.
+        /// </summary>
+        public static float RenderScale(int stored, float tierScale)
+        {
+            int step = ScaleStep(stored);
+            return step == 0 ? tierScale : Scales[step];
+        }
+
+        public static string ScaleName(int stored, string language)
+        {
+            int step = ScaleStep(stored);
+            if (step == 0) return language == null ? OutpostZero.Shell.Loc.T("scale.auto") : OutpostZero.Shell.Loc.T("scale.auto", language);
+            return (int)Math.Round(Scales[step] * 100f) + "%";
+        }
+
         public static string FrameName(int stored)
         {
             return FrameName(stored, "en");

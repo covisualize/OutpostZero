@@ -4,6 +4,7 @@
     "references": [
         "OutpostZero",
         "OutpostZero.Editor",
+        "Unity.InputSystem",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner"
     ],

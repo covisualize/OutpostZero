@@ -39,10 +39,10 @@ namespace OutpostZero.Shell
         public static readonly Hint[] Hints =
         {
             new Hint { Id = "hint.move", Signal = "move", Text = "WASD moves. The mouse aims." },
-            new Hint { Id = "hint.fire", Signal = "fire", Text = "Left click fires. R reloads." },
+            new Hint { Id = "hint.fire", Signal = "fire", Text = "Left click fires. {key:Reload} reloads." },
             new Hint { Id = "hint.crouch", Signal = "crouch", Text = "Crouch cuts exposure. Noise still travels." },
             new Hint { Id = "hint.loot", Signal = "loot", Text = "Scrap and supplies go into the pack." },
-            new Hint { Id = "hint.pack", Signal = "pack", Text = "Tab opens the pack. Use what you are carrying." },
+            new Hint { Id = "hint.pack", Signal = "pack", Text = "{key:Inventory} opens the pack. Use what you are carrying." },
             new Hint { Id = "hint.reload", Signal = "reload", Text = "An empty magazine does not fire. Reload before the click." },
             new Hint { Id = "hint.flashlight", Signal = "flashlight", Text = "The flashlight shows the street and shows you." },
             new Hint { Id = "hint.medkit", Signal = "medkit", Text = "A medkit closes a bleed. It will not refill itself." },

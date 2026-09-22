@@ -23,8 +23,8 @@ namespace OutpostZero.Tests.EditMode
             for (int i = 1; i < rows.Count; i++)
             {
                 Assert.AreEqual(3, rows[i].Length, rows[i][0]);
-                Assert.AreEqual(Loc.T(rows[i][0], "en"), rows[i][1], rows[i][0]);
-                Assert.AreEqual(Loc.T(rows[i][0], "es"), rows[i][2], rows[i][0]);
+                Assert.AreEqual(Loc.Raw(rows[i][0], "en"), rows[i][1], rows[i][0]);
+                Assert.AreEqual(Loc.Raw(rows[i][0], "es"), rows[i][2], rows[i][0]);
             }
         }
 

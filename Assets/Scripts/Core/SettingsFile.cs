@@ -39,6 +39,7 @@ namespace OutpostZero.Core
             public int sprint;
             public int frame;
             public int resolution;
+            public int render;
             public bool subtitles;
             public bool merciful;
             public bool quietFlash;
@@ -76,6 +77,7 @@ namespace OutpostZero.Core
                 sprint = 0,
                 frame = 0,
                 resolution = 0,
+                render = 0,
                 subtitles = true,
                 merciful = false,
                 quietFlash = false,
@@ -114,6 +116,7 @@ namespace OutpostZero.Core
             Int(builder, "sprint", snap.sprint);
             Int(builder, "frame", snap.frame);
             Int(builder, "resolution", snap.resolution);
+            Int(builder, "render", snap.render);
             Int(builder, "subtitles", snap.subtitles ? 1 : 0);
             Int(builder, "merciful", snap.merciful ? 1 : 0);
             Int(builder, "flash", snap.quietFlash ? 1 : 0);
@@ -153,6 +156,7 @@ namespace OutpostZero.Core
             snap.sprint = (int)Num(json, "sprint", snap.sprint);
             snap.frame = (int)Num(json, "frame", snap.frame);
             snap.resolution = (int)Num(json, "resolution", snap.resolution);
+            snap.render = (int)Num(json, "render", snap.render);
             snap.subtitles = Num(json, "subtitles", 1f) != 0f;
             snap.merciful = Num(json, "merciful", 0f) != 0f;
             snap.quietFlash = Num(json, "flash", 0f) != 0f;

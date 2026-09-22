@@ -22,7 +22,7 @@ namespace OutpostZero.Shell
             {
                 builder.Append(Field(key));
                 foreach (var language in Languages)
-                    builder.Append(',').Append(Field(Loc.Has(key, language) ? Loc.T(key, language) : ""));
+                    builder.Append(',').Append(Field(Loc.Has(key, language) ? Loc.Raw(key, language) : ""));
                 builder.Append('\n');
             }
             return builder.ToString();

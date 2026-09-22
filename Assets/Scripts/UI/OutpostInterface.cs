@@ -51,7 +51,8 @@ namespace OutpostZero.UI
         private readonly List<Label> popups = new List<Label>();
         private int listening = -1;
         private int padListen = -1;
-        private string settingsBaseline = "";
+        private bool askKeep;
+        private string bindNote = "";
         private bool settingsWasOpen;
         private readonly ScreenStack screens = new ScreenStack();
         private GameState screensState = GameState.MainMenu;
@@ -90,8 +91,12 @@ namespace OutpostZero.UI
                 if (key == Key.None) continue;
                 var control = Keyboard.current[key];
                 if (control == null || !control.wasPressedThisFrame) continue;
-                if (key != Key.Escape) ControlBindings.TryRebind((ControlBindings.Action)listening, key);
-                if (key != Key.Escape) SettingsService.Instance?.NoteBindings();
+                if (key != Key.Escape)
+                {
+                    var action = (ControlBindings.Action)listening;
+                    bindNote = BindNote.For(ControlBindings.Check(action, key), key, ControlBindings.Holder(action, key), null);
+                    if (ControlBindings.TryRebind(action, key)) SettingsService.Instance?.NoteBindings();
+                }
                 listening = -1;
                 menuKey = "";
                 return;
@@ -337,7 +342,7 @@ namespace OutpostZero.UI
             if (HordeDirector.Instance != null) objectiveText.AppendLine(StreetHud.Tension(Mathf.RoundToInt(HordeDirector.Instance.Tension), HordeDirector.Instance.State.ToString(), null));
             if (WorldClock.Instance != null) objectiveText.AppendLine(WorldClock.Instance.Label);
             var interactor = player != null ? player.GetComponent<PlayerInteractor>() : null;
-            if (interactor != null && !string.IsNullOrEmpty(interactor.Prompt)) objectiveText.Append("[E] " + interactor.Prompt);
+            if (interactor != null && !string.IsNullOrEmpty(interactor.Prompt)) objectiveText.Append(KeyPrompt.Interact(interactor.Prompt));
             var raid = NightRaidController.Instance;
             if (raid != null && raid.Running) objectiveText.Append("   ").Append(StreetHud.Raid(Mathf.CeilToInt(raid.Remaining), null));
             var gate = ExtractionZone.Current;
@@ -465,14 +470,14 @@ namespace OutpostZero.UI
                 codexId = "";
             }
             bool settings = SettingsService.Instance != null && SettingsService.Instance.ShowSettings;
-            if (settings && !settingsWasOpen) settingsBaseline = SettingsService.Instance.ExportSettings();
-            if (!settings) settingsBaseline = "";
+            if (settings && !settingsWasOpen) SettingsService.Instance.BeginEdit();
+            if (!settings) askKeep = false;
             settingsWasOpen = settings;
             bool trade = FactionTrade.Instance != null && FactionTrade.Instance.Open;
             string language = SettingsService.Instance != null ? SettingsService.Instance.Language : "en";
             string discrete = SettingsService.Instance != null ? SettingsService.Instance.DiscreteKey : "";
             string tradeKey = FactionTrade.Instance != null ? FactionTrade.Instance.Signature : "";
-            string nextMenu = state + "|" + settings + "|" + trade + "|" + language + "|" + discrete + "|" + ControlBindings.Signature() + "|" + PadBindings.Signature() + "|" + listening + "|" + padListen + "|" + screens.Signature() + "|" + NewGameSignature() + "|" + codexId + "|" + tradeKey;
+            string nextMenu = state + "|" + settings + "|" + trade + "|" + language + "|" + discrete + "|" + ControlBindings.Signature() + "|" + PadBindings.Signature() + "|" + listening + "|" + padListen + "|" + screens.Signature() + "|" + NewGameSignature() + "|" + codexId + "|" + tradeKey + "|" + askKeep + "|" + bindNote;
             if (nextMenu != menuKey)
             {
                 menuKey = nextMenu;
@@ -506,7 +511,7 @@ namespace OutpostZero.UI
             switch (BackRoute.For(settings, trade, screens.Depth, pausable))
             {
                 case BackAction.CloseSettings:
-                    SettingsService.Instance.TogglePanel();
+                    CloseSettings();
                     break;
                 case BackAction.CloseTrade:
                     FactionTrade.Instance.Toggle();
@@ -518,6 +523,37 @@ namespace OutpostZero.UI
                     gm.TogglePause();
                     break;
             }
+        }
+
+        private void CloseSettings()
+        {
+            var settings = SettingsService.Instance;
+            if (settings == null) return;
+            switch (SettingsDraft.OnClose(settings.HasUnsaved, askKeep))
+            {
+                case SettingsClose.Ask:
+                    askKeep = true;
+                    break;
+                case SettingsClose.StayOpen:
+                    askKeep = false;
+                    break;
+                default:
+                    FinishSettings(false);
+                    break;
+            }
+        }
+
+        private void FinishSettings(bool revert)
+        {
+            var settings = SettingsService.Instance;
+            if (settings == null) return;
+            if (revert) settings.RevertEdits();
+            else settings.KeepEdits();
+            askKeep = false;
+            bindNote = "";
+            listening = -1;
+            padListen = -1;
+            if (settings.ShowSettings) settings.TogglePanel();
         }
 
         private void Open(MenuScreen screen) => screens.Push(screen);
@@ -815,6 +851,15 @@ namespace OutpostZero.UI
         {
             var settings = SettingsService.Instance;
             parent.Add(Title(Loc.T("set.title")));
+            if (askKeep)
+            {
+                parent.Add(Body(Loc.T("set.unsaved")));
+                parent.Add(Button(Loc.T("set.keep"), () => FinishSettings(false)));
+                parent.Add(Button(Loc.T("set.revert"), () => FinishSettings(true)));
+                parent.Add(Button(Loc.T("set.back"), () => askKeep = false));
+                parent.style.display = DisplayStyle.Flex;
+                return;
+            }
             parent.Add(SliderRow(Loc.T("set.shake"), settings.ScreenShake, settings.SetShake));
             parent.Add(SliderRow(Loc.T("set.volume"), settings.MasterVolume, settings.SetVolume));
             parent.Add(SliderRow(Loc.T("set.effects"), settings.SfxVolume, settings.SetSfx));
@@ -834,6 +879,7 @@ namespace OutpostZero.UI
             parent.Add(Button(settings.VSync ? Loc.T("set.vsync_on") : Loc.T("set.vsync_off"), settings.ToggleVSync));
             parent.Add(Button(Loc.T("set.frame") + " " + PlayOptions.FrameName(settings.FrameCap, null), settings.CycleFrameCap));
             parent.Add(Button(Loc.T("set.resolution") + " " + DisplayModes.Name(settings.Resolution), settings.CycleResolution));
+            parent.Add(Button(Loc.T("set.render") + " " + PlayOptions.ScaleName(settings.RenderScaleStep, null), settings.CycleRenderScale));
             parent.Add(Button(settings.AimAssist == 0 ? Loc.T("set.aim_off") : settings.AimAssist == 2 ? Loc.T("set.aim_strong") : Loc.T("set.aim_light"), settings.CycleAim));
             parent.Add(Button(settings.InvertLook ? Loc.T("set.invert") : Loc.T("set.look"), settings.ToggleInvert));
             parent.Add(Button(settings.CrouchMode == 1 ? Loc.T("set.crouch_toggle") : Loc.T("set.crouch_hold"), settings.ToggleCrouchMode));
@@ -846,6 +892,7 @@ namespace OutpostZero.UI
             parent.Add(Button(settings.MotionBlur ? Loc.T("set.blur_on") : Loc.T("set.blur_off"), settings.ToggleMotionBlur));
             parent.Add(Button(settings.WindowMode == 1 ? Loc.T("set.window") : settings.WindowMode == 2 ? Loc.T("set.full") : Loc.T("set.display"), settings.CycleWindow));
             parent.Add(Body(Loc.T("set.keys")));
+            if (bindNote.Length > 0) parent.Add(Body(bindNote));
             for (int i = 0; i < ControlBindings.Count; i++)
             {
                 var action = (ControlBindings.Action)i;
@@ -889,12 +936,14 @@ namespace OutpostZero.UI
             }));
             parent.Add(Button(Loc.T("set.revert"), () =>
             {
-                if (!string.IsNullOrEmpty(settingsBaseline)) SettingsService.Instance?.ImportSettings(settingsBaseline);
+                settings.RevertEdits();
+                settings.BeginEdit();
                 listening = -1;
                 padListen = -1;
+                bindNote = "";
                 menuKey = "";
             }));
-            parent.Add(Button(Loc.T("set.close"), settings.TogglePanel));
+            parent.Add(Button(Loc.T("set.close"), CloseSettings));
             parent.style.display = DisplayStyle.Flex;
         }
 

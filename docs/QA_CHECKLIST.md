@@ -122,7 +122,7 @@ Play this in a player build, not the editor. Use Survivor difficulty and a fixed
 - [ ] PRO-63 **Play**: see the full loop in section 2. Esc backs out of every menu one level at a time.
 - [ ] PRO-64 **Automated** (round trip, `.bak` recovery, v1 fixture migration) and **Play**: quit at each camp phase and Continue restores it.
 - [ ] PRO-65 **Play**: every setting survives a restart and applies at once. Rebinding a key updates the HUD prompts.
-- [ ] PRO-66 **Automated** (audio buses and clip validation) and **Play**: playing blind, you can tell the weapon, surface, zombie type, distance and tension.
+- [ ] PRO-66 **Automated** (audio buses and clip validation; `AudioCoverageTests` checks every played, computed and mixer-named id has a clip, and that `SfxLibrary` ids are real) and **Play**: playing blind, you can tell the weapon, surface, zombie type, distance and tension.
 - [ ] PRO-67 **Play**: 3 fresh testers finish Day 1 and the first expedition with no README.
 - [ ] PRO-68 **Automated** (same seed gives the same street, blocks stay walkable) and **Play**: a campaign win takes about 6 to 8 hours.
 - [ ] PRO-69 **Play**: the game is playable in each colour-blind mode (off, blue-yellow, mono) and with sound off using captions. Switching EN/ES re-renders every screen.
