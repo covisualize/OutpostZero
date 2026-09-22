@@ -46,6 +46,8 @@ namespace OutpostZero.Shell
         public int difficulty;
         public int broadcast;
         public int nextDifficulty;
+        public int slot;
+        public string seal = "";
         public float sfxVolume = 1f;
         public float musicVolume = 0.7f;
         public float ambienceVolume = 0.8f;
@@ -80,6 +82,9 @@ namespace OutpostZero.Shell
         {
             if (data == null) data = new SaveGameData();
             data.schemaVersion = CurrentSchema;
+            data.seal = "";
+            string bare = UnityEngine.JsonUtility.ToJson(data, true);
+            data.seal = SaveSlots.Hash(bare);
             return UnityEngine.JsonUtility.ToJson(data, true);
         }
 
@@ -105,6 +110,18 @@ namespace OutpostZero.Shell
             {
                 error = "schema";
                 return false;
+            }
+            if (!string.IsNullOrEmpty(data.seal))
+            {
+                string claimed = data.seal;
+                data.seal = "";
+                string bare = UnityEngine.JsonUtility.ToJson(data, true);
+                data.seal = claimed;
+                if (SaveSlots.Hash(bare) != claimed)
+                {
+                    error = "seal";
+                    return false;
+                }
             }
             return true;
         }

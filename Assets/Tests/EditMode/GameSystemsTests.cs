@@ -861,5 +861,54 @@ namespace OutpostZero.Tests.EditMode
             Assert.IsFalse(SpawnRing.InFront(0f, 0f, 0f, 1f, 0f, -10f));
             Assert.IsFalse(SpawnRing.InFront(0f, 0f, 0f, 0.1f, 0f, 10f));
         }
+
+        [Test]
+        public void FiveSlotsKeepTheNewestAndABrokenSealFallsBack()
+        {
+            Assert.AreEqual("slot_0.json", SaveSlots.FileName(0));
+            Assert.AreEqual("slot_4.json", SaveSlots.FileName(4));
+            Assert.AreEqual("slot_4.json", SaveSlots.FileName(9));
+            Assert.AreEqual("slot_auto.json", SaveSlots.FileName(SaveSlots.AutoSlot));
+            Assert.AreEqual(SaveSlots.LegacyFile, SaveSlots.FileName(SaveSlots.LegacySlot));
+            Assert.AreEqual(0, SaveSlots.Manual(-1));
+            Assert.AreEqual(4, SaveSlots.Manual(8));
+
+            var cards = new[]
+            {
+                new SaveSlots.Card { Slot = 0, Day = 2, Hour = 8f, Occupied = true },
+                new SaveSlots.Card { Slot = 1, Day = 4, Hour = 6f, Occupied = true },
+                new SaveSlots.Card { Slot = SaveSlots.AutoSlot, Day = 4, Hour = 6f, Occupied = true, Auto = true },
+                new SaveSlots.Card { Slot = SaveSlots.LegacySlot, Occupied = false }
+            };
+            Assert.AreEqual(2, SaveSlots.Newest(cards));
+            cards[2].Day = 3;
+            Assert.AreEqual(1, SaveSlots.Newest(cards));
+            Assert.AreEqual(-1, SaveSlots.Newest(new[] { new SaveSlots.Card { Occupied = false } }));
+            Assert.AreEqual(-1, SaveSlots.Newest(null));
+
+            var data = new SaveGameData { day = 4, hour = 6.5f, slot = 2 };
+            string json = SaveCodec.Serialize(data);
+            Assert.IsTrue(SaveCodec.TryDeserialize(json, out var loaded, out var error), error);
+            Assert.AreEqual(1, loaded.schemaVersion);
+            Assert.AreEqual(4, loaded.day);
+            Assert.AreEqual(2, loaded.slot);
+            Assert.IsFalse(string.IsNullOrEmpty(loaded.seal));
+
+            var tampered = JsonUtility.FromJson<SaveGameData>(json);
+            tampered.day = 9;
+            string broken = JsonUtility.ToJson(tampered, true);
+            Assert.IsFalse(SaveCodec.TryDeserialize(broken, out _, out error));
+            Assert.AreEqual("seal", error);
+
+            var legacy = new SaveGameData { day = 2, schemaVersion = 1 };
+            string old = JsonUtility.ToJson(legacy);
+            Assert.IsTrue(SaveCodec.TryDeserialize(old, out var kept, out error), error);
+            Assert.AreEqual(2, kept.day);
+            Assert.AreEqual("", kept.seal);
+
+            var future = new SaveGameData { schemaVersion = 2 };
+            Assert.IsFalse(SaveCodec.TryDeserialize(JsonUtility.ToJson(future), out _, out error));
+            Assert.AreEqual("schema", error);
+        }
     }
 }

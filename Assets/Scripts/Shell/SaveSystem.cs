@@ -10,7 +10,20 @@ namespace OutpostZero.Shell
     {
         public static SaveSystem Instance { get; private set; }
 
-        public string PathToSave => Path.Combine(Application.persistentDataPath, "outpost-zero-save.json");
+        private int slot;
+
+        public int Slot => slot;
+        public string PathToSave => PathFor(slot);
+
+        public void UseSlot(int index)
+        {
+            slot = SaveSlots.Manual(index);
+        }
+
+        public string PathFor(int index)
+        {
+            return Path.Combine(Application.persistentDataPath, SaveSlots.FileName(index));
+        }
 
         private void Awake()
         {
@@ -27,50 +40,126 @@ namespace OutpostZero.Shell
         public bool Save(bool announce)
         {
             var data = Capture();
-            string json = SaveCodec.Serialize(data);
+            int target = announce ? slot : SaveSlots.AutoSlot;
+            if (!Write(PathFor(target), data))
+            {
+                GameplayFeedback.Toast("Save failed");
+                return false;
+            }
+            if (announce) GameplayFeedback.Toast("Game saved");
+            return true;
+        }
+
+        public bool Load()
+        {
+            var cards = Cards();
+            int best = SaveSlots.Newest(cards);
+            if (best < 0)
+            {
+                GameplayFeedback.Toast("No save file");
+                return false;
+            }
+            return LoadCard(cards[best]);
+        }
+
+        public bool LoadSlot(int index)
+        {
+            return LoadCard(new SaveSlots.Card { Slot = index, Occupied = true, Auto = index == SaveSlots.AutoSlot });
+        }
+
+        public bool HasSave()
+        {
+            return SaveSlots.Newest(Cards()) >= 0;
+        }
+
+        public SaveSlots.Card[] Cards()
+        {
+            var cards = new SaveSlots.Card[SaveSlots.ManualCount + 2];
+            for (int i = 0; i < SaveSlots.ManualCount; i++) cards[i] = Peek(i);
+            cards[SaveSlots.AutoSlot] = Peek(SaveSlots.AutoSlot);
+            cards[SaveSlots.ManualCount + 1] = Peek(SaveSlots.LegacySlot);
+            return cards;
+        }
+
+        private bool LoadCard(SaveSlots.Card card)
+        {
+            if (!TryRead(PathFor(card.Slot), out var data))
+            {
+                GameplayFeedback.Toast(card.Occupied ? "Save could not be read" : "No save file");
+                return false;
+            }
+            if (SaveSlots.Manual(data.slot) == data.slot) UseSlot(data.slot);
+            else if (card.Slot >= 0 && card.Slot < SaveSlots.ManualCount) UseSlot(card.Slot);
+            Apply(data);
+            GameplayFeedback.Toast(card.Auto ? "Autosave loaded" : "Save loaded");
+            return true;
+        }
+
+        private SaveSlots.Card Peek(int index)
+        {
+            var card = new SaveSlots.Card { Slot = index, Auto = index == SaveSlots.AutoSlot };
+            if (!TryRead(PathFor(index), out var data)) return card;
+            card.Occupied = true;
+            card.Day = data.day;
+            card.Hour = data.hour;
+            card.Leader = LeaderName(data);
+            return card;
+        }
+
+        private static string LeaderName(SaveGameData data)
+        {
+            if (data == null || data.survivors == null) return "";
+            for (int i = 0; i < data.survivors.Length; i++)
+            {
+                if (data.survivors[i] != null && data.survivors[i].leader && !string.IsNullOrEmpty(data.survivors[i].displayName))
+                    return data.survivors[i].displayName;
+            }
+            for (int i = 0; i < data.survivors.Length; i++)
+            {
+                if (data.survivors[i] != null && !string.IsNullOrEmpty(data.survivors[i].displayName))
+                    return data.survivors[i].displayName;
+            }
+            return "";
+        }
+
+        private bool Write(string path, SaveGameData data)
+        {
             try
             {
-                string path = PathToSave;
+                string json = SaveCodec.Serialize(data);
                 string tmp = path + ".tmp";
                 Directory.CreateDirectory(Path.GetDirectoryName(path) ?? Application.persistentDataPath);
                 File.WriteAllText(tmp, json);
                 if (File.Exists(path)) File.Copy(path, path + ".bak", true);
                 File.Copy(tmp, path, true);
                 File.Delete(tmp);
-                if (announce) GameplayFeedback.Toast("Game saved");
                 return true;
             }
             catch (System.Exception ex)
             {
                 Debug.LogWarning("[SaveSystem] " + ex.Message);
-                GameplayFeedback.Toast("Save failed");
                 return false;
             }
         }
 
-        public bool Load()
+        private static bool TryRead(string path, out SaveGameData data)
         {
-            string path = PathToSave;
-            if (!File.Exists(path))
-            {
-                GameplayFeedback.Toast("No save file");
-                return false;
-            }
-            if (!SaveCodec.TryDeserialize(File.ReadAllText(path), out var data, out var error))
-            {
-                GameplayFeedback.Toast(error == "schema" ? "Save is from another version" : "Save could not be read");
-                return false;
-            }
-            Apply(data);
-            GameplayFeedback.Toast("Save loaded");
-            return true;
+            data = null;
+            if (ReadFile(path, out data)) return true;
+            return ReadFile(path + ".bak", out data);
         }
 
-        public bool HasSave() => File.Exists(PathToSave);
+        private static bool ReadFile(string path, out SaveGameData data)
+        {
+            data = null;
+            if (string.IsNullOrEmpty(path) || !File.Exists(path)) return false;
+            return SaveCodec.TryDeserialize(File.ReadAllText(path), out data, out _);
+        }
 
         public SaveGameData Capture()
         {
             var data = new SaveGameData();
+            data.slot = slot;
             if (WorldClock.Instance != null)
             {
                 data.day = WorldClock.Instance.Day;

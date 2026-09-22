@@ -40,6 +40,7 @@ namespace OutpostZero.UI
         private readonly List<Label> popups = new List<Label>();
         private int listening = -1;
         private bool credits;
+        private bool slotsOpen;
         private bool codexOpen;
         private string codexId = "";
 
@@ -224,7 +225,7 @@ namespace OutpostZero.UI
             string language = SettingsService.Instance != null ? SettingsService.Instance.Language : "en";
             string discrete = SettingsService.Instance != null ? SettingsService.Instance.DiscreteKey : "";
             string tradeKey = FactionTrade.Instance != null ? FactionTrade.Instance.Signature : "";
-            string nextMenu = state + "|" + settings + "|" + trade + "|" + language + "|" + discrete + "|" + ControlBindings.Signature() + "|" + listening + "|" + credits + "|" + codexOpen + "|" + codexId + "|" + tradeKey;
+            string nextMenu = state + "|" + settings + "|" + trade + "|" + language + "|" + discrete + "|" + ControlBindings.Signature() + "|" + listening + "|" + credits + "|" + slotsOpen + "|" + codexOpen + "|" + codexId + "|" + tradeKey;
             if (nextMenu != menuKey)
             {
                 menuKey = nextMenu;
@@ -396,6 +397,11 @@ namespace OutpostZero.UI
                         menu.Add(Button("Back", () => credits = false));
                         break;
                     }
+                    if (slotsOpen)
+                    {
+                        DrawSlots(menu);
+                        break;
+                    }
                     menu.Add(Title("OUTPOST ZERO"));
                     menu.Add(Body("Version " + SceneRoute.Version));
                     menu.Add(Button("Continue", () => Go(FlowStep.Sanctuary, () =>
@@ -403,6 +409,7 @@ namespace OutpostZero.UI
                         if (SaveSystem.Instance == null || !SaveSystem.Instance.Load())
                             GameManager.Instance.SetState(GameState.MainMenu);
                     })));
+                    menu.Add(Button("Saves", () => slotsOpen = true));
                     menu.Add(Button("Difficulty: " + DifficultyProfile.Name(SettingsService.Instance != null ? SettingsService.Instance.NextDifficulty : 2), () => SettingsService.Instance?.CycleDifficulty()));
                     menu.Add(Button("New outpost", () => Go(FlowStep.Sanctuary, () => GameManager.Instance.BeginNewOutpost())));
                     menu.Add(Button(Loc.T("menu.settings"), () => SettingsService.Instance?.TogglePanel()));
@@ -615,6 +622,59 @@ namespace OutpostZero.UI
                 label.style.unityFontStyleAndWeight = FontStyle.Bold;
                 damageLayer.Add(label);
             }
+        }
+
+        private void DrawSlots(VisualElement menu)
+        {
+            menu.Add(Title("SAVES"));
+            var cards = SaveSystem.Instance != null ? SaveSystem.Instance.Cards() : System.Array.Empty<SaveSlots.Card>();
+            for (int i = 0; i < SaveSlots.ManualCount; i++)
+            {
+                SaveSlots.Card card = default;
+                for (int c = 0; c < cards.Length; c++)
+                {
+                    if (cards[c].Slot == i) card = cards[c];
+                }
+                int index = i;
+                string label = card.Occupied
+                    ? "Slot " + (i + 1) + "  day " + card.Day + "  " + card.Leader
+                    : "Slot " + (i + 1) + "  empty";
+                menu.Add(Button(label, () =>
+                {
+                    slotsOpen = false;
+                    if (card.Occupied)
+                    {
+                        Go(FlowStep.Sanctuary, () =>
+                        {
+                            if (SaveSystem.Instance == null || !SaveSystem.Instance.LoadSlot(index))
+                                GameManager.Instance.SetState(GameState.MainMenu);
+                        });
+                    }
+                    else
+                    {
+                        SaveSystem.Instance?.UseSlot(index);
+                        Go(FlowStep.Sanctuary, () => GameManager.Instance.BeginNewOutpost());
+                    }
+                }));
+            }
+            SaveSlots.Card auto = default;
+            for (int c = 0; c < cards.Length; c++)
+            {
+                if (cards[c].Slot == SaveSlots.AutoSlot) auto = cards[c];
+            }
+            if (auto.Occupied)
+            {
+                menu.Add(Button("Autosave  day " + auto.Day + "  " + auto.Leader, () =>
+                {
+                    slotsOpen = false;
+                    Go(FlowStep.Sanctuary, () =>
+                    {
+                        if (SaveSystem.Instance == null || !SaveSystem.Instance.LoadSlot(SaveSlots.AutoSlot))
+                            GameManager.Instance.SetState(GameState.MainMenu);
+                    });
+                }));
+            }
+            menu.Add(Button("Back", () => slotsOpen = false));
         }
 
         private static string[] ClearedDistricts(WorldMapService map)

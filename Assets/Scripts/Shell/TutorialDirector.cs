@@ -43,7 +43,6 @@ namespace OutpostZero.Shell
 
         [SerializeField] private int index;
         [SerializeField] private bool finished;
-        private float nextStepAt;
 
         public bool Finished => finished;
         public string Current => finished || index >= TutorialTrack.Steps.Length ? string.Empty : TutorialTrack.Steps[index];
@@ -56,16 +55,6 @@ namespace OutpostZero.Shell
                 return;
             }
             Instance = this;
-            nextStepAt = Time.unscaledTime + 18f;
-        }
-
-        private void Update()
-        {
-            if (finished) return;
-            if (Time.unscaledTime < nextStepAt) return;
-            index++;
-            nextStepAt = Time.unscaledTime + 18f;
-            if (index >= TutorialTrack.Steps.Length) finished = true;
         }
 
         public void Note(string signal)
@@ -73,7 +62,6 @@ namespace OutpostZero.Shell
             if (finished) return;
             index = TutorialTrack.Advance(index, signal, out bool nowFinished);
             if (nowFinished) finished = true;
-            else nextStepAt = Time.unscaledTime + 18f;
         }
 
         public void Dismiss() => finished = true;
