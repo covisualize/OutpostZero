@@ -849,8 +849,9 @@ namespace OutpostZero.AI
             var pane = wall.collider.GetComponent<GlassPane>();
             if (pane != null)
             {
+                float before = pane.Current;
                 pane.TakeDamage(PaneCharge.Hit, wall.point, dash, gameObject);
-                if (PaneCharge.Through(PaneGlass.Hp, PaneCharge.Hit)) return;
+                if (PaneCharge.Through(before, PaneCharge.Hit)) return;
             }
             abilityClock.Phase = 0;
             abilityClock.Left = 0f;
