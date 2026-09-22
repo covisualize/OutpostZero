@@ -50,6 +50,7 @@ namespace OutpostZero.Shell
         private string weatherId = "";
         private NoiseManager subscribedNoise;
         private float nextStep;
+        private float stepEvent;
         private bool peaked;
         private int streak;
         private float streakAt;
@@ -312,8 +313,15 @@ namespace OutpostZero.Shell
             filter.cutoffFrequency = wall ? EarWall.Muffle(hz) : hz;
         }
 
+        public void Footfall()
+        {
+            stepEvent = Time.time;
+            PlayStep();
+        }
+
         private void Step()
         {
+            if (!Player.StepGate.AllowTimer(Time.time, stepEvent)) return;
             var player = PlayerRegistry.Current;
             if (player == null) return;
             var body = player.GetComponent<CharacterController>();
@@ -321,6 +329,15 @@ namespace OutpostZero.Shell
             if (Time.time < nextStep) return;
             float interval = player.IsSprinting ? 0.28f : player.IsCrouching ? 0.55f : 0.42f;
             nextStep = Time.time + interval;
+            PlayStep();
+        }
+
+        private void PlayStep()
+        {
+            var player = PlayerRegistry.Current;
+            if (player == null) return;
+            var body = player.GetComponent<CharacterController>();
+            if (body == null || body.velocity.magnitude < 0.8f) return;
             string surface = "";
             if (Physics.Raycast(player.transform.position + Vector3.up, Vector3.down, out var hit, 2.2f, GameLayers.VisionOcclusionMask, QueryTriggerInteraction.Ignore))
             {

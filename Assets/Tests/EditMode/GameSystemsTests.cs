@@ -3205,6 +3205,16 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void AClipStepSilencesTheTimerBeat()
+        {
+            Assert.IsTrue(StepGate.AllowTimer(1f, 0f));
+            Assert.IsFalse(StepGate.AllowTimer(1.1f, 1f));
+            Assert.IsTrue(StepGate.AllowTimer(1.22f, 1f));
+            Assert.IsTrue(StepGate.AllowTimer(0.5f, 1f));
+            Assert.AreEqual(0.22f, StepGate.Hold, 0.001f);
+        }
+
+        [Test]
         public void GoreOffDropsBloodAndAShotgunSpraysTheWall()
         {
             Assert.AreEqual(0, GoreMark.Splats(0, false, true));

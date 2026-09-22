@@ -36,7 +36,11 @@ namespace OutpostZero.Player
                 var controllerAsset = Resources.Load<RuntimeAnimatorController>("SurvivorLocomotion");
                 if (controllerAsset != null) animator.runtimeAnimatorController = controllerAsset;
             }
-            if (animator != null && animator.runtimeAnimatorController != null) return;
+            if (animator != null && animator.runtimeAnimatorController != null)
+            {
+                Arm(animator.gameObject);
+                return;
+            }
             visual = FindVisual();
             if (visual == null) return;
             animationPlayer = visual.gameObject.GetComponent<Animation>() ?? visual.gameObject.AddComponent<Animation>();
@@ -46,6 +50,19 @@ namespace OutpostZero.Player
             AddClip(Pose.Crouch, 0.03f, 0.7f);
             AddClip(Pose.Sprint, 0.1f, 0.28f);
             animationPlayer.Play(Pose.Idle.ToString());
+            Arm(visual.gameObject);
+        }
+
+        private void Arm(GameObject host)
+        {
+            if (host == null || host == gameObject) return;
+            if (host.GetComponent<FootstepRelay>() == null) host.AddComponent<FootstepRelay>();
+        }
+
+        public void OnFootstep()
+        {
+            controller?.PlayFootstep();
+            Shell.AudioManager.Instance?.Footfall();
         }
 
         private void Start()
@@ -123,6 +140,14 @@ namespace OutpostZero.Player
                 new Keyframe(duration, 0f));
             clip.SetCurve("", typeof(Transform), "localPosition.y", curve);
             clip.wrapMode = WrapMode.Loop;
+            if (id != Pose.Idle)
+            {
+                clip.AddEvent(new AnimationEvent
+                {
+                    time = duration * 0.5f,
+                    functionName = "OnFootstep"
+                });
+            }
             animationPlayer.AddClip(clip, id.ToString());
         }
 
@@ -148,6 +173,18 @@ namespace OutpostZero.Player
             }
             pose = next;
             animationPlayer.CrossFade(pose.ToString(), 0.12f);
+        }
+    }
+
+    /// <summary>
+    /// Animation events fire on the object that plays the clip. This forwards them to the body.
+    /// </summary>
+    public class FootstepRelay : MonoBehaviour
+    {
+        public void OnFootstep()
+        {
+            var body = GetComponentInParent<SurvivorLocomotion>();
+            if (body != null) body.OnFootstep();
         }
     }
 }

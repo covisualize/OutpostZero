@@ -450,6 +450,13 @@ namespace OutpostZero.Player
             }
         }
 
+        public void PlayFootstep()
+        {
+            if (characterController == null || !characterController.isGrounded) return;
+            if (characterController.velocity.magnitude < 0.2f) return;
+            GenerateFootstepNoise();
+        }
+
         private void GenerateFootstepNoise()
         {
             float interval = footstepInterval;
