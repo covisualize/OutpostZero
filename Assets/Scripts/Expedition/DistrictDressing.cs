@@ -91,6 +91,74 @@ namespace OutpostZero.Expedition
             var exitCollider = exit.GetComponent<Collider>();
             if (exitCollider != null) Destroy(exitCollider);
             Paint(exit.GetComponent<Renderer>(), new Color(0.25f, 0.75f, 0.45f));
+            RaiseRoom(plan);
+        }
+
+        private void RaiseRoom(DistrictBlocks.Plan plan)
+        {
+            float doorX = plan.PoiX + 2.2f;
+            float doorZ = plan.PoiZ;
+            DoorMap.Inside(doorX, doorZ, out float insideX, out float insideZ);
+
+            var slab = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            slab.name = "StreetDoor";
+            slab.transform.SetParent(root, false);
+            slab.transform.position = new Vector3(doorX, 1.1f, doorZ);
+            slab.transform.localScale = new Vector3(0.18f, 2.2f, 1.05f);
+            slab.layer = GameLayers.Interactable;
+            Paint(slab.GetComponent<Renderer>(), new Color(0.35f, 0.24f, 0.16f));
+            slab.AddComponent<StreetDoor>().Configure(new Vector3(insideX, 0.05f, insideZ), false);
+
+            var floor = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            floor.name = "RoomFloor";
+            floor.transform.SetParent(root, false);
+            floor.transform.position = new Vector3(insideX, -0.1f, insideZ);
+            floor.transform.localScale = new Vector3(8f, 0.2f, 8f);
+            floor.layer = GameLayers.Environment;
+            Paint(floor.GetComponent<Renderer>(), new Color(0.28f, 0.27f, 0.25f));
+
+            RaiseWall(insideX, insideZ + 3.6f, 8f, 0.3f);
+            RaiseWall(insideX, insideZ - 3.6f, 8f, 0.3f);
+            RaiseWall(insideX + 3.6f, insideZ, 0.3f, 7.4f);
+            RaiseWall(insideX - 3.6f, insideZ, 0.3f, 7.4f);
+
+            var back = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            back.name = "RoomDoor";
+            back.transform.SetParent(root, false);
+            back.transform.position = new Vector3(insideX, 1.1f, insideZ);
+            back.transform.localScale = new Vector3(0.18f, 2.2f, 1.05f);
+            back.layer = GameLayers.Interactable;
+            Paint(back.GetComponent<Renderer>(), new Color(0.45f, 0.32f, 0.2f));
+            back.AddComponent<StreetDoor>().Configure(new Vector3(doorX, 0.05f, doorZ), true);
+
+            var crate = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            crate.name = "RoomCrate";
+            crate.transform.SetParent(root, false);
+            crate.transform.position = new Vector3(insideX + 1.6f, 0.4f, insideZ + 1.2f);
+            crate.transform.localScale = new Vector3(0.8f, 0.7f, 0.8f);
+            crate.layer = GameLayers.Interactable;
+            Paint(crate.GetComponent<Renderer>(), new Color(0.42f, 0.36f, 0.24f));
+            crate.AddComponent<LootContainer>().Configure(plan.Footprint == "clinic" || plan.PoiRole == "radio" ? "medical" : "crate");
+
+            var lamp = new GameObject("RoomLamp");
+            lamp.transform.SetParent(root, false);
+            lamp.transform.position = new Vector3(insideX, 2.4f, insideZ);
+            var light = lamp.AddComponent<Light>();
+            light.type = LightType.Point;
+            light.range = 8f;
+            light.intensity = 1.1f;
+            light.color = new Color(1f, 0.9f, 0.75f);
+        }
+
+        private void RaiseWall(float x, float z, float width, float depth)
+        {
+            var wall = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            wall.name = "RoomWall";
+            wall.transform.SetParent(root, false);
+            wall.transform.position = new Vector3(x, 1.4f, z);
+            wall.transform.localScale = new Vector3(width, 2.8f, depth);
+            wall.layer = GameLayers.Environment;
+            Paint(wall.GetComponent<Renderer>(), new Color(0.32f, 0.3f, 0.28f));
         }
 
         private void RaiseRescue(string districtId, DistrictBlocks.Plan plan)

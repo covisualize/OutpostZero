@@ -1741,5 +1741,20 @@ namespace OutpostZero.Tests.EditMode
             Assert.AreEqual(3, RaidPlan.Hurt(2));
             Assert.AreEqual(3, RaidPlan.Hurt(3));
         }
+
+        [Test]
+        public void AStreetDoorOpensARoomNinetyMetersEast()
+        {
+            DoorMap.Inside(-7.8f, 4f, out float insideX, out float insideZ);
+            Assert.AreEqual(82.2f, insideX, 0.001f);
+            Assert.AreEqual(4f, insideZ, 0.001f);
+            DoorMap.Outside(insideX, insideZ, out float backX, out float backZ);
+            Assert.AreEqual(-7.8f, backX, 0.001f);
+            Assert.AreEqual(4f, backZ, 0.001f);
+            Assert.IsFalse(DoorMap.IsInside(-7.8f));
+            Assert.IsTrue(DoorMap.IsInside(insideX));
+            Assert.AreEqual("Step inside", DoorMap.Prompt(false));
+            Assert.AreEqual("Step outside", DoorMap.Prompt(true));
+        }
     }
 }
