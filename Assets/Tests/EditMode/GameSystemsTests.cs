@@ -1424,5 +1424,22 @@ namespace OutpostZero.Tests.EditMode
             Assert.AreEqual(3840, ultraW);
             Assert.AreEqual(2160, ultraH);
         }
+
+        [Test]
+        public void ACrateRowTakesOneStackAndLeavesTheRest()
+        {
+            var crate = new[]
+            {
+                new ContainerHold.Stack { Id = "bandage", Count = 3 },
+                new ContainerHold.Stack { Id = "scrap", Count = 2 }
+            };
+            Assert.AreEqual("Bandage x3", ContainerHold.Offer(crate[0]));
+            Assert.AreEqual("Scrap x2", ContainerHold.Offer(crate[1]));
+            Assert.AreEqual("mystery x2", ContainerHold.Offer(new ContainerHold.Stack { Id = "mystery", Count = 2 }));
+            Assert.AreEqual("", ContainerHold.Offer(new ContainerHold.Stack { Id = "", Count = 4 }));
+            crate = ContainerHold.Take(crate, "bandage", int.MaxValue, out int moved);
+            Assert.AreEqual(3, moved);
+            Assert.AreEqual("scrap*2", ContainerHold.Signature(crate));
+        }
     }
 }

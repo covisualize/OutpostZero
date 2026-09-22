@@ -14,7 +14,20 @@ namespace OutpostZero.Items
         public static LootContainer Open { get; private set; }
 
         public string Contents => ContainerHold.Signature(stacks);
+        public int HeldCount => stacks == null ? 0 : stacks.Length;
         public string Prompt => looted ? string.Empty : rolled ? "Take from container" : "Search container";
+
+        public string HeldId(int index)
+        {
+            if (stacks == null || index < 0 || index >= stacks.Length) return "";
+            return stacks[index].Id ?? "";
+        }
+
+        public string HeldOffer(int index)
+        {
+            if (stacks == null || index < 0 || index >= stacks.Length) return "";
+            return ContainerHold.Offer(stacks[index]);
+        }
 
         public void Configure(string table)
         {

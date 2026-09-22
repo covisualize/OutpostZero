@@ -661,9 +661,14 @@ namespace OutpostZero.UI
             }
             pack.Add(scroll);
             var crate = LootContainer.Open;
-            if (crate != null && !string.IsNullOrEmpty(crate.Contents))
+            if (crate != null && crate.HeldCount > 0)
             {
-                pack.Add(Body("Container  " + crate.Contents.Replace("|", "  ")));
+                pack.Add(Body("Container"));
+                for (int i = 0; i < crate.HeldCount; i++)
+                {
+                    string id = crate.HeldId(i);
+                    pack.Add(Button("Take " + crate.HeldOffer(i), () => crate.Take(id, inventory)));
+                }
                 pack.Add(Button("Take all", () => crate.TakeAll(inventory)));
             }
             pack.Add(Button("Close", () => FindFirstObjectByType<GameShellUI>()?.CloseInventory()));

@@ -69,5 +69,13 @@ namespace OutpostZero.Items
             }
             return text;
         }
+
+        public static string Offer(Stack stack)
+        {
+            if (string.IsNullOrEmpty(stack.Id) || stack.Count <= 0) return "";
+            var record = ItemCatalog.Find(stack.Id);
+            string name = record != null && !string.IsNullOrEmpty(record.DisplayName) ? record.DisplayName : stack.Id;
+            return name + " x" + stack.Count;
+        }
     }
 }
