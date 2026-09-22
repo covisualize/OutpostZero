@@ -594,6 +594,37 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void EveryPlayedSoundHasATone()
+        {
+            Assert.IsFalse(ClipBook.Has(null));
+            Assert.IsFalse(ClipBook.Has(""));
+            Assert.IsFalse(ClipBook.Has("nope"));
+            for (int i = 0; i < ClipBook.Ids.Length; i++)
+                Assert.IsTrue(ClipBook.Has(ClipBook.Ids[i]), ClipBook.Ids[i]);
+            Assert.AreEqual("gun", ClipBook.Fire(WeaponType.Pistol));
+            Assert.AreEqual("shotgun", ClipBook.Fire(WeaponType.Shotgun));
+            Assert.AreEqual("rifle", ClipBook.Fire(WeaponType.Rifle));
+            Assert.AreEqual("smg", ClipBook.Fire(WeaponType.SMG));
+            Assert.AreEqual("swing", ClipBook.Fire(WeaponType.Melee));
+            Assert.AreNotEqual(ClipBook.Mark("gun"), ClipBook.Mark("shotgun"));
+            Assert.AreNotEqual(ClipBook.Mark("gun"), ClipBook.Mark("rifle"));
+            Assert.AreNotEqual(ClipBook.Mark("rifle"), ClipBook.Mark("smg"));
+            Assert.AreNotEqual(ClipBook.Mark("shotgun"), ClipBook.Mark("smg"));
+            Assert.AreNotEqual(ClipBook.Mark("boom"), ClipBook.Mark("kill"));
+            Assert.AreNotEqual(ClipBook.Mark("step"), ClipBook.Mark("step_hard"));
+            Assert.AreNotEqual(ClipBook.Mark("step_metal"), ClipBook.Mark("step_wood"));
+            Assert.AreNotEqual(ClipBook.Mark("step_water"), ClipBook.Mark("step_gravel"));
+            Assert.AreNotEqual(ClipBook.Mark("step"), ClipBook.Mark("step_gravel"));
+            Assert.AreNotEqual(ClipBook.Mark("groan"), ClipBook.Mark("shriek"));
+            Assert.AreNotEqual(ClipBook.Mark("shriek"), ClipBook.Mark("roar"));
+            Assert.AreNotEqual(ClipBook.Mark("roar"), ClipBook.Mark("groan"));
+            Assert.AreEqual(32f, AudioSpace.MaxDistance("rifle"), 0.001f);
+            Assert.AreEqual(32f, AudioSpace.MaxDistance("smg"), 0.001f);
+            Assert.AreEqual(1f, ClipBook.Mark("nope"), 0.001f);
+            Assert.AreNotEqual(ClipBook.Mark("gun"), ClipBook.Mark("nope"));
+        }
+
+        [Test]
         public void CaravansVisitOnACalendarAndPricesFollowStanding()
         {
             Assert.IsTrue(CaravanBook.Visits(3));
