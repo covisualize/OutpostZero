@@ -3135,6 +3135,20 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void AnEmptyGunClicksAndAReloadSpeaksThreeTimes()
+        {
+            Assert.AreEqual("dry", GunCue.Click(0, false));
+            Assert.AreEqual("", GunCue.Click(1, false));
+            Assert.AreEqual("", GunCue.Click(0, true));
+            Assert.AreEqual("mag_out", GunCue.Stage(0f, 0));
+            Assert.AreEqual("", GunCue.Stage(0.2f, 1));
+            Assert.AreEqual("mag_in", GunCue.Stage(0.33f, 1));
+            Assert.AreEqual("rack", GunCue.Stage(0.72f, 2));
+            Assert.AreEqual("", GunCue.Stage(1f, 3));
+            Assert.AreEqual(3, GunCue.Mark("rack"));
+        }
+
+        [Test]
         public void DemolishingAModuleReturnsHalfTheScrap()
         {
             Assert.AreEqual(3, ScrapRefund.Half(6));

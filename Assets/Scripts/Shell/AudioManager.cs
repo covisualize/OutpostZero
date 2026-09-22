@@ -367,6 +367,9 @@ namespace OutpostZero.Shell
             if (id == "boom_far") return noise * Mathf.Sin(t * 4f);
             if (id == "heart") return Mathf.Sin(t * 7f);
             if (id == "breath") return noise * Mathf.Sin(t * 3f);
+            if (id == "dry") return Mathf.Sin(t * 90f);
+            if (id == "mag_out" || id == "mag_in") return noise * Mathf.Sin(t * 14f);
+            if (id == "rack") return Mathf.Sin(t * 28f);
             return noise;
         }
 
@@ -375,7 +378,7 @@ namespace OutpostZero.Shell
             if (clips.TryGetValue(id, out var clip)) return clip;
             int rate = 22050;
             bool loop = id == "ambient" || id == "rain" || id == "wind" || id == "stem_perc" || id == "stem_combat";
-            float seconds = loop ? 2f : id == "boom_far" ? 0.7f : id == "boom" ? 0.45f : id == "gun_far" ? 0.42f : id == "breath" ? 0.5f : id == "heart" ? 0.22f : 0.18f;
+            float seconds = loop ? 2f : id == "boom_far" ? 0.7f : id == "boom" ? 0.45f : id == "gun_far" ? 0.42f : id == "breath" ? 0.5f : id == "heart" ? 0.22f : id == "dry" ? 0.07f : 0.18f;
             int samples = Mathf.CeilToInt(rate * seconds);
             var data = new float[samples];
             var random = new System.Random(id.GetHashCode());

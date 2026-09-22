@@ -145,6 +145,7 @@ namespace OutpostZero.Combat
             if (currentAmmo <= 0)
             {
                 PlaySound(emptyClickSound);
+                Cue(GunCue.Click(currentAmmo, isReloading));
                 nextAttackTime = Time.time + (1f / attackRate);
                 TryStartReload();
                 return false;
@@ -241,10 +242,20 @@ namespace OutpostZero.Combat
             reloadWait = reloadDuration * FieldHand.Reload(SurvivorRoster.LeaderPractice("Guard"));
             OnReloadStarted?.Invoke();
             PlaySound(reloadSound);
+            int stage = 0;
+            string open = GunCue.Stage(0f, stage);
+            stage = GunCue.Mark(open);
+            Cue(open);
 
             while (reloadElapsed < reloadWait)
             {
                 reloadElapsed += Time.deltaTime;
+                string beat = GunCue.Stage(MagPulse.Fill(reloadElapsed, reloadWait), stage);
+                if (beat.Length > 0)
+                {
+                    stage = GunCue.Mark(beat);
+                    Cue(beat);
+                }
                 yield return null;
             }
             reloadElapsed = reloadWait;
@@ -281,6 +292,15 @@ namespace OutpostZero.Combat
             {
                 audioSource.PlayOneShot(clip);
             }
+        }
+
+        private void Cue(string id)
+        {
+            if (string.IsNullOrEmpty(id)) return;
+            var ear = OutpostZero.Shell.AudioManager.Instance;
+            if (ear == null) return;
+            Vector3 at = muzzlePoint != null ? muzzlePoint.position : transform.position;
+            ear.PlayAt(id, at, id == "dry" ? 0.32f : 0.4f);
         }
     }
 }
