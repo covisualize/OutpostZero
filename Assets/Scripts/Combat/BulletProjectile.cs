@@ -53,6 +53,7 @@ namespace OutpostZero.Combat
 
         private void OnHit(RaycastHit hit)
         {
+            CombatEvents.NoteDir(direction);
             DamageResolver.Resolve(hit, damage, shooter, true, weapon);
             CombatVfx.Tracer(transform.position, hit.point);
             Destroy(gameObject);

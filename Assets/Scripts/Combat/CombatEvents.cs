@@ -11,6 +11,16 @@ namespace OutpostZero.Combat
         public static event Action<Vector3, WeaponBase> OnShotFired;
         public static bool FromWeapon { get; private set; }
         public static WeaponType LastWeapon { get; private set; } = WeaponType.Pistol;
+        public static float DirX { get; private set; }
+        public static float DirY { get; private set; }
+        public static float DirZ { get; private set; }
+
+        public static void NoteDir(Vector3 dir)
+        {
+            DirX = dir.x;
+            DirY = dir.y;
+            DirZ = dir.z;
+        }
 
         public static void RaiseHit(Vector3 point, Vector3 normal, GameObject target)
         {

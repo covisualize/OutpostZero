@@ -200,6 +200,7 @@ namespace OutpostZero.Combat
                 if (Physics.Raycast(spawnPos, direction, out RaycastHit hit, range, hitMask, QueryTriggerInteraction.Ignore))
                 {
                     end = hit.point;
+                    CombatEvents.NoteDir(direction);
                     DamageResolver.Resolve(hit, ModifiedDamage, ownerGameObject, true, weaponType);
                 }
                 Vector3 eject = muzzlePoint != null ? muzzlePoint.right : transform.right;

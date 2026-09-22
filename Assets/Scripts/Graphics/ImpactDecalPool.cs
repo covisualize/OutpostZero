@@ -69,6 +69,8 @@ namespace OutpostZero.Graphics
             if (count <= 0) return;
             string kind = mark == Mark.Blood ? "blood" : mark == Mark.Scorch ? "scorch" : mark == Mark.Oil ? "oil" : "hole";
             float full = GoreMark.Size(kind, level);
+            BloodDrift.Along(CombatEvents.DirX, CombatEvents.DirY, CombatEvents.DirZ, out float driftX, out float driftY, out float driftZ);
+            bool streak = BloodDrift.Shows(level, blood) && (driftX != 0f || driftZ != 0f);
             for (int i = 0; i < count; i++)
             {
                 GoreMark.Offset(i, out float ox, out float oy);
@@ -83,7 +85,15 @@ namespace OutpostZero.Graphics
                 }
                 Place(at, normal, mark, full);
             }
-            Burst(point, StrikeFace.Of(target));
+            if (streak)
+            {
+                for (int s = 1; s <= BloodDrift.Drops; s++)
+                {
+                    float t = s / (float)BloodDrift.Drops;
+                    Place(point + new Vector3(driftX, driftY, driftZ) * t, normal, Mark.Blood, full * 0.7f);
+                }
+            }
+            Burst(point, StrikeFace.Of(target), streak ? driftX : 0f, streak ? driftZ : 0f);
         }
 
         private void OnKill(GameObject victim, GameObject killer)
@@ -145,7 +155,7 @@ namespace OutpostZero.Graphics
             renderer.SetPropertyBlock(block);
         }
 
-        private void Burst(Vector3 point, string face)
+        private void Burst(Vector3 point, string face, float driftX, float driftZ)
         {
             var go = new GameObject("ImpactBurst");
             go.transform.position = point;
@@ -158,8 +168,15 @@ namespace OutpostZero.Graphics
                 : face == "metal" ? new Color(1f, 0.78f, 0.28f)
                 : face == "wood" ? new Color(0.62f, 0.42f, 0.18f)
                 : new Color(0.55f, 0.52f, 0.48f);
+            int emit = face == "spark" ? 10 : 8;
             main.maxParticles = 12;
-            particles.Emit(face == "spark" ? 10 : 8);
+            if (face == "flesh" && (driftX != 0f || driftZ != 0f))
+            {
+                var shot = new ParticleSystem.EmitParams();
+                shot.velocity = new Vector3(driftX, 0.35f, driftZ) * 6f;
+                particles.Emit(shot, emit);
+            }
+            else particles.Emit(emit);
             Destroy(go, 0.6f);
         }
 

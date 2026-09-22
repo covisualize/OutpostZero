@@ -3511,6 +3511,36 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void BloodStreaksWithTheShot()
+        {
+            Assert.IsFalse(BloodDrift.Shows(0, true));
+            Assert.IsFalse(BloodDrift.Shows(1, false));
+            Assert.IsTrue(BloodDrift.Shows(1, true));
+            Assert.IsTrue(BloodDrift.Shows(2, true));
+            BloodDrift.Along(1f, 0f, 0f, out float ox, out float oy, out float oz);
+            Assert.AreEqual(0.55f, ox, 0.001f);
+            Assert.AreEqual(0f, oy, 0.001f);
+            Assert.AreEqual(0f, oz, 0.001f);
+            BloodDrift.Along(0f, -1f, 0f, out ox, out oy, out oz);
+            Assert.AreEqual(0f, ox, 0.001f);
+            Assert.AreEqual(0f, oy, 0.001f);
+            Assert.AreEqual(0f, oz, 0.001f);
+            BloodDrift.Along(0f, 0f, 0f, out ox, out oy, out oz);
+            Assert.AreEqual(0f, ox, 0.001f);
+            Assert.AreEqual(0f, oz, 0.001f);
+            BloodDrift.Along(3f, -1f, 0f, out ox, out oy, out oz);
+            Assert.AreEqual(0.55f, ox, 0.001f);
+            Assert.AreEqual(0f, oy, 0.001f);
+            Assert.AreEqual(0f, oz, 0.001f);
+            BloodDrift.Along(-1f, 2f, -1f, out ox, out oy, out oz);
+            Assert.AreEqual(-0.3889f, ox, 0.001f);
+            Assert.AreEqual(0f, oy, 0.001f);
+            Assert.AreEqual(-0.3889f, oz, 0.001f);
+            Assert.AreEqual(3, BloodDrift.Drops);
+            Assert.AreEqual(0, GoreMark.Splats(0, false, true));
+        }
+
+        [Test]
         public void AWallStopsAScreamAndMufflesTheGun()
         {
             Assert.AreEqual(0.8f, EarWall.Gain(0.8f, false, true), 0.001f);
