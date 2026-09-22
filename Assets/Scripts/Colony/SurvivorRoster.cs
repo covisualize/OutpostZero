@@ -423,6 +423,7 @@ namespace OutpostZero.Colony
                         {
                             survivor.cooking = Practice.Gain(survivor.cooking);
                             served += Practice.Bonus(survivor.cooking);
+                            if (spent > 0) served += PotDepth.Plate(survivor.cooking);
                         }
                         if (spent > 0 && storage != null) storage.TakeRaw(spent);
                         if (served > 0 && storage != null) storage.AddFood(served);

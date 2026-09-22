@@ -3449,6 +3449,25 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void ADeepCookPlatesExtraAndAFourthShiftDoesNot()
+        {
+            Assert.AreEqual(0, PotDepth.Plate(4));
+            Assert.AreEqual(0, PotDepth.Plate(0));
+            Assert.AreEqual(0, PotDepth.Plate(-1));
+            Assert.AreEqual(1, PotDepth.Plate(5));
+            Assert.AreEqual(4, PotDepth.Plate(8));
+            Assert.AreEqual(4, PotDepth.Plate(12));
+            Assert.AreEqual(1, Practice.Bonus(4));
+            Assert.AreEqual(1, Practice.Bonus(8));
+            CookPot.Serve(true, 4, 2, out int spent, out int food, out int morale);
+            Assert.AreEqual(2, spent);
+            Assert.AreEqual(6, food);
+            Assert.AreEqual(8, morale);
+            Assert.AreEqual(7, food + Practice.Bonus(4) + PotDepth.Plate(4));
+            Assert.AreEqual(11, food + Practice.Bonus(8) + PotDepth.Plate(8));
+        }
+
+        [Test]
         public void AZombieWithoutARigStillAttacksAndFalls()
         {
             Assert.AreEqual(14f, PoseSheet.Lean(ZombieAI.ZombieState.Chase, 0f), 0.001f);
