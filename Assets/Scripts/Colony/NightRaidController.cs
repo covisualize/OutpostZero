@@ -489,7 +489,7 @@ namespace OutpostZero.Colony
             if (SurvivorRoster.Instance == null || string.IsNullOrEmpty(trait)) return 0;
             foreach (var survivor in SurvivorRoster.Instance.Survivors)
             {
-                if (survivor.alive && (survivor.trait == trait || survivor.aside == trait)) count++;
+                if (survivor.alive && (survivor.trait == trait || survivor.aside == trait || survivor.mark == trait)) count++;
             }
             return count;
         }

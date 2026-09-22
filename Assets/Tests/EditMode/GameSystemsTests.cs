@@ -3384,6 +3384,68 @@ namespace OutpostZero.Tests.EditMode
             Assert.AreEqual("Loner", loaded.survivors[0].aside);
             Assert.IsTrue(SaveCodec.TryDeserialize("{\"schemaVersion\":1,\"survivors\":[{\"id\":\"ada\",\"trait\":\"Cook\"}]}", out var old, out error), error);
             Assert.IsNull(old.survivors[0].aside);
+            Assert.IsNull(old.survivors[0].mark);
+        }
+
+        [Test]
+        public void EachHandCarriesAThirdTrait()
+        {
+            Assert.AreEqual(23.4f, TraitHook.HungerDrop("Watchful", "Loner", "Glutton"), 0.001f);
+            Assert.AreEqual(18f, TraitHook.HungerDrop("Watchful", "Loner", null), 0.001f);
+            Assert.AreEqual(18f, TraitHook.HungerDrop("Watchful", null), 0.001f);
+            Assert.AreEqual(23.4f, TraitHook.HungerDrop("Watchful", "Glutton"), 0.001f);
+            Assert.AreEqual(0.8f, TraitHook.Aim("Cook", "Loner", "Sharpshooter"), 0.001f);
+            Assert.AreEqual(1f, TraitHook.Aim("Cook", null), 0.001f);
+            Assert.AreEqual(5, TraitHook.RestGain("Cook", "Loner", "Insomniac", 8));
+            Assert.AreEqual(8, TraitHook.RestGain("Cook", null, 8));
+            Assert.AreEqual(4, TraitHook.CookPlate("Guard", "Loner", "Cook", true));
+            Assert.AreEqual(0, TraitHook.CookPlate("Guard", "Cook", false));
+            Assert.AreEqual(6, TraitHook.WatchCost("Cook", "Loner", "Cowardly"));
+            Assert.AreEqual(0, TraitHook.WatchCost("Cook", "Loner", "Brave"));
+            Assert.AreEqual(2, TraitHook.WatchCost("Watchful", null));
+            Assert.AreEqual("Inspired", ColonyDay.Mood(65f, "Cook", "Loner", "Optimist"));
+            Assert.AreEqual("Steady", ColonyDay.Mood(65f, "Cook", "Loner", null));
+            Assert.AreEqual(1.1f, ColonyDay.OutputScale(65f, "Cook", "Loner", "Optimist"), 0.001f);
+            var plain = new[]
+            {
+                new ColonistDay { id = "ada", trait = "Watchful", aside = "Loner", task = "Rest", morale = 50f, hunger = 78f, thirst = 78f, opinion = 18 }
+            };
+            var marked = new[]
+            {
+                new ColonistDay { id = "ada", trait = "Watchful", aside = "Loner", mark = "Glutton", task = "Rest", morale = 50f, hunger = 78f, thirst = 78f, opinion = 18 }
+            };
+            int food = 0;
+            int water = 0;
+            int raw = 0;
+            int foodB = 0;
+            int waterB = 0;
+            int rawB = 0;
+            ColonyDay.Simulate(plain, ref food, ref water, false, false, "", 0, ref raw);
+            ColonyDay.Simulate(marked, ref foodB, ref waterB, false, false, "", 0, ref rawB);
+            Assert.AreEqual(60f, plain[0].hunger, 0.01f);
+            Assert.AreEqual(54.6f, marked[0].hunger, 0.01f);
+            for (int seed = 1; seed <= 40; seed++)
+            {
+                var camp = SurvivorDraw.Open(seed);
+                var again = SurvivorDraw.Open(seed);
+                Assert.AreEqual(SurvivorDraw.Signature(camp), SurvivorDraw.Signature(again));
+                for (int i = 0; i < camp.Length; i++)
+                {
+                    Assert.IsFalse(string.IsNullOrEmpty(camp[i].Mark));
+                    Assert.AreEqual(camp[i].Mark, again[i].Mark);
+                    Assert.IsFalse(SurvivorDraw.Clashes(camp[i].Trait, camp[i].Mark));
+                    Assert.IsFalse(SurvivorDraw.Clashes(camp[i].Aside, camp[i].Mark));
+                    Assert.AreNotEqual(camp[i].Trait, camp[i].Mark);
+                    Assert.AreNotEqual(camp[i].Aside, camp[i].Mark);
+                    if (camp[i].Trait == "Field Medic") Assert.AreEqual(4, camp[i].Medicine);
+                    if (camp[i].Trait == "Cook") Assert.AreEqual(4, camp[i].Cooking);
+                    if (camp[i].Trait == "Loner") Assert.AreEqual(camp[i].Aside == "Scrounger" ? 3 : 2, camp[i].Scavenge);
+                }
+            }
+            var saved = new SaveGameData { survivors = new[] { new SurvivorSave { id = "ada", trait = "Cook", aside = "Loner", mark = "Optimist" } } };
+            Assert.IsTrue(SaveCodec.TryDeserialize(SaveCodec.Serialize(saved), out var loaded, out var error), error);
+            Assert.AreEqual("Optimist", loaded.survivors[0].mark);
+            Assert.AreEqual(1, loaded.schemaVersion);
         }
 
         [Test]

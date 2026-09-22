@@ -11,6 +11,7 @@ namespace OutpostZero.Colony
         public string id;
         public string trait;
         public string aside = "";
+        public string mark = "";
         public string task;
         public string bond;
         public string kin = "";
@@ -39,7 +40,12 @@ namespace OutpostZero.Colony
 
         public static string Mood(float morale, string trait, string aside)
         {
-            if (aside == "Optimist") return Mood(morale, "Optimist");
+            return Mood(morale, trait, aside, null);
+        }
+
+        public static string Mood(float morale, string trait, string aside, string mark)
+        {
+            if (mark == "Optimist" || aside == "Optimist") return Mood(morale, "Optimist");
             return Mood(morale, trait);
         }
 
@@ -59,7 +65,12 @@ namespace OutpostZero.Colony
 
         public static float OutputScale(float morale, string trait, string aside)
         {
-            if (aside == "Optimist") return OutputScale(morale, "Optimist");
+            return OutputScale(morale, trait, aside, null);
+        }
+
+        public static float OutputScale(float morale, string trait, string aside, string mark)
+        {
+            if (mark == "Optimist" || aside == "Optimist") return OutputScale(morale, "Optimist");
             return OutputScale(morale, trait);
         }
 
@@ -107,7 +118,7 @@ namespace OutpostZero.Colony
                 }
                 if (person.task == "Cook") anyCook = true;
                 if (person.task == "Medic") medic = true;
-                if (TraitHook.Holds(person.trait, person.aside, "Volatile")) volatilePresent = true;
+                if (TraitHook.Holds(person.trait, person.aside, person.mark, "Volatile")) volatilePresent = true;
             }
 
             string fallenFirst = FirstName(fallenName);
@@ -119,7 +130,7 @@ namespace OutpostZero.Colony
 
                 person.morale -= stain;
                 float hungerBefore = person.hunger;
-                person.hunger = Clamp(person.hunger - TraitHook.HungerDrop(person.trait, person.aside));
+                person.hunger = Clamp(person.hunger - TraitHook.HungerDrop(person.trait, person.aside, person.mark));
                 person.thirst = Clamp(person.thirst - 22f);
 
                 int beforeFood = food;
@@ -153,12 +164,12 @@ namespace OutpostZero.Colony
                 }
 
                 int opinionBefore = person.opinion;
-                if (SharesWork(people, person) && !TraitHook.Holds(person.trait, person.aside, "Loner"))
+                if (SharesWork(people, person) && !TraitHook.Holds(person.trait, person.aside, person.mark, "Loner"))
                 {
                     person.opinion += 2;
                     person.kin = KinBoard.Warm(person.kin, people, person.id, person.task, false);
                 }
-                if (TraitHook.Holds(person.trait, person.aside, "Volatile"))
+                if (TraitHook.Holds(person.trait, person.aside, person.mark, "Volatile"))
                 {
                     person.opinion -= MealTable.FeudShift(6, leaderPresent, leadSkill);
                     person.kin = KinBoard.ChillToward(person.kin, people, person.id, leaderPresent, leadSkill);

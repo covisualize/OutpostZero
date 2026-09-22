@@ -12,6 +12,7 @@ namespace OutpostZero.Colony
             public string Name;
             public string Trait;
             public string Aside;
+            public string Mark;
             public bool Leader;
             public string Bond;
             public int Combat;
@@ -83,6 +84,11 @@ namespace OutpostZero.Colony
                 drafts[i].Cooking = System.Math.Max(drafts[i].Cooking, Skill(aside, "cooking"));
                 drafts[i].Scavenge = System.Math.Max(drafts[i].Scavenge, Skill(aside, "scavenge"));
             }
+            for (int i = 0; i < 4; i++)
+            {
+                int markIndex = Third(seed, i * 7 + 140, usedTrait, drafts[i].Trait, drafts[i].Aside);
+                drafts[i].Mark = markIndex < 0 ? "" : Traits[markIndex];
+            }
             return drafts;
         }
 
@@ -150,6 +156,21 @@ namespace OutpostZero.Colony
                 int index = (start + i) % Traits.Length;
                 if (used[index]) continue;
                 if (Clashes(first, Traits[index])) continue;
+                used[index] = true;
+                return index;
+            }
+            return -1;
+        }
+
+        private static int Third(int seed, int salt, bool[] used, string first, string second)
+        {
+            int start = Mix(seed, salt) % Traits.Length;
+            for (int i = 0; i < Traits.Length; i++)
+            {
+                int index = (start + i) % Traits.Length;
+                if (used[index]) continue;
+                string name = Traits[index];
+                if (Clashes(first, name) || Clashes(second, name)) continue;
                 used[index] = true;
                 return index;
             }

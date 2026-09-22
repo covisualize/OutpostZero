@@ -170,7 +170,7 @@ namespace OutpostZero.Combat
             brassRound++;
             bool showTracer = BrassCue.Tracer(weaponType, brassRound);
             int guard = SurvivorRoster.LeaderPractice("Guard");
-            float spread = RecoilBloom.Spread(spreadAngle, SpreadMultiplier * FieldHand.Spread(guard) * HandDepth.Spread(guard) * TraitHook.Aim(SurvivorRoster.LeaderTrait(), SurvivorRoster.LeaderAside()), heat);
+            float spread = RecoilBloom.Spread(spreadAngle, SpreadMultiplier * FieldHand.Spread(guard) * HandDepth.Spread(guard) * TraitHook.Aim(SurvivorRoster.LeaderTrait(), SurvivorRoster.LeaderAside(), SurvivorRoster.LeaderMark()), heat);
             for (int i = 0; i < projectilesPerShot; i++)
             {
                 Vector3 shootDir = ApplySpread(targetDirection, spread);

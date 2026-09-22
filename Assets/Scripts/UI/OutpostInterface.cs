@@ -537,8 +537,9 @@ namespace OutpostZero.UI
         {
             if (survivor == null) return "";
             string marks = Loc.Trait(survivor.trait);
-            if (string.IsNullOrEmpty(survivor.aside)) return marks;
-            return marks + " · " + Loc.Trait(survivor.aside);
+            if (!string.IsNullOrEmpty(survivor.aside)) marks += " · " + Loc.Trait(survivor.aside);
+            if (!string.IsNullOrEmpty(survivor.mark)) marks += " · " + Loc.Trait(survivor.mark);
+            return marks;
         }
 
         private static string QuestLine(string id, string quests)
@@ -595,7 +596,7 @@ namespace OutpostZero.UI
                         {
                             if (!survivor.alive) continue;
                             string id = survivor.id;
-                            menu.Add(Button(survivor.displayName + " — " + Marks(survivor) + "  " + ColonyDay.Mood(survivor.morale, survivor.trait, survivor.aside), () => GameManager.Instance.AcceptSuccessor(id)));
+                            menu.Add(Button(survivor.displayName + " — " + Marks(survivor) + "  " + ColonyDay.Mood(survivor.morale, survivor.trait, survivor.aside, survivor.mark), () => GameManager.Instance.AcceptSuccessor(id)));
                         }
                     }
                     menu.Add(Button(Loc.T("menu.falls"), () => GameManager.Instance.SetState(GameState.GameOver)));
@@ -785,7 +786,7 @@ namespace OutpostZero.UI
                 foreach (var survivor in roster.Survivors)
                 {
                     string flag = survivor.leader ? "*" : survivor.alive ? "" : "x";
-                    string mood = ColonyDay.Mood(survivor.morale, survivor.trait, survivor.aside);
+                    string mood = ColonyDay.Mood(survivor.morale, survivor.trait, survivor.aside, survivor.mark);
                     string doing = CampRoutine.Choose(survivor.task, survivor.hunger, survivor.thirst, survivor.morale, survivor.injury);
                     string post = doing == survivor.task ? Loc.Task(survivor.task) : Loc.Task(survivor.task) + " → " + Loc.Task(doing);
                     string skills = Practice.Line(survivor.combat, survivor.medicine, survivor.engineering, survivor.cooking, survivor.scavenge, null);

@@ -19,7 +19,13 @@ namespace OutpostZero.Colony
 
         public static bool Holds(string trait, string aside, string name)
         {
-            return !string.IsNullOrEmpty(name) && (trait == name || aside == name);
+            return Holds(trait, aside, null, name);
+        }
+
+        public static bool Holds(string trait, string aside, string mark, string name)
+        {
+            if (string.IsNullOrEmpty(name)) return false;
+            return trait == name || aside == name || mark == name;
         }
 
         public static int CookPlate(string trait, bool cooked)
@@ -29,7 +35,12 @@ namespace OutpostZero.Colony
 
         public static int CookPlate(string trait, string aside, bool cooked)
         {
-            if (!cooked || !Holds(trait, aside, "Cook")) return 0;
+            return CookPlate(trait, aside, null, cooked);
+        }
+
+        public static int CookPlate(string trait, string aside, string mark, bool cooked)
+        {
+            if (!cooked || !Holds(trait, aside, mark, "Cook")) return 0;
             return 4;
         }
 
@@ -40,7 +51,12 @@ namespace OutpostZero.Colony
 
         public static float Aim(string trait, string aside)
         {
-            if (Holds(trait, aside, "Sharpshooter")) return 0.8f;
+            return Aim(trait, aside, null);
+        }
+
+        public static float Aim(string trait, string aside, string mark)
+        {
+            if (Holds(trait, aside, mark, "Sharpshooter")) return 0.8f;
             return 1f;
         }
 
@@ -51,8 +67,13 @@ namespace OutpostZero.Colony
 
         public static int WatchCost(string trait, string aside)
         {
-            if (Holds(trait, aside, "Cowardly")) return 6;
-            if (Holds(trait, aside, "Brave")) return 0;
+            return WatchCost(trait, aside, null);
+        }
+
+        public static int WatchCost(string trait, string aside, string mark)
+        {
+            if (Holds(trait, aside, mark, "Cowardly")) return 6;
+            if (Holds(trait, aside, mark, "Brave")) return 0;
             return 2;
         }
 
@@ -63,7 +84,12 @@ namespace OutpostZero.Colony
 
         public static int WatchPay(string trait, string aside, int watch)
         {
-            if (watch <= 0 || Holds(trait, aside, "Cowardly")) return 0;
+            return WatchPay(trait, aside, null, watch);
+        }
+
+        public static int WatchPay(string trait, string aside, string mark, int watch)
+        {
+            if (watch <= 0 || Holds(trait, aside, mark, "Cowardly")) return 0;
             return watch;
         }
 
@@ -85,7 +111,12 @@ namespace OutpostZero.Colony
 
         public static float HungerDrop(string trait, string aside)
         {
-            if (Holds(trait, aside, "Glutton")) return GluttonHunger;
+            return HungerDrop(trait, aside, null);
+        }
+
+        public static float HungerDrop(string trait, string aside, string mark)
+        {
+            if (Holds(trait, aside, mark, "Glutton")) return GluttonHunger;
             return PlainHunger;
         }
 
@@ -96,8 +127,13 @@ namespace OutpostZero.Colony
 
         public static int RestGain(string trait, string aside, int rest)
         {
+            return RestGain(trait, aside, null, rest);
+        }
+
+        public static int RestGain(string trait, string aside, string mark, int rest)
+        {
             if (rest < 0) rest = 0;
-            if (!Holds(trait, aside, "Insomniac")) return rest;
+            if (!Holds(trait, aside, mark, "Insomniac")) return rest;
             int cut = rest - 3;
             return cut < 1 ? 1 : cut;
         }

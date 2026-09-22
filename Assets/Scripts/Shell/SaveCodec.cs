@@ -9,6 +9,7 @@ namespace OutpostZero.Shell
         public string displayName;
         public string trait;
         public string aside = "";
+        public string mark = "";
         public bool alive;
         public bool leader;
         public float morale;
