@@ -288,6 +288,7 @@ namespace OutpostZero.Shell
             { "trait.scrounger", "Scrounger" },
             { "trait.watchful", "Watchful" },
             { "trait.volatile", "Volatile" },
+            { "trait.glutton", "Glutton" },
             { "mood.inspired", "Inspired" },
             { "mood.steady", "Steady" },
             { "mood.depressed", "Depressed" },
@@ -645,6 +646,7 @@ namespace OutpostZero.Shell
             { "trait.scrounger", "Rebuscador" },
             { "trait.watchful", "Vigilante" },
             { "trait.volatile", "Volátil" },
+            { "trait.glutton", "Glotón" },
             { "mood.inspired", "Inspirado" },
             { "mood.steady", "Estable" },
             { "mood.depressed", "Deprimido" },
@@ -778,6 +780,7 @@ namespace OutpostZero.Shell
                 : trait == "Scrounger" ? "trait.scrounger"
                 : trait == "Watchful" ? "trait.watchful"
                 : trait == "Volatile" ? "trait.volatile"
+                : trait == "Glutton" ? "trait.glutton"
                 : "";
             if (key.Length == 0) return trait ?? "";
             return Pick(key, trait);

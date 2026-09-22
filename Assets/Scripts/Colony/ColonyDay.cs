@@ -91,7 +91,7 @@ namespace OutpostZero.Colony
 
                 person.morale -= stain;
                 float hungerBefore = person.hunger;
-                person.hunger = Clamp(person.hunger - 18f);
+                person.hunger = Clamp(person.hunger - TraitHook.HungerDrop(person.trait));
                 person.thirst = Clamp(person.thirst - 22f);
 
                 int beforeFood = food;

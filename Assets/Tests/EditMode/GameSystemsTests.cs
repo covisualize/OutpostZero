@@ -3031,6 +3031,21 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void AWatchfulCampHearsTheRaidSoonerAndAGluttonEatsMore()
+        {
+            Assert.AreEqual(0f, TraitHook.Warning(0, 3, 2, 2), 0.001f);
+            Assert.AreEqual(8f, TraitHook.Warning(1, 0, 0, 0), 0.001f);
+            Assert.AreEqual(14f, TraitHook.Warning(1, 1, 0, 0), 0.001f);
+            Assert.AreEqual(18f, TraitHook.Warning(1, 1, 1, 0), 0.001f);
+            Assert.AreEqual(21f, TraitHook.Warning(1, 1, 1, 1), 0.001f);
+            Assert.AreEqual(28f, TraitHook.Warning(3, 1, 2, 2), 0.001f);
+            Assert.AreEqual(18f, TraitHook.HungerDrop(null), 0.001f);
+            Assert.AreEqual(18f, TraitHook.HungerDrop("Watchful"), 0.001f);
+            Assert.AreEqual(23.4f, TraitHook.HungerDrop("Glutton"), 0.001f);
+            Assert.AreEqual("Glotón", Loc.T("trait.glutton", "es"));
+        }
+
+        [Test]
         public void DemolishingAModuleReturnsHalfTheScrap()
         {
             Assert.AreEqual(3, ScrapRefund.Half(6));

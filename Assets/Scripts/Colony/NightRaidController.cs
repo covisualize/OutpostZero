@@ -64,7 +64,7 @@ namespace OutpostZero.Colony
         public void Begin()
         {
             if (running || warning) return;
-            float hold = RaidWarn.Seconds(TowerCount(), GuardCount());
+            float hold = TraitHook.Warning(TowerCount(), GuardCount(), TraitCount("Watchful"), TraitCount("Light Sleeper"));
             if (hold <= 0f)
             {
                 Open(false);
@@ -480,6 +480,17 @@ namespace OutpostZero.Colony
                 if (survivor.alive && survivor.task == "Guard") guards++;
             }
             return guards;
+        }
+
+        private static int TraitCount(string trait)
+        {
+            int count = 0;
+            if (SurvivorRoster.Instance == null || string.IsNullOrEmpty(trait)) return 0;
+            foreach (var survivor in SurvivorRoster.Instance.Survivors)
+            {
+                if (survivor.alive && survivor.trait == trait) count++;
+            }
+            return count;
         }
 
         private static int LampsOn(string approach)

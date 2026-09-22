@@ -34,7 +34,7 @@ namespace OutpostZero.Colony
 
         private static readonly string[] Traits =
         {
-            "Steady Hands", "Light Sleeper", "Field Medic", "Scrounger", "Watchful", "Volatile"
+            "Steady Hands", "Light Sleeper", "Field Medic", "Scrounger", "Watchful", "Volatile", "Glutton"
         };
 
         public static Draft[] Open(int seed)
