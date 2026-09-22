@@ -4216,6 +4216,21 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void ARunnerClawOpensABleed()
+        {
+            Assert.IsTrue(ClawCut.Opens(true, 0.34f));
+            Assert.IsFalse(ClawCut.Opens(true, 0.35f));
+            Assert.IsFalse(ClawCut.Opens(false, 0f));
+            Assert.IsTrue(ClawCut.Opens(true, -1f));
+            Assert.IsFalse(ClawCut.Opens(true, 1f));
+            Assert.AreEqual(0.35f, ClawCut.RunnerBleed, 0.001f);
+            Assert.IsTrue(ClawCut.Infects(0.19f));
+            Assert.IsFalse(ClawCut.Infects(0.2f));
+            Assert.IsFalse(ClawCut.Infects(1f));
+            Assert.AreEqual(0.2f, ClawCut.BiteInfect, 0.001f);
+        }
+
+        [Test]
         public void StreetLampsFollowTheDarkAndNoonStaysOut()
         {
             Assert.AreEqual(0f, DayNightCycle.HourToNight(12f), 0.001f);

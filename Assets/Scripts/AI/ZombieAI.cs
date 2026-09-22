@@ -745,8 +745,9 @@ namespace OutpostZero.AI
                 var effects = currentTarget.GetComponent<StatusEffectController>();
                 if (effects != null)
                 {
-                    if (Random.value < 0.35f) effects.ApplyBleed(5f);
-                    if (Random.value < 0.2f) effects.ApplyInfection(8f);
+                    bool runner = specialAbility == ZombieSpecialAbility.Lunge;
+                    if (ClawCut.Opens(runner, Random.value)) effects.ApplyBleed(5f);
+                    if (ClawCut.Infects(Random.value)) effects.ApplyInfection(8f);
                     if (specialAbility == ZombieSpecialAbility.Charge) effects.Knockdown(0.7f);
                 }
             }
