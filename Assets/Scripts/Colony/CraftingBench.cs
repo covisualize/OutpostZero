@@ -22,7 +22,7 @@ namespace OutpostZero.Colony
 
         public static readonly Recipe[] Recipes =
         {
-            new Recipe { Id = "bandage", Label = "Bandage", ScrapCost = 3, OutputId = "bandage", OutputCount = 1 },
+            new Recipe { Id = "bandage", Label = "Bandage", ScrapCost = 1, OutputId = "bandage", OutputCount = 1 },
             new Recipe { Id = "medkit", Label = "Medkit", ScrapCost = 8, OutputId = "medkit", OutputCount = 1 },
             new Recipe { Id = "antibiotics", Label = "Antibiotics", ScrapCost = 10, OutputId = "antibiotics", OutputCount = 1 },
             new Recipe { Id = "painkillers", Label = "Painkillers", ScrapCost = 5, OutputId = "painkillers", OutputCount = 1 },
@@ -53,12 +53,22 @@ namespace OutpostZero.Colony
             {
                 if (candidate.Id == recipeId) recipe = candidate;
             }
-            if (recipe == null) return false;
-            bool bench = GridBuilder.Instance != null && GridBuilder.Instance.HasKind("Workbench");
-            int cost = Priced(recipe.ScrapCost, bench);
-            if (ColonyStorage.Instance == null || !ColonyStorage.Instance.TrySpendScrap(cost))
+            if (recipe == null || !CraftBill.TryOf(recipeId, out var bill)) return false;
+            var storage = ColonyStorage.Instance;
+            if (storage == null) return false;
+
+            bool workbench = GridBuilder.Instance != null && GridBuilder.Instance.HasKind("Workbench");
+            bool cot = GridBuilder.Instance != null && GridBuilder.Instance.HasKind("Cot");
+            int due = Priced(bill.Scrap, workbench);
+            string block = CraftBill.Block(bill.Station, bill.Skill, CraftBill.StationReady(bill.Station, workbench, cot), SkillReady(bill.Skill));
+            if (!string.IsNullOrEmpty(block))
             {
-                GameplayFeedback.Toast("Not enough camp scrap");
+                GameplayFeedback.Toast(block);
+                return false;
+            }
+            if (!storage.TrySpendBill(due, bill.Cloth, bill.Chemicals, bill.Tape))
+            {
+                GameplayFeedback.Toast("Not enough camp supplies");
                 return false;
             }
 
@@ -68,7 +78,7 @@ namespace OutpostZero.Colony
                 var weapon = player != null ? player.ActiveWeapon : null;
                 if (weapon == null)
                 {
-                    ColonyStorage.Instance.AddScrap(cost);
+                    Refund(due, bill);
                     return false;
                 }
                 var mod = weapon.GetComponent<WeaponMod>() ?? weapon.gameObject.AddComponent<WeaponMod>();
@@ -81,7 +91,7 @@ namespace OutpostZero.Colony
             var inventory = PlayerRegistry.Current != null ? PlayerRegistry.Current.GetComponent<PlayerInventory>() : null;
             if (record == null || inventory == null)
             {
-                ColonyStorage.Instance.AddScrap(cost);
+                Refund(due, bill);
                 return false;
             }
 
@@ -91,7 +101,7 @@ namespace OutpostZero.Colony
             }
             else if (!inventory.TryAddItem(record.Id, record.DisplayName, record.Category, recipe.OutputCount, record.Weight))
             {
-                ColonyStorage.Instance.AddScrap(cost);
+                Refund(due, bill);
                 GameplayFeedback.Toast("Pack is full");
                 return false;
             }
@@ -100,10 +110,28 @@ namespace OutpostZero.Colony
             return true;
         }
 
-        public static int Priced(int scrap, bool workbench)
+        private static bool SkillReady(string skill)
         {
-            if (!workbench) return scrap;
-            return scrap <= 1 ? 1 : scrap - 1;
+            if (string.IsNullOrEmpty(skill)) return true;
+            var roster = SurvivorRoster.Instance;
+            if (roster == null) return false;
+            foreach (var person in roster.Survivors)
+            {
+                if (CraftBill.OnDuty(person.trait, person.task, person.alive, skill)) return true;
+            }
+            return false;
         }
+
+        private static void Refund(int scrap, CraftBill.Cost bill)
+        {
+            var storage = ColonyStorage.Instance;
+            if (storage == null) return;
+            if (scrap > 0) storage.AddScrap(scrap);
+            if (bill.Cloth > 0) storage.AddCloth(bill.Cloth);
+            if (bill.Chemicals > 0) storage.AddChemicals(bill.Chemicals);
+            if (bill.Tape > 0) storage.AddTape(bill.Tape);
+        }
+
+        public static int Priced(int scrap, bool workbench) => CraftBill.ScrapDue(scrap, workbench);
     }
 }

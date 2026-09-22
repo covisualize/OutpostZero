@@ -717,6 +717,7 @@ namespace OutpostZero.UI
             if (storage != null)
             {
                 camp.Add(Body("Scrap " + storage.Scrap + "  Food " + storage.Food + "  Water " + storage.Water
+                    + "  Cloth " + storage.Cloth + "  Chem " + storage.Chemicals + "  Tape " + storage.Tape
                     + (services != null && services.GeneratorOnline ? "  Generator on" : "  Generator dark")));
             }
             var roster = SurvivorRoster.Instance;
@@ -787,8 +788,9 @@ namespace OutpostZero.UI
             foreach (var recipe in CraftingBench.Recipes)
             {
                 string id = recipe.Id;
-                int cost = CraftingBench.Priced(recipe.ScrapCost, bench);
-                camp.Add(Button(recipe.Label + " (" + cost + ")", () => CraftingBench.Instance?.Craft(id)));
+                if (!CraftBill.TryOf(id, out var bill)) continue;
+                int due = CraftingBench.Priced(bill.Scrap, bench);
+                camp.Add(Button(CraftBill.Line(recipe.Label, due, bill.Cloth, bill.Chemicals, bill.Tape), () => CraftingBench.Instance?.Craft(id)));
             }
             var map = WorldMapService.Instance;
             if (map != null)
@@ -1015,7 +1017,11 @@ namespace OutpostZero.UI
         {
             var builder = new StringBuilder();
             if (WorldClock.Instance != null) builder.Append(WorldClock.Instance.Day);
-            if (ColonyStorage.Instance != null) builder.Append(ColonyStorage.Instance.Scrap).Append(ColonyStorage.Instance.Food).Append(ColonyStorage.Instance.Security);
+            if (ColonyStorage.Instance != null)
+            {
+                builder.Append(ColonyStorage.Instance.Scrap).Append(ColonyStorage.Instance.Food).Append(ColonyStorage.Instance.Security);
+                builder.Append(ColonyStorage.Instance.Cloth).Append(ColonyStorage.Instance.Chemicals).Append(ColonyStorage.Instance.Tape);
+            }
             if (SurvivorRoster.Instance != null)
             {
                 foreach (var survivor in SurvivorRoster.Instance.Survivors)

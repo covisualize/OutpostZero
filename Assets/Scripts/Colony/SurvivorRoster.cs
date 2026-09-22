@@ -231,8 +231,11 @@ namespace OutpostZero.Colony
         public void TickTasks()
         {
             var storage = ColonyStorage.Instance;
+            int day = WorldClock.Instance != null ? WorldClock.Instance.Day : 1;
+            int index = 0;
             foreach (var survivor in survivors)
             {
+                index++;
                 if (!survivor.alive) continue;
                 switch (survivor.task)
                 {
@@ -240,6 +243,13 @@ namespace OutpostZero.Colony
                         int scrap = Pay(4 + (survivor.trait == "Scrounger" ? 3 : 0), survivor.morale);
                         if (scrap > 0 && storage != null) storage.AddScrap(scrap);
                         if (scrap > 0) survivor.morale = Mathf.Max(0f, survivor.morale - 4f);
+                        if (storage != null)
+                        {
+                            CraftBill.Salvage(day * 17 + index, survivor.trait == "Scrounger", out int cloth, out int chemicals, out int tape);
+                            storage.AddCloth(cloth);
+                            if (chemicals > 0) storage.AddChemicals(chemicals);
+                            if (tape > 0) storage.AddTape(tape);
+                        }
                         break;
                     case "Cook":
                         int meals = Pay(2, survivor.morale);

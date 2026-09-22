@@ -39,6 +39,9 @@ namespace OutpostZero.Shell
         public int colonyScrap;
         public int food;
         public int water;
+        public int cloth;
+        public int chemicals;
+        public int tape;
         public int kills;
         public int lifetimeKills;
         public int districtsCleared;

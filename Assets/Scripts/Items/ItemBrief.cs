@@ -39,6 +39,9 @@ namespace OutpostZero.Items
             if (record.Use == ItemUse.Relief) return "+20 health over 20s";
             if (record.Use == ItemUse.Lure) return "Draws the dead";
             if (record.Use == ItemUse.Molotov) return "Fire on impact";
+            if (record.Id == "cloth") return "Bandages and fire bottles";
+            if (record.Id == "chemicals") return "Ammo and medicine";
+            if (record.Id == "tape") return "Holds a medkit together";
             if (record.Use == ItemUse.Material) return "Camp scrap";
             return "";
         }
@@ -57,6 +60,9 @@ namespace OutpostZero.Items
                 case "ammo_shells": return "Fits the shotgun.";
                 case "ammo_rifle": return "Fits the rifle.";
                 case "scrap": return "The camp spends this.";
+                case "cloth": return "Turns into bandages at the sanctuary.";
+                case "chemicals": return "The bench needs a measure for each batch of rounds.";
+                case "tape": return "One roll finishes a medkit.";
                 case "noise_lure": return "Throw it to pull a horde off a door.";
                 case "molotov": return "Breaks into fire.";
                 default: return "";

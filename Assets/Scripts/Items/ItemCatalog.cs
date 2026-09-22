@@ -49,6 +49,9 @@ namespace OutpostZero.Items
             new ItemRecord { Id = "ammo_shells", DisplayName = "Shotgun Shells", Category = Core.ItemCategory.Ammunition, Weight = 0.04f, AmmoType = Core.WeaponType.Shotgun, AmmoAmount = 6, Use = ItemUse.Ammo },
             new ItemRecord { Id = "ammo_rifle", DisplayName = "Rifle Magazine", Category = Core.ItemCategory.Ammunition, Weight = 0.08f, AmmoType = Core.WeaponType.Rifle, AmmoAmount = 30, Use = ItemUse.Ammo },
             new ItemRecord { Id = "scrap", DisplayName = "Scrap", Category = Core.ItemCategory.ScrapMaterial, Weight = 0.1f, Use = ItemUse.Material },
+            new ItemRecord { Id = "cloth", DisplayName = "Cloth", Category = Core.ItemCategory.ScrapMaterial, Weight = 0.15f, Use = ItemUse.Material },
+            new ItemRecord { Id = "chemicals", DisplayName = "Chemicals", Category = Core.ItemCategory.ScrapMaterial, Weight = 0.2f, Use = ItemUse.Material },
+            new ItemRecord { Id = "tape", DisplayName = "Duct Tape", Category = Core.ItemCategory.ScrapMaterial, Weight = 0.1f, Use = ItemUse.Material },
             new ItemRecord { Id = "noise_lure", DisplayName = "Noise Lure", Category = Core.ItemCategory.KeyItem, Weight = 0.2f, Use = ItemUse.Lure },
             new ItemRecord { Id = "molotov", DisplayName = "Molotov", Category = Core.ItemCategory.Fuel, Weight = 0.6f, Use = ItemUse.Molotov }
         };
@@ -102,7 +105,9 @@ namespace OutpostZero.Items
             return new[]
             {
                 new Grant { ItemId = "scrap", Count = 2 + rng.Next(0, 5) },
-                new Grant { ItemId = rng.NextDouble() > 0.55 ? "canned_food" : "water", Count = 1 }
+                new Grant { ItemId = rng.NextDouble() > 0.55 ? "canned_food" : "water", Count = 1 },
+                new Grant { ItemId = "cloth", Count = 1 },
+                new Grant { ItemId = rng.NextDouble() > 0.6 ? "chemicals" : "tape", Count = 1 }
             };
         }
     }

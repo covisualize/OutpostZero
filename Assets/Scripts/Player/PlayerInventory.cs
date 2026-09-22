@@ -199,11 +199,33 @@ namespace OutpostZero.Player
 
         public void DepositScrapToColony()
         {
-            if (scrapCount <= 0) return;
-            OutpostZero.Colony.ColonyStorage.Instance?.AddScrap(scrapCount);
-            scrapCount = 0;
+            var storage = OutpostZero.Colony.ColonyStorage.Instance;
+            if (storage == null) return;
+            bool moved = false;
+            if (scrapCount > 0)
+            {
+                storage.AddScrap(scrapCount);
+                scrapCount = 0;
+                moved = true;
+            }
+            if (DepositMaterial(storage, "cloth")) moved = true;
+            if (DepositMaterial(storage, "chemicals")) moved = true;
+            if (DepositMaterial(storage, "tape")) moved = true;
+            if (!moved) return;
             RecalculateWeight();
             OnInventoryChanged?.Invoke();
+        }
+
+        private bool DepositMaterial(OutpostZero.Colony.ColonyStorage storage, string id)
+        {
+            var existing = items.Find(item => item.ItemId == id);
+            if (existing == null || existing.Quantity <= 0) return false;
+            int count = existing.Quantity;
+            items.Remove(existing);
+            if (id == "cloth") storage.AddCloth(count);
+            else if (id == "chemicals") storage.AddChemicals(count);
+            else storage.AddTape(count);
+            return true;
         }
 
         private bool GrantAmmo(WeaponType weaponType, int amount)

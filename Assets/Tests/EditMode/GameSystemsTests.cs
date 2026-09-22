@@ -1670,5 +1670,41 @@ namespace OutpostZero.Tests.EditMode
                 PadBindings.ResetDefaults();
             }
         }
+
+        [Test]
+        public void AMedkitNeedsACotAndAMedicAndScavengeBringsCloth()
+        {
+            Assert.IsTrue(CraftBill.TryOf("medkit", out var medkit));
+            Assert.AreEqual(CraftBill.Cot, medkit.Station);
+            Assert.AreEqual("Medic", medkit.Skill);
+            Assert.AreEqual(1, medkit.Cloth);
+            Assert.AreEqual(1, medkit.Chemicals);
+            Assert.AreEqual(1, medkit.Tape);
+            Assert.AreEqual("Need a medical cot", CraftBill.Block(medkit.Station, medkit.Skill, false, true));
+            Assert.AreEqual("Need a medic on duty", CraftBill.Block(medkit.Station, medkit.Skill, true, false));
+            Assert.AreEqual("", CraftBill.Block(medkit.Station, medkit.Skill, true, true));
+            Assert.IsTrue(CraftBill.OnDuty("Field Medic", "Rest", true, "Medic"));
+            Assert.IsTrue(CraftBill.OnDuty("Steady Hands", "Medic", true, "Medic"));
+            Assert.IsFalse(CraftBill.OnDuty("Field Medic", "Medic", false, "Medic"));
+            Assert.IsFalse(CraftBill.OnDuty("Scrounger", "Scavenge", true, "Medic"));
+
+            Assert.IsTrue(CraftBill.TryOf("ammo_9mm", out var ammo));
+            Assert.AreEqual(CraftBill.Workbench, ammo.Station);
+            Assert.AreEqual(3, CraftBill.ScrapDue(ammo.Scrap, true));
+            Assert.AreEqual(4, CraftBill.ScrapDue(ammo.Scrap, false));
+            Assert.AreEqual("Need a workbench", CraftBill.Block(ammo.Station, ammo.Skill, false, true));
+            Assert.IsFalse(CraftBill.Afford(3, 0, 1, 0, 3, 0, 0, 0));
+            Assert.IsTrue(CraftBill.Afford(3, 0, 1, 0, 3, 0, 1, 0));
+            Assert.AreEqual("9mm (12)   scrap 3   chem 1", CraftBill.Line("9mm (12)", 3, 0, 1, 0));
+
+            CraftBill.Salvage(1, false, out int cloth, out int chemicals, out int tape);
+            Assert.AreEqual(1, cloth);
+            Assert.AreEqual(1, chemicals);
+            Assert.AreEqual(0, tape);
+            CraftBill.Salvage(4, true, out cloth, out chemicals, out tape);
+            Assert.AreEqual(2, cloth);
+            Assert.AreEqual(0, chemicals);
+            Assert.AreEqual(1, tape);
+        }
     }
 }
