@@ -262,7 +262,7 @@ namespace OutpostZero.Combat
             if (eject.sqrMagnitude < 0.01f) eject = Vector3.right;
             body.AddForce((eject.normalized + Vector3.up) * 1.6f, ForceMode.Impulse);
             body.AddTorque(Random.insideUnitSphere * 0.4f, ForceMode.Impulse);
-            shell.AddComponent<BrassDrop>().Arm(BrassCue.Sound(type), BrassCue.Volume(type));
+            shell.AddComponent<BrassDrop>().Arm(BrassCue.Sound(type), BrassCue.Volume(type), type);
             Object.Destroy(shell, 1.4f);
         }
 
@@ -272,12 +272,14 @@ namespace OutpostZero.Combat
             private string sound = "";
             private float volume;
             private bool played;
+            private WeaponType kind;
 
-            public void Arm(string id, float gain)
+            public void Arm(string id, float gain, WeaponType type)
             {
                 ejectedAt = Time.time;
                 sound = id ?? "";
                 volume = gain;
+                kind = type;
             }
 
             private void Update()
@@ -287,6 +289,8 @@ namespace OutpostZero.Combat
                 played = true;
                 if (sound.Length == 0 || volume <= 0f) return;
                 OutpostZero.Shell.AudioManager.Instance?.PlayAt(sound, transform.position, volume);
+                if (ShellRing.Calls(kind) && OutpostZero.Sensory.NoiseManager.Instance != null)
+                    OutpostZero.Sensory.NoiseManager.Instance.EmitNoise(transform.position, ShellRing.Radius, ShellRing.Loud, Core.NoiseType.ShellClink, null);
                 var mark = GameObject.CreatePrimitive(PrimitiveType.Quad);
                 mark.name = "BrassMark";
                 Seat(mark);

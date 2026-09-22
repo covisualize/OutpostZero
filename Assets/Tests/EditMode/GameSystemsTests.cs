@@ -4231,6 +4231,25 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void ASpentCasingCallsAnythingClose()
+        {
+            Assert.AreEqual(3.2f, ShellRing.Radius, 0.001f);
+            Assert.AreEqual(0.28f, ShellRing.Loud, 0.001f);
+            Assert.IsTrue(ShellRing.Calls(WeaponType.Pistol));
+            Assert.IsTrue(ShellRing.Calls(WeaponType.Shotgun));
+            Assert.IsTrue(ShellRing.Calls(WeaponType.Rifle));
+            Assert.IsTrue(ShellRing.Calls(WeaponType.SMG));
+            Assert.IsFalse(ShellRing.Calls(WeaponType.Melee));
+            Assert.Greater(ShellRing.Radius, 2f);
+            Assert.Less(ShellRing.Radius, 6f);
+            Assert.Less(ShellRing.Radius, BleedScent.Radius);
+            Assert.AreEqual("[Shell, east]", Presentation.Caption(NoiseType.ShellClink, 1f, 0f, "en"));
+            Assert.AreEqual("[Casquillo, este]", Presentation.Caption(NoiseType.ShellClink, 1f, 0f, "es"));
+            Assert.AreEqual("", Presentation.Caption(NoiseType.WalkFootstep, 1f, 0f, "en"));
+            Assert.IsFalse(StormCover.Masks(10f, 10.6f, NoiseType.ShellClink));
+        }
+
+        [Test]
         public void StreetLampsFollowTheDarkAndNoonStaysOut()
         {
             Assert.AreEqual(0f, DayNightCycle.HourToNight(12f), 0.001f);
