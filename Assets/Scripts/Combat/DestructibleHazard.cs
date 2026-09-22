@@ -111,7 +111,7 @@ namespace OutpostZero.Combat
 
             CombatVfx.Burst(origin, kind);
             CombatEvents.RaiseHit(origin, Vector3.up, gameObject);
-            GameplayFeedback.Toast(kind == HazardKind.Explosive ? "Barrel exploded" : kind == HazardKind.Toxic ? "Toxic cloud" : "Oil spill");
+            GameplayFeedback.Toast(FightSay.Hazard(kind, null));
             Chain(origin);
             if (kind == HazardKind.Toxic) GasField.Open(transform.position);
             if (kind == HazardKind.Oil) OilPatch.Leave(transform.position);

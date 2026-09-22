@@ -5575,6 +5575,39 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void StreetShoutsFollowTheLanguage()
+        {
+            Assert.AreEqual("Barrel exploded", FightSay.Hazard(HazardKind.Explosive, "en"));
+            Assert.AreEqual("El barril explotó", FightSay.Hazard(HazardKind.Explosive, "es"));
+            Assert.AreEqual("Toxic cloud", FightSay.Hazard(HazardKind.Toxic, "en"));
+            Assert.AreEqual("Nube tóxica", FightSay.Hazard(HazardKind.Toxic, "es"));
+            Assert.AreEqual("Oil spill", FightSay.Hazard(HazardKind.Oil, "en"));
+            Assert.AreEqual("Derrame de aceite", FightSay.Hazard(HazardKind.Oil, "es"));
+            Assert.AreEqual("Molotov burst", FightSay.Impact(true, "en"));
+            Assert.AreEqual("Estalló el molotov", FightSay.Impact(true, "es"));
+            Assert.AreEqual("Lure clattered", FightSay.Impact(false, "en"));
+            Assert.AreEqual("El cebo resonó", FightSay.Impact(false, "es"));
+            Assert.AreEqual("Mara stays at the sanctuary", StreetAsk.Stays("Mara", "en"));
+            Assert.AreEqual("Mara se queda en el santuario", StreetAsk.Stays("Mara", "es"));
+            Assert.AreEqual("Radio part stowed", StreetAsk.Stowed(true, "en"));
+            Assert.AreEqual("Pieza de radio guardada", StreetAsk.Stowed(true, "es"));
+            Assert.AreEqual("Cache searched", StreetAsk.Stowed(false, "en"));
+            Assert.AreEqual("Alijo registrado", StreetAsk.Stowed(false, "es"));
+            Assert.AreEqual("Gear recovered", StreetAsk.Kept(true, "en"));
+            Assert.AreEqual("Equipo recuperado", StreetAsk.Kept(true, "es"));
+            Assert.AreEqual("Nothing left but the name", StreetAsk.Kept(false, "en"));
+            Assert.AreEqual("No queda más que el nombre", StreetAsk.Kept(false, "es"));
+            Assert.AreEqual("Inside", DoorMap.Cross(false, "en"));
+            Assert.AreEqual("Dentro", DoorMap.Cross(false, "es"));
+            Assert.AreEqual("Back on the street", DoorMap.Cross(true, "en"));
+            Assert.AreEqual("De vuelta en la calle", DoorMap.Cross(true, "es"));
+            Assert.AreEqual("Step inside", DoorMap.Prompt(false));
+            Assert.AreEqual("Generator repair fitted", CraftSay.Fitted("repair_kit", "Repair Kit", "en"));
+            Assert.AreEqual("Reparación del generador colocado", CraftSay.Fitted("repair_kit", "Repair Kit", "es"));
+            Assert.AreEqual("Pipe bomb burst", FightSay.Burst("en"));
+        }
+
+        [Test]
         public void AZombieWithoutARigStillAttacksAndFalls()
         {
             Assert.AreEqual(14f, PoseSheet.Lean(ZombieAI.ZombieState.Chase, 0f), 0.001f);

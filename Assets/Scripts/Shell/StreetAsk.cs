@@ -36,6 +36,21 @@ namespace OutpostZero.Shell
             return Person(name, language) + " " + Word("ask.takes", language);
         }
 
+        public static string Stays(string name, string language)
+        {
+            return Person(name, language) + " " + Word("ask.stays", language);
+        }
+
+        public static string Stowed(bool radio, string language)
+        {
+            return Word(radio ? "ask.stowed" : "ask.searched", language);
+        }
+
+        public static string Kept(bool gear, string language)
+        {
+            return Word(gear ? "ask.kept" : "ask.nameonly", language);
+        }
+
         public static string Brief(string id, string fallback, string language)
         {
             string key = "ask.brief." + (id ?? "");

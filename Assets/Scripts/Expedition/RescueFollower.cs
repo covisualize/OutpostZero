@@ -88,7 +88,7 @@ namespace OutpostZero.Expedition
             }
             joined = true;
             following = false;
-            GameplayFeedback.Toast(personName + " stays at the sanctuary");
+            GameplayFeedback.Toast(StreetAsk.Stays(personName, null));
             gameObject.SetActive(false);
         }
 

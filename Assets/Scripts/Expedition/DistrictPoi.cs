@@ -41,7 +41,7 @@ namespace OutpostZero.Expedition
             taken = true;
             ObjectiveTracker.Instance?.MarkPoi();
             if (!string.IsNullOrEmpty(stamp)) OutpostZero.Shell.WorldMapService.Instance?.NoteStreet(stamp);
-            GameplayFeedback.Toast(role == "radio" ? "Radio part stowed" : "Cache searched");
+            GameplayFeedback.Toast(StreetAsk.Stowed(role == "radio", null));
         }
     }
 }

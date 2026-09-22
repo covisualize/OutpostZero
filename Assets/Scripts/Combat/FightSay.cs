@@ -11,6 +11,14 @@ namespace OutpostZero.Combat
         public static string Down(string language) => Word("fight.down", language);
         public static string Burst(string language) => Word("fight.burst", language);
         public static string Flare(string language) => Word("fight.flare", language);
+        public static string Impact(bool molotov, string language) => Word(molotov ? "fight.molotov" : "fight.lure", language);
+
+        public static string Hazard(HazardKind kind, string language)
+        {
+            if (kind == HazardKind.Toxic) return Word("fight.toxic", language);
+            if (kind == HazardKind.Oil) return Word("fight.oil", language);
+            return Word("fight.barrel", language);
+        }
         public static string Held(string language) => Word("fight.held", language);
         public static string Swap(string language) => Word("fight.swap", language);
         public static string Boards(string language) => Word("fight.boards", language);

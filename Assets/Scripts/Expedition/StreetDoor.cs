@@ -43,7 +43,7 @@ namespace OutpostZero.Expedition
             if (follower != null && follower.Following)
                 follower.transform.position = dest + new Vector3(0.8f, 0f, 0f);
 
-            GameplayFeedback.Toast(leaving ? "Back on the street" : "Inside");
+            GameplayFeedback.Toast(DoorMap.Cross(leaving, null));
         }
     }
 }

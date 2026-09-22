@@ -24,6 +24,14 @@ namespace OutpostZero.Colony
             return builder.ToString();
         }
 
+        public static string Fitted(string id, string label, string language)
+        {
+            string key = "recipe." + (id ?? "");
+            string name = Word(key, language);
+            if (name == key || string.IsNullOrEmpty(name)) name = label ?? "";
+            return name + " " + Word("craft.fitted", language);
+        }
+
         private static string Word(string key, string language)
         {
             if (string.IsNullOrEmpty(language)) return Loc.T(key);

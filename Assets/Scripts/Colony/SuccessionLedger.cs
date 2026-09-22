@@ -194,7 +194,7 @@ namespace OutpostZero.Colony
             taken = true;
             inventory.RestoreGear(gear);
             SurvivorRoster.Instance?.Recover(index);
-            GameplayFeedback.Toast(string.IsNullOrEmpty(gear) ? "Nothing left but the name" : "Gear recovered");
+            GameplayFeedback.Toast(StreetAsk.Kept(!string.IsNullOrEmpty(gear), null));
             Destroy(gameObject);
         }
     }

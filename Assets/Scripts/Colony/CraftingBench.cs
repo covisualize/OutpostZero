@@ -102,7 +102,7 @@ namespace OutpostZero.Colony
                     GameplayFeedback.Toast(Loc.T("gate.gen"));
                     return false;
                 }
-                GameplayFeedback.Toast(recipe.Label + " fitted");
+                GameplayFeedback.Toast(CraftSay.Fitted(recipe.Id, recipe.Label, null));
                 return true;
             }
             if (recipe.Id == "barricade_kit")
@@ -113,7 +113,7 @@ namespace OutpostZero.Colony
                     GameplayFeedback.Toast(Loc.T("gate.wall"));
                     return false;
                 }
-                GameplayFeedback.Toast(recipe.Label + " fitted");
+                GameplayFeedback.Toast(CraftSay.Fitted(recipe.Id, recipe.Label, null));
                 return true;
             }
             if (recipe.Id == "radio_spare")
@@ -126,7 +126,7 @@ namespace OutpostZero.Colony
                     return false;
                 }
                 map.GrantSpare();
-                GameplayFeedback.Toast(recipe.Label + " fitted");
+                GameplayFeedback.Toast(CraftSay.Fitted(recipe.Id, recipe.Label, null));
                 return true;
             }
 
@@ -141,7 +141,7 @@ namespace OutpostZero.Colony
                 }
                 var mod = weapon.GetComponent<WeaponMod>() ?? weapon.gameObject.AddComponent<WeaponMod>();
                 mod.Apply(recipe.OutputId);
-                GameplayFeedback.Toast(recipe.Label + " fitted");
+                GameplayFeedback.Toast(CraftSay.Fitted(recipe.Id, recipe.Label, null));
                 return true;
             }
 
