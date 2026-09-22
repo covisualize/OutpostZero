@@ -158,6 +158,7 @@ namespace OutpostZero.Core
             {
                 var container = go.AddComponent<LootContainer>();
                 container.Configure(name.Contains("Mil") ? "military" : "crate");
+                container.Stamp(StreetLedger.Mark(name, go.transform.position.x, go.transform.position.z));
                 if (go.GetComponent<Collider>() == null)
                 {
                     var box = go.AddComponent<BoxCollider>();

@@ -232,7 +232,11 @@ namespace OutpostZero.Expedition
         {
             box.Configure(table);
             box.Stamp(mark);
-            if (WorldMapService.Instance != null && WorldMapService.Instance.StreetTaken(mark)) box.MarkEmpty();
+            if (WorldMapService.Instance == null) return;
+            string left = WorldMapService.Instance.StreetLeft(mark);
+            if (left == null) return;
+            if (left.Length == 0) box.MarkEmpty();
+            else box.Restore(left);
         }
 
         private static bool Close(float a, float b)

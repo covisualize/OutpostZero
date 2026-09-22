@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace OutpostZero.Items
 {
     /// <summary>
@@ -68,6 +70,36 @@ namespace OutpostZero.Items
                 text += stacks[i].Id + "*" + stacks[i].Count;
             }
             return text;
+        }
+
+        public static string Encode(Stack[] stacks)
+        {
+            if (stacks == null || stacks.Length == 0) return "";
+            string text = "";
+            for (int i = 0; i < stacks.Length; i++)
+            {
+                if (string.IsNullOrEmpty(stacks[i].Id) || stacks[i].Count <= 0) continue;
+                if (text.Length > 0) text += ";";
+                text += stacks[i].Id + "*" + stacks[i].Count;
+            }
+            return text;
+        }
+
+        public static Stack[] Decode(string body)
+        {
+            if (string.IsNullOrEmpty(body)) return new Stack[0];
+            var bits = body.Split(';');
+            var list = new List<Stack>();
+            for (int i = 0; i < bits.Length; i++)
+            {
+                if (string.IsNullOrEmpty(bits[i])) continue;
+                var pair = bits[i].Split('*');
+                if (pair.Length < 2 || string.IsNullOrEmpty(pair[0])) continue;
+                int.TryParse(pair[1], out int count);
+                if (count <= 0) continue;
+                list.Add(new Stack { Id = pair[0], Count = count });
+            }
+            return list.ToArray();
         }
 
         public static string Offer(Stack stack)

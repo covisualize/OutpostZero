@@ -4,8 +4,9 @@ using System.Collections.Generic;
 namespace OutpostZero.Shell
 {
     /// <summary>
-    /// Spots already emptied on a district. A later trip to that street finds them empty.
-    /// Another district keeps its own list. The campaign save stays schema 1.
+    /// Spots already opened on a district. An empty mark stays empty. A held mark
+    /// keeps the stacks that were left. Another district keeps its own list.
+    /// The campaign save stays schema 1.
     /// </summary>
     public static class StreetLedger
     {
@@ -19,13 +20,38 @@ namespace OutpostZero.Shell
 
         public static string Note(string packed, string district, string mark)
         {
-            packed = packed ?? "";
-            if (string.IsNullOrEmpty(district) || string.IsNullOrEmpty(mark)) return packed;
-            if (Has(packed, district, mark)) return packed;
+            packed = Drop(packed, district, mark);
+            if (string.IsNullOrEmpty(district) || string.IsNullOrEmpty(mark)) return packed ?? "";
             var list = Split(packed);
             list.Add(district + "=" + mark);
             list.Sort(StringComparer.Ordinal);
             return Join(list);
+        }
+
+        public static string Hold(string packed, string district, string mark, string body)
+        {
+            if (string.IsNullOrEmpty(body)) return Note(packed, district, mark);
+            packed = Drop(packed, district, mark);
+            if (string.IsNullOrEmpty(district) || string.IsNullOrEmpty(mark)) return packed ?? "";
+            body = body.Replace("|", ";").Replace("=", "").Replace("~", "");
+            var list = Split(packed);
+            list.Add(district + "=" + mark + "~" + body);
+            list.Sort(StringComparer.Ordinal);
+            return Join(list);
+        }
+
+        public static string Read(string packed, string district, string mark)
+        {
+            if (string.IsNullOrEmpty(packed) || string.IsNullOrEmpty(district) || string.IsNullOrEmpty(mark)) return null;
+            string gone = district + "=" + mark;
+            string prefix = gone + "~";
+            var list = Split(packed);
+            for (int i = 0; i < list.Count; i++)
+            {
+                if (list[i] == gone) return "";
+                if (list[i].StartsWith(prefix, StringComparison.Ordinal)) return list[i].Substring(prefix.Length);
+            }
+            return null;
         }
 
         public static bool Has(string packed, string district, string mark)
@@ -51,6 +77,24 @@ namespace OutpostZero.Shell
                 if (list[i].StartsWith(prefix, StringComparison.Ordinal)) count++;
             }
             return count;
+        }
+
+        private static string Drop(string packed, string district, string mark)
+        {
+            packed = packed ?? "";
+            if (string.IsNullOrEmpty(district) || string.IsNullOrEmpty(mark)) return packed;
+            string gone = district + "=" + mark;
+            string prefix = gone + "~";
+            var list = Split(packed);
+            bool changed = false;
+            for (int i = list.Count - 1; i >= 0; i--)
+            {
+                if (list[i] != gone && !list[i].StartsWith(prefix, StringComparison.Ordinal)) continue;
+                list.RemoveAt(i);
+                changed = true;
+            }
+            if (!changed) return packed;
+            return Join(list);
         }
 
         private static List<string> Split(string packed)

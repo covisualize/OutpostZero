@@ -1067,6 +1067,42 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void APartlyEmptiedCrateKeepsWhatIsLeft()
+        {
+            var stacks = new[]
+            {
+                new ContainerHold.Stack { Id = "scrap", Count = 4 },
+                new ContainerHold.Stack { Id = "bandage", Count = 1 }
+            };
+            Assert.AreEqual("scrap*4;bandage*1", ContainerHold.Encode(stacks));
+            var back = ContainerHold.Decode("scrap*4;bandage*1");
+            Assert.AreEqual(2, back.Length);
+            Assert.AreEqual("scrap", back[0].Id);
+            Assert.AreEqual(4, back[0].Count);
+            Assert.AreEqual("bandage", back[1].Id);
+            Assert.AreEqual(1, back[1].Count);
+            Assert.AreEqual(0, ContainerHold.Decode("").Length);
+            Assert.AreEqual(0, ContainerHold.Decode(null).Length);
+            string mark = StreetLedger.Mark("crate", 2.2f, 12f);
+            Assert.AreEqual("crate@22,120", mark);
+            string packed = StreetLedger.Hold(null, "ash_market", mark, "scrap*4;bandage*1");
+            Assert.AreEqual("ash_market=crate@22,120~scrap*4;bandage*1", packed);
+            Assert.IsFalse(StreetLedger.Has(packed, "ash_market", mark));
+            Assert.AreEqual("scrap*4;bandage*1", StreetLedger.Read(packed, "ash_market", mark));
+            Assert.AreEqual(1, StreetLedger.Count(packed, "ash_market"));
+            Assert.IsNull(StreetLedger.Read(packed, "rail_yard", mark));
+            packed = StreetLedger.Hold(packed, "ash_market", mark, "scrap*1");
+            Assert.AreEqual("scrap*1", StreetLedger.Read(packed, "ash_market", mark));
+            Assert.AreEqual(1, StreetLedger.Count(packed, "ash_market"));
+            packed = StreetLedger.Note(packed, "ash_market", mark);
+            Assert.AreEqual("", StreetLedger.Read(packed, "ash_market", mark));
+            Assert.IsTrue(StreetLedger.Has(packed, "ash_market", mark));
+            Assert.AreEqual(1, StreetLedger.Count(packed, "ash_market"));
+            Assert.IsNull(StreetLedger.Read("", "ash_market", mark));
+            Assert.IsNull(StreetLedger.Read(null, "ash_market", mark));
+        }
+
+        [Test]
         public void ABurstBarrelStaysGoneOnTheNextTrip()
         {
             string barrel = StreetLedger.Mark("barrel_explosive", 1.6f, 4f);

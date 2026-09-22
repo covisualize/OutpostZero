@@ -16,6 +16,7 @@ namespace OutpostZero.Items
         public static LootContainer Open { get; private set; }
 
         public string Contents => ContainerHold.Signature(stacks);
+        public string StampId => stamp ?? "";
         public int HeldCount => stacks == null ? 0 : stacks.Length;
         public string Prompt => looted ? string.Empty : rolled ? "Take from container" : "Search container";
 
@@ -49,6 +50,28 @@ namespace OutpostZero.Items
             if (Open == this) Open = null;
         }
 
+        public void Restore(string body)
+        {
+            stacks = ContainerHold.Decode(body);
+            rolled = true;
+            looted = stacks.Length == 0;
+            if (looted && Open == this) Open = null;
+        }
+
+        public static void Sweep()
+        {
+            if (OutpostZero.Shell.WorldMapService.Instance == null) return;
+            var boxes = Object.FindObjectsByType<LootContainer>(FindObjectsSortMode.None);
+            for (int i = 0; i < boxes.Length; i++)
+            {
+                if (boxes[i] == null || string.IsNullOrEmpty(boxes[i].StampId)) continue;
+                string left = OutpostZero.Shell.WorldMapService.Instance.StreetLeft(boxes[i].StampId);
+                if (left == null) continue;
+                if (left.Length == 0) boxes[i].MarkEmpty();
+                else boxes[i].Restore(left);
+            }
+        }
+
         public bool CanInteract(PlayerInventory inventory) => !looted && inventory != null;
 
         public void Interact(PlayerInventory inventory)
@@ -59,6 +82,7 @@ namespace OutpostZero.Items
             PackView.AskOpen();
             GameplayFeedback.Toast(stacks.Length > 0 ? "Container open" : "Empty");
             if (stacks.Length == 0) Finish();
+            else Remember();
         }
 
         public bool Take(string id, PlayerInventory inventory)
@@ -73,6 +97,7 @@ namespace OutpostZero.Items
                 return false;
             }
             if (stacks.Length == 0) Finish();
+            else Remember();
             return true;
         }
 
@@ -96,6 +121,7 @@ namespace OutpostZero.Items
                 GameplayFeedback.Toast("Left some loot behind");
             }
             if (stacks.Length == 0) Finish();
+            else Remember();
             return given;
         }
 
@@ -157,6 +183,12 @@ namespace OutpostZero.Items
             for (int i = 0; i < stacks.Length; i++) next[i] = stacks[i];
             next[stacks.Length] = new ContainerHold.Stack { Id = id, Count = count };
             return next;
+        }
+
+        private void Remember()
+        {
+            if (string.IsNullOrEmpty(stamp)) return;
+            OutpostZero.Shell.WorldMapService.Instance?.NoteHold(stamp, ContainerHold.Encode(stacks));
         }
 
         private void Finish()

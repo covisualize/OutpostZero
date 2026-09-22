@@ -4,6 +4,7 @@ using UnityEngine;
 using OutpostZero.Colony;
 using OutpostZero.Combat;
 using OutpostZero.Core;
+using OutpostZero.Items;
 
 namespace OutpostZero.Shell
 {
@@ -342,6 +343,7 @@ namespace OutpostZero.Shell
             WorldMapService.Instance?.RestoreCampaign(data.radio, data.difficulty, data.broadcast, data.worldSeed, data.endless);
             WorldMapService.Instance?.RestoreStreet(data.street);
             DestructibleHazard.Sweep();
+            LootContainer.Sweep();
             if (data.districtIndex > data.districtsCleared) WorldMapService.Instance?.SelectIndex(data.districtIndex);
             if (data.nextDifficulty > 0) SettingsService.Instance?.SetNextDifficulty(data.nextDifficulty);
             SettingsService.Instance?.ApplyComfort(data.goreLevel, data.hitStop, data.damageNumbers, data.hudOpacity, data.brightness, data.motionBlur, data.windowMode);

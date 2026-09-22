@@ -92,6 +92,18 @@ namespace OutpostZero.Shell
             return StreetLedger.Has(street, district, mark);
         }
 
+        public void NoteHold(string mark, string body)
+        {
+            string district = Current != null ? Current.id : "";
+            street = StreetLedger.Hold(street, district, mark, body);
+        }
+
+        public string StreetLeft(string mark)
+        {
+            string district = Current != null ? Current.id : "";
+            return StreetLedger.Read(street, district, mark);
+        }
+
         public void RestoreStreet(string packed)
         {
             street = packed ?? "";
