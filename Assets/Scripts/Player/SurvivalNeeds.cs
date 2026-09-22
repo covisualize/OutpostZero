@@ -53,6 +53,11 @@ namespace OutpostZero.Player
             Mirror();
         }
 
+        public void SetFatigue(float value)
+        {
+            fatigue = UnityEngine.Mathf.Clamp(value, 0f, 100f);
+        }
+
         public void Apply(float hungerValue, float thirstValue, float fatigueValue)
         {
             hunger = Mathf.Clamp(hungerValue, 0f, 100f);

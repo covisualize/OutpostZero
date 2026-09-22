@@ -89,6 +89,12 @@ namespace OutpostZero.Player
             knockdownRemaining = Mathf.Max(knockdownRemaining, seconds);
         }
 
+        public void RestoreCondition(bool bleeding, float infectionSeconds)
+        {
+            bleedRemaining = bleeding ? -1f : 0f;
+            infection = infectionSeconds < 0.05f ? 0f : infectionSeconds;
+        }
+
         public void ClearInjury()
         {
             poisonRemaining = 0f;

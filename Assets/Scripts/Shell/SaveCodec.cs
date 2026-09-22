@@ -54,6 +54,10 @@ namespace OutpostZero.Shell
         public int fuelSet;
         public int shots;
         public int packTier;
+        public int fatigue;
+        public int fatigueSet;
+        public int bleed;
+        public int infection;
         public string prints = "";
         public int kills;
         public int lifetimeKills;

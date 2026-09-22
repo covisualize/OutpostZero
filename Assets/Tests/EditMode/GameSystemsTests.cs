@@ -1587,6 +1587,38 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void FatigueBleedAndFeverStayOnTheExistingSave()
+        {
+            Assert.AreEqual(200, BodyState.PackFatigue(20f));
+            Assert.AreEqual(0, BodyState.PackFatigue(-3f));
+            Assert.AreEqual(1000, BodyState.PackFatigue(140f));
+            Assert.AreEqual(20f, BodyState.UnpackFatigue(200, 1), 0.001f);
+            Assert.AreEqual(0f, BodyState.UnpackFatigue(0, 1), 0.001f);
+            Assert.AreEqual(-1f, BodyState.UnpackFatigue(0, 0), 0.001f);
+            Assert.AreEqual(1, BodyState.PackBleed(true));
+            Assert.AreEqual(0, BodyState.PackBleed(false));
+            Assert.IsTrue(BodyState.UnpackBleed(1));
+            Assert.IsFalse(BodyState.UnpackBleed(0));
+            Assert.AreEqual(0, BodyState.PackInfection(0f));
+            Assert.AreEqual(900, BodyState.PackInfection(90f));
+            Assert.AreEqual(1810, BodyState.PackInfection(400f));
+            Assert.AreEqual(90f, BodyState.UnpackInfection(900), 0.001f);
+            Assert.AreEqual(0f, BodyState.UnpackInfection(0), 0.001f);
+
+            var data = new SaveGameData { fatigue = 200, fatigueSet = 1, bleed = 1, infection = 900 };
+            Assert.IsTrue(SaveCodec.TryDeserialize(SaveCodec.Serialize(data), out var loaded, out var error), error);
+            Assert.AreEqual(200, loaded.fatigue);
+            Assert.AreEqual(1, loaded.fatigueSet);
+            Assert.AreEqual(1, loaded.bleed);
+            Assert.AreEqual(900, loaded.infection);
+            Assert.IsTrue(SaveCodec.TryDeserialize("{\"schemaVersion\":1}", out var legacy, out var legacyError), legacyError);
+            Assert.AreEqual(0, legacy.fatigueSet);
+            Assert.AreEqual(0, legacy.bleed);
+            Assert.AreEqual(0, legacy.infection);
+            Assert.AreEqual(-1f, BodyState.UnpackFatigue(legacy.fatigue, legacy.fatigueSet), 0.001f);
+        }
+
+        [Test]
         public void HungerSlowsRecoveryAndThirstShrinksStamina()
         {
             Assert.AreEqual(55f, NeedsPressure.HungerPerSecond * 600f, 0.01f);

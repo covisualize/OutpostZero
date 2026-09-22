@@ -212,6 +212,18 @@ namespace OutpostZero.Shell
                 data.weaponMods = OutpostZero.Player.PlayerRegistry.Current.PackMods();
                 var inventory = OutpostZero.Player.PlayerRegistry.Current.GetComponent<OutpostZero.Player.PlayerInventory>();
                 if (inventory != null) data.packTier = inventory.PackTier;
+                var needs = OutpostZero.Player.PlayerRegistry.Current.GetComponent<OutpostZero.Player.SurvivalNeeds>();
+                if (needs != null)
+                {
+                    data.fatigue = OutpostZero.Player.BodyState.PackFatigue(needs.Fatigue);
+                    data.fatigueSet = 1;
+                }
+                var effects = OutpostZero.Player.PlayerRegistry.Current.GetComponent<OutpostZero.Player.StatusEffectController>();
+                if (effects != null)
+                {
+                    data.bleed = OutpostZero.Player.BodyState.PackBleed(effects.IsBleeding);
+                    data.infection = OutpostZero.Player.BodyState.PackInfection(effects.Infection);
+                }
             }
             if (SurvivorRoster.Instance != null)
             {
@@ -307,6 +319,12 @@ namespace OutpostZero.Shell
             CodexDirector.Instance?.Restore(data.codex);
             OutpostZero.Player.PlayerRegistry.Current?.RestoreMods(data.weaponMods);
             OutpostZero.Player.PlayerRegistry.Current?.GetComponent<OutpostZero.Player.PlayerInventory>()?.SetPackTier(data.packTier);
+            float keptFatigue = OutpostZero.Player.BodyState.UnpackFatigue(data.fatigue, data.fatigueSet);
+            if (keptFatigue >= 0f)
+                OutpostZero.Player.PlayerRegistry.Current?.GetComponent<OutpostZero.Player.SurvivalNeeds>()?.SetFatigue(keptFatigue);
+            OutpostZero.Player.PlayerRegistry.Current?.GetComponent<OutpostZero.Player.StatusEffectController>()?.RestoreCondition(
+                OutpostZero.Player.BodyState.UnpackBleed(data.bleed),
+                OutpostZero.Player.BodyState.UnpackInfection(data.infection));
             WorldMapService.Instance?.RestoreCleared(data.districtsCleared);
             WorldMapService.Instance?.RestoreCampaign(data.radio, data.difficulty, data.broadcast, data.worldSeed, data.endless);
             if (data.districtIndex > data.districtsCleared) WorldMapService.Instance?.SelectIndex(data.districtIndex);
