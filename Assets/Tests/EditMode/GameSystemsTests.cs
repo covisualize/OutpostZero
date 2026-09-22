@@ -6126,6 +6126,24 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void ACrouchedBladeStaysCloseAndAGunKeepsItsReach()
+        {
+            Assert.AreEqual(0.45f, QuietSwing.Crouch, 0.001f);
+            Assert.AreEqual(1f, QuietSwing.Scale(false, WeaponType.Melee), 0.001f);
+            Assert.AreEqual(0.45f, QuietSwing.Scale(true, WeaponType.Melee), 0.001f);
+            Assert.AreEqual(1f, QuietSwing.Scale(true, WeaponType.Pistol), 0.001f);
+            Assert.AreEqual(1f, QuietSwing.Scale(true, WeaponType.Shotgun), 0.001f);
+            Assert.AreEqual(2f, QuietSwing.Radius(2f, false, WeaponType.Melee), 0.001f);
+            Assert.AreEqual(0.9f, QuietSwing.Radius(2f, true, WeaponType.Melee), 0.001f);
+            Assert.AreEqual(0f, QuietSwing.Radius(-1f, true, WeaponType.Melee), 0.001f);
+            Assert.AreEqual(20f, QuietSwing.Radius(20f, true, WeaponType.Pistol), 0.001f);
+            Assert.AreEqual(34f, QuietSwing.Radius(34f, true, WeaponType.Rifle), 0.001f);
+            Assert.AreEqual(2f, WeaponCard.Find("machete").Noise, 0.001f);
+            Assert.AreEqual(8f, SwingCost.Melee, 0.001f);
+            Assert.AreEqual(48f, WeaponCard.Find("machete").Damage, 0.001f);
+        }
+
+        [Test]
         public void AZombieWithoutARigStillAttacksAndFalls()
         {
             Assert.AreEqual(14f, PoseSheet.Lean(ZombieAI.ZombieState.Chase, 0f), 0.001f);

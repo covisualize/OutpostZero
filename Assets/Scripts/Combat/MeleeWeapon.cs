@@ -59,7 +59,8 @@ namespace OutpostZero.Combat
                 OutpostZero.Shell.AudioManager.Instance?.PlayAt(whoosh, transform.position, SwingCue.Volume);
 
             // Emit faint noise (whiff / grunt)
-            EmitWeaponNoise();
+            var body = ownerGameObject != null ? ownerGameObject.GetComponent<OutpostZero.Player.PlayerController>() : null;
+            EmitWeaponNoise(QuietSwing.Scale(body != null && body.IsCrouching, weaponType));
 
             Vector3 origin = ownerTransform != null ? ownerTransform.position : transform.position;
             Vector3 forward = targetDirection.normalized;
