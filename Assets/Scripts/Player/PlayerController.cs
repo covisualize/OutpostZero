@@ -470,8 +470,14 @@ namespace OutpostZero.Player
             for (int i = 0; i < count; i++)
             {
                 if (i > 0) builder.Append('\n');
-                string name = equippedWeapons[i] != null ? equippedWeapons[i].WeaponName : "";
-                builder.Append(WeaponWheel.Row(i, name, i == WheelSlot));
+                string name = "";
+                if (equippedWeapons[i] != null)
+                {
+                    var held = equippedWeapons[i];
+                    string id = held is FirearmWeapon gun ? gun.CardId : WeaponCard.IdFor(held.Type);
+                    name = FightSay.Gun(id, held.WeaponName, null);
+                }
+                builder.Append(WeaponWheel.Row(i, name, i == WheelSlot, null));
             }
             return builder.ToString();
         }

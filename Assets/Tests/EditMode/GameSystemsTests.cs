@@ -4578,6 +4578,19 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void AWeaponNameOnTheStreetFollowsTheLanguage()
+        {
+            Assert.AreEqual("> 1  Pistol", WeaponWheel.Row(0, "Pistol", true));
+            Assert.AreEqual("  3  empty", WeaponWheel.Row(2, "", false));
+            Assert.AreEqual("  3  vacío", WeaponWheel.Row(2, "", false, "es"));
+            Assert.AreEqual("> 1  Rifle de asalto", WeaponWheel.Row(0, FightSay.Gun("rifle_assault", "Assault Rifle", "es"), true, "es"));
+            Assert.AreEqual("Assault Rifle", FightSay.Gun("rifle_assault", "Assault Rifle", "en"));
+            Assert.AreEqual("Rifle de asalto", FightSay.Gun("rifle_assault", "Assault Rifle", "es"));
+            Assert.AreEqual("Steel Machete", FightSay.Gun("machete", "Steel Machete", "en"));
+            Assert.AreEqual("Machete de acero", FightSay.Gun(WeaponCard.IdFor(WeaponType.Melee), "Steel Machete", "es"));
+        }
+
+        [Test]
         public void StreetLampsFollowTheDarkAndNoonStaysOut()
         {
             Assert.AreEqual(0f, DayNightCycle.HourToNight(12f), 0.001f);

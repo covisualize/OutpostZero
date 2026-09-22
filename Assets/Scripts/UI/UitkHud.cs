@@ -63,11 +63,11 @@ namespace OutpostZero.UI
             }
             if (player.ActiveWeapon is FirearmWeapon gun)
             {
-                ammo.text = gun.WeaponName + "  " + gun.CurrentAmmo + " / " + gun.ReserveAmmo;
+                ammo.text = FightSay.Gun(gun.CardId, gun.WeaponName, null) + "  " + gun.CurrentAmmo + " / " + gun.ReserveAmmo;
             }
             else if (player.ActiveWeapon != null)
             {
-                ammo.text = player.ActiveWeapon.WeaponName;
+                ammo.text = FightSay.Gun(WeaponCard.IdFor(player.ActiveWeapon.Type), player.ActiveWeapon.WeaponName, null);
             }
         }
 

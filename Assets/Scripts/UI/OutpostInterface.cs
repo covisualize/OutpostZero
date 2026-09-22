@@ -387,13 +387,13 @@ namespace OutpostZero.UI
                 bool low = MagPulse.Low(gun.CurrentAmmo, gun.MaxMagazine, gun.IsReloading);
                 string reload = StreetHud.Ammo("", gun.CurrentAmmo, gun.ReserveAmmo, gun.IsReloading, Mathf.RoundToInt(gun.ReloadFill * 100f), low, null);
                 int split = reload.IndexOf("   ");
-                weapon.text = gun.WeaponName + (split >= 0 ? reload.Substring(split) : "");
+                weapon.text = FightSay.Gun(gun.CardId, gun.WeaponName, null) + (split >= 0 ? reload.Substring(split) : "");
                 weapon.style.color = low ? HudPalette.Warn(vision) : Color.white;
                 weapon.style.opacity = MagPulse.Alpha(Time.unscaledTime, low);
             }
             else if (player != null && player.ActiveWeapon != null)
             {
-                weapon.text = player.ActiveWeapon.WeaponName;
+                weapon.text = FightSay.Gun(WeaponCard.IdFor(player.ActiveWeapon.Type), player.ActiveWeapon.WeaponName, null);
                 weapon.style.color = Color.white;
                 weapon.style.opacity = 1f;
             }

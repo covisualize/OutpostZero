@@ -37,9 +37,20 @@ namespace OutpostZero.Combat
 
         public static string Row(int slot, string name, bool hot)
         {
-            string body = string.IsNullOrEmpty(name) ? "empty" : name;
+            return Row(slot, name, hot, "en");
+        }
+
+        public static string Row(int slot, string name, bool hot, string language)
+        {
+            string body = string.IsNullOrEmpty(name) ? Word(language) : name;
             string mark = hot ? ">" : " ";
             return mark + " " + (slot + 1) + "  " + body;
+        }
+
+        private static string Word(string language)
+        {
+            if (string.IsNullOrEmpty(language)) return Shell.Loc.T("wheel.empty");
+            return Shell.Loc.T("wheel.empty", language);
         }
     }
 }
