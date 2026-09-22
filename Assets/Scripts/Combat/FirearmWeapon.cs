@@ -169,7 +169,8 @@ namespace OutpostZero.Combat
             heat = RecoilBloom.AfterShot(heat);
             brassRound++;
             bool showTracer = BrassCue.Tracer(weaponType, brassRound);
-            float spread = RecoilBloom.Spread(spreadAngle, SpreadMultiplier * FieldHand.Spread(SurvivorRoster.LeaderPractice("Guard")) * TraitHook.Aim(SurvivorRoster.LeaderTrait(), SurvivorRoster.LeaderAside()), heat);
+            int guard = SurvivorRoster.LeaderPractice("Guard");
+            float spread = RecoilBloom.Spread(spreadAngle, SpreadMultiplier * FieldHand.Spread(guard) * HandDepth.Spread(guard) * TraitHook.Aim(SurvivorRoster.LeaderTrait(), SurvivorRoster.LeaderAside()), heat);
             for (int i = 0; i < projectilesPerShot; i++)
             {
                 Vector3 shootDir = ApplySpread(targetDirection, spread);
@@ -244,7 +245,8 @@ namespace OutpostZero.Combat
         {
             isReloading = true;
             reloadElapsed = 0f;
-            reloadWait = reloadDuration * FieldHand.Reload(SurvivorRoster.LeaderPractice("Guard"));
+            int guardSkill = SurvivorRoster.LeaderPractice("Guard");
+            reloadWait = reloadDuration * FieldHand.Reload(guardSkill) * HandDepth.Reload(guardSkill);
             OnReloadStarted?.Invoke();
             PlaySound(reloadSound);
             int stage = 0;

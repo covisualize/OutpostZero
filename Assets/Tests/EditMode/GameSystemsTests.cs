@@ -2940,7 +2940,17 @@ namespace OutpostZero.Tests.EditMode
             Assert.AreEqual(50, FieldHand.Medkit(3));
             Assert.AreEqual(56, FieldHand.Medkit(4));
             Assert.AreEqual("Medkit used  +50 HP", FieldHand.Dose(0));
-            Assert.AreEqual("Medkit used  +56 HP", FieldHand.Dose(8));
+            Assert.AreEqual("Medkit used  +56 HP", FieldHand.Dose(4));
+            Assert.AreEqual("Medkit used  +60 HP", FieldHand.Dose(8));
+            Assert.AreEqual(1f, HandDepth.Spread(4), 0.001f);
+            Assert.AreEqual(0.88f, HandDepth.Spread(8), 0.001f);
+            Assert.AreEqual(1f, HandDepth.Reload(4), 0.001f);
+            Assert.AreEqual(0.9f, HandDepth.Reload(8), 0.001f);
+            Assert.AreEqual(0, HandDepth.Heal(4));
+            Assert.AreEqual(4, HandDepth.Heal(8));
+            Assert.AreEqual(0, HandDepth.Scrap(4));
+            Assert.AreEqual(4, HandDepth.Scrap(8));
+            Assert.AreEqual(8, Practice.Gain(8));
             Assert.AreEqual(2.5f, RecoilBloom.Spread(2.5f, FieldHand.Spread(0), 0f), 0.001f);
             Assert.AreEqual(2.125f, RecoilBloom.Spread(2.5f, FieldHand.Spread(4), 0f), 0.001f);
         }

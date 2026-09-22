@@ -417,7 +417,7 @@ namespace OutpostZero.Player
 
             medicalKits--;
             LastDoseSkill = SurvivorRoster.LeaderPractice("Medic");
-            health?.Heal(FieldHand.Medkit(LastDoseSkill));
+            health?.Heal(FieldHand.Medkit(LastDoseSkill) + HandDepth.Heal(LastDoseSkill));
             effects?.StopBleed();
             effects?.CureInfection();
             RecalculateWeight();

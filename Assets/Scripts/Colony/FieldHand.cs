@@ -28,7 +28,7 @@ namespace OutpostZero.Colony
 
         public static string Dose(int skill)
         {
-            return "Medkit used  +" + Medkit(skill) + " HP";
+            return "Medkit used  +" + (Medkit(skill) + HandDepth.Heal(skill)) + " HP";
         }
     }
 }

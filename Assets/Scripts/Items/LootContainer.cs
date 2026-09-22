@@ -102,7 +102,8 @@ namespace OutpostZero.Items
                 if (ItemCatalog.Find(grants[i].ItemId) == null) continue;
                 stacks[write++] = new ContainerHold.Stack { Id = grants[i].ItemId, Count = grants[i].Count };
             }
-            int extra = FieldHand.Scrap(SurvivorRoster.LeaderPractice("Scavenge"));
+            int scavenge = SurvivorRoster.LeaderPractice("Scavenge");
+            int extra = FieldHand.Scrap(scavenge) + HandDepth.Scrap(scavenge);
             if (extra > 0) stacks = Pile(stacks, "scrap", extra);
         }
 
