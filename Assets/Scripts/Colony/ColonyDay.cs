@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using OutpostZero.Graphics;
 
 namespace OutpostZero.Colony
 {
@@ -97,6 +98,11 @@ namespace OutpostZero.Colony
 
         public static string[] Simulate(IList<ColonistDay> people, ref int food, ref int water, bool cot, bool expeditionWon, string fallenName, int bodies, ref int raw)
         {
+            return Simulate(people, ref food, ref water, cot, expeditionWon, fallenName, bodies, ref raw, WeatherKind.Clear);
+        }
+
+        public static string[] Simulate(IList<ColonistDay> people, ref int food, ref int water, bool cot, bool expeditionWon, string fallenName, int bodies, ref int raw, WeatherKind sky)
+        {
             var events = new List<string>();
             if (people == null) return Array.Empty<string>();
             int stain = YardDead.MoodHit(bodies);
@@ -141,7 +147,9 @@ namespace OutpostZero.Colony
                 if (person == null || !person.alive) continue;
 
                 person.fatigue = ShiftWear.After(person.fatigue, person.task, cot);
+                person.fatigue = YardSoak.Wear(person.fatigue, person.task, sky);
                 person.morale -= stain;
+                person.morale -= YardSoak.Mood(person.task, sky);
                 float hungerBefore = person.hunger;
                 person.hunger = Clamp(person.hunger - TraitHook.HungerDrop(person.trait, person.aside, person.mark));
                 person.thirst = Clamp(person.thirst - 22f);
@@ -240,6 +248,7 @@ namespace OutpostZero.Colony
 
             if (MealTable.Argument(volatilePresent, living, leaderPresent) || KinBoard.Quarrel(people, leaderPresent)) Once(events, "argument");
             if (expeditionWon && Average(people) > 70f) Once(events, "celebration");
+            if (YardSoak.Soaked(sky)) Once(events, "soak");
             return events.ToArray();
         }
 

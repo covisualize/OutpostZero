@@ -5408,6 +5408,61 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void AStormSoaksTheYardAndACookStaysDry()
+        {
+            Assert.AreEqual(4, YardSoak.Keep(4, "Scavenge", WeatherKind.Clear));
+            Assert.AreEqual(4, YardSoak.Keep(4, "Scavenge", WeatherKind.Fog));
+            Assert.AreEqual(4, YardSoak.Keep(4, "Build", WeatherKind.Overcast));
+            Assert.AreEqual(3, YardSoak.Keep(4, "Scavenge", WeatherKind.Rain));
+            Assert.AreEqual(2, YardSoak.Keep(4, "Scavenge", WeatherKind.Storm));
+            Assert.AreEqual(1, YardSoak.Keep(1, "Guard", WeatherKind.Rain));
+            Assert.AreEqual(0, YardSoak.Keep(1, "Guard", WeatherKind.Storm));
+            Assert.AreEqual(2, YardSoak.Keep(2, "Cook", WeatherKind.Storm));
+            Assert.AreEqual(0, YardSoak.Keep(0, "Clear", WeatherKind.Storm));
+            Assert.AreEqual(0, YardSoak.Keep(-3, "Build", WeatherKind.Rain));
+            Assert.AreEqual(22f, YardSoak.Wear(22f, "Scavenge", WeatherKind.Clear), 0.001f);
+            Assert.AreEqual(28f, YardSoak.Wear(22f, "Guard", WeatherKind.Rain), 0.001f);
+            Assert.AreEqual(36f, YardSoak.Wear(22f, "Build", WeatherKind.Storm), 0.001f);
+            Assert.AreEqual(22f, YardSoak.Wear(22f, "Cook", WeatherKind.Storm), 0.001f);
+            Assert.AreEqual(100f, YardSoak.Wear(90f, "Clear", WeatherKind.Storm), 0.001f);
+            Assert.AreEqual(0f, YardSoak.Mood("Cook", WeatherKind.Storm), 0.001f);
+            Assert.AreEqual(4f, YardSoak.Mood("Scavenge", WeatherKind.Storm), 0.001f);
+            Assert.AreEqual("The yard is soaked", NoteSay.One("soak", "en"));
+            Assert.AreEqual("El patio está empapado", NoteSay.One("soak", "es"));
+
+            var yard = new List<ColonistDay>
+            {
+                new ColonistDay { id = "ada", task = "Scavenge", hunger = 78f, thirst = 78f, morale = 70f }
+            };
+            int food = 0;
+            int water = 0;
+            int raw = 0;
+            var clear = ColonyDay.Simulate(yard, ref food, ref water, false, false, "", 0, ref raw);
+            Assert.AreEqual(22f, yard[0].fatigue, 0.001f);
+            Assert.AreEqual(70f, yard[0].morale, 0.001f);
+            Assert.IsFalse(System.Array.IndexOf(clear, "soak") >= 0);
+
+            yard[0].fatigue = 0f;
+            yard[0].morale = 70f;
+            yard[0].hunger = 78f;
+            yard[0].thirst = 78f;
+            var storm = ColonyDay.Simulate(yard, ref food, ref water, false, false, "", 0, ref raw, WeatherKind.Storm);
+            Assert.AreEqual(36f, yard[0].fatigue, 0.001f);
+            Assert.AreEqual(66f, yard[0].morale, 0.001f);
+            Assert.AreEqual(60f, yard[0].hunger, 0.001f);
+            Assert.Contains("soak", storm);
+
+            var kitchen = new List<ColonistDay>
+            {
+                new ColonistDay { id = "ada", task = "Cook", hunger = 78f, thirst = 78f, morale = 70f }
+            };
+            var wet = ColonyDay.Simulate(kitchen, ref food, ref water, false, false, "", 0, ref raw, WeatherKind.Storm);
+            Assert.AreEqual(22f, kitchen[0].fatigue, 0.001f);
+            Assert.AreEqual(70f, kitchen[0].morale, 0.001f);
+            Assert.Contains("soak", wet);
+        }
+
+        [Test]
         public void AZombieWithoutARigStillAttacksAndFalls()
         {
             Assert.AreEqual(14f, PoseSheet.Lean(ZombieAI.ZombieState.Chase, 0f), 0.001f);

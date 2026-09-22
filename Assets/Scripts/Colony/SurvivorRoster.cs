@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using OutpostZero.Core;
+using OutpostZero.Graphics;
 using OutpostZero.Player;
 using OutpostZero.Shell;
 
@@ -441,6 +442,7 @@ namespace OutpostZero.Colony
         {
             var storage = ColonyStorage.Instance;
             int day = WorldClock.Instance != null ? WorldClock.Instance.Day : 1;
+            WeatherKind sky = WeatherController.Instance != null ? WeatherController.Instance.Kind : WeatherKind.Clear;
             int index = 0;
             foreach (var survivor in survivors)
             {
@@ -457,6 +459,7 @@ namespace OutpostZero.Colony
                             scrap += Practice.Bonus(survivor.scavenge);
                             scrap += ScrapDepth.Extra(survivor.scavenge);
                         }
+                        scrap = YardSoak.Keep(scrap, survivor.task, sky);
                         if (scrap > 0 && storage != null) storage.AddScrap(scrap);
                         if (scrap > 0) survivor.morale = Mathf.Max(0f, survivor.morale - 4f);
                         if (storage != null)
@@ -495,6 +498,7 @@ namespace OutpostZero.Colony
                             survivor.morale = Mathf.Max(0f, survivor.morale - TraitHook.WatchCost(survivor.trait, survivor.aside, survivor.mark));
                         }
                         watch = TraitHook.WatchPay(survivor.trait, survivor.aside, survivor.mark, watch);
+                        watch = YardSoak.Keep(watch, survivor.task, sky);
                         if (watch > 0 && storage != null) storage.AddSecurity(watch);
                         break;
                     case "Rest":
@@ -525,11 +529,13 @@ namespace OutpostZero.Colony
                             pace += BuildDepth.Raise(survivor.engineering);
                             pace = ShiftWear.Short(pace, survivor.fatigue);
                         }
+                        pace = YardSoak.Keep(pace, survivor.task, sky);
                         if (pace > 0 && GridBuilder.Instance != null && (GridBuilder.Instance.Raise(pace) || GridBuilder.Instance.Patch(pace) || GridBuilder.Instance.Lift(pace)))
                             survivor.morale = Mathf.Max(0f, survivor.morale - 2f);
                         break;
                     case "Clear":
                         int haul = ShiftWear.Short(YardDead.Hands(survivor.morale), survivor.fatigue);
+                        haul = YardSoak.Keep(haul, survivor.task, sky);
                         if (haul > 0 && storage != null && storage.TakeBodies(haul) > 0)
                             survivor.morale = Mathf.Max(0f, survivor.morale - 2f);
                         break;
@@ -552,7 +558,8 @@ namespace OutpostZero.Colony
             bool cot = CampServices.Instance != null && CampServices.Instance.CotOnline;
             int bodies = ColonyStorage.Instance != null ? ColonyStorage.Instance.Bodies : 0;
             int raw = ColonyStorage.Instance != null ? ColonyStorage.Instance.Raw : 0;
-            var notes = ColonyDay.Simulate(days, ref food, ref water, cot, expeditionWon, fallenName, bodies, ref raw);
+            WeatherKind sky = WeatherController.Instance != null ? WeatherController.Instance.Kind : WeatherKind.Clear;
+            var notes = ColonyDay.Simulate(days, ref food, ref water, cot, expeditionWon, fallenName, bodies, ref raw, sky);
             ApplySnapshot(days);
             Spend(food, water);
             if (ColonyStorage.Instance != null) ColonyStorage.Instance.SetRaw(raw);
