@@ -6047,6 +6047,28 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void AStormDrinksTheTankAndAClearNightDoesNot()
+        {
+            Assert.AreEqual(0.8f, StormBurn.Pull, 0.001f);
+            Assert.AreEqual(10f, StormBurn.After(10f, 10f, WeatherKind.Storm), 0.001f);
+            Assert.AreEqual(5f, StormBurn.After(10f, 5f, WeatherKind.Clear), 0.001f);
+            Assert.AreEqual(5f, StormBurn.After(10f, 5f, WeatherKind.Rain), 0.001f);
+            Assert.AreEqual(5f, StormBurn.After(10f, 5f, WeatherKind.Fog), 0.001f);
+            Assert.AreEqual(1f, StormBurn.After(10f, 5f, WeatherKind.Storm), 0.001f);
+            Assert.AreEqual(6.4f, StormBurn.After(10f, 8f, WeatherKind.Storm), 0.001f);
+            Assert.AreEqual(0f, StormBurn.After(1f, 0f, WeatherKind.Storm), 0.001f);
+            Assert.AreEqual(0f, StormBurn.After(-1f, 5f, WeatherKind.Storm), 0.001f);
+            Assert.AreEqual(90f, FuelTank.NightRate, 0.001f);
+            Assert.AreEqual(0.45f, FuelTank.Dusk, 0.001f);
+            Assert.AreEqual(5f, FuelTank.Drink(10f, 200f, true, 0.46f), 0.001f);
+            Assert.AreEqual(10f, FuelTank.Drink(10f, 200f, true, 0.45f), 0.001f);
+            Assert.AreEqual(10f, FuelTank.Drink(10f, 200f, false, 0.8f), 0.001f);
+            Assert.AreEqual("A storm drinks the tank", Loc.T("tank.storm", "en"));
+            Assert.AreEqual("Una tormenta bebe el tanque", Loc.T("tank.storm", "es"));
+            Assert.AreEqual(2, RainCatch.StormExtra);
+        }
+
+        [Test]
         public void AZombieWithoutARigStillAttacksAndFalls()
         {
             Assert.AreEqual(14f, PoseSheet.Lean(ZombieAI.ZombieState.Chase, 0f), 0.001f);

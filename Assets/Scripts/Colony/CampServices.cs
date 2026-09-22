@@ -68,7 +68,12 @@ namespace OutpostZero.Colony
             }
 
             float night = Graphics.DayNightCycle.Instance != null ? Graphics.DayNightCycle.Instance.NightFactor : 0f;
+            float before = fuelHours;
             fuelHours = FuelTank.Drink(fuelHours, Time.deltaTime, generatorPresent, night);
+            var skyKind = OutpostZero.Graphics.WeatherController.Instance != null
+                ? OutpostZero.Graphics.WeatherController.Instance.Kind
+                : OutpostZero.Graphics.WeatherKind.Clear;
+            fuelHours = StormBurn.After(before, fuelHours, skyKind);
 
             ApplyLights();
 

@@ -814,7 +814,7 @@ namespace OutpostZero.UI
                 camp.Add(Body(Loc.T("camp.scrap") + " " + storage.Scrap + "  " + Loc.T("camp.food") + " " + storage.Food + "  " + Loc.T("camp.water") + " " + storage.Water
                     + "  " + Loc.T("camp.cloth") + " " + storage.Cloth + "  " + Loc.T("camp.chem") + " " + storage.Chemicals                     + "  " + Loc.T("camp.tape") + " " + storage.Tape + "  " + Loc.T("camp.raw") + " " + storage.Raw + "  " + Loc.T("camp.rounds") + " " + storage.Rounds
                     + "  " + (services != null && services.GeneratorOnline ? Loc.T("camp.gen_on") : Loc.T("camp.gen_off"))
-                    + (services != null ? "  " + Loc.T("camp.fuel") + " " + FuelTank.Label(services.FuelHours) : "")));
+                    + (services != null ? "  " + Loc.T("camp.fuel") + " " + FuelTank.Label(services.FuelHours) + StormNote(services) : "")));
                 camp.Add(Body(Loc.T("camp.room") + " " + storage.Used + "/" + storage.Room));
                 if (storage.Bodies > 0) camp.Add(Body(Loc.T("camp.bodies") + " " + storage.Bodies));
                 if (storage.Cells > 0)
@@ -1233,6 +1233,14 @@ namespace OutpostZero.UI
                 }));
             }
             menu.Add(Button("Back", () => slotsOpen = false));
+        }
+
+        private static string StormNote(CampServices services)
+        {
+            if (services == null || !services.GeneratorOnline) return "";
+            var sky = WeatherController.Instance;
+            if (sky == null || sky.Kind != WeatherKind.Storm) return "";
+            return "  " + Loc.T("tank.storm");
         }
 
         private static string SkyCast(string id, string[] charted, int day)
