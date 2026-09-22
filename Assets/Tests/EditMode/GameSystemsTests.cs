@@ -2234,6 +2234,37 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void AColonistStandsBesideTheModuleForTheTask()
+        {
+            var kinds = new[] { "Workbench", "Campfire", "Campfire", "Cot" };
+            var sites = new[] { 0, 1, 0, 0 };
+            var integrity = new[] { 100, 100, 80, 100 };
+            var jobs = new[] { 2, 0, 0, 0 };
+            Assert.AreEqual(2, CampPost.Pick("Cook", kinds, sites, integrity, jobs));
+            Assert.AreEqual(1, CampPost.Pick("Build", kinds, sites, integrity, jobs));
+            Assert.AreEqual(3, CampPost.Pick("Medic", kinds, sites, integrity, jobs));
+            Assert.AreEqual(-1, CampPost.Pick("Guard", kinds, sites, integrity, jobs));
+            Assert.AreEqual(-1, CampPost.Pick("Clear", kinds, sites, integrity, jobs));
+            Assert.AreEqual(-1, CampPost.Pick("Cook", null, sites, integrity, jobs));
+            var raised = new[] { "Workbench" };
+            Assert.AreEqual(0, CampPost.Pick("Build", raised, new[] { 0 }, new[] { 100 }, new[] { 2 }));
+            Assert.AreEqual(-1, CampPost.Pick("Build", raised, new[] { 0 }, new[] { 100 }, new[] { 0 }));
+            Assert.AreEqual(-1, CampPost.Pick("Build", raised, new[] { 0 }, new[] { 100 }, new[] { 4 }));
+            CampPost.Place("Cook", 0, 4f, 6f, true, out float cookX, out float cookZ);
+            Assert.AreEqual(4f, cookX, 0.001f);
+            Assert.AreEqual(6f, cookZ, 0.001f);
+            CampPost.Place("Clear", 0, 0f, 0f, false, out float clearX, out float clearZ);
+            Assert.AreEqual(-7.1f, clearX, 0.001f);
+            Assert.AreEqual(-8f, clearZ, 0.001f);
+            CampPost.Place("Guard", 0, 0f, 0f, false, out float guardX, out float guardZ);
+            Assert.AreEqual(-9.1f, guardX, 0.001f);
+            Assert.AreEqual(-12f, guardZ, 0.001f);
+            CampPost.Place("Build", 1, 2f, 3f, true, out float buildX, out float buildZ);
+            Assert.AreEqual(2.55f, buildX, 0.001f);
+            Assert.AreEqual(3.4f, buildZ, 0.001f);
+        }
+
+        [Test]
         public void AFarmFeedsTheCampAfterThreeMornings()
         {
             var plots = new[]

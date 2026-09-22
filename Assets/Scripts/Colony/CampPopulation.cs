@@ -34,9 +34,8 @@ namespace OutpostZero.Colony
                 var body = Ensure(survivor.id, survivor.displayName);
                 Tint(body, survivor.morale);
                 string action = CampRoutine.Choose(survivor.task, survivor.hunger, survivor.thirst, survivor.morale, survivor.injury);
-                CampRoutine.Nudge(index, out float nudgeX, out float nudgeZ);
                 index++;
-                Vector3 goal = Station(action) + new Vector3(nudgeX, 0f, nudgeZ);
+                Vector3 goal = Station(action, index - 1);
                 body.position = Vector3.MoveTowards(body.position, goal, 1.4f * Time.deltaTime);
                 Vector3 face = goal - body.position;
                 face.y = 0f;
@@ -77,16 +76,32 @@ namespace OutpostZero.Colony
             renderer.SetPropertyBlock(block);
         }
 
-        private static Vector3 Station(string task)
+        private static Vector3 Station(string task, int index)
         {
-            switch (task)
+            var grid = GridBuilder.Instance;
+            int count = grid != null ? grid.Placed.Count : 0;
+            var kinds = new string[count];
+            var sites = new int[count];
+            var integrity = new int[count];
+            var jobs = new int[count];
+            var xs = new float[count];
+            var zs = new float[count];
+            for (int i = 0; i < count; i++)
             {
-                case "Cook": return new Vector3(-12f, 1f, -12f);
-                case "Guard": return new Vector3(-8f, 1f, -12f);
-                case "Medic": return new Vector3(-16f, 1f, -10f);
-                case "Scavenge": return new Vector3(-18f, 1f, -8f);
-                default: return new Vector3(-14f, 1f, -15f);
+                var module = grid.Placed[i];
+                kinds[i] = module.kind;
+                sites[i] = module.site;
+                integrity[i] = module.integrity;
+                jobs[i] = module.job;
+                xs[i] = module.x;
+                zs[i] = module.z;
             }
+            int pick = CampPost.Pick(task, kinds, sites, integrity, jobs);
+            bool found = pick >= 0;
+            float moduleX = found ? xs[pick] : 0f;
+            float moduleZ = found ? zs[pick] : 0f;
+            CampPost.Place(task, index, moduleX, moduleZ, found, out float x, out float z);
+            return new Vector3(x, 1f, z);
         }
 
         private void Remove(string id)
