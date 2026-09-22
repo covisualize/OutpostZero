@@ -790,6 +790,7 @@ namespace OutpostZero.UI
                     row.Add(Button(Loc.Task("Guard"), () => roster.Assign(id, "Guard")));
                     row.Add(Button(Loc.Task("Cook"), () => roster.Assign(id, "Cook")));
                     row.Add(Button(Loc.Task("Medic"), () => roster.Assign(id, "Medic")));
+                    row.Add(Button(Loc.Task("Build"), () => roster.Assign(id, "Build")));
                     camp.Add(row);
                 }
             }
@@ -831,10 +832,15 @@ namespace OutpostZero.UI
                 int sprout = -1;
                 foreach (var module in GridBuilder.Instance.Placed)
                 {
-                    if (module.kind != "Farm" || module.integrity <= 0 || module.age >= CampYield.FarmWait) continue;
+                    if (module.kind != "Farm" || module.site != 0 || module.integrity <= 0 || module.age >= CampYield.FarmWait) continue;
                     if (sprout < 0 || module.age < sprout) sprout = module.age;
                 }
                 if (sprout >= 0) camp.Add(Body(Loc.T("camp.sprout") + " " + sprout + "/" + CampYield.FarmWait));
+                foreach (var module in GridBuilder.Instance.Placed)
+                {
+                    if (module.site == 0 || module.integrity <= 0) continue;
+                    camp.Add(Body(Loc.T("camp.raising") + " " + module.kind + " " + module.hours + "/" + BuildSite.Need(module.kind)));
+                }
             }
             camp.Add(build);
             camp.Add(Body(Loc.T("camp.craft")));
@@ -1090,7 +1096,7 @@ namespace OutpostZero.UI
             if (GridBuilder.Instance != null)
             {
                 builder.Append(GridBuilder.Instance.Selected).Append(GridBuilder.Instance.Facing);
-                foreach (var module in GridBuilder.Instance.Placed) builder.Append(module.kind).Append(module.age).Append(module.integrity);
+                foreach (var module in GridBuilder.Instance.Placed) builder.Append(module.kind).Append(module.age).Append(module.integrity).Append(module.site).Append(module.hours);
             }
             if (CampServices.Instance != null) builder.Append(CampServices.Instance.GeneratorOnline);
             if (WorldMapService.Instance != null && WorldMapService.Instance.Current != null)

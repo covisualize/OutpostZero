@@ -97,10 +97,10 @@ namespace OutpostZero.Colony
             {
                 foreach (var module in GridBuilder.Instance.Placed)
                 {
-                    if (module.kind == "Water") waterPresent = true;
-                    if (module.kind == "Cot") cotPresent = true;
-                    if (module.kind == "Watchtower") towerPresent = true;
-                    if (module.kind == "Generator") generatorPresent = true;
+                    if (module.kind == "Water" && BuildSite.Ready(module.site, module.integrity)) waterPresent = true;
+                    if (module.kind == "Cot" && BuildSite.Ready(module.site, module.integrity)) cotPresent = true;
+                    if (module.kind == "Watchtower" && BuildSite.Ready(module.site, module.integrity)) towerPresent = true;
+                    if (module.kind == "Generator" && BuildSite.Ready(module.site, module.integrity)) generatorPresent = true;
                 }
             }
             CountContacts();

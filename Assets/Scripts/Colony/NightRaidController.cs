@@ -197,7 +197,7 @@ namespace OutpostZero.Colony
             var spikes = new System.Collections.Generic.List<PlacedModule>();
             foreach (var module in GridBuilder.Instance.Placed)
             {
-                if (module.kind == "Spikes" && module.integrity > 0) spikes.Add(module);
+                if (module.kind == "Spikes" && BuildSite.Ready(module.site, module.integrity)) spikes.Add(module);
             }
             if (spikes.Count == 0) return;
             nextTrap = Time.time + TrapHit.Gap;
@@ -272,7 +272,7 @@ namespace OutpostZero.Colony
             {
                 foreach (var module in GridBuilder.Instance.Placed)
                 {
-                    if (module.kind == "Watchtower" && module.integrity > 0)
+                    if (module.kind == "Watchtower" && BuildSite.Ready(module.site, module.integrity))
                         return new Vector3(module.x, 2.2f, module.z);
                 }
             }
@@ -285,7 +285,7 @@ namespace OutpostZero.Colony
             {
                 foreach (var module in GridBuilder.Instance.Placed)
                 {
-                    if (module.kind == "Turret" && module.integrity > 0)
+                    if (module.kind == "Turret" && BuildSite.Ready(module.site, module.integrity))
                         return new Vector3(module.x, 1.2f, module.z);
                 }
             }

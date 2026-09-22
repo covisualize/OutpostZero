@@ -35,6 +35,8 @@ namespace OutpostZero.Colony
         public int rotation;
         public int integrity = 100;
         public int age;
+        public int site;
+        public int hours;
         public float lit = -1f;
     }
 
@@ -134,7 +136,7 @@ namespace OutpostZero.Colony
             var plots = new CampYield.Plot[placed.Count];
             for (int i = 0; i < placed.Count; i++)
             {
-                plots[i].Kind = placed[i].kind;
+                plots[i].Kind = placed[i].site == 0 ? placed[i].kind : "";
                 plots[i].Age = placed[i].age;
                 plots[i].Integrity = placed[i].integrity;
             }
@@ -174,11 +176,27 @@ namespace OutpostZero.Colony
                 GameplayFeedback.Toast("Need " + cost + " camp scrap");
                 return false;
             }
-            var record = new PlacedModule { kind = kind.ToString(), x = x, z = z, rotation = facing, integrity = 100 };
+            var record = new PlacedModule { kind = kind.ToString(), x = x, z = z, rotation = facing, integrity = 100, site = 1 };
             placed.Add(record);
             SpawnView(record);
-            GameplayFeedback.Toast("Placed " + kind);
+            GameplayFeedback.Toast("Site marked " + kind);
             return true;
+        }
+
+        public bool Raise(int pace)
+        {
+            for (int i = 0; i < placed.Count; i++)
+            {
+                var module = placed[i];
+                if (module.site == 0 || module.integrity <= 0) continue;
+                BuildSite.Work(module.site, module.hours, BuildSite.Need(module.kind), pace, out int nextSite, out int nextHours, out bool finished);
+                module.site = nextSite;
+                module.hours = nextHours;
+                RefreshViews();
+                if (finished) GameplayFeedback.Toast(module.kind + " is up");
+                return true;
+            }
+            return false;
         }
 
         public void Restore(PlacedModule[] modules)
@@ -202,10 +220,20 @@ namespace OutpostZero.Colony
             view.transform.position = new Vector3(module.x, flat ? 0.04f : 0.6f, module.z);
             view.transform.rotation = Quaternion.Euler(0f, module.rotation, 0f);
             view.transform.localScale = Scale(module.kind, module.integrity);
+            if (module.site != 0)
+            {
+                float bulk = BuildSite.Bulk(module.hours);
+                view.transform.localScale = new Vector3(
+                    view.transform.localScale.x * bulk,
+                    view.transform.localScale.y * bulk,
+                    view.transform.localScale.z * bulk);
+            }
             var renderer = view.GetComponent<Renderer>();
             if (renderer != null)
             {
-                renderer.material.color = module.kind == "Oil" && module.lit >= 0f
+                renderer.material.color = module.site != 0
+                    ? Color.Lerp(ColorFor(module.kind), new Color(0.72f, 0.7f, 0.58f), module.hours > 0 ? 0.35f : 0.7f)
+                    : module.kind == "Oil" && module.lit >= 0f
                     ? new Color(0.95f, 0.42f, 0.08f)
                     : ColorFor(module.kind);
             }
@@ -242,7 +270,7 @@ namespace OutpostZero.Colony
             int count = 0;
             for (int i = 0; i < placed.Count; i++)
             {
-                if (placed[i].kind == kind && placed[i].integrity > 0) count++;
+                if (placed[i].kind == kind && BuildSite.Ready(placed[i].site, placed[i].integrity)) count++;
             }
             return count;
         }
@@ -254,7 +282,7 @@ namespace OutpostZero.Colony
             for (int i = 0; i < placed.Count; i++)
             {
                 var module = placed[i];
-                if (module.kind != "Barricade" || module.integrity <= 0) continue;
+                if (module.kind != "Barricade" || !BuildSite.Ready(module.site, module.integrity)) continue;
                 if (RaidPlan.Covers(ax, az, module.x, module.z)) count++;
             }
             return count;
@@ -271,7 +299,7 @@ namespace OutpostZero.Colony
             float best = 6.25f;
             foreach (var module in placed)
             {
-                if (module.kind != "Barricade" || module.integrity <= 0) continue;
+                if (module.kind != "Barricade" || !BuildSite.Ready(module.site, module.integrity)) continue;
                 float dx = module.x - x;
                 float dz = module.z - z;
                 float distance = dx * dx + dz * dz;
@@ -299,7 +327,7 @@ namespace OutpostZero.Colony
             float best = float.MaxValue;
             foreach (var module in placed)
             {
-                if (module.kind != "Barricade" || module.integrity <= 0) continue;
+                if (module.kind != "Barricade" || !BuildSite.Ready(module.site, module.integrity)) continue;
                 float dx = module.x - ax;
                 float dz = module.z - az;
                 float distance = dx * dx + dz * dz;
@@ -341,7 +369,7 @@ namespace OutpostZero.Colony
             for (int i = 0; i < placed.Count; i++)
             {
                 var module = placed[i];
-                if (module.kind != "Oil" || module.integrity <= 0 || module.lit >= 0f) continue;
+                if (module.kind != "Oil" || !BuildSite.Ready(module.site, module.integrity) || module.lit >= 0f) continue;
                 if (!OilBurn.Ignites(module.x - x, module.z - z)) continue;
                 module.lit = now;
                 caught = true;
@@ -359,7 +387,7 @@ namespace OutpostZero.Colony
             var pool = new List<PlacedModule>();
             for (int i = 0; i < placed.Count; i++)
             {
-                if (placed[i].kind == "Oil") pool.Add(placed[i]);
+                if (placed[i].kind == "Oil" && BuildSite.Ready(placed[i].site, placed[i].integrity)) pool.Add(placed[i]);
             }
             if (pool.Count == 0) return;
             bool changed = false;
@@ -408,7 +436,7 @@ namespace OutpostZero.Colony
         {
             for (int i = 0; i < placed.Count; i++)
             {
-                if (placed[i].kind == kind && placed[i].integrity > 0) return true;
+                if (placed[i].kind == kind && BuildSite.Ready(placed[i].site, placed[i].integrity)) return true;
             }
             return false;
         }
@@ -430,7 +458,7 @@ namespace OutpostZero.Colony
             int count = 0;
             foreach (var module in placed)
             {
-                if (module.kind == "Barricade" && module.integrity > 0) count++;
+                if (module.kind == "Barricade" && BuildSite.Ready(module.site, module.integrity)) count++;
             }
             return count;
         }

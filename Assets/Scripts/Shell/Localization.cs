@@ -106,6 +106,7 @@ namespace OutpostZero.Shell
             { "task.guard", "Guard" },
             { "task.cook", "Cook" },
             { "task.medic", "Medic" },
+            { "task.build", "Build" },
             { "task.lead", "Lead" },
             { "task.fallen", "Fallen" },
             { "task.quarantine", "Quarantine" },
@@ -137,6 +138,7 @@ namespace OutpostZero.Shell
             { "camp.turret", "Turret" },
             { "camp.spikes", "Spikes" },
             { "camp.oil", "Oil" },
+            { "camp.raising", "Raising" },
             { "camp.crate", "Crate" },
             { "camp.room", "Stores" },
             { "camp.sprout", "Farm sprouts" },
@@ -242,6 +244,7 @@ namespace OutpostZero.Shell
             { "bark.guard", "Watching the gate." },
             { "bark.medic", "Hold still." },
             { "bark.scavenge", "I'll check the piles." },
+            { "bark.build", "I'll raise it." },
             { "bark.hold", "We'll hold." },
             { "bark.rest", "Resting." },
             { "recipe.bandage", "Bandage" },
@@ -401,6 +404,7 @@ namespace OutpostZero.Shell
             { "task.guard", "Vigilar" },
             { "task.cook", "Cocinar" },
             { "task.medic", "Curar" },
+            { "task.build", "Construir" },
             { "task.lead", "Liderar" },
             { "task.fallen", "Caído" },
             { "task.quarantine", "Cuarentena" },
@@ -432,6 +436,7 @@ namespace OutpostZero.Shell
             { "camp.turret", "Torreta" },
             { "camp.spikes", "Pinchos" },
             { "camp.oil", "Aceite" },
+            { "camp.raising", "Levantando" },
             { "camp.crate", "Caja" },
             { "camp.room", "Almacén" },
             { "camp.sprout", "El huerto brota" },
@@ -537,6 +542,7 @@ namespace OutpostZero.Shell
             { "bark.guard", "Vigilo la puerta." },
             { "bark.medic", "Quieto." },
             { "bark.scavenge", "Reviso los montones." },
+            { "bark.build", "Lo levanto." },
             { "bark.hold", "Aguantaremos." },
             { "bark.rest", "Descansando." },
             { "recipe.bandage", "Vendaje" },
@@ -671,6 +677,7 @@ namespace OutpostZero.Shell
                 : action == "Guard" ? "bark.guard"
                 : action == "Medic" ? "bark.medic"
                 : action == "Scavenge" ? "bark.scavenge"
+                : action == "Build" ? "bark.build"
                 : morale > 70f ? "bark.hold"
                 : "bark.rest";
             return Pick(key, OutpostZero.Colony.CampRoutine.Bark(action, morale));

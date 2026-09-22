@@ -29,6 +29,8 @@ namespace OutpostZero.Shell
         public int rotation;
         public int integrity = 100;
         public int age;
+        public int site;
+        public int hours;
     }
 
     [Serializable]

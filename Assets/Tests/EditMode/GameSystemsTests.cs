@@ -44,7 +44,7 @@ namespace OutpostZero.Tests.EditMode
                 },
                 modules = new[]
                 {
-                    new ModuleSave { kind = "Barricade", x = 2f, z = -4f, rotation = 0, age = 3 }
+                    new ModuleSave { kind = "Barricade", x = 2f, z = -4f, rotation = 0, age = 3, site = 1, hours = 1 }
                 }
             };
 
@@ -59,6 +59,12 @@ namespace OutpostZero.Tests.EditMode
             Assert.AreEqual("Barricade", loaded.modules[0].kind);
             Assert.AreEqual(100, loaded.modules[0].integrity);
             Assert.AreEqual(3, loaded.modules[0].age);
+            Assert.AreEqual(1, loaded.modules[0].site);
+            Assert.AreEqual(1, loaded.modules[0].hours);
+            Assert.IsTrue(SaveCodec.TryDeserialize("{\"schemaVersion\":1,\"modules\":[{\"kind\":\"Farm\",\"age\":3}]}", out var legacy, out var legacyError), legacyError);
+            Assert.AreEqual(0, legacy.modules[0].site);
+            Assert.AreEqual(0, legacy.modules[0].hours);
+            Assert.AreEqual(3, legacy.modules[0].age);
         }
 
         [Test]
@@ -1967,6 +1973,39 @@ namespace OutpostZero.Tests.EditMode
             Assert.AreEqual("Crate", Loc.T("camp.crate"));
             Assert.AreEqual("Caja", Loc.T("camp.crate", "es"));
             Assert.AreEqual("Almacén", Loc.T("camp.room", "es"));
+        }
+
+        [Test]
+        public void ABuildSiteStaysQuietUntilTheHoursAreIn()
+        {
+            Assert.AreEqual(1, BuildSite.Need("Barricade"));
+            Assert.AreEqual(4, BuildSite.Need("Farm"));
+            Assert.AreEqual(5, BuildSite.Need("Turret"));
+            Assert.AreEqual(2, BuildSite.Need(""));
+            Assert.AreEqual(1, BuildSite.Shift(null, 50f));
+            Assert.AreEqual(1, BuildSite.Shift("Steady Hands", 40f));
+            Assert.AreEqual(2, BuildSite.Shift("Field Engineer", 40f));
+            Assert.AreEqual(0, BuildSite.Shift("Steady Hands", 5f));
+            Assert.IsTrue(BuildSite.Ready(0, 100));
+            Assert.IsFalse(BuildSite.Ready(1, 100));
+            Assert.IsFalse(BuildSite.Ready(0, 0));
+            Assert.AreEqual(0.45f, BuildSite.Bulk(0), 0.001f);
+            Assert.AreEqual(0.75f, BuildSite.Bulk(2), 0.001f);
+            BuildSite.Work(1, 0, 2, 1, out int site, out int hours, out bool finished);
+            Assert.AreEqual(1, site);
+            Assert.AreEqual(1, hours);
+            Assert.IsFalse(finished);
+            BuildSite.Work(site, hours, 2, 1, out site, out hours, out finished);
+            Assert.AreEqual(0, site);
+            Assert.AreEqual(2, hours);
+            Assert.IsTrue(finished);
+            BuildSite.Work(0, 4, 2, 1, out site, out hours, out finished);
+            Assert.AreEqual(0, site);
+            Assert.AreEqual(4, hours);
+            Assert.IsFalse(finished);
+            Assert.AreEqual("Build", CampRoutine.Choose("Build", 80f, 80f, 60f, 0));
+            Assert.AreEqual("I'll raise it.", CampRoutine.Bark("Build", 50f));
+            Assert.AreEqual("Construir", Loc.Task("Build", "es"));
         }
 
         [Test]

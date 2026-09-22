@@ -23,6 +23,7 @@ namespace OutpostZero.Colony
             if (action == "Guard") return "Watching the gate.";
             if (action == "Medic") return "Hold still.";
             if (action == "Scavenge") return "I'll check the piles.";
+            if (action == "Build") return "I'll raise it.";
             if (morale > 70f) return "We'll hold.";
             return "Resting.";
         }

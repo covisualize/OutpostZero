@@ -294,6 +294,11 @@ namespace OutpostZero.Colony
                             if (survivors[i].alive && survivors[i].injury > 0) survivors[i].injury--;
                         }
                         break;
+                    case "Build":
+                        int pace = BuildSite.Shift(survivor.trait, survivor.morale);
+                        if (pace > 0 && GridBuilder.Instance != null && GridBuilder.Instance.Raise(pace))
+                            survivor.morale = Mathf.Max(0f, survivor.morale - 2f);
+                        break;
                 }
             }
             OnRosterChanged?.Invoke();
