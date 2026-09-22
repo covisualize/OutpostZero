@@ -11,6 +11,7 @@ namespace OutpostZero.Colony
             public string Id;
             public string Name;
             public string Trait;
+            public string Aside;
             public bool Leader;
             public string Bond;
             public int Combat;
@@ -71,7 +72,27 @@ namespace OutpostZero.Colony
             Bond(ref drafts[1], drafts[0].Name, seed, 1);
             Bond(ref drafts[2], drafts[3].Name, seed, 2);
             Bond(ref drafts[3], drafts[2].Name, seed, 3);
+            for (int i = 0; i < 4; i++)
+            {
+                int asideIndex = Second(seed, i * 7 + 90, usedTrait, drafts[i].Trait);
+                string aside = asideIndex < 0 ? "" : Traits[asideIndex];
+                drafts[i].Aside = aside;
+                drafts[i].Combat = System.Math.Max(drafts[i].Combat, Skill(aside, "combat"));
+                drafts[i].Medicine = System.Math.Max(drafts[i].Medicine, Skill(aside, "medicine"));
+                drafts[i].Engineering = System.Math.Max(drafts[i].Engineering, Skill(aside, "engineering"));
+                drafts[i].Cooking = System.Math.Max(drafts[i].Cooking, Skill(aside, "cooking"));
+                drafts[i].Scavenge = System.Math.Max(drafts[i].Scavenge, Skill(aside, "scavenge"));
+            }
             return drafts;
+        }
+
+        public static bool Clashes(string a, string b)
+        {
+            if (string.IsNullOrEmpty(a) || string.IsNullOrEmpty(b)) return false;
+            if (a == b) return true;
+            return Pair(a, b, "Brave", "Cowardly")
+                || Pair(a, b, "Insomniac", "Light Sleeper")
+                || Pair(a, b, "Optimist", "Volatile");
         }
 
         public static string Signature(Draft[] drafts)
@@ -114,6 +135,25 @@ namespace OutpostZero.Colony
             if (kind == "cooking" && trait == "Cook") return 4;
             if (kind == "cooking" && trait == "Light Sleeper") return 1;
             return 0;
+        }
+
+        private static bool Pair(string a, string b, string left, string right)
+        {
+            return (a == left && b == right) || (a == right && b == left);
+        }
+
+        private static int Second(int seed, int salt, bool[] used, string first)
+        {
+            int start = Mix(seed, salt) % Traits.Length;
+            for (int i = 0; i < Traits.Length; i++)
+            {
+                int index = (start + i) % Traits.Length;
+                if (used[index]) continue;
+                if (Clashes(first, Traits[index])) continue;
+                used[index] = true;
+                return index;
+            }
+            return -1;
         }
 
         private static int Pick(int seed, int salt, int length, bool[] used)

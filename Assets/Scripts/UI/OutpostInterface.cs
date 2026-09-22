@@ -530,6 +530,14 @@ namespace OutpostZero.UI
             parent.Add(Button("Leave", faction.Toggle));
         }
 
+        private static string Marks(Survivor survivor)
+        {
+            if (survivor == null) return "";
+            string marks = Loc.Trait(survivor.trait);
+            if (string.IsNullOrEmpty(survivor.aside)) return marks;
+            return marks + " · " + Loc.Trait(survivor.aside);
+        }
+
         private static string QuestLine(string id, string quests)
         {
             if (id == "clinic") return CaravanBook.QuestDone(quests, "clinic") ? "Field dressings learned" : "The Clinic wants 4 medkits";
@@ -584,7 +592,7 @@ namespace OutpostZero.UI
                         {
                             if (!survivor.alive) continue;
                             string id = survivor.id;
-                            menu.Add(Button(survivor.displayName + " — " + survivor.trait + "  " + ColonyDay.Mood(survivor.morale, survivor.trait), () => GameManager.Instance.AcceptSuccessor(id)));
+                            menu.Add(Button(survivor.displayName + " — " + Marks(survivor) + "  " + ColonyDay.Mood(survivor.morale, survivor.trait, survivor.aside), () => GameManager.Instance.AcceptSuccessor(id)));
                         }
                     }
                     menu.Add(Button(Loc.T("menu.falls"), () => GameManager.Instance.SetState(GameState.GameOver)));
@@ -774,12 +782,12 @@ namespace OutpostZero.UI
                 foreach (var survivor in roster.Survivors)
                 {
                     string flag = survivor.leader ? "*" : survivor.alive ? "" : "x";
-                    string mood = ColonyDay.Mood(survivor.morale, survivor.trait);
+                    string mood = ColonyDay.Mood(survivor.morale, survivor.trait, survivor.aside);
                     string doing = CampRoutine.Choose(survivor.task, survivor.hunger, survivor.thirst, survivor.morale, survivor.injury);
                     string post = doing == survivor.task ? Loc.Task(survivor.task) : Loc.Task(survivor.task) + " → " + Loc.Task(doing);
                     string skills = Practice.Line(survivor.combat, survivor.medicine, survivor.engineering, survivor.cooking, survivor.scavenge, null);
                     string leads = Heir.Line(survivor.leadership, null);
-                    camp.Add(Body(flag + " " + survivor.displayName + " (" + Loc.Trait(survivor.trait) + ") " + post
+                    camp.Add(Body(flag + " " + survivor.displayName + " (" + Marks(survivor) + ") " + post
                         + "  " + Loc.Mood(mood)
                         + "  " + Loc.T("camp.food") + " " + Mathf.RoundToInt(survivor.hunger)
                         + " " + Loc.T("camp.water") + " " + Mathf.RoundToInt(survivor.thirst)

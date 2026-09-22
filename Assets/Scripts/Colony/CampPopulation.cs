@@ -60,7 +60,7 @@ namespace OutpostZero.Colony
                     continue;
                 }
                 var body = Ensure(survivor.id, survivor.displayName);
-                Tint(body, survivor.morale, survivor.trait);
+                Tint(body, survivor.morale, survivor.trait, survivor.aside);
                 string action = raid
                     ? GuardStand.Face(survivor.task, survivor.morale, survivor.injury)
                     : CampRoutine.Choose(survivor.task, survivor.hunger, survivor.thirst, survivor.morale, survivor.injury);
@@ -97,12 +97,12 @@ namespace OutpostZero.Colony
             return body.transform;
         }
 
-        private static void Tint(Transform body, float morale, string trait)
+        private static void Tint(Transform body, float morale, string trait, string aside)
         {
             var renderer = body.GetComponent<Renderer>();
             if (renderer == null) return;
             Color tint;
-            switch (ColonyDay.Mood(morale, trait))
+            switch (ColonyDay.Mood(morale, trait, aside))
             {
                 case "Inspired": tint = new Color(0.72f, 0.62f, 0.42f); break;
                 case "Depressed": tint = new Color(0.35f, 0.35f, 0.38f); break;

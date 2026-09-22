@@ -3136,7 +3136,7 @@ namespace OutpostZero.Tests.EditMode
                 for (int i = 0; i < camp.Length; i++)
                 {
                     if (camp[i].Trait != "Loner") continue;
-                    Assert.AreEqual(2, camp[i].Scavenge);
+                    Assert.AreEqual(camp[i].Aside == "Scrounger" ? 3 : 2, camp[i].Scavenge);
                     loner = true;
                 }
             }
@@ -3145,6 +3145,57 @@ namespace OutpostZero.Tests.EditMode
             Assert.AreEqual("Optimista", Loc.T("trait.optimist", "es"));
             Assert.AreEqual("Solitario", Loc.T("trait.loner", "es"));
             Assert.AreEqual("Noctámbulo", Loc.T("trait.owl", "es"));
+        }
+
+        [Test]
+        public void EachHandCarriesASecondTraitThatDoesNotClash()
+        {
+            Assert.IsTrue(SurvivorDraw.Clashes("Brave", "Cowardly"));
+            Assert.IsTrue(SurvivorDraw.Clashes("Cowardly", "Brave"));
+            Assert.IsTrue(SurvivorDraw.Clashes("Insomniac", "Light Sleeper"));
+            Assert.IsTrue(SurvivorDraw.Clashes("Optimist", "Volatile"));
+            Assert.IsTrue(SurvivorDraw.Clashes("Cook", "Cook"));
+            Assert.IsFalse(SurvivorDraw.Clashes("Cook", "Engineer"));
+            Assert.IsFalse(SurvivorDraw.Clashes("Brave", ""));
+            Assert.IsFalse(SurvivorDraw.Clashes(null, "Loner"));
+            for (int seed = 1; seed <= 40; seed++)
+            {
+                var camp = SurvivorDraw.Open(seed);
+                var again = SurvivorDraw.Open(seed);
+                Assert.AreEqual(SurvivorDraw.Signature(camp), SurvivorDraw.Signature(again));
+                for (int i = 0; i < camp.Length; i++)
+                {
+                    Assert.IsFalse(string.IsNullOrEmpty(camp[i].Aside));
+                    Assert.IsFalse(SurvivorDraw.Clashes(camp[i].Trait, camp[i].Aside));
+                    Assert.AreEqual(camp[i].Aside, again[i].Aside);
+                    if (camp[i].Trait == "Field Medic") Assert.AreEqual(4, camp[i].Medicine);
+                    if (camp[i].Aside == "Engineer") Assert.AreEqual(4, camp[i].Engineering);
+                    if (camp[i].Aside == "Cook") Assert.AreEqual(4, camp[i].Cooking);
+                    if (camp[i].Aside == "Sharpshooter") Assert.AreEqual(4, camp[i].Combat);
+                }
+            }
+            Assert.AreEqual(23.4f, TraitHook.HungerDrop("Watchful", "Glutton"), 0.001f);
+            Assert.AreEqual(18f, TraitHook.HungerDrop("Watchful", null), 0.001f);
+            Assert.AreEqual(6, TraitHook.WatchCost("Cook", "Cowardly"));
+            Assert.AreEqual(0, TraitHook.WatchCost("Cook", "Brave"));
+            Assert.AreEqual(2, TraitHook.WatchCost("Watchful", null));
+            Assert.AreEqual(0, TraitHook.WatchPay("Cook", "Cowardly", 2));
+            Assert.AreEqual(2, TraitHook.WatchPay("Cook", "Brave", 2));
+            Assert.AreEqual(0.8f, TraitHook.Aim("Cook", "Sharpshooter"), 0.001f);
+            Assert.AreEqual(1f, TraitHook.Aim("Cook", null), 0.001f);
+            Assert.AreEqual(4, TraitHook.CookPlate("Guard", "Cook", true));
+            Assert.AreEqual(0, TraitHook.CookPlate("Guard", "Cook", false));
+            Assert.AreEqual(5, TraitHook.RestGain("Cook", "Insomniac", 8));
+            Assert.AreEqual(8, TraitHook.RestGain("Cook", null, 8));
+            Assert.AreEqual("Inspired", ColonyDay.Mood(65f, "Cook", "Optimist"));
+            Assert.AreEqual("Steady", ColonyDay.Mood(65f, "Cook", "Loner"));
+            Assert.AreEqual(1.1f, ColonyDay.OutputScale(65f, "Cook", "Optimist"), 0.001f);
+            var saved = new SaveGameData { survivors = new[] { new SurvivorSave { id = "ada", trait = "Cook", aside = "Loner" } } };
+            Assert.IsTrue(SaveCodec.TryDeserialize(SaveCodec.Serialize(saved), out var loaded, out var error), error);
+            Assert.AreEqual(1, loaded.schemaVersion);
+            Assert.AreEqual("Loner", loaded.survivors[0].aside);
+            Assert.IsTrue(SaveCodec.TryDeserialize("{\"schemaVersion\":1,\"survivors\":[{\"id\":\"ada\",\"trait\":\"Cook\"}]}", out var old, out error), error);
+            Assert.IsNull(old.survivors[0].aside);
         }
 
         [Test]
