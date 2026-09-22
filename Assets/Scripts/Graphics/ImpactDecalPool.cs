@@ -8,8 +8,12 @@ namespace OutpostZero.Graphics
 {
     public class ImpactDecalPool : MonoBehaviour
     {
+        public static ImpactDecalPool Instance { get; private set; }
+
         private readonly List<Decal> pool = new List<Decal>();
+        private readonly List<Vector3> stains = new List<Vector3>();
         private Material material;
+        private int bootSteps;
 
         private class Decal
         {
@@ -22,14 +26,37 @@ namespace OutpostZero.Graphics
 
         private void OnEnable()
         {
+            Instance = this;
             CombatEvents.OnHit += Spawn;
             CombatEvents.OnKill += OnKill;
         }
 
         private void OnDisable()
         {
+            if (Instance == this) Instance = null;
             CombatEvents.OnHit -= Spawn;
             CombatEvents.OnKill -= OnKill;
+        }
+
+        public void StampBoot(Vector3 at, Vector3 right)
+        {
+            int gore = SettingsService.Instance != null ? SettingsService.Instance.Gore : 1;
+            bool through = false;
+            for (int i = 0; i < stains.Count; i++)
+            {
+                if (BootPrint.Near(at.x, at.z, stains[i].x, stains[i].z))
+                {
+                    through = true;
+                    break;
+                }
+            }
+            bootSteps = BootPrint.Charge(bootSteps, through, gore);
+            if (!BootPrint.Due(bootSteps, gore)) return;
+            Vector3 flat = new Vector3(right.x, 0f, right.z);
+            if (flat.sqrMagnitude < 0.001f) flat = Vector3.right;
+            flat.Normalize();
+            Place(at + flat * BootPrint.Side(bootSteps), Vector3.up, Mark.Blood, BootPrint.Size(gore), true);
+            bootSteps = BootPrint.Spend(bootSteps);
         }
 
         private void Update()
@@ -83,14 +110,14 @@ namespace OutpostZero.Graphics
                     Vector3 up = Vector3.Cross(right, normal.sqrMagnitude > 0.001f ? normal : Vector3.up);
                     at += right * ox + up * oy;
                 }
-                Place(at, normal, mark, full);
+                Place(at, normal, mark, full, false);
             }
             if (streak)
             {
                 for (int s = 1; s <= BloodDrift.Drops; s++)
                 {
                     float t = s / (float)BloodDrift.Drops;
-                    Place(point + new Vector3(driftX, driftY, driftZ) * t, normal, Mark.Blood, full * 0.7f);
+                    Place(point + new Vector3(driftX, driftY, driftZ) * t, normal, Mark.Blood, full * 0.7f, false);
                 }
             }
             Burst(point, StrikeFace.Of(target), streak ? driftX : 0f, streak ? driftZ : 0f);
@@ -104,7 +131,7 @@ namespace OutpostZero.Graphics
             if (victim.GetComponentInParent<OutpostZero.AI.ZombieAI>() == null && victim.name.IndexOf("Zombie") < 0) return;
             Vector3 point = victim.transform.position;
             if (!CloseEnough(point)) return;
-            Place(point, Vector3.up, Mark.Blood, GoreMark.Size("blood", level) * 1.8f);
+            Place(point, Vector3.up, Mark.Blood, GoreMark.Size("blood", level) * 1.8f, false);
         }
 
         private static bool CloseEnough(Vector3 point)
@@ -115,8 +142,9 @@ namespace OutpostZero.Graphics
             return GoreMark.Near(delta.x, delta.y, delta.z);
         }
 
-        private void Place(Vector3 point, Vector3 normal, Mark mark, float full)
+        private void Place(Vector3 point, Vector3 normal, Mark mark, float full, bool boot)
         {
+            if (mark == Mark.Blood && !boot) Remember(point);
             var decal = Rent();
             decal.Object.transform.position = point + normal * 0.02f;
             if (normal.sqrMagnitude > 0.001f)
@@ -130,6 +158,12 @@ namespace OutpostZero.Graphics
             decal.Until = Time.time + (mark == Mark.Scorch ? 14f : 8f);
             decal.Object.transform.localScale = new Vector3(full, full, full);
             decal.Object.SetActive(true);
+        }
+
+        private void Remember(Vector3 point)
+        {
+            stains.Add(point);
+            if (stains.Count > 32) stains.RemoveAt(0);
         }
 
         private static Mark Choose(GameObject target)

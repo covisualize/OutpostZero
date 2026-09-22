@@ -412,6 +412,7 @@ namespace OutpostZero.Shell
             int puffs = Combat.WoundShow.Puffs(player.IsSprinting, player.IsCrouching, soaked);
             if (puffs > 0) Combat.CombatVfx.Puff(player.transform.position, puffs, soaked);
             if (soaked && !player.IsCrouching) PlayAt("splash", player.transform.position, player.IsSprinting ? 0.3f : Combat.WoundShow.Splash);
+            ImpactDecalPool.Instance?.StampBoot(player.transform.position, player.transform.right);
         }
 
         private void Body()

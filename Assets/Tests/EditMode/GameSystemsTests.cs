@@ -3836,6 +3836,32 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void BloodyBootsPrintSixStepsThenDry()
+        {
+            Assert.AreEqual(0, BootPrint.Charge(4, true, 0));
+            Assert.AreEqual(6, BootPrint.Charge(0, true, 1));
+            Assert.AreEqual(4, BootPrint.Charge(4, false, 1));
+            Assert.AreEqual(6, BootPrint.Charge(2, true, 2));
+            Assert.IsFalse(BootPrint.Due(0, 1));
+            Assert.IsFalse(BootPrint.Due(4, 0));
+            Assert.IsTrue(BootPrint.Due(4, 1));
+            Assert.AreEqual(5, BootPrint.Spend(6));
+            Assert.AreEqual(0, BootPrint.Spend(0));
+            Assert.AreEqual(-0.12f, BootPrint.Side(6), 0.001f);
+            Assert.AreEqual(0.12f, BootPrint.Side(5), 0.001f);
+            Assert.AreEqual(0.16f, BootPrint.Size(1), 0.001f);
+            Assert.AreEqual(0.22f, BootPrint.Size(2), 0.001f);
+            Assert.AreEqual(0.42f, GoreMark.Size("blood", 1), 0.001f);
+            Assert.IsTrue(BootPrint.Near(0f, 0f, 1.4f, 0f));
+            Assert.IsFalse(BootPrint.Near(0f, 0f, 1.41f, 0f));
+            Assert.IsFalse(BootPrint.Through(0f, 0f, null, null, 1));
+            Assert.IsTrue(BootPrint.Through(0f, 0f, new[] { 3f, 0.2f }, new[] { 0f, 0f }, 2));
+            Assert.IsFalse(BootPrint.Through(0f, 0f, new[] { 3f }, new[] { 0f }, 1));
+            Assert.AreEqual(0, GoreMark.Splats(0, false, true));
+            Assert.AreEqual(5, GoreMark.Splats(2, true, true));
+        }
+
+        [Test]
         public void AZombieWithoutARigStillAttacksAndFalls()
         {
             Assert.AreEqual(14f, PoseSheet.Lean(ZombieAI.ZombieState.Chase, 0f), 0.001f);
