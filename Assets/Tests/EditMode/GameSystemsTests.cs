@@ -105,6 +105,26 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void ACurbStepsUpFifteenCentimetersAndLeavesTheLaneOpen()
+        {
+            Assert.AreEqual(0.15f, RoadGraph.CurbHeight, 0.001f);
+            Assert.AreEqual(1.6f, RoadGraph.LaneClear, 0.001f);
+            Assert.Less(RoadGraph.CurbHeight, 0.3f);
+
+            var edges = RoadGraph.Edges(RoadGraph.Build(1701, "ash_market"));
+            Assert.IsTrue(HasEdge(edges, 8f, 0f, "dash"));
+            Assert.IsTrue(HasEdge(edges, 32f, 0f, "cross"));
+            Assert.IsTrue(HasEdge(edges, 12f, 0.89f, "curb"));
+            Assert.IsFalse(HasEdge(edges, 12f, 1.38f, "walk"));
+            Assert.IsTrue(HasEdge(edges, 8f, 1.38f, "walk"));
+            for (int i = 0; i < edges.Length; i++)
+            {
+                if (edges[i].Kind != "curb") continue;
+                Assert.IsFalse(edges[i].X < 3.5f && edges[i].Z < 0.2f && edges[i].Z > -0.2f);
+            }
+        }
+
+        [Test]
         public void KeyRebindRejectsADuplicateAndRoundTrips()
         {
             ControlBindings.ResetDefaults();
@@ -1866,6 +1886,20 @@ namespace OutpostZero.Tests.EditMode
             {
                 PadBindings.ResetDefaults();
             }
+        }
+
+        private static bool HasEdge(RoadGraph.Edge[] edges, float x, float z, string kind)
+        {
+            if (edges == null) return false;
+            for (int i = 0; i < edges.Length; i++)
+            {
+                float dx = edges[i].X - x;
+                float dz = edges[i].Z - z;
+                if (dx < 0f) dx = -dx;
+                if (dz < 0f) dz = -dz;
+                if (dx < 0.02f && dz < 0.02f && edges[i].Kind == kind) return true;
+            }
+            return false;
         }
     }
 }

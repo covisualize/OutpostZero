@@ -154,6 +154,8 @@ namespace OutpostZero.Expedition
                 }
             }
 
+            RaiseEdges(RoadGraph.Edges(map));
+
             if (!map.HasNest) return;
             var nest = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
             nest.name = "EastNest";
@@ -163,6 +165,48 @@ namespace OutpostZero.Expedition
             var nestCollider = nest.GetComponent<Collider>();
             if (nestCollider != null) Destroy(nestCollider);
             Paint(nest.GetComponent<Renderer>(), new Color(0.28f, 0.1f, 0.08f));
+        }
+
+        private void RaiseEdges(RoadGraph.Edge[] edges)
+        {
+            if (edges == null) return;
+            for (int i = 0; i < edges.Length; i++)
+            {
+                var edge = edges[i];
+                if (edge.Kind == "cross")
+                {
+                    Mark(edge.X, 0.06f, edge.Z, 1.5f, 0.02f, 0.14f, 0f, "Crosswalk", new Color(0.82f, 0.8f, 0.74f), false);
+                    Mark(edge.X, 0.06f, edge.Z, 0.14f, 0.02f, 1.5f, 0f, "Crosswalk", new Color(0.82f, 0.8f, 0.74f), false);
+                    continue;
+                }
+                if (edge.Kind == "dash")
+                {
+                    Mark(edge.X, 0.06f, edge.Z, 1.15f, 0.02f, 0.12f, edge.Yaw, "LaneDash", new Color(0.72f, 0.62f, 0.22f), false);
+                    continue;
+                }
+                bool curb = edge.Kind == "curb";
+                float breadth = curb ? RoadGraph.CurbBreadth : RoadGraph.SidewalkBreadth;
+                float height = curb ? RoadGraph.CurbHeight : 0.04f;
+                Mark(edge.X, height * 0.5f, edge.Z, 3.05f, height, breadth, edge.Yaw, curb ? "StreetCurb" : "Sidewalk",
+                    curb ? new Color(0.55f, 0.54f, 0.5f) : new Color(0.4f, 0.4f, 0.38f), true);
+            }
+        }
+
+        private void Mark(float x, float y, float z, float width, float height, float depth, float yaw, string name, Color color, bool solid)
+        {
+            var body = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            body.name = name;
+            body.transform.SetParent(root, false);
+            body.transform.position = new Vector3(x, y, z);
+            body.transform.rotation = Quaternion.Euler(0f, yaw, 0f);
+            body.transform.localScale = new Vector3(width, height, depth);
+            if (!solid)
+            {
+                var collider = body.GetComponent<Collider>();
+                if (collider != null) Destroy(collider);
+            }
+            else body.layer = GameLayers.Environment;
+            Paint(body.GetComponent<Renderer>(), color);
         }
 
         private static bool Close(float a, float b)

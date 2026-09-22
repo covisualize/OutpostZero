@@ -11,11 +11,23 @@ namespace OutpostZero.Shell
     public static class RoadGraph
     {
         public const float Step = 4f;
+        public const float CurbHeight = 0.15f;
+        public const float LaneClear = 1.6f;
+        public const float CurbBreadth = 0.18f;
+        public const float SidewalkBreadth = 0.8f;
 
         public struct Cell
         {
             public float X;
             public float Z;
+            public string Kind;
+        }
+
+        public struct Edge
+        {
+            public float X;
+            public float Z;
+            public float Yaw;
             public string Kind;
         }
 
@@ -153,6 +165,38 @@ namespace OutpostZero.Shell
             return "";
         }
 
+        public static Edge[] Edges(Map map)
+        {
+            var list = new List<Edge>();
+            var cells = map.Cells;
+            if (cells == null) return new Edge[0];
+            for (int i = 0; i < cells.Length; i++)
+            {
+                if (!Open(cells[i].Kind)) continue;
+                float x = cells[i].X;
+                float z = cells[i].Z;
+                bool east = OpenAt(cells, x + Step, z);
+                bool west = OpenAt(cells, x - Step, z);
+                bool north = OpenAt(cells, x, z + Step);
+                bool south = OpenAt(cells, x, z - Step);
+                int links = (east ? 1 : 0) + (west ? 1 : 0) + (north ? 1 : 0) + (south ? 1 : 0);
+                if (!north) Side(list, x, z, 0f, 1f);
+                if (!south) Side(list, x, z, 0f, -1f);
+                if (!east) Side(list, x, z, 1f, 0f);
+                if (!west && !(x <= 4.01f && Close(z, 0f))) Side(list, x, z, -1f, 0f);
+                if (links >= 3) list.Add(new Edge { X = x, Z = z, Kind = "cross" });
+                else if (east && west && !north && !south) list.Add(new Edge { X = x, Z = z, Kind = "dash" });
+                else if (north && south && !east && !west) list.Add(new Edge { X = x, Z = z, Yaw = 90f, Kind = "dash" });
+            }
+            return list.ToArray();
+        }
+
+        public static bool ClearsBuildings(float x, float z)
+        {
+            if (x > 10.4f && x < 20.5f && z > 1f && z < 11.3f) return false;
+            return true;
+        }
+
         public static string Signature(Map map)
         {
             if (map.Cells == null) return "";
@@ -205,6 +249,28 @@ namespace OutpostZero.Shell
                 if (dx < 0f) dx = -dx;
                 if (dz < 0f) dz = -dz;
                 if (dx + dz <= Step + 0.05f && dx + dz > 0.05f) return true;
+            }
+            return false;
+        }
+
+        private static void Side(List<Edge> list, float x, float z, float nx, float nz)
+        {
+            float half = LaneClear * 0.5f;
+            float curbAlong = nx != 0f ? 90f : 0f;
+            float curbX = x + nx * (half + CurbBreadth * 0.5f);
+            float curbZ = z + nz * (half + CurbBreadth * 0.5f);
+            if (ClearsBuildings(curbX, curbZ)) list.Add(new Edge { X = curbX, Z = curbZ, Yaw = curbAlong, Kind = "curb" });
+            float walkX = x + nx * (half + CurbBreadth + SidewalkBreadth * 0.5f);
+            float walkZ = z + nz * (half + CurbBreadth + SidewalkBreadth * 0.5f);
+            if (ClearsBuildings(walkX, walkZ)) list.Add(new Edge { X = walkX, Z = walkZ, Yaw = curbAlong, Kind = "walk" });
+        }
+
+        private static bool OpenAt(Cell[] cells, float x, float z)
+        {
+            for (int i = 0; i < cells.Length; i++)
+            {
+                if (!Open(cells[i].Kind)) continue;
+                if (Close(cells[i].X, x) && Close(cells[i].Z, z)) return true;
             }
             return false;
         }
