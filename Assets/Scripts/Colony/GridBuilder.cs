@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
+using OutpostZero.AI;
+using OutpostZero.Combat;
 using OutpostZero.Core;
 using OutpostZero.Graphics;
 
@@ -19,7 +21,8 @@ namespace OutpostZero.Colony
         Farm,
         Purifier,
         Turret,
-        Spikes
+        Spikes,
+        Oil
     }
 
     [Serializable]
@@ -31,6 +34,7 @@ namespace OutpostZero.Colony
         public int rotation;
         public int integrity = 100;
         public int age;
+        public float lit = -1f;
     }
 
     public class GridBuilder : MonoBehaviour
@@ -42,6 +46,7 @@ namespace OutpostZero.Colony
         private readonly List<GameObject> views = new List<GameObject>();
         private ModuleKind selected = ModuleKind.Barricade;
         private bool buildMode;
+        private float nextOil;
 
         public bool BuildMode => buildMode;
         public ModuleKind Selected => selected;
@@ -59,6 +64,7 @@ namespace OutpostZero.Colony
 
         private void Update()
         {
+            TickOil(Time.time);
             if (GameManager.Instance == null || GameManager.Instance.CurrentState != GameState.CampManagement) return;
             if (Player.ExpeditionInput.BuildPressed)
             {
@@ -146,15 +152,18 @@ namespace OutpostZero.Colony
         {
             var view = GameObject.CreatePrimitive(PrimitiveType.Cube);
             view.name = "Module_" + module.kind;
-            view.transform.position = new Vector3(module.x, module.kind == "Spikes" ? 0.04f : 0.6f, module.z);
+            bool flat = module.kind == "Spikes" || module.kind == "Oil";
+            view.transform.position = new Vector3(module.x, flat ? 0.04f : 0.6f, module.z);
             view.transform.rotation = Quaternion.Euler(0f, module.rotation, 0f);
             view.transform.localScale = Scale(module.kind, module.integrity);
             var renderer = view.GetComponent<Renderer>();
             if (renderer != null)
             {
-                renderer.material.color = ColorFor(module.kind);
+                renderer.material.color = module.kind == "Oil" && module.lit >= 0f
+                    ? new Color(0.95f, 0.42f, 0.08f)
+                    : ColorFor(module.kind);
             }
-            if (module.kind == "Spikes")
+            if (module.kind == "Spikes" || module.kind == "Oil")
             {
                 var pad = view.GetComponent<Collider>();
                 if (pad != null) Destroy(pad);
@@ -280,6 +289,75 @@ namespace OutpostZero.Colony
             return true;
         }
 
+        public void IgniteNear(float x, float z, float now)
+        {
+            bool caught = false;
+            for (int i = 0; i < placed.Count; i++)
+            {
+                var module = placed[i];
+                if (module.kind != "Oil" || module.integrity <= 0 || module.lit >= 0f) continue;
+                if (!OilBurn.Ignites(module.x - x, module.z - z)) continue;
+                module.lit = now;
+                caught = true;
+            }
+            if (!caught) return;
+            nextOil = now;
+            RefreshViews();
+            GameplayFeedback.Toast("The oil catches");
+        }
+
+        public void TickOil(float now)
+        {
+            if (now < nextOil) return;
+            nextOil = now + OilBurn.Gap;
+            var pool = new List<PlacedModule>();
+            for (int i = 0; i < placed.Count; i++)
+            {
+                if (placed[i].kind == "Oil") pool.Add(placed[i]);
+            }
+            if (pool.Count == 0) return;
+            bool changed = false;
+            var burning = new List<PlacedModule>();
+            for (int i = 0; i < pool.Count; i++)
+            {
+                var module = pool[i];
+                if (module.lit < 0f) continue;
+                if (!OilBurn.Burning(module.lit, now))
+                {
+                    placed.Remove(module);
+                    changed = true;
+                    continue;
+                }
+                burning.Add(module);
+            }
+            if (changed) RefreshViews();
+            if (burning.Count == 0) return;
+            var horde = Object.FindObjectsByType<ZombieAI>(FindObjectsSortMode.None);
+            var living = new List<ZombieAI>();
+            for (int i = 0; i < horde.Length; i++)
+            {
+                if (horde[i] != null && horde[i].CurrentState != ZombieAI.ZombieState.Dead) living.Add(horde[i]);
+            }
+            if (living.Count == 0) return;
+            var distance = new float[living.Count];
+            for (int s = 0; s < burning.Count; s++)
+            {
+                var oil = burning[s];
+                for (int i = 0; i < living.Count; i++)
+                {
+                    float dx = living[i].transform.position.x - oil.x;
+                    float dz = living[i].transform.position.z - oil.z;
+                    distance[i] = (float)Math.Sqrt(dx * dx + dz * dz);
+                }
+                int mark = OilBurn.Victim(distance);
+                if (mark < 0) continue;
+                var target = living[mark];
+                var health = target.GetComponent<HealthSystem>();
+                if (health != null && !health.IsDead)
+                    health.TakeDamage(OilBurn.Damage, target.transform.position, new Vector3(target.transform.position.x - oil.x, 0f, target.transform.position.z - oil.z), gameObject);
+            }
+        }
+
         public bool HasKind(string kind)
         {
             for (int i = 0; i < placed.Count; i++)
@@ -332,6 +410,7 @@ namespace OutpostZero.Colony
                 case ModuleKind.Purifier: return 15;
                 case ModuleKind.Turret: return 22;
                 case ModuleKind.Spikes: return 8;
+                case ModuleKind.Oil: return 9;
                 default: return 6;
             }
         }
@@ -351,6 +430,7 @@ namespace OutpostZero.Colony
                 case "Purifier": return new Vector3(0.7f, 1.3f, 0.7f);
                 case "Turret": return new Vector3(0.45f, 1.5f, 0.45f);
                 case "Spikes": return new Vector3(1.6f, 0.08f, 1.6f);
+                case "Oil": return new Vector3(2.4f, 0.06f, 2.4f);
                 default: return new Vector3(1.8f * health, 1.1f * Mathf.Lerp(0.35f, 1f, health), 0.4f);
             }
         }
@@ -369,6 +449,7 @@ namespace OutpostZero.Colony
                 case "Purifier": return new Color(0.35f, 0.7f, 0.78f);
                 case "Turret": return new Color(0.22f, 0.24f, 0.28f);
                 case "Spikes": return new Color(0.35f, 0.36f, 0.38f);
+                case "Oil": return new Color(0.12f, 0.1f, 0.08f);
                 default: return new Color(0.48f, 0.42f, 0.32f);
             }
         }

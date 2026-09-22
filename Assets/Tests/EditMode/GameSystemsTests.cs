@@ -1989,6 +1989,22 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void OilStaysDarkUntilFireReachesIt()
+        {
+            Assert.IsFalse(OilBurn.Burning(-1f, 0f));
+            Assert.IsTrue(OilBurn.Burning(0f, 0f));
+            Assert.IsTrue(OilBurn.Burning(0f, 7.9f));
+            Assert.IsFalse(OilBurn.Burning(0f, 8f));
+            Assert.IsFalse(OilBurn.Burning(5f, 4f));
+            Assert.IsTrue(OilBurn.Ignites(3.5f, 0f));
+            Assert.IsFalse(OilBurn.Ignites(0f, 3.51f));
+            Assert.AreEqual(2, OilBurn.Victim(new[] { 3f, 2.2f, 0.4f }));
+            Assert.AreEqual(-1, OilBurn.Victim(new[] { 2.21f }));
+            Assert.AreEqual(-1, OilBurn.Victim(null));
+            Assert.AreEqual(9, GridBuilder.Cost(ModuleKind.Oil));
+        }
+
+        [Test]
         public void AnEastGridKeepsAWalkFromTheSpawnToTheFarGate()
         {
             var ash = RoadGraph.Build(1701, "ash_market");

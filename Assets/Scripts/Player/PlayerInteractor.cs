@@ -202,6 +202,7 @@ namespace OutpostZero.Player
             }
             if (molotov)
             {
+                OutpostZero.Colony.GridBuilder.Instance?.IgniteNear(origin.x, origin.z, Time.time);
                 Collider[] hits = Physics.OverlapSphere(origin, 3.2f);
                 foreach (var hit in hits)
                 {
