@@ -18,6 +18,65 @@ namespace OutpostZero.Tests.EditMode
     public class GameSystemsTests
     {
         [Test]
+        public void ExpeditionContextSortsAndDedupesTheLoadout()
+        {
+            var context = ExpeditionLedger.Open("old_market", "s1", "Mara", new[] { "Shotgun_Pump", null, "Bandage", "", "Shotgun_Pump" }, WeatherKind.Fog, 42, 0, 1);
+            CollectionAssert.AreEqual(new[] { "Bandage", "Shotgun_Pump" }, context.loadout);
+            Assert.AreEqual(1, context.day);
+            Assert.AreEqual(WeatherKind.Fog, context.weather);
+            Assert.AreEqual(42, context.seed);
+            Assert.IsTrue(context.Open);
+            Assert.IsFalse(default(ExpeditionContext).Open);
+            CollectionAssert.IsEmpty(ExpeditionLedger.Loadout(null));
+        }
+
+        [Test]
+        public void ExpeditionOutcomeClampsAndReadsTheQuota()
+        {
+            var context = ExpeditionLedger.Open("old_market", "s1", "Mara", null, WeatherKind.Clear, 1, 3, 1);
+            var outcome = ExpeditionLedger.Close(context, ExpeditionEnd.Extracted, -3, 0, 12, 10, -5f);
+            Assert.AreEqual(0, outcome.kills);
+            Assert.AreEqual(1, outcome.killGoal);
+            Assert.AreEqual(0f, outcome.seconds);
+            Assert.AreEqual("old_market", outcome.district);
+            Assert.IsFalse(outcome.QuotaMet);
+            Assert.IsTrue(ExpeditionLedger.Close(context, ExpeditionEnd.Victory, 5, 5, 10, 10, 1f).QuotaMet);
+
+            Assert.IsTrue(outcome.LeaderCameHome);
+            Assert.IsTrue(ExpeditionLedger.Close(context, ExpeditionEnd.Dragged, 0, 1, 0, 1, 0f).LeaderCameHome);
+            Assert.IsFalse(ExpeditionLedger.Close(context, ExpeditionEnd.Succession, 0, 1, 0, 1, 0f).LeaderCameHome);
+            Assert.IsFalse(ExpeditionLedger.Close(context, ExpeditionEnd.Wiped, 0, 1, 0, 1, 0f).LeaderCameHome);
+        }
+
+        [Test]
+        public void ExpeditionEndRoutesTheFlow()
+        {
+            Assert.AreEqual(FlowStep.Results, ExpeditionLedger.After(ExpeditionEnd.Extracted));
+            Assert.AreEqual(FlowStep.Results, ExpeditionLedger.After(ExpeditionEnd.Victory));
+            Assert.AreEqual(FlowStep.Sanctuary, ExpeditionLedger.After(ExpeditionEnd.Dragged));
+            Assert.AreEqual(FlowStep.Results, ExpeditionLedger.After(ExpeditionEnd.Wiped));
+        }
+
+        [Test]
+        public void ExpeditionCampLineReadsInBothLanguages()
+        {
+            Assert.AreEqual("0:00", ExpeditionLedger.Clock(-1f));
+            Assert.AreEqual("6:05", ExpeditionLedger.Clock(365.9f));
+            var outcome = ExpeditionLedger.Close(ExpeditionLedger.Open("", "s1", "Mara", null, WeatherKind.Clear, 1, 1, 1), ExpeditionEnd.Extracted, 12, 10, 40, 30, 365f);
+            string street = Loc.T("result.street", "en");
+            Assert.AreEqual("Back from " + street + ": 12 kills, 40 scrap, 6:05 out.", ExpeditionLedger.CampLine(outcome, "en"));
+            string es = ExpeditionLedger.CampLine(outcome, "es");
+            StringAssert.StartsWith("De vuelta de", es);
+            StringAssert.Contains("6:05", es);
+            Assert.AreEqual("Tiempo fuera 6:05", ExpeditionLedger.TimeLine(outcome, "es"));
+            foreach (var key in new[] { "run.home", "run.time", "menu.save_quit", "menu.quit" })
+            {
+                Assert.AreNotEqual(key, Loc.T(key, "en"), key);
+                Assert.AreNotEqual(key, Loc.T(key, "es"), key);
+            }
+        }
+
+        [Test]
         public void ItemCatalogCoversMedicalAmmoAndFood()
         {
             Assert.IsNotNull(ItemCatalog.Find("medkit"));

@@ -725,12 +725,15 @@ namespace OutpostZero.UI
         {
             var gm = GameManager.Instance;
             var tracker = ObjectiveTracker.Instance;
+            var outcome = gm != null ? gm.LastOutcome : default;
+            bool closed = outcome.end != ExpeditionEnd.None;
             string district = ExtractSlip.Place(gm != null ? gm.LastStreet : "", null);
-            int kills = gm != null ? gm.ZombiesKilled : 0;
-            int scrap = gm != null ? gm.ScrapLooted : 0;
-            int killGoal = tracker != null ? tracker.KillGoal : 1;
-            int scrapGoal = tracker != null ? tracker.ScrapGoal : 1;
+            int kills = closed ? outcome.kills : gm != null ? gm.ZombiesKilled : 0;
+            int scrap = closed ? outcome.scrap : gm != null ? gm.ScrapLooted : 0;
+            int killGoal = closed ? outcome.killGoal : tracker != null ? tracker.KillGoal : 1;
+            int scrapGoal = closed ? outcome.scrapGoal : tracker != null ? tracker.ScrapGoal : 1;
             menu.Add(Body(ExtractSlip.Line(district, kills, killGoal, scrap, scrapGoal, Loc.T("result.kills"), Loc.T("result.scrap"))));
+            if (closed) menu.Add(Body(ExpeditionLedger.TimeLine(outcome, null)));
             if (tracker != null && tracker.PoiLine().Length > 0) menu.Add(Body(tracker.PoiLine()));
         }
 

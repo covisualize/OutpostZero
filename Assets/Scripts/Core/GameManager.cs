@@ -34,7 +34,10 @@ namespace OutpostZero.Core
         public int ZombiesKilled => zombiesKilled;
         public int LifetimeKills => lifetimeKills;
         public int ScrapLooted => scrapLooted;
-        public string LastStreet { get; private set; } = "";
+        public string LastStreet => LastOutcome.district ?? "";
+        public ExpeditionContext Expedition { get; private set; }
+        public ExpeditionOutcome LastOutcome { get; private set; }
+        private bool outcomeAnnounced = true;
 
         public event Action<GameState> OnGameStateChanged;
         public event Action<int> OnZombiesKilledChanged;
@@ -124,6 +127,11 @@ namespace OutpostZero.Core
 
         public void EnterCamp()
         {
+            if (!outcomeAnnounced)
+            {
+                outcomeAnnounced = true;
+                if (LastOutcome.LeaderCameHome) GameplayFeedback.Toast(ExpeditionLedger.CampLine(LastOutcome, null));
+            }
             var needs = PlayerRegistry.Current != null ? PlayerRegistry.Current.GetComponent<SurvivalNeeds>() : null;
             if (needs != null) SurvivorRoster.Instance?.CopyLeaderNeeds(needs.Hunger, needs.Thirst, needs.Fatigue);
             SetState(GameState.CampManagement);
@@ -158,7 +166,37 @@ namespace OutpostZero.Core
             OnScrapLootedChanged?.Invoke(scrapLooted);
             ObjectiveTracker.Instance?.ResetProgress();
             WorldMapService.Instance?.ApplyOpening();
+            Expedition = OpenContext();
             SetState(GameState.ExpeditionActive);
+        }
+
+        private static ExpeditionContext OpenContext()
+        {
+            var map = WorldMapService.Instance;
+            var leader = SurvivorRoster.Instance != null ? SurvivorRoster.Instance.Leader : null;
+            var inventory = PlayerRegistry.Current != null ? PlayerRegistry.Current.GetComponent<PlayerInventory>() : null;
+            var carried = new System.Collections.Generic.List<string>();
+            if (inventory != null)
+            {
+                foreach (var item in inventory.Items) carried.Add(item.ItemId);
+            }
+            return ExpeditionLedger.Open(
+                map != null && map.Current != null ? map.Current.id : "",
+                leader != null ? leader.id : "",
+                leader != null ? leader.displayName : "",
+                carried,
+                WeatherController.Instance != null ? WeatherController.Instance.Kind : WeatherKind.Clear,
+                map != null ? map.WorldSeed : DistrictGenerator.DefaultSeed,
+                WorldClock.Instance != null ? WorldClock.Instance.Day : 1,
+                map != null ? map.Difficulty : 2);
+        }
+
+        private void CloseExpedition(ExpeditionEnd end)
+        {
+            var tracker = ObjectiveTracker.Instance;
+            LastOutcome = ExpeditionLedger.Close(Expedition, end, zombiesKilled, tracker != null ? tracker.KillGoal : 1, scrapLooted, tracker != null ? tracker.ScrapGoal : 1, expeditionTimer);
+            outcomeAnnounced = false;
+            Expedition = default;
         }
 
         public void RecordZombieKill(string archetypeId = null)
@@ -181,12 +219,11 @@ namespace OutpostZero.Core
         {
             var inventory = PlayerRegistry.Current != null ? PlayerRegistry.Current.GetComponent<PlayerInventory>() : null;
             inventory?.DepositScrapToColony();
-            LastStreet = WorldMapService.Instance != null && WorldMapService.Instance.Current != null
-                ? WorldMapService.Instance.Current.id
-                : "";
+            if (!Expedition.Open) Expedition = OpenContext();
             WorldMapService.Instance?.ClearCurrent();
             ObjectiveTracker.Instance?.MarkExtracted();
             bool won = WorldMapService.Instance != null && WorldMapService.Instance.CampaignWon && !WorldMapService.Instance.Endless;
+            CloseExpedition(won ? ExpeditionEnd.Victory : ExpeditionEnd.Extracted);
             SurvivorRoster.Instance?.RewardReturn();
             BringHomeBite();
             FactionTrade.Instance?.NoteExtracted();
@@ -199,8 +236,11 @@ namespace OutpostZero.Core
         public void TriggerPlayerDeath()
         {
             bool merciful = SettingsService.Instance != null && SettingsService.Instance.Merciful;
+            if (!Expedition.Open) Expedition = OpenContext();
             if (merciful && SurvivorRoster.Instance != null && SurvivorRoster.Instance.WoundLeader())
             {
+                CloseExpedition(ExpeditionEnd.Dragged);
+                outcomeAnnounced = true;
                 BringHomeBite();
                 BringToCamp(false);
                 GameplayFeedback.Toast(GateLine.Drag(null));
@@ -211,6 +251,7 @@ namespace OutpostZero.Core
             var effects = PlayerRegistry.Current != null ? PlayerRegistry.Current.GetComponent<StatusEffectController>() : null;
             string cause = effects != null && effects.IsInfected ? "infection" : "killed";
             bool successor = SurvivorRoster.Instance == null || SurvivorRoster.Instance.MarkLeaderDead(corpse, cause);
+            CloseExpedition(successor ? ExpeditionEnd.Succession : ExpeditionEnd.Wiped);
             AudioManager.Instance?.Sting("death");
             SetState(successor ? GameState.SuccessionScreen : GameState.GameOver);
             SaveSystem.Instance?.Save(false);
