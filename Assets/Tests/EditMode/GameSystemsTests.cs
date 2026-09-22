@@ -3116,6 +3116,25 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void ALowBodyThumpsAndPants()
+        {
+            Assert.IsFalse(BodyCue.Heart(0.25f));
+            Assert.IsTrue(BodyCue.Heart(0.24f));
+            Assert.IsFalse(BodyCue.Heart(0f));
+            Assert.AreEqual(0f, BodyCue.HeartGap(0.25f), 0.001f);
+            Assert.AreEqual(0.76f, BodyCue.HeartGap(0.125f), 0.001f);
+            Assert.AreEqual(0.81f, BodyCue.HeartPitch(0.125f), 0.001f);
+            Assert.IsFalse(BodyCue.Breath(0.2f));
+            Assert.IsTrue(BodyCue.Breath(0.19f));
+            Assert.IsFalse(BodyCue.Breath(0f));
+            Assert.AreEqual(2.4f, BodyCue.BreathGap, 0.001f);
+            Assert.IsFalse(BodyCue.Due(1f, 1f, 1.1f));
+            Assert.IsTrue(BodyCue.Due(2.1f, 1f, 1.1f));
+            Assert.AreEqual(0f, AudioSpace.SpatialBlend("heart"), 0.001f);
+            Assert.AreEqual(0f, AudioSpace.SpatialBlend("breath"), 0.001f);
+        }
+
+        [Test]
         public void DemolishingAModuleReturnsHalfTheScrap()
         {
             Assert.AreEqual(3, ScrapRefund.Half(6));

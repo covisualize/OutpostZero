@@ -16,7 +16,7 @@ namespace OutpostZero.Shell
     {
         public static float SpatialBlend(string id)
         {
-            if (id == "ambient" || id == "pulse" || id == "ui" || id == "rain" || id == "wind") return 0f;
+            if (id == "ambient" || id == "pulse" || id == "ui" || id == "rain" || id == "wind" || id == "heart" || id == "breath") return 0f;
             if (id != null && id.StartsWith("step")) return 0.35f;
             return 1f;
         }
@@ -49,6 +49,8 @@ namespace OutpostZero.Shell
         private bool peaked;
         private int streak;
         private float streakAt;
+        private float nextHeart;
+        private float nextBreath;
 
         private void Awake()
         {
@@ -140,11 +142,17 @@ namespace OutpostZero.Shell
                 peaked = false;
             }
             Step();
+            Body();
         }
 
         public void Play(string id, float volume = 1f)
         {
             PlayAt(id, transform.position, volume);
+        }
+
+        public void Play(string id, float volume, float pitch)
+        {
+            PlayAt(id, transform.position, volume, pitch);
         }
 
         public void PlayAt(string id, Vector3 position, float volume = 1f, float pitch = 0f)
@@ -256,6 +264,28 @@ namespace OutpostZero.Shell
             PlayAt(step, player.transform.position, player.IsCrouching ? 0.12f : 0.28f, pitch);
         }
 
+        private void Body()
+        {
+            var player = PlayerRegistry.Current;
+            if (player == null) return;
+            var life = player.GetComponent<HealthSystem>();
+            float hp = life != null && life.MaxHealth > 0f ? life.CurrentHealth / life.MaxHealth : 1f;
+            float air = player.MaxStamina > 0f ? player.CurrentStamina / player.MaxStamina : 1f;
+            float now = Time.time;
+            if (!BodyCue.Heart(hp)) nextHeart = 0f;
+            else if (BodyCue.Due(now, nextHeart, BodyCue.HeartGap(hp)))
+            {
+                nextHeart = now;
+                Play("heart", 0.45f, BodyCue.HeartPitch(hp));
+            }
+            if (!BodyCue.Breath(air)) nextBreath = 0f;
+            else if (BodyCue.Due(now, nextBreath, BodyCue.BreathGap))
+            {
+                nextBreath = now;
+                Play("breath", 0.22f, 0.9f);
+            }
+        }
+
         private void OnShot(Vector3 muzzle, WeaponBase weapon)
         {
             if (weapon == null) return;
@@ -335,6 +365,8 @@ namespace OutpostZero.Shell
             if (id == "stinger_dawn") return Mathf.Sin(t * 22f);
             if (id == "gun_far") return Mathf.Sin(t * 9f);
             if (id == "boom_far") return noise * Mathf.Sin(t * 4f);
+            if (id == "heart") return Mathf.Sin(t * 7f);
+            if (id == "breath") return noise * Mathf.Sin(t * 3f);
             return noise;
         }
 
@@ -343,7 +375,7 @@ namespace OutpostZero.Shell
             if (clips.TryGetValue(id, out var clip)) return clip;
             int rate = 22050;
             bool loop = id == "ambient" || id == "rain" || id == "wind" || id == "stem_perc" || id == "stem_combat";
-            float seconds = loop ? 2f : id == "boom_far" ? 0.7f : id == "boom" ? 0.45f : id == "gun_far" ? 0.42f : 0.18f;
+            float seconds = loop ? 2f : id == "boom_far" ? 0.7f : id == "boom" ? 0.45f : id == "gun_far" ? 0.42f : id == "breath" ? 0.5f : id == "heart" ? 0.22f : 0.18f;
             int samples = Mathf.CeilToInt(rate * seconds);
             var data = new float[samples];
             var random = new System.Random(id.GetHashCode());
@@ -351,7 +383,7 @@ namespace OutpostZero.Shell
             {
                 float t = i / (float)samples;
                 float noise = (float)(random.NextDouble() * 2.0 - 1.0);
-                float decay = id == "boom_far" || id == "gun_far" ? 2.4f : id == "boom" ? 4f : 10f;
+                float decay = id == "boom_far" || id == "gun_far" ? 2.4f : id == "boom" ? 4f : id == "heart" || id == "breath" ? 5f : 10f;
                 float envelope = loop ? 0.25f : Mathf.Exp(-t * decay);
                 float tone = Tone(id, t, noise);
                 data[i] = tone * envelope * (loop ? 0.2f : 0.6f);
