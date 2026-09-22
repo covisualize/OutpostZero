@@ -21,6 +21,7 @@ namespace OutpostZero.Colony
         public float hunger = 78f;
         public float thirst = 78f;
         public float fatigue;
+        public int fatigueKnown;
         public int opinion = 18;
         public int injury;
         public int combat;
@@ -93,10 +94,20 @@ namespace OutpostZero.Colony
 
         public void CopyLeaderNeeds(float hunger, float thirst)
         {
+            CopyLeaderNeeds(hunger, thirst, -1f);
+        }
+
+        public void CopyLeaderNeeds(float hunger, float thirst, float fatigue)
+        {
             var leader = Leader;
             if (leader == null) return;
             leader.hunger = Mathf.Clamp(hunger, 0f, 100f);
             leader.thirst = Mathf.Clamp(thirst, 0f, 100f);
+            if (fatigue >= 0f)
+            {
+                leader.fatigue = BodyCarry.Clamp(fatigue);
+                leader.fatigueKnown = 1;
+            }
             OnRosterChanged?.Invoke();
         }
 
@@ -111,6 +122,18 @@ namespace OutpostZero.Colony
             }
             hunger = leader.hunger;
             thirst = leader.thirst;
+            return true;
+        }
+
+        public bool LeaderFatigue(out float fatigue)
+        {
+            var leader = Leader;
+            if (leader == null || leader.fatigueKnown == 0)
+            {
+                fatigue = 0f;
+                return false;
+            }
+            fatigue = BodyCarry.Clamp(leader.fatigue);
             return true;
         }
 

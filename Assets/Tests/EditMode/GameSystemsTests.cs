@@ -716,6 +716,19 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void StreetWearComesHomeAndARestedCardGoesBackOut()
+        {
+            Assert.AreEqual(40f, BodyCarry.Clamp(40f), 0.001f);
+            Assert.AreEqual(0f, BodyCarry.Clamp(-5f), 0.001f);
+            Assert.AreEqual(100f, BodyCarry.Clamp(140f), 0.001f);
+            Assert.AreEqual(20f, BodyCarry.Carry(8f, 20f, false), 0.001f);
+            Assert.AreEqual(8f, BodyCarry.Carry(8f, 20f, true), 0.001f);
+            Assert.AreEqual(0f, BodyCarry.Carry(0f, 20f, true), 0.001f);
+            Assert.AreEqual(20f, BodyCarry.Carry(0f, 20f, false), 0.001f);
+            Assert.AreEqual(0f, BodyCarry.Carry(-4f, 20f, true), 0.001f);
+        }
+
+        [Test]
         public void MistSitsOnTheStreetWhenTheAirIsThick()
         {
             Assert.IsTrue(MistBank.Shows(WeatherKind.Fog, 0f));

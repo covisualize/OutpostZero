@@ -120,7 +120,7 @@ namespace OutpostZero.Core
         public void EnterCamp()
         {
             var needs = PlayerRegistry.Current != null ? PlayerRegistry.Current.GetComponent<SurvivalNeeds>() : null;
-            if (needs != null) SurvivorRoster.Instance?.CopyLeaderNeeds(needs.Hunger, needs.Thirst);
+            if (needs != null) SurvivorRoster.Instance?.CopyLeaderNeeds(needs.Hunger, needs.Thirst, needs.Fatigue);
             SetState(GameState.CampManagement);
             WeatherController.Instance?.SetDistrict("");
             SaveSystem.Instance?.Save(false);
@@ -137,7 +137,9 @@ namespace OutpostZero.Core
             var needs = PlayerRegistry.Current != null ? PlayerRegistry.Current.GetComponent<SurvivalNeeds>() : null;
             if (needs != null && SurvivorRoster.Instance != null && SurvivorRoster.Instance.ReadLeaderNeeds(out float hunger, out float thirst))
             {
-                needs.Apply(hunger, thirst, needs.Fatigue);
+                float fatigue = needs.Fatigue;
+                if (SurvivorRoster.Instance.LeaderFatigue(out float carried)) fatigue = BodyCarry.Carry(carried, needs.Fatigue, true);
+                needs.Apply(hunger, thirst, fatigue);
             }
             zombiesKilled = 0;
             scrapLooted = 0;

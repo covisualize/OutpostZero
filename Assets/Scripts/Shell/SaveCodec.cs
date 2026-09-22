@@ -16,6 +16,7 @@ namespace OutpostZero.Shell
         public float hunger;
         public float thirst;
         public float fatigue;
+        public int fatigueKnown;
         public int opinion;
         public int injury;
         public bool needsTracked;
