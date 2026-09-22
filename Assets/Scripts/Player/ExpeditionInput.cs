@@ -4,8 +4,8 @@ using UnityEngine.InputSystem;
 namespace OutpostZero.Player
 {
     /// <summary>
-    /// Gameplay actions read from the Input System, with the legacy axes as a fallback
-    /// while Active Input Handling is set to Both.
+    /// Gameplay actions read from the Input System only. With no keyboard, mouse or pad attached,
+    /// every action reads as idle and the pointer sits at the screen centre.
     /// </summary>
     public static class ExpeditionInput
     {
@@ -21,10 +21,7 @@ namespace OutpostZero.Player
                 }
 
                 var keyboard = Keyboard.current;
-                if (keyboard == null)
-                {
-                    return new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"));
-                }
+                if (keyboard == null) return Vector2.zero;
 
                 float x = (Down(keyboard.dKey) || Down(keyboard.rightArrowKey) ? 1f : 0f) - (Down(keyboard.aKey) || Down(keyboard.leftArrowKey) ? 1f : 0f);
                 float y = (Down(keyboard.wKey) || Down(keyboard.upArrowKey) ? 1f : 0f) - (Down(keyboard.sKey) || Down(keyboard.downArrowKey) ? 1f : 0f);
@@ -49,7 +46,7 @@ namespace OutpostZero.Player
             get
             {
                 if (Mouse.current != null) return Mouse.current.position.ReadValue();
-                return Input.mousePosition;
+                return new Vector2(Screen.width * 0.5f, Screen.height * 0.5f);
             }
         }
 
@@ -58,7 +55,7 @@ namespace OutpostZero.Player
             get
             {
                 if (Mouse.current != null) return Mouse.current.scroll.ReadValue().y;
-                return Input.GetAxis("Mouse ScrollWheel");
+                return 0f;
             }
         }
 
@@ -67,7 +64,7 @@ namespace OutpostZero.Player
             get
             {
                 if (PadHeld(PadBindings.Action.Fire)) return true;
-                return Mouse.current != null ? Mouse.current.leftButton.isPressed : Input.GetMouseButton(0);
+                return Mouse.current != null ? Mouse.current.leftButton.isPressed : false;
             }
         }
 
@@ -76,7 +73,7 @@ namespace OutpostZero.Player
             get
             {
                 if (PadDown(PadBindings.Action.Fire)) return true;
-                return Mouse.current != null ? Mouse.current.leftButton.wasPressedThisFrame : Input.GetMouseButtonDown(0);
+                return Mouse.current != null ? Mouse.current.leftButton.wasPressedThisFrame : false;
             }
         }
 
@@ -85,7 +82,7 @@ namespace OutpostZero.Player
             get
             {
                 if (PadHeld(PadBindings.Action.Aim)) return true;
-                return Mouse.current != null ? Mouse.current.rightButton.isPressed : Input.GetMouseButton(1);
+                return Mouse.current != null ? Mouse.current.rightButton.isPressed : false;
             }
         }
         public static bool PausePressed => Pressed(ControlBindings.Action.Pause) || PadDown(PadBindings.Action.Pause);
@@ -111,7 +108,6 @@ namespace OutpostZero.Player
             {
                 if (PadHeld(PadBindings.Action.Wheel)) return true;
                 if (Mouse.current != null && Mouse.current.middleButton.isPressed) return true;
-                if (Mouse.current == null && Input.GetMouseButton(2)) return true;
                 return Held(Key.Z);
             }
         }
@@ -165,14 +161,14 @@ namespace OutpostZero.Player
         private static bool Pressed(Key key)
         {
             var keyboard = Keyboard.current;
-            if (keyboard == null) return Input.GetKeyDown(ToLegacy(key));
+            if (keyboard == null || key == Key.None) return false;
             return keyboard[key].wasPressedThisFrame;
         }
 
         private static bool Held(Key key)
         {
             var keyboard = Keyboard.current;
-            if (keyboard == null) return Input.GetKey(ToLegacy(key));
+            if (keyboard == null || key == Key.None) return false;
             return keyboard[key].isPressed;
         }
 
@@ -212,39 +208,6 @@ namespace OutpostZero.Player
                 case "DpadLeft": return pad.dpad.left;
                 case "DpadRight": return pad.dpad.right;
                 default: return null;
-            }
-        }
-
-        private static KeyCode ToLegacy(Key key)
-        {
-            switch (key)
-            {
-                case Key.Escape: return KeyCode.Escape;
-                case Key.R: return KeyCode.R;
-                case Key.E: return KeyCode.E;
-                case Key.Q: return KeyCode.Q;
-                case Key.F: return KeyCode.F;
-                case Key.C: return KeyCode.C;
-                case Key.LeftCtrl: return KeyCode.LeftControl;
-                case Key.LeftShift: return KeyCode.LeftShift;
-                case Key.Tab: return KeyCode.Tab;
-                case Key.I: return KeyCode.I;
-                case Key.G: return KeyCode.G;
-                case Key.V: return KeyCode.V;
-                case Key.B: return KeyCode.B;
-                case Key.Z: return KeyCode.Z;
-                case Key.Space: return KeyCode.Space;
-                case Key.F3: return KeyCode.F3;
-                case Key.F9: return KeyCode.F9;
-                case Key.Digit1: return KeyCode.Alpha1;
-                case Key.Digit2: return KeyCode.Alpha2;
-                case Key.Digit3: return KeyCode.Alpha3;
-                case Key.Digit4: return KeyCode.Alpha4;
-                case Key.Digit5: return KeyCode.Alpha5;
-                case Key.Digit6: return KeyCode.Alpha6;
-                case Key.Digit7: return KeyCode.Alpha7;
-                case Key.Digit8: return KeyCode.Alpha8;
-                default: return KeyCode.None;
             }
         }
     }
