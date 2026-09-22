@@ -6467,6 +6467,25 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void AFourthBiteDropsTheFollowerAndThreeWoundsStay()
+        {
+            Assert.IsFalse(FollowFall.Drops(0));
+            Assert.IsFalse(FollowFall.Drops(2));
+            Assert.IsFalse(FollowFall.Drops(-1));
+            Assert.IsTrue(FollowFall.Drops(3));
+            Assert.IsTrue(FollowFall.Drops(9));
+            Assert.AreEqual(3, FollowBite.After(3));
+            Assert.AreEqual(3, FollowBite.Cap);
+            Assert.IsFalse(FollowLimp.Swings(3));
+            Assert.AreEqual("Maya falls", FollowFall.Line("Maya", "en"));
+            Assert.AreEqual("Maya cae", FollowFall.Line("Maya", "es"));
+            Assert.AreEqual("Survivor falls", FollowFall.Line("", "en"));
+            Assert.AreEqual("Superviviente cae", FollowFall.Line("Survivor", "es"));
+            Assert.AreEqual("Maya can barely keep up", FollowLimp.Line("Maya", "en"));
+            Assert.AreEqual(8, RescueBook.RosterCap);
+        }
+
+        [Test]
         public void AZombieWithoutARigStillAttacksAndFalls()
         {
             Assert.AreEqual(14f, PoseSheet.Lean(ZombieAI.ZombieState.Chase, 0f), 0.001f);

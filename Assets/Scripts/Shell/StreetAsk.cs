@@ -61,6 +61,11 @@ namespace OutpostZero.Shell
             return Person(name, language) + " " + Word("ask.drag", language);
         }
 
+        public static string Fall(string name, string language)
+        {
+            return Person(name, language) + " " + Word("ask.falls", language);
+        }
+
         public static string Stowed(bool radio, string language)
         {
             return Word(radio ? "ask.stowed" : "ask.searched", language);

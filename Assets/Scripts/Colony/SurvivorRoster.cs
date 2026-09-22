@@ -741,6 +741,19 @@ namespace OutpostZero.Colony
             return true;
         }
 
+        public bool Lose(string id, string name, string trait)
+        {
+            if (string.IsNullOrEmpty(id) || Has(id)) return false;
+            if (survivors.Count >= RescueBook.RosterCap) return false;
+            var person = Make(id, name, trait, false, "Lost on the street");
+            person.alive = false;
+            person.injury = OutpostZero.Expedition.FollowBite.Cap;
+            person.task = "Fallen";
+            survivors.Add(person);
+            OnRosterChanged?.Invoke();
+            return true;
+        }
+
         public void Replace(List<Survivor> loaded)
         {
             survivors = loaded ?? new List<Survivor>();

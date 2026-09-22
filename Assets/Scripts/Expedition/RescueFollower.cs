@@ -133,6 +133,11 @@ namespace OutpostZero.Expedition
             if (FollowBite.Due(lastBite, Time.time, ZombieAI.Nearest(nextX, nextZ)))
             {
                 lastBite = Time.time;
+                if (FollowFall.Drops(bites))
+                {
+                    Fall();
+                    return;
+                }
                 int before = bites;
                 bites = FollowBite.After(bites);
                 if (bites > before)
@@ -146,6 +151,15 @@ namespace OutpostZero.Expedition
             bool playerThere = RescueBook.AtGate(lead.x, lead.z, spot.x, spot.z, 3.4f);
             if (!personThere || !playerThere) return;
             TryJoin();
+        }
+
+        private void Fall()
+        {
+            joined = true;
+            following = false;
+            GameplayFeedback.Toast(FollowFall.Line(personName, null));
+            SurvivorRoster.Instance?.Lose(personId, personName, Trait());
+            gameObject.SetActive(false);
         }
 
         private void TryJoin()
