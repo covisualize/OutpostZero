@@ -1,4 +1,5 @@
 using UnityEngine;
+using OutpostZero.Core;
 
 namespace OutpostZero.Combat
 {
@@ -12,10 +13,15 @@ namespace OutpostZero.Combat
 
         public static void Shot(Vector3 muzzle, Vector3 direction, Vector3 end, Vector3 eject)
         {
+            Shot(muzzle, direction, end, eject, true, WeaponType.Pistol);
+        }
+
+        public static void Shot(Vector3 muzzle, Vector3 direction, Vector3 end, Vector3 eject, bool tracer, WeaponType type)
+        {
             direction = direction.sqrMagnitude > 0.001f ? direction.normalized : Vector3.forward;
             if (FlashCap.Take(Time.time, Quiet())) Muzzle(muzzle, direction);
-            Tracer(muzzle, end);
-            Shell(muzzle, eject);
+            if (tracer) Tracer(muzzle, end);
+            Shell(muzzle, eject, type);
         }
 
         public static bool Bolt(Vector3 position)
@@ -103,12 +109,13 @@ namespace OutpostZero.Combat
             Object.Destroy(tracer, 0.05f);
         }
 
-        private static void Shell(Vector3 position, Vector3 eject)
+        private static void Shell(Vector3 position, Vector3 eject, WeaponType type)
         {
             var shell = GameObject.CreatePrimitive(PrimitiveType.Cube);
             shell.name = "Shell";
             shell.transform.position = position;
-            shell.transform.localScale = new Vector3(0.03f, 0.03f, 0.07f);
+            bool hull = type == WeaponType.Shotgun;
+            shell.transform.localScale = hull ? new Vector3(0.04f, 0.04f, 0.09f) : new Vector3(0.03f, 0.03f, 0.07f);
             var renderer = shell.GetComponent<Renderer>();
             if (renderer != null) renderer.material.color = new Color(0.72f, 0.58f, 0.22f);
             var body = shell.AddComponent<Rigidbody>();
@@ -117,7 +124,41 @@ namespace OutpostZero.Combat
             if (eject.sqrMagnitude < 0.01f) eject = Vector3.right;
             body.AddForce((eject.normalized + Vector3.up) * 1.6f, ForceMode.Impulse);
             body.AddTorque(Random.insideUnitSphere * 0.4f, ForceMode.Impulse);
+            shell.AddComponent<BrassDrop>().Arm(BrassCue.Sound(type), BrassCue.Volume(type));
             Object.Destroy(shell, 1.4f);
+        }
+
+        private sealed class BrassDrop : MonoBehaviour
+        {
+            private float ejectedAt;
+            private string sound = "";
+            private float volume;
+            private bool played;
+
+            public void Arm(string id, float gain)
+            {
+                ejectedAt = Time.time;
+                sound = id ?? "";
+                volume = gain;
+            }
+
+            private void Update()
+            {
+                if (played) return;
+                if (!BrassCue.Due(Time.time, ejectedAt)) return;
+                played = true;
+                if (sound.Length == 0 || volume <= 0f) return;
+                OutpostZero.Shell.AudioManager.Instance?.PlayAt(sound, transform.position, volume);
+                var mark = GameObject.CreatePrimitive(PrimitiveType.Quad);
+                mark.name = "BrassMark";
+                Object.Destroy(mark.GetComponent<Collider>());
+                mark.transform.position = transform.position + Vector3.down * 0.02f;
+                mark.transform.rotation = Quaternion.Euler(90f, 0f, 0f);
+                mark.transform.localScale = new Vector3(0.05f, 0.09f, 1f);
+                var renderer = mark.GetComponent<Renderer>();
+                if (renderer != null) renderer.material.color = new Color(0.72f, 0.58f, 0.22f, 0.85f);
+                Object.Destroy(mark, 6f);
+            }
         }
 
         private static Material SpriteMaterial()

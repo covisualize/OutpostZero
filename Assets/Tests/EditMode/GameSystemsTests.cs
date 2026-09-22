@@ -3301,6 +3301,37 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void ACasingClinksAndARifleTracerWaitsForTheThirdRound()
+        {
+            Assert.IsFalse(BrassCue.Ejects(WeaponType.Melee));
+            Assert.IsTrue(BrassCue.Ejects(WeaponType.Pistol));
+            Assert.IsTrue(BrassCue.Ejects(WeaponType.Rifle));
+            Assert.AreEqual("", BrassCue.Sound(WeaponType.Melee));
+            Assert.AreEqual("clink", BrassCue.Sound(WeaponType.Pistol));
+            Assert.AreEqual("clink", BrassCue.Sound(WeaponType.Rifle));
+            Assert.AreEqual("clink", BrassCue.Sound(WeaponType.SMG));
+            Assert.AreEqual("clack", BrassCue.Sound(WeaponType.Shotgun));
+            Assert.AreEqual(0f, BrassCue.Volume(WeaponType.Melee), 0.001f);
+            Assert.AreEqual(0.22f, BrassCue.Volume(WeaponType.Rifle), 0.001f);
+            Assert.AreEqual(0.34f, BrassCue.Volume(WeaponType.Shotgun), 0.001f);
+            Assert.IsFalse(BrassCue.Due(1f, 0f));
+            Assert.IsFalse(BrassCue.Due(0.5f, 1f));
+            Assert.IsFalse(BrassCue.Due(1.34f, 1f));
+            Assert.IsTrue(BrassCue.Due(1.35f, 1f));
+            Assert.IsTrue(BrassCue.Tracer(WeaponType.Pistol, 1));
+            Assert.IsTrue(BrassCue.Tracer(WeaponType.Shotgun, 2));
+            Assert.IsFalse(BrassCue.Tracer(WeaponType.Rifle, 1));
+            Assert.IsFalse(BrassCue.Tracer(WeaponType.Rifle, 2));
+            Assert.IsTrue(BrassCue.Tracer(WeaponType.Rifle, 3));
+            Assert.IsTrue(BrassCue.Tracer(WeaponType.Rifle, 6));
+            Assert.IsFalse(BrassCue.Tracer(WeaponType.SMG, 0));
+            Assert.IsFalse(BrassCue.Tracer(WeaponType.SMG, 4));
+            Assert.IsTrue(BrassCue.Tracer(WeaponType.SMG, 3));
+            Assert.AreEqual(6f, AudioSpace.MaxDistance("clink"), 0.001f);
+            Assert.AreEqual(6f, AudioSpace.MaxDistance("clack"), 0.001f);
+        }
+
+        [Test]
         public void GoreOffDropsBloodAndAShotgunSpraysTheWall()
         {
             Assert.AreEqual(0, GoreMark.Splats(0, false, true));

@@ -32,6 +32,8 @@ namespace OutpostZero.Combat
         public int CurrentAmmo => currentAmmo;
         public int MaxMagazine => MagazineCapacity;
 
+        private int brassRound;
+
         private int MagazineCapacity
         {
             get
@@ -165,18 +167,20 @@ namespace OutpostZero.Combat
 
             // Fire projectiles
             heat = RecoilBloom.AfterShot(heat);
+            brassRound++;
+            bool showTracer = BrassCue.Tracer(weaponType, brassRound);
             float spread = RecoilBloom.Spread(spreadAngle, SpreadMultiplier * FieldHand.Spread(SurvivorRoster.LeaderPractice("Guard")) * TraitHook.Aim(SurvivorRoster.LeaderTrait()), heat);
             for (int i = 0; i < projectilesPerShot; i++)
             {
                 Vector3 shootDir = ApplySpread(targetDirection, spread);
-                FireSingleProjectile(shootDir);
+                FireSingleProjectile(shootDir, showTracer);
             }
 
             TriggerAttackEvent();
             return true;
         }
 
-        private void FireSingleProjectile(Vector3 direction)
+        private void FireSingleProjectile(Vector3 direction, bool tracer)
         {
             Vector3 spawnPos = muzzlePoint != null ? muzzlePoint.position : transform.position;
 
@@ -188,7 +192,7 @@ namespace OutpostZero.Combat
                 var bullet = projObj.GetComponent<BulletProjectile>() ?? projObj.AddComponent<BulletProjectile>();
                 bullet.Setup(direction, ModifiedDamage, ownerGameObject, hitMask, weaponType);
                 Vector3 eject = muzzlePoint != null ? muzzlePoint.right : transform.right;
-                CombatVfx.Shot(spawnPos, direction, spawnPos + direction * Mathf.Min(range, 8f), eject);
+                CombatVfx.Shot(spawnPos, direction, spawnPos + direction * Mathf.Min(range, 8f), eject, tracer, weaponType);
             }
             else
             {
@@ -199,7 +203,7 @@ namespace OutpostZero.Combat
                     DamageResolver.Resolve(hit, ModifiedDamage, ownerGameObject, true, weaponType);
                 }
                 Vector3 eject = muzzlePoint != null ? muzzlePoint.right : transform.right;
-                CombatVfx.Shot(spawnPos, direction, end, eject);
+                CombatVfx.Shot(spawnPos, direction, end, eject, tracer, weaponType);
             }
         }
 
