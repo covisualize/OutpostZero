@@ -3046,6 +3046,29 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void GoreOffDropsBloodAndAShotgunSpraysTheWall()
+        {
+            Assert.AreEqual(0, GoreMark.Splats(0, false, true));
+            Assert.AreEqual(1, GoreMark.Splats(0, false, false));
+            Assert.AreEqual(1, GoreMark.Splats(1, false, true));
+            Assert.AreEqual(3, GoreMark.Splats(1, true, true));
+            Assert.AreEqual(5, GoreMark.Splats(2, true, true));
+            Assert.AreEqual(0.42f, GoreMark.Size("blood", 1), 0.001f);
+            Assert.AreEqual(0.567f, GoreMark.Size("blood", 2), 0.001f);
+            Assert.AreEqual(0.7f, GoreMark.Size("scorch", 1), 0.001f);
+            Assert.IsTrue(GoreMark.Near(10f, 0f, 10f));
+            Assert.IsFalse(GoreMark.Near(30f, 0f, 30f));
+            Assert.AreEqual(0.42f, GoreMark.FadeScale(2f, 0.42f), 0.001f);
+            Assert.AreEqual(0.21f, GoreMark.FadeScale(1f, 0.42f), 0.001f);
+            Assert.AreEqual(0f, GoreMark.FadeScale(0f, 0.42f), 0.001f);
+            Assert.AreEqual(0.098f, GoreMark.Spread(0f, 0.28f), 0.001f);
+            Assert.AreEqual(0.28f, GoreMark.Spread(3f, 0.28f), 0.001f);
+            GoreMark.Offset(1, out float x, out float y);
+            Assert.AreEqual(0.18f, x, 0.001f);
+            Assert.AreEqual(0.08f, y, 0.001f);
+        }
+
+        [Test]
         public void DemolishingAModuleReturnsHalfTheScrap()
         {
             Assert.AreEqual(3, ScrapRefund.Half(6));
