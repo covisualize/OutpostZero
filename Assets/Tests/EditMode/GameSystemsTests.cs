@@ -5608,6 +5608,20 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void AStormPullsTheWireHarderThanAClearDay()
+        {
+            Assert.AreEqual(0.08f, GroundMist.Wind(WeatherKind.Clear), 0.001f);
+            Assert.AreEqual(0.9f, GroundMist.Wind(WeatherKind.Storm), 0.001f);
+            Assert.AreEqual(0f, WireGust.Side(0.08f, 0f), 0.001f);
+            Assert.AreEqual(0.0726f, WireGust.Side(0.08f, 1f), 0.001f);
+            Assert.AreEqual(0.817f, WireGust.Side(0.9f, 1f), 0.001f);
+            Assert.AreEqual(0.227f, WireGust.Side(0.25f, 1f), 0.001f);
+            Assert.AreEqual(0f, WireGust.Side(-1f, 1f), 0.001f);
+            Assert.AreEqual(0.12f, WireGust.Base, 0.001f);
+            Assert.AreEqual(0.65f, WireGust.Rate, 0.001f);
+        }
+
+        [Test]
         public void AZombieWithoutARigStillAttacksAndFalls()
         {
             Assert.AreEqual(14f, PoseSheet.Lean(ZombieAI.ZombieState.Chase, 0f), 0.001f);

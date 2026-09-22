@@ -189,7 +189,9 @@ namespace OutpostZero.Expedition
         private void Update()
         {
             if (line == null) return;
-            float sway = Mathf.Sin(Time.time * 0.65f) * 0.12f;
+            var sky = WeatherController.Instance;
+            float wind = sky != null ? GroundMist.Wind(sky.Kind) : WireGust.Clear;
+            float sway = WireGust.Side(wind, Time.time);
             int count = line.positionCount;
             for (int i = 0; i < count; i++)
             {
