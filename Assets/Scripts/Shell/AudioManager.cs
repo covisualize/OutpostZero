@@ -32,6 +32,9 @@ namespace OutpostZero.Shell
             if (id == "flies") return FlyBed.Reach;
             if (id == "hiss") return 20f;
             if (id == "clink" || id == "clack") return 6f;
+            if (id == "spark") return 16f;
+            if (id == "splinter" || id == "spray") return 12f;
+            if (id == "dust") return 8f;
             return 18f;
         }
     }
@@ -428,8 +431,13 @@ namespace OutpostZero.Shell
         {
             bool melee = CombatEvents.FromWeapon && CombatEvents.LastWeapon == WeaponType.Melee;
             bool barrel = target != null && target.GetComponentInParent<DestructibleHazard>() != null;
-            string id = melee ? (barrel ? "clang" : "chop") : "hit";
-            PlayAt(id, point, melee ? 0.5f : 0.45f);
+            if (melee)
+            {
+                PlayAt(barrel ? "clang" : "chop", point, 0.5f);
+                return;
+            }
+            string face = Combat.StrikeFace.Of(target);
+            PlayAt(Combat.StrikeFace.Sound(face), point, Combat.StrikeFace.Volume(face));
         }
 
         private void OnKill(GameObject victim, GameObject killer)
@@ -534,6 +542,10 @@ namespace OutpostZero.Shell
             if (id == "take_metal") return Mathf.Sin(t * 40f);
             if (id == "clink") return Mathf.Sin(t * 120f);
             if (id == "clack") return noise * Mathf.Sin(t * 40f);
+            if (id == "spark") return Mathf.Sin(t * 140f);
+            if (id == "splinter") return noise * Mathf.Sin(t * 22f);
+            if (id == "dust") return noise;
+            if (id == "spray") return noise * Mathf.Sin(t * 18f);
             return noise;
         }
 

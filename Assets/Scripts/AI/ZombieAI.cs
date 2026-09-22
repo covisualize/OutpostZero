@@ -864,14 +864,17 @@ namespace OutpostZero.AI
                 LootPickup.Spawn(LootKind.Scrap, Random.Range(2, 6), transform.position);
             }
 
+            var melt = GetComponent<CorpseMelt>();
+            if (melt == null) melt = gameObject.AddComponent<CorpseMelt>();
+            melt.Begin();
             var pool = ZombiePool.Instance;
             if (pool != null)
             {
-                pool.Release(gameObject, 4f);
+                pool.Release(gameObject, CorpseMelt.Length);
             }
             else
             {
-                Destroy(gameObject, 4f);
+                Destroy(gameObject, CorpseMelt.Length);
             }
         }
 

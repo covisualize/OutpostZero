@@ -146,7 +146,9 @@ Shader "OutpostZero/TriplanarRim"
                 color += spec * mainLight.color.rgb * 0.4;
                 color = lerp(color, _RimColor.rgb, rim * _RimColor.a);
                 color = lerp(color, color * mainLight.color.rgb, metallic);
-                color += emissive + _Emission.rgb;
+                float gap = noise - _Dissolve;
+                float fringe = (_Dissolve > 0.02) ? saturate(1.0 - gap / 0.07) * step(0.0, gap) : 0;
+                color += emissive + _Emission.rgb + fringe * float3(1.0, 0.32, 0.06);
                 return half4(color, 1);
             }
             ENDHLSL

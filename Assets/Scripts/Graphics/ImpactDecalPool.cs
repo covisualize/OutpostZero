@@ -83,7 +83,7 @@ namespace OutpostZero.Graphics
                 }
                 Place(at, normal, mark, full);
             }
-            Burst(point);
+            Burst(point, StrikeFace.Of(target));
         }
 
         private void OnKill(GameObject victim, GameObject killer)
@@ -145,17 +145,21 @@ namespace OutpostZero.Graphics
             renderer.SetPropertyBlock(block);
         }
 
-        private void Burst(Vector3 point)
+        private void Burst(Vector3 point, string face)
         {
             var go = new GameObject("ImpactBurst");
             go.transform.position = point;
             var particles = go.AddComponent<ParticleSystem>();
             var main = particles.main;
-            main.startLifetime = 0.25f;
-            main.startSpeed = 2.5f;
-            main.startSize = 0.08f;
+            main.startLifetime = face == "dust" ? 0.4f : 0.25f;
+            main.startSpeed = face == "spark" ? 4.5f : face == "flesh" ? 3.2f : 2.2f;
+            main.startSize = face == "splinter" ? 0.12f : 0.08f;
+            main.startColor = face == "flesh" ? new Color(0.55f, 0.05f, 0.04f)
+                : face == "metal" ? new Color(1f, 0.78f, 0.28f)
+                : face == "wood" ? new Color(0.62f, 0.42f, 0.18f)
+                : new Color(0.55f, 0.52f, 0.48f);
             main.maxParticles = 12;
-            particles.Emit(8);
+            particles.Emit(face == "spark" ? 10 : 8);
             Destroy(go, 0.6f);
         }
 

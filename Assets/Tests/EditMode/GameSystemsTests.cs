@@ -3332,6 +3332,35 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void AHitReadsTheSurfaceAndACorpseBurnsAway()
+        {
+            Assert.AreEqual("flesh", StrikeFace.OfName("Zombie_Walker"));
+            Assert.AreEqual("metal", StrikeFace.OfName("Dumpster_Alley"));
+            Assert.AreEqual("metal", StrikeFace.OfName("Prop_Barrel_Red"));
+            Assert.AreEqual("wood", StrikeFace.OfName("RoomCrate"));
+            Assert.AreEqual("wood", StrikeFace.OfName("StreetDoor"));
+            Assert.AreEqual("concrete", StrikeFace.OfName("DistrictLot"));
+            Assert.AreEqual("concrete", StrikeFace.OfName(null));
+            Assert.AreEqual("concrete", StrikeFace.OfName(""));
+            Assert.AreEqual("spray", StrikeFace.Sound("flesh"));
+            Assert.AreEqual("spark", StrikeFace.Sound("metal"));
+            Assert.AreEqual("splinter", StrikeFace.Sound("wood"));
+            Assert.AreEqual("dust", StrikeFace.Sound("concrete"));
+            Assert.AreEqual(0.4f, StrikeFace.Volume("flesh"), 0.001f);
+            Assert.AreEqual(0.38f, StrikeFace.Volume("metal"), 0.001f);
+            Assert.AreEqual(0.36f, StrikeFace.Volume("wood"), 0.001f);
+            Assert.AreEqual(0.28f, StrikeFace.Volume("concrete"), 0.001f);
+            Assert.AreEqual(16f, AudioSpace.MaxDistance("spark"), 0.001f);
+            Assert.AreEqual(12f, AudioSpace.MaxDistance("splinter"), 0.001f);
+            Assert.AreEqual(8f, AudioSpace.MaxDistance("dust"), 0.001f);
+            Assert.AreEqual(0f, CorpseMelt.Amount(0f), 0.001f);
+            Assert.AreEqual(0.5f, CorpseMelt.Amount(1.5f), 0.001f);
+            Assert.AreEqual(1f, CorpseMelt.Amount(3f), 0.001f);
+            Assert.AreEqual(1f, CorpseMelt.Amount(4f), 0.001f);
+            Assert.AreEqual(3f, CorpseMelt.Length, 0.001f);
+        }
+
+        [Test]
         public void GoreOffDropsBloodAndAShotgunSpraysTheWall()
         {
             Assert.AreEqual(0, GoreMark.Splats(0, false, true));
