@@ -637,6 +637,26 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void ATiredColonistLeavesThePostAndWalksSlower()
+        {
+            Assert.AreEqual("Guard", CampRoutine.Choose("Guard", 80f, 80f, 60f, 0));
+            Assert.AreEqual("Guard", CampRoutine.Choose("Guard", 80f, 80f, 60f, 0, 75f));
+            Assert.AreEqual("Rest", CampRoutine.Choose("Guard", 80f, 80f, 60f, 0, 76f));
+            Assert.AreEqual("Rest", CampRoutine.Choose("Clear", 80f, 80f, 60f, 0, 90f));
+            Assert.AreEqual("Cook", CampRoutine.Choose("Guard", 20f, 80f, 60f, 0, 90f));
+            Assert.AreEqual("Medic", CampRoutine.Choose("Scavenge", 80f, 80f, 60f, 2, 90f));
+            Assert.AreEqual("Rest", CampRoutine.Choose("Guard", 80f, 80f, 5f, 0, 90f));
+            Assert.AreEqual("Resting.", CampRoutine.Bark("Rest", 50f));
+            Assert.AreEqual("My legs are done.", CampRoutine.Bark("Rest", 50f, 80f));
+            Assert.AreEqual("My legs are done.", Loc.Bark("Rest", 50f, 80f));
+            Assert.AreEqual("Las piernas no dan más.", Loc.T("bark.tired", "es"));
+            Assert.AreEqual(1.4f, ShiftWear.Stride(0f, false), 0.001f);
+            Assert.AreEqual(0.9f, ShiftWear.Stride(76f, false), 0.001f);
+            Assert.AreEqual(3.6f, ShiftWear.Stride(75f, true), 0.001f);
+            Assert.AreEqual(2.2f, ShiftWear.Stride(80f, true), 0.001f);
+        }
+
+        [Test]
         public void MistSitsOnTheStreetWhenTheAirIsThick()
         {
             Assert.IsTrue(MistBank.Shows(WeatherKind.Fog, 0f));

@@ -1,16 +1,23 @@
 namespace OutpostZero.Colony
 {
     /// <summary>
-    /// What a colonist actually does in the yard. Hunger, thirst, injury, and a collapse
-    /// pull them off the board assignment. The nudge keeps two people off the same tile.
+    /// What a colonist actually does in the yard. Hunger, thirst, injury, a collapse,
+    /// and wear past the tired line pull them off the board assignment.
+    /// The nudge keeps two people off the same tile.
     /// </summary>
     public static class CampRoutine
     {
         public static string Choose(string assigned, float hunger, float thirst, float morale, int injury)
         {
+            return Choose(assigned, hunger, thirst, morale, injury, 0f);
+        }
+
+        public static string Choose(string assigned, float hunger, float thirst, float morale, int injury, float fatigue)
+        {
             if (morale < 10f) return "Rest";
             if (injury >= 2 || assigned == "Quarantine") return "Medic";
             if (hunger < 45f || thirst < 40f) return "Cook";
+            if (OutpostZero.Player.NeedsPressure.Tired(fatigue) && assigned != "Rest") return "Rest";
             if (assigned == "Clear") return "Clear";
             if (morale < 30f && assigned == "Scavenge") return "Rest";
             if (string.IsNullOrEmpty(assigned) || assigned == "Lead" || assigned == "Fallen") return "Rest";
@@ -19,7 +26,13 @@ namespace OutpostZero.Colony
 
         public static string Bark(string action, float morale)
         {
+            return Bark(action, morale, 0f);
+        }
+
+        public static string Bark(string action, float morale, float fatigue)
+        {
             if (morale < 10f) return "I can't do this.";
+            if (action == "Rest" && OutpostZero.Player.NeedsPressure.Tired(fatigue)) return "My legs are done.";
             if (action == "Cook") return "Fire's lit.";
             if (action == "Guard") return "Watching the gate.";
             if (action == "Medic") return "Hold still.";

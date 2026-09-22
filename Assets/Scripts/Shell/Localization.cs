@@ -358,6 +358,7 @@ namespace OutpostZero.Shell
             { "bark.clear", "I'll haul them." },
             { "bark.hold", "We'll hold." },
             { "bark.rest", "Resting." },
+            { "bark.tired", "My legs are done." },
             { "recipe.bandage", "Bandage" },
             { "recipe.medkit", "Medkit" },
             { "recipe.antibiotics", "Antibiotics" },
@@ -775,6 +776,7 @@ namespace OutpostZero.Shell
             { "bark.clear", "Los retiro." },
             { "bark.hold", "Aguantaremos." },
             { "bark.rest", "Descansando." },
+            { "bark.tired", "Las piernas no dan más." },
             { "recipe.bandage", "Vendaje" },
             { "recipe.medkit", "Botiquín" },
             { "recipe.antibiotics", "Antibióticos" },
@@ -921,7 +923,13 @@ namespace OutpostZero.Shell
 
         public static string Bark(string action, float morale)
         {
+            return Bark(action, morale, 0f);
+        }
+
+        public static string Bark(string action, float morale, float fatigue)
+        {
             string key = morale < 10f ? "bark.cant"
+                : action == "Rest" && OutpostZero.Player.NeedsPressure.Tired(fatigue) ? "bark.tired"
                 : action == "Cook" ? "bark.cook"
                 : action == "Guard" ? "bark.guard"
                 : action == "Medic" ? "bark.medic"
@@ -930,7 +938,7 @@ namespace OutpostZero.Shell
                 : action == "Clear" ? "bark.clear"
                 : morale > 70f ? "bark.hold"
                 : "bark.rest";
-            return Pick(key, OutpostZero.Colony.CampRoutine.Bark(action, morale));
+            return Pick(key, OutpostZero.Colony.CampRoutine.Bark(action, morale, fatigue));
         }
 
         public static string Recipe(string id, string fallback)

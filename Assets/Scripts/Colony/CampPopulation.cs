@@ -63,7 +63,7 @@ namespace OutpostZero.Colony
                 Tint(body, survivor.morale, survivor.trait, survivor.aside, survivor.mark);
                 string action = raid
                     ? GuardStand.Face(survivor.task, survivor.morale, survivor.injury)
-                    : CampRoutine.Choose(survivor.task, survivor.hunger, survivor.thirst, survivor.morale, survivor.injury);
+                    : CampRoutine.Choose(survivor.task, survivor.hunger, survivor.thirst, survivor.morale, survivor.injury, survivor.fatigue);
                 index++;
                 Vector3 goal;
                 if (raid && action == "Guard")
@@ -75,7 +75,7 @@ namespace OutpostZero.Colony
                     guardSlot++;
                 }
                 else goal = Station(action, index - 1);
-                float pace = raid ? 3.6f : 1.4f;
+                float pace = ShiftWear.Stride(survivor.fatigue, raid);
                 body.position = Vector3.MoveTowards(body.position, goal, pace * Time.deltaTime);
                 Vector3 face = goal - body.position;
                 face.y = 0f;

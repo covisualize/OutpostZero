@@ -831,7 +831,7 @@ namespace OutpostZero.UI
                 {
                     string flag = survivor.leader ? "*" : survivor.alive ? "" : "x";
                     string mood = ColonyDay.Mood(survivor.morale, survivor.trait, survivor.aside, survivor.mark);
-                    string doing = CampRoutine.Choose(survivor.task, survivor.hunger, survivor.thirst, survivor.morale, survivor.injury);
+                    string doing = CampRoutine.Choose(survivor.task, survivor.hunger, survivor.thirst, survivor.morale, survivor.injury, survivor.fatigue);
                     string post = doing == survivor.task ? Loc.Task(survivor.task) : Loc.Task(survivor.task) + " → " + Loc.Task(doing);
                     string skills = Practice.Line(survivor.combat, survivor.medicine, survivor.engineering, survivor.cooking, survivor.scavenge, null);
                     string leads = Heir.Line(survivor.leadership, null);
@@ -846,7 +846,7 @@ namespace OutpostZero.UI
                         + (skills.Length > 0 ? "  " + skills : "")
                         + (leads.Length > 0 ? "  " + leads : "")
                         + (LifeLine.Line(survivor.age, survivor.past, null).Length > 0 ? "  " + LifeLine.Line(survivor.age, survivor.past, null) : "")
-                        + "  \"" + Loc.Bark(doing, survivor.morale) + "\""));
+                        + "  \"" + Loc.Bark(doing, survivor.morale, survivor.fatigue) + "\""));
                     if (!survivor.alive) continue;
                     string id = survivor.id;
                     var row = new VisualElement();

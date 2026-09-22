@@ -8,6 +8,10 @@ namespace OutpostZero.Colony
     {
         public const float Labor = 22f;
         public const float Lead = 8f;
+        public const float Yard = 1.4f;
+        public const float Raid = 3.6f;
+        public const float TiredYard = 0.9f;
+        public const float TiredRaid = 2.2f;
 
         public static float After(float fatigue, string task, bool cot)
         {
@@ -17,6 +21,13 @@ namespace OutpostZero.Colony
             if (task == "Lead") return Clamp(fatigue + Lead);
             if (IsLabor(task)) return Clamp(fatigue + Labor);
             return fatigue;
+        }
+
+        public static float Stride(float fatigue, bool raid)
+        {
+            bool tired = OutpostZero.Player.NeedsPressure.Tired(fatigue);
+            if (raid) return tired ? TiredRaid : Raid;
+            return tired ? TiredYard : Yard;
         }
 
         public static int Short(int paid, float fatigue)
