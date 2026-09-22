@@ -327,9 +327,11 @@ namespace OutpostZero.Colony
             int water = ColonyStorage.Instance != null ? ColonyStorage.Instance.Water : 0;
             bool cot = CampServices.Instance != null && CampServices.Instance.CotOnline;
             int bodies = ColonyStorage.Instance != null ? ColonyStorage.Instance.Bodies : 0;
-            var notes = ColonyDay.Simulate(days, ref food, ref water, cot, expeditionWon, fallenName, bodies);
+            int raw = ColonyStorage.Instance != null ? ColonyStorage.Instance.Raw : 0;
+            var notes = ColonyDay.Simulate(days, ref food, ref water, cot, expeditionWon, fallenName, bodies, ref raw);
             ApplySnapshot(days);
             Spend(food, water);
+            if (ColonyStorage.Instance != null) ColonyStorage.Instance.SetRaw(raw);
             Publish(notes);
             FactionTrade.Instance?.OnMorning(WorldClock.Instance != null ? WorldClock.Instance.Day : 1);
         }

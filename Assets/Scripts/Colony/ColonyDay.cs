@@ -51,6 +51,12 @@ namespace OutpostZero.Colony
 
         public static string[] Simulate(IList<ColonistDay> people, ref int food, ref int water, bool cot, bool expeditionWon, string fallenName, int bodies)
         {
+            int raw = 0;
+            return Simulate(people, ref food, ref water, cot, expeditionWon, fallenName, bodies, ref raw);
+        }
+
+        public static string[] Simulate(IList<ColonistDay> people, ref int food, ref int water, bool cot, bool expeditionWon, string fallenName, int bodies, ref int raw)
+        {
             var events = new List<string>();
             if (people == null) return Array.Empty<string>();
             int stain = YardDead.MoodHit(bodies);
@@ -59,11 +65,13 @@ namespace OutpostZero.Colony
             bool medic = false;
             bool volatilePresent = false;
             int living = 0;
+            bool leaderPresent = false;
             for (int i = 0; i < people.Count; i++)
             {
                 var person = people[i];
                 if (person == null || !person.alive) continue;
                 living++;
+                if (person.leader) leaderPresent = true;
                 if (person.task == "Cook") anyCook = true;
                 if (person.task == "Medic") medic = true;
                 if (person.trait == "Volatile") volatilePresent = true;
@@ -80,12 +88,9 @@ namespace OutpostZero.Colony
                 person.hunger = Clamp(person.hunger - 18f);
                 person.thirst = Clamp(person.thirst - 22f);
 
-                if (food > 0 && person.hunger < 92f)
-                {
-                    food--;
-                    person.hunger = Clamp(person.hunger + 48f);
-                    if (anyCook) person.morale += 4f;
-                }
+                int beforeFood = food;
+                MealTable.Serve(ref food, ref raw, ref person.hunger, ref person.morale);
+                if (beforeFood > food && anyCook) person.morale += 4f;
                 if (water > 0 && person.thirst < 92f)
                 {
                     water--;
@@ -98,7 +103,7 @@ namespace OutpostZero.Colony
 
                 if (person.task == "Rest" && !person.leader)
                 {
-                    person.morale += cot ? 6f : -5f;
+                    person.morale += MealTable.RestMood(cot, person.injury <= 0);
                 }
 
                 if (expeditionWon) person.morale += 10f;
@@ -115,7 +120,7 @@ namespace OutpostZero.Colony
 
                 int opinionBefore = person.opinion;
                 if (SharesWork(people, person)) person.opinion += 2;
-                if (person.trait == "Volatile") person.opinion -= 6;
+                if (person.trait == "Volatile") person.opinion -= MealTable.FeudShift(6, leaderPresent);
                 if (opinionBefore < 40 && person.opinion >= 40) Once(events, "friendship");
 
                 if (person.injury > 0 && (cot || medic))
@@ -164,7 +169,7 @@ namespace OutpostZero.Colony
                 }
             }
 
-            if (living >= 2 && volatilePresent) Once(events, "argument");
+            if (MealTable.Argument(volatilePresent, living, leaderPresent)) Once(events, "argument");
             if (expeditionWon && Average(people) > 70f) Once(events, "celebration");
             return events.ToArray();
         }

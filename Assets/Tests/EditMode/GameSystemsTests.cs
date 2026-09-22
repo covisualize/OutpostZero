@@ -2293,6 +2293,65 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void ALeaderCalmsTheFeudAndRawFoodSoursTheMeal()
+        {
+            int food = 2;
+            int raw = 2;
+            float hunger = 40f;
+            float morale = 70f;
+            MealTable.Serve(ref food, ref raw, ref hunger, ref morale);
+            Assert.AreEqual(1, food);
+            Assert.AreEqual(2, raw);
+            Assert.AreEqual(88f, hunger);
+            Assert.AreEqual(70f, morale);
+            food = 0;
+            hunger = 40f;
+            MealTable.Serve(ref food, ref raw, ref hunger, ref morale);
+            Assert.AreEqual(1, raw);
+            Assert.AreEqual(62f, hunger);
+            Assert.AreEqual(66f, morale);
+            Assert.AreEqual(-5f, MealTable.RestMood(false, true));
+            Assert.AreEqual(1f, MealTable.RestMood(true, true));
+            Assert.AreEqual(6f, MealTable.RestMood(true, false));
+            Assert.AreEqual(6, MealTable.FeudShift(6, false));
+            Assert.AreEqual(3, MealTable.FeudShift(6, true));
+            Assert.IsTrue(MealTable.Argument(true, 2, false));
+            Assert.IsFalse(MealTable.Argument(true, 2, true));
+            Assert.IsFalse(MealTable.Argument(true, 1, false));
+
+            var ward = new List<ColonistDay>
+            {
+                new ColonistDay { id = "v", trait = "Volatile", task = "Rest", morale = 60f, hunger = 40f, thirst = 80f, opinion = 18 },
+                new ColonistDay { id = "lead", task = "Lead", leader = true, morale = 70f, hunger = 90f, thirst = 90f, opinion = 20 }
+            };
+            food = 0;
+            raw = 2;
+            int water = 0;
+            var notes = ColonyDay.Simulate(ward, ref food, ref water, true, false, "", 0, ref raw);
+            Assert.AreEqual(0, raw);
+            Assert.AreEqual(15, ward[0].opinion);
+            Assert.AreEqual(57f, ward[0].morale);
+            Assert.IsFalse(System.Array.Exists(notes, note => note == "argument"));
+
+            var idle = new List<ColonistDay>
+            {
+                new ColonistDay { id = "ada", task = "Rest", morale = 50f, hunger = 90f, thirst = 90f }
+            };
+            food = 0;
+            raw = 0;
+            water = 0;
+            ColonyDay.Simulate(idle, ref food, ref water, true, false, "", 0, ref raw);
+            Assert.AreEqual(51f, idle[0].morale);
+            idle[0].morale = 50f;
+            idle[0].hunger = 90f;
+            idle[0].thirst = 90f;
+            idle[0].injury = 2;
+            ColonyDay.Simulate(idle, ref food, ref water, true, false, "", 0, ref raw);
+            Assert.AreEqual(56f, idle[0].morale);
+            Assert.AreEqual(1, idle[0].injury);
+        }
+
+        [Test]
         public void AFarmFeedsTheCampAfterThreeMornings()
         {
             var plots = new[]
