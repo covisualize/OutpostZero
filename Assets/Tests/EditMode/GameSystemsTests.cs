@@ -3199,6 +3199,32 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void AHeadshotMistsAndABleedDrips()
+        {
+            Assert.IsTrue(WoundShow.MistDue(true, 1));
+            Assert.IsTrue(WoundShow.MistDue(true, 2));
+            Assert.IsFalse(WoundShow.MistDue(true, 0));
+            Assert.IsFalse(WoundShow.MistDue(false, 2));
+            Assert.IsFalse(WoundShow.Bleeds(0));
+            Assert.IsTrue(WoundShow.Bleeds(1));
+            Assert.IsTrue(WoundShow.DripDue(1f, 0f));
+            Assert.IsFalse(WoundShow.DripDue(1.5f, 1f));
+            Assert.IsTrue(WoundShow.DripDue(1.85f, 1f));
+            Assert.IsTrue(WoundShow.DripDue(0.4f, 1f));
+            Assert.IsTrue(WoundShow.Soaked(0.65f));
+            Assert.IsFalse(WoundShow.Soaked(0.2f));
+            Assert.IsFalse(WoundShow.Soaked(0f));
+            Assert.AreEqual(0, WoundShow.Puffs(true, true, true));
+            Assert.AreEqual(2, WoundShow.Puffs(false, false, false));
+            Assert.AreEqual(6, WoundShow.Puffs(true, false, false));
+            Assert.AreEqual(5, WoundShow.Puffs(false, false, true));
+            Assert.AreEqual(7, WoundShow.Puffs(true, false, true));
+            Assert.AreEqual(0.46f, WoundShow.Mist, 0.001f);
+            Assert.AreEqual(10f, AudioSpace.MaxDistance("mist"), 0.001f);
+            Assert.AreEqual(8f, AudioSpace.MaxDistance("splash"), 0.001f);
+        }
+
+        [Test]
         public void TheGeneratorHumsAndTheFireCrackles()
         {
             YardBed.Mix(false, false, false, out float hum, out float crackle, out float buzz);

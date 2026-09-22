@@ -16,6 +16,7 @@ namespace OutpostZero.Player
 
         private HealthSystem health;
         private float tick;
+        private float lastDrip;
 
         public bool IsPoisoned => poisonRemaining > 0f;
         public bool IsBleeding => bleedRemaining != 0f;
@@ -53,6 +54,7 @@ namespace OutpostZero.Player
         public void StopBleed()
         {
             bleedRemaining = 0f;
+            lastDrip = 0f;
         }
 
         public void ApplyInfection(float amount)
@@ -120,6 +122,17 @@ namespace OutpostZero.Player
                 float step = dt < painRemaining ? dt : painRemaining;
                 painRemaining -= step;
                 health.Heal(Affliction.PainHeal(step));
+            }
+
+            int gore = SettingsService.Instance != null ? SettingsService.Instance.Gore : 1;
+            if (health != null && !health.IsDead && IsBleeding && WoundShow.Bleeds(gore) && WoundShow.DripDue(Time.time, lastDrip))
+            {
+                lastDrip = Time.time;
+                CombatVfx.Drip(transform.position);
+            }
+            else if (!IsBleeding)
+            {
+                lastDrip = 0f;
             }
 
             tick -= dt;

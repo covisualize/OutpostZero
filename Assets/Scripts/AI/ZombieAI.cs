@@ -84,6 +84,7 @@ namespace OutpostZero.AI
         private float pendingStun = 0.8f;
         private SpecialBeat.Clock abilityClock;
         private float lostSight;
+        private float lastDrip;
         private SearchMemory.Sweep searchSweep;
         private float dashX;
         private float dashZ = 1f;
@@ -260,6 +261,7 @@ namespace OutpostZero.AI
             leaving = false;
             abilityClock = new SpecialBeat.Clock();
             lostSight = 0f;
+            lastDrip = 0f;
             searchSweep = new SearchMemory.Sweep();
             dashX = 0f;
             dashZ = 1f;
@@ -324,6 +326,7 @@ namespace OutpostZero.AI
                 var gameState = GameManager.Instance.CurrentState;
                 if (gameState != GameState.ExpeditionActive && gameState != GameState.RaidActive) return;
             }
+            Drip();
 
             if (posted)
             {
@@ -876,6 +879,17 @@ namespace OutpostZero.AI
             {
                 Destroy(gameObject, CorpseMelt.Length);
             }
+        }
+
+        private void Drip()
+        {
+            if (healthSystem == null) return;
+            int gore = SettingsService.Instance != null ? SettingsService.Instance.Gore : 1;
+            if (!WoundShow.Bleeds(gore)) return;
+            if (!CharacterLook.Wounded(healthSystem.CurrentHealth, healthSystem.MaxHealth, gore)) return;
+            if (!WoundShow.DripDue(Time.time, lastDrip)) return;
+            lastDrip = Time.time;
+            CombatVfx.Drip(transform.position);
         }
 
         private string Breed()

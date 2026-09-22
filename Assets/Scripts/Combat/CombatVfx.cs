@@ -161,6 +161,52 @@ namespace OutpostZero.Combat
             }
         }
 
+        public static void Mist(Vector3 point)
+        {
+            var go = new GameObject("HeadMist");
+            go.transform.position = point + Vector3.up * 0.15f;
+            var particles = go.AddComponent<ParticleSystem>();
+            var main = particles.main;
+            main.startLifetime = 0.35f;
+            main.startSpeed = 1.6f;
+            main.startSize = 0.16f;
+            main.startColor = new Color(0.55f, 0.08f, 0.07f, 0.7f);
+            main.gravityModifier = -0.4f;
+            main.maxParticles = 16;
+            particles.Emit(14);
+            Object.Destroy(go, 0.6f);
+            OutpostZero.Shell.AudioManager.Instance?.PlayAt("mist", point, WoundShow.Mist);
+        }
+
+        public static void Drip(Vector3 feet)
+        {
+            var mark = GameObject.CreatePrimitive(PrimitiveType.Quad);
+            mark.name = "BloodDrip";
+            Object.Destroy(mark.GetComponent<Collider>());
+            mark.transform.position = feet + Vector3.up * 0.02f;
+            mark.transform.rotation = Quaternion.Euler(90f, 0f, 0f);
+            mark.transform.localScale = new Vector3(0.12f, 0.16f, 1f);
+            var renderer = mark.GetComponent<Renderer>();
+            if (renderer != null) renderer.material.color = new Color(0.4f, 0.04f, 0.03f, 0.9f);
+            Object.Destroy(mark, 6f);
+        }
+
+        public static void Puff(Vector3 feet, int count, bool wet)
+        {
+            if (count <= 0) return;
+            var go = new GameObject(wet ? "StepSplash" : "StepDust");
+            go.transform.position = feet + Vector3.up * 0.05f;
+            var particles = go.AddComponent<ParticleSystem>();
+            var main = particles.main;
+            main.startLifetime = wet ? 0.28f : 0.4f;
+            main.startSpeed = wet ? 1.4f : 0.8f;
+            main.startSize = wet ? 0.1f : 0.14f;
+            main.startColor = wet ? new Color(0.62f, 0.74f, 0.82f, 0.7f) : new Color(0.55f, 0.5f, 0.42f, 0.55f);
+            main.maxParticles = 12;
+            particles.Emit(count);
+            Object.Destroy(go, 0.6f);
+        }
+
         private static Material SpriteMaterial()
         {
             if (spriteMaterial != null) return spriteMaterial;

@@ -35,6 +35,8 @@ namespace OutpostZero.Shell
             if (id == "spark") return 16f;
             if (id == "splinter" || id == "spray") return 12f;
             if (id == "dust") return 8f;
+            if (id == "mist") return 10f;
+            if (id == "splash") return 8f;
             return 18f;
         }
     }
@@ -392,6 +394,12 @@ namespace OutpostZero.Shell
             bool hard = step == "step_hard" || step == "step_metal";
             float pitch = hard ? Random.Range(1.05f, 1.2f) : Random.Range(0.85f, 1f);
             PlayAt(step, player.transform.position, player.IsCrouching ? 0.12f : 0.28f, pitch);
+            var weather = WeatherController.Instance;
+            float wetness = weather != null ? WeatherSurface.Wetness(weather.Kind) : 0f;
+            bool soaked = Combat.WoundShow.Soaked(wetness);
+            int puffs = Combat.WoundShow.Puffs(player.IsSprinting, player.IsCrouching, soaked);
+            if (puffs > 0) Combat.CombatVfx.Puff(player.transform.position, puffs, soaked);
+            if (soaked && !player.IsCrouching) PlayAt("splash", player.transform.position, player.IsSprinting ? 0.3f : Combat.WoundShow.Splash);
         }
 
         private void Body()
@@ -546,6 +554,8 @@ namespace OutpostZero.Shell
             if (id == "splinter") return noise * Mathf.Sin(t * 22f);
             if (id == "dust") return noise;
             if (id == "spray") return noise * Mathf.Sin(t * 18f);
+            if (id == "mist") return noise * Mathf.Sin(t * 8f);
+            if (id == "splash") return noise * Mathf.Sin(t * 30f);
             return noise;
         }
 
