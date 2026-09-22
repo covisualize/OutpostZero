@@ -1197,5 +1197,42 @@ namespace OutpostZero.Tests.EditMode
             Assert.IsTrue(RescueBook.AtGate(3f, 0f, 0f, 0f, 3.2f));
             Assert.IsFalse(RescueBook.AtGate(4f, 0f, 0f, 0f, 3.2f));
         }
+
+        [Test]
+        public void ARunnerWindsUpBeforeTheLungeAndABruteBeforeTheCharge()
+        {
+            Assert.IsTrue(SpecialBeat.InReach(2.2f, false));
+            Assert.IsFalse(SpecialBeat.InReach(2.1f, false));
+            Assert.IsTrue(SpecialBeat.InReach(5.5f, false));
+            Assert.IsFalse(SpecialBeat.InReach(5.6f, false));
+            Assert.IsTrue(SpecialBeat.InReach(3f, true));
+            Assert.IsTrue(SpecialBeat.InReach(8f, true));
+            Assert.IsFalse(SpecialBeat.InReach(2.5f, true));
+            Assert.AreEqual(8f, SpecialBeat.Speed(false));
+            Assert.AreEqual(6.5f, SpecialBeat.Speed(true));
+            Assert.AreEqual(30f, SpecialBeat.LungeDamage);
+
+            var idle = SpecialBeat.Advance(new SpecialBeat.Clock(), false, 10f, 1f);
+            Assert.AreEqual(0, idle.Phase);
+
+            var wind = SpecialBeat.Advance(new SpecialBeat.Clock(), true, 10f, 0.1f);
+            Assert.AreEqual(1, wind.Phase);
+            Assert.Greater(wind.Left, 0.2f);
+
+            var dash = SpecialBeat.Advance(wind, true, 10.1f, 0.5f);
+            Assert.AreEqual(2, dash.Phase);
+            Assert.IsFalse(dash.Struck);
+            Assert.IsTrue(SpecialBeat.Hits(dash, 1.6f, 1.9f));
+            Assert.IsFalse(SpecialBeat.Hits(dash, 4f, 1.9f));
+            Assert.IsFalse(SpecialBeat.Hits(wind, 1.6f, 1.9f));
+
+            var done = SpecialBeat.Advance(dash, true, 11f, 0.5f);
+            Assert.AreEqual(0, done.Phase);
+            Assert.Greater(done.Ready, 11f);
+            var held = SpecialBeat.Advance(done, true, done.Ready - 0.1f, 0.1f);
+            Assert.AreEqual(0, held.Phase);
+            var again = SpecialBeat.Advance(done, true, done.Ready, 0.1f);
+            Assert.AreEqual(1, again.Phase);
+        }
     }
 }

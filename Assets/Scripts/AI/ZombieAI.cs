@@ -60,7 +60,7 @@ namespace OutpostZero.AI
         private float nextAttackTime = 0f;
         private float stateTimer = 0f;
         private float pendingStun = 0.8f;
-        private float abilityReady;
+        private SpecialBeat.Clock abilityClock;
         private Vector3 spawnOrigin;
         [SerializeField] private ZombieSpecialAbility specialAbility;
         private string archetypeId = "";
@@ -137,6 +137,7 @@ namespace OutpostZero.AI
                 agent.isStopped = false;
             }
             currentState = ZombieState.Idle;
+            abilityClock = new SpecialBeat.Clock();
             SetState(ZombieState.Wander);
             CharacterVariety.Ensure(gameObject).Bind(string.IsNullOrEmpty(archetypeId) ? name : archetypeId, true);
         }
@@ -268,11 +269,15 @@ namespace OutpostZero.AI
 
                 case ZombieState.Attack:
                     agent.isStopped = true;
+                    abilityClock.Phase = 0;
+                    abilityClock.Left = 0f;
                     break;
 
                 case ZombieState.Stunned:
                     agent.isStopped = true;
                     stateTimer = pendingStun;
+                    abilityClock.Phase = 0;
+                    abilityClock.Left = 0f;
                     break;
 
                 case ZombieState.Searching:
@@ -341,20 +346,55 @@ namespace OutpostZero.AI
             float distToTarget = Vector3.Distance(transform.position, currentTarget.position);
             Vector3 flat = currentTarget.position - transform.position;
             flat.y = 0f;
-            if (specialAbility == ZombieSpecialAbility.Lunge && distToTarget < 6f && distToTarget > attackRange && Time.time >= abilityReady)
+            bool charging = specialAbility == ZombieSpecialAbility.Charge;
+            bool lunging = specialAbility == ZombieSpecialAbility.Lunge;
+            if (charging || lunging)
             {
-                abilityReady = Time.time + 4.5f;
-                if (agent.isOnNavMesh && flat.sqrMagnitude > 0.01f) agent.Move(flat.normalized * 3.1f);
-            }
-            else if (specialAbility == ZombieSpecialAbility.Charge && distToTarget < 8f)
-            {
-                agent.speed = chaseSpeed * 1.75f;
+                abilityClock = SpecialBeat.Advance(abilityClock, SpecialBeat.InReach(distToTarget, charging), Time.time, Time.deltaTime);
+                if (abilityClock.Phase == 1)
+                {
+                    agent.isStopped = true;
+                    if (flat.sqrMagnitude > 0.01f) transform.rotation = Quaternion.LookRotation(flat.normalized);
+                }
+                else if (abilityClock.Phase == 2)
+                {
+                    agent.isStopped = false;
+                    agent.speed = 0f;
+                    if (agent.isOnNavMesh && flat.sqrMagnitude > 0.01f)
+                    {
+                        agent.Move(flat.normalized * SpecialBeat.Speed(charging) * Time.deltaTime);
+                    }
+                }
+                else
+                {
+                    agent.isStopped = false;
+                    agent.speed = chaseSpeed;
+                }
+
+                if (SpecialBeat.Hits(abilityClock, distToTarget, attackRange + 0.35f))
+                {
+                    abilityClock.Struck = true;
+                    abilityClock.Phase = 0;
+                    abilityClock.Left = 0f;
+                    abilityClock.Ready = Time.time + SpecialBeat.Cooldown;
+                    ConnectDash(charging);
+                }
             }
 
-            if (distToTarget <= attackRange)
+            if (distToTarget <= attackRange && abilityClock.Phase != 1)
             {
                 SetState(ZombieState.Attack);
             }
+        }
+
+        private void ConnectDash(bool charge)
+        {
+            if (currentTarget == null) return;
+            var damageable = currentTarget.GetComponent<IDamageable>();
+            if (damageable == null || damageable.IsDead) return;
+            float amount = charge ? attackDamage + 8f : SpecialBeat.LungeDamage;
+            damageable.TakeDamage(amount, currentTarget.position, transform.forward, gameObject);
+            if (charge) currentTarget.GetComponent<StatusEffectController>()?.Knockdown(0.7f);
         }
 
         private void UpdateSearching()
