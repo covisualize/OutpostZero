@@ -410,12 +410,7 @@ namespace OutpostZero.Player
 
         private void SpawnDrop(string id, string name, int count)
         {
-            var drop = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            drop.name = "Dropped_" + id;
-            drop.transform.position = transform.position + transform.forward * 0.8f + Vector3.up * 0.25f;
-            drop.transform.localScale = new Vector3(0.28f, 0.18f, 0.28f);
-            drop.layer = GameLayers.Interactable;
-            drop.AddComponent<WorldItem>().Configure(id, count);
+            ItemDatabase.SpawnWorld(id, count, transform.position + transform.forward * 0.8f + Vector3.up * 0.05f, Quaternion.Euler(0f, transform.eulerAngles.y, 0f));
             GameplayFeedback.Toast(PackSay.Dropped(id, name, null));
         }
 

@@ -1210,7 +1210,17 @@ namespace OutpostZero.UI
             foreach (var item in inventory.Items)
             {
                 string id = item.ItemId;
-                var row = new VisualElement { style = { flexDirection = FlexDirection.Row } };
+                var row = new VisualElement { style = { flexDirection = FlexDirection.Row, alignItems = Align.Center } };
+                var icon = ItemDatabase.Icon(id);
+                if (icon != null)
+                {
+                    var picture = new VisualElement();
+                    picture.style.width = 32;
+                    picture.style.height = 32;
+                    picture.style.marginRight = 6;
+                    picture.style.backgroundImage = new StyleBackground(icon);
+                    row.Add(picture);
+                }
                 var label = Body();
                 label.text = Loc.Item(id) + " x" + item.Quantity;
                 label.style.flexGrow = 1;

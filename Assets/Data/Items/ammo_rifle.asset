@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c75b22f8091a2b3c4d5e6f708192a450, type: 3}
+  m_Name: ammo_rifle
+  m_EditorClassIdentifier: OutpostZero::OutpostZero.Items.AmmoDefinition
+  id: ammo_rifle
+  displayName: Rifle Magazine
+  category: 1
+  weight: 0.08
+  use: 4
+  heal: 0
+  hunger: 0
+  thirst: 0
+  worldModel: Loot_AmmoBox_Rifle
+  worldPrefab: {fileID: 474361937430170467, guid: 8f15f9857d0cfa8e7849cde8d4b2a97a, type: 3}
+  icon: {fileID: 2800000, guid: 763752b4666cc4b263811e76e9c552a7, type: 3}
+  weapon: 3
+  rounds: 30

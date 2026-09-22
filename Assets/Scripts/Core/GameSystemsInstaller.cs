@@ -24,6 +24,7 @@ namespace OutpostZero.Core
             var host = Object.FindFirstObjectByType<GameManager>();
             if (host == null) return;
 
+            ItemDatabase.Ensure();
             Add<SettingsService>(host.gameObject);
             Add<AudioManager>(host.gameObject);
             Add<SaveSystem>(host.gameObject);

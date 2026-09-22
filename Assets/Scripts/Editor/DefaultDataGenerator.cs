@@ -132,6 +132,7 @@ namespace OutpostZero.EditorTools
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
+            foreach (var problem in ItemDatabaseSync.Sync()) Debug.LogWarning("[DefaultDataGenerator] " + problem);
         }
 
         public static WeaponDefinition LoadWeapon(string assetName)

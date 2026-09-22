@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c75b21f8091a2b3c4d5e6f708192a44f, type: 3}
+  m_Name: chemicals
+  m_EditorClassIdentifier: OutpostZero::OutpostZero.Items.ItemDefinition
+  id: chemicals
+  displayName: Chemicals
+  category: 4
+  weight: 0.2
+  use: 7
+  heal: 0
+  hunger: 0
+  thirst: 0
+  worldModel: Loot_Chemicals
+  worldPrefab: {fileID: 794965983735702402, guid: 78bd2a295453259247f7d4f833ccba82, type: 3}
+  icon: {fileID: 2800000, guid: bb7ec56d97dc2a8fc6eebcc9d2d4683e, type: 3}

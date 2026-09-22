@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c75b22f8091a2b3c4d5e6f708192a450, type: 3}
+  m_Name: ammo_smg
+  m_EditorClassIdentifier: OutpostZero::OutpostZero.Items.AmmoDefinition
+  id: ammo_smg
+  displayName: SMG Magazine
+  category: 1
+  weight: 0.05
+  use: 4
+  heal: 0
+  hunger: 0
+  thirst: 0
+  worldModel: Loot_AmmoBox_SMG
+  worldPrefab: {fileID: 739242583729682962, guid: 206b361432c3a051e0ba22bdca1b238f, type: 3}
+  icon: {fileID: 2800000, guid: a1d1f2215a980578f2220e83259d1a69, type: 3}
+  weapon: 4
+  rounds: 25

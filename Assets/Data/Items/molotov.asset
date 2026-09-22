@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c75b21f8091a2b3c4d5e6f708192a44f, type: 3}
+  m_Name: molotov
+  m_EditorClassIdentifier: OutpostZero::OutpostZero.Items.ItemDefinition
+  id: molotov
+  displayName: Molotov
+  category: 5
+  weight: 0.6
+  use: 6
+  heal: 0
+  hunger: 0
+  thirst: 0
+  worldModel: Loot_Molotov
+  worldPrefab: {fileID: 453075205628090549, guid: 0cff114bfcd8f376c6a1df1ff959216a, type: 3}
+  icon: {fileID: 2800000, guid: 17099ba492fd9bca1f1121c937363840, type: 3}
