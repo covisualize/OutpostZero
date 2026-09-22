@@ -22,6 +22,9 @@ namespace OutpostZero.Graphics
             public float Born;
             public float Full;
             public bool Oil;
+            public bool Stay;
+            public Vector3 At;
+            public string Kind;
         }
 
         private void OnEnable()
@@ -61,10 +64,29 @@ namespace OutpostZero.Graphics
 
         private void Update()
         {
+            bool street = GameManager.Instance == null || MarkStay.OnStreet(GameManager.Instance.CurrentState);
+            var player = PlayerRegistry.Current;
             for (int i = 0; i < pool.Count; i++)
             {
                 var decal = pool[i];
-                if (decal.Object == null || !decal.Object.activeSelf) continue;
+                if (decal.Object == null) continue;
+                if (decal.Stay)
+                {
+                    bool near = player == null || GoreMark.Near(
+                        decal.At.x - player.transform.position.x,
+                        decal.At.y - player.transform.position.y,
+                        decal.At.z - player.transform.position.z);
+                    if (!MarkStay.Visible(decal.Kind, street, near))
+                    {
+                        if (!street) decal.Stay = false;
+                        decal.Object.SetActive(false);
+                        continue;
+                    }
+                    if (!decal.Object.activeSelf) decal.Object.SetActive(true);
+                    decal.Object.transform.localScale = new Vector3(decal.Full, decal.Full, decal.Full);
+                    continue;
+                }
+                if (!decal.Object.activeSelf) continue;
                 float remaining = decal.Until - Time.time;
                 if (remaining <= 0f)
                 {
@@ -155,7 +177,11 @@ namespace OutpostZero.Graphics
             decal.Full = full;
             decal.Oil = mark == Mark.Oil;
             decal.Born = Time.time;
-            decal.Until = Time.time + (mark == Mark.Scorch ? 14f : 8f);
+            decal.Kind = KindOf(mark);
+            decal.Stay = MarkStay.Holds(decal.Kind);
+            decal.At = point;
+            float life = MarkStay.Life(decal.Kind);
+            decal.Until = decal.Stay ? 0f : Time.time + life;
             decal.Object.transform.localScale = new Vector3(full, full, full);
             decal.Object.SetActive(true);
         }
@@ -164,6 +190,14 @@ namespace OutpostZero.Graphics
         {
             stains.Add(point);
             if (stains.Count > 32) stains.RemoveAt(0);
+        }
+
+        private static string KindOf(Mark mark)
+        {
+            if (mark == Mark.Blood) return "blood";
+            if (mark == Mark.Scorch) return "scorch";
+            if (mark == Mark.Oil) return "oil";
+            return "hole";
         }
 
         private static Mark Choose(GameObject target)
@@ -218,16 +252,19 @@ namespace OutpostZero.Graphics
         {
             foreach (var decal in pool)
             {
-                if (decal.Object != null && !decal.Object.activeSelf) return decal;
+                if (decal.Object != null && !decal.Object.activeSelf && !decal.Stay) return decal;
             }
             int cap = QualityProfile.For(SettingsService.Instance != null ? SettingsService.Instance.Quality : 1).Decals;
             if (pool.Count >= cap)
             {
-                Decal oldest = pool[0];
-                for (int i = 1; i < pool.Count; i++)
+                Decal oldest = null;
+                for (int i = 0; i < pool.Count; i++)
                 {
-                    if (pool[i].Until < oldest.Until) oldest = pool[i];
+                    if (pool[i].Stay) continue;
+                    if (oldest == null || pool[i].Until < oldest.Until) oldest = pool[i];
                 }
+                if (oldest == null) oldest = pool[0];
+                oldest.Stay = false;
                 oldest.Object.SetActive(false);
                 return oldest;
             }

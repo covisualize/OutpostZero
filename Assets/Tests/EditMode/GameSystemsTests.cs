@@ -4840,6 +4840,29 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void ABulletHoleStaysOnTheStreetUntilTheRunEnds()
+        {
+            Assert.IsTrue(MarkStay.Holds("hole"));
+            Assert.IsTrue(MarkStay.Holds("scorch"));
+            Assert.IsFalse(MarkStay.Holds("blood"));
+            Assert.IsFalse(MarkStay.Holds("oil"));
+            Assert.IsFalse(MarkStay.Holds(null));
+            Assert.AreEqual(8f, MarkStay.Life("blood"), 0.001f);
+            Assert.AreEqual(8f, MarkStay.Life("oil"), 0.001f);
+            Assert.AreEqual(0f, MarkStay.Life("hole"), 0.001f);
+            Assert.AreEqual(0f, MarkStay.Life("scorch"), 0.001f);
+            Assert.IsTrue(MarkStay.OnStreet(GameState.ExpeditionActive));
+            Assert.IsTrue(MarkStay.OnStreet(GameState.RaidActive));
+            Assert.IsFalse(MarkStay.OnStreet(GameState.CampManagement));
+            Assert.IsTrue(MarkStay.Visible("hole", true, true));
+            Assert.IsFalse(MarkStay.Visible("hole", true, false));
+            Assert.IsFalse(MarkStay.Visible("scorch", false, true));
+            Assert.IsTrue(MarkStay.Visible("blood", false, false));
+            Assert.IsTrue(GoreMark.Near(28f, 0f, 28f));
+            Assert.IsFalse(GoreMark.Near(30f, 0f, 30f));
+        }
+
+        [Test]
         public void GoreOffDropsBloodAndAShotgunSpraysTheWall()
         {
             Assert.AreEqual(0, GoreMark.Splats(0, false, true));
