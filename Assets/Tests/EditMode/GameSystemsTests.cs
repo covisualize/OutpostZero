@@ -3631,6 +3631,12 @@ namespace OutpostZero.Tests.EditMode
             Assert.AreEqual(0f, HearGate.Perceived(0f, 40f, 1f, false, NoiseType.Thunder), 0.001f);
             Assert.AreEqual(0.09f, HearGate.Perceived(8f, 10f, 1f, true, NoiseType.GunshotLoud), 0.001f);
             Assert.AreEqual(0.8f, WeatherSurface.Sight(WeatherKind.Rain), 0.001f);
+            Assert.AreEqual(1f, RainMask.Heard(1f, false), 0.001f);
+            Assert.AreEqual(0f, RainMask.Heard(0f, true), 0.001f);
+            Assert.AreEqual(0.85f, RainMask.Heard(1f, true), 0.001f);
+            Assert.AreEqual(0.051f, RainMask.Heard(0.06f, true), 0.001f);
+            Assert.AreEqual(0f, RainMask.Heard(0.05f, true), 0.001f);
+            Assert.AreEqual(0.15f, RainMask.Cover, 0.001f);
             Assert.AreEqual(0, KinBoard.Read("", "ellis"));
             Assert.AreEqual(0, KinBoard.Read("ellis:2", "jonas"));
             Assert.AreEqual("ellis:2", KinBoard.Shift("", "ellis", 2));

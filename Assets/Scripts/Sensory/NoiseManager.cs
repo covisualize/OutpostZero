@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using OutpostZero.Colony;
 using OutpostZero.Core;
+using OutpostZero.Graphics;
 
 namespace OutpostZero.Sensory
 {
@@ -102,7 +103,10 @@ namespace OutpostZero.Sensory
                             wall = true;
                     }
 
-                    float perceivedIntensity = HearGate.Perceived(dist, effectiveRadius, intensity, wall, noiseType);
+                    bool rain = WeatherController.Instance != null && WeatherController.Instance.Kind == WeatherKind.Rain;
+                    float perceivedIntensity = RainMask.Heard(
+                        HearGate.Perceived(dist, effectiveRadius, intensity, wall, noiseType),
+                        rain);
                     if (perceivedIntensity > 0f)
                     {
                         listener.OnHearNoise(origin, radius, perceivedIntensity, noiseType, source);
