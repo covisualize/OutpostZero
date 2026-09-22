@@ -85,12 +85,12 @@ namespace OutpostZero.Colony
             string block = CraftBill.Block(bill.Station, bill.Skill, CraftBill.StationReady(bill.Station, workbench, cot), SkillReady(bill.Skill));
             if (!string.IsNullOrEmpty(block))
             {
-                GameplayFeedback.Toast(block);
+                GameplayFeedback.Toast(StallVoice.Block(block, null));
                 return false;
             }
             if (!storage.TrySpendBill(due, bill.Cloth, bill.Chemicals, bill.Tape))
             {
-                GameplayFeedback.Toast("Not enough camp supplies");
+                GameplayFeedback.Toast(Loc.T("stall.short"));
                 return false;
             }
 

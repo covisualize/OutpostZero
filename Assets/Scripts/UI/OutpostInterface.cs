@@ -522,10 +522,11 @@ namespace OutpostZero.UI
         {
             string id = faction.ActiveId;
             int standing = faction.StandingOf(id);
-            parent.Add(Title(faction.Faction + "  " + standing));
+            string name = StallVoice.Name(id, null);
+            parent.Add(Title(name + "  " + standing));
             if (CaravanBook.Refuses(id, standing))
             {
-                parent.Add(Body(faction.Faction + " will not trade"));
+                parent.Add(Body(StallVoice.Refuse(name, null)));
             }
             else
             {
@@ -533,18 +534,18 @@ namespace OutpostZero.UI
                 for (int i = 0; i < stock.Length; i++)
                 {
                     string itemId = stock[i];
-                    var record = ItemCatalog.Find(itemId);
-                    string label = record != null ? record.DisplayName : itemId;
-                    parent.Add(Button("Buy " + label + " (" + faction.Price(itemId) + ")", () => faction.Buy(itemId)));
+                    string label = Loc.Item(itemId);
+                    parent.Add(Button(StallVoice.Buy(label, faction.Price(itemId), null), () => faction.Buy(itemId)));
                 }
-                parent.Add(Button("Sell bandage", () => faction.SellBandage()));
+                parent.Add(Button(Loc.T("stall.sell"), () => faction.SellBandage()));
             }
-            parent.Add(Body(QuestLine(id, faction.Quests)));
+            string questId = id == "clinic" || id == "farmers" ? id : "caravan";
+            parent.Add(Body(StallVoice.Quest(id, CaravanBook.QuestDone(faction.Quests, questId), null)));
             if (id == "clinic" && !CaravanBook.QuestDone(faction.Quests, "clinic"))
             {
-                parent.Add(Button("Deliver 4 medkits", () => faction.DeliverMedkits()));
+                parent.Add(Button(Loc.T("stall.deliver"), () => faction.DeliverMedkits()));
             }
-            parent.Add(Button("Leave", faction.Toggle));
+            parent.Add(Button(Loc.T("stall.leave"), faction.Toggle));
         }
 
         private static string Marks(Survivor survivor)
@@ -569,14 +570,6 @@ namespace OutpostZero.UI
             string bitter = KinBoard.Bitter(kin);
             if (bitter.Length > 0) text += "  " + Loc.T("bond.rival") + " " + bitter;
             return text;
-        }
-
-        private static string QuestLine(string id, string quests)
-        {
-            if (id == "clinic") return CaravanBook.QuestDone(quests, "clinic") ? "Field dressings learned" : "The Clinic wants 4 medkits";
-            if (id == "farmers") return CaravanBook.QuestDone(quests, "farmers") ? "Farmers remember the nest" : "Clear a district for the farmers";
-            if (id == "militia") return "Iron Militia sells rifle and shell ammo";
-            return CaravanBook.QuestDone(quests, "caravan") ? "Escort complete" : "Extract on a visit day and the caravan pays";
         }
 
         private void RebuildMenu(GameState state, bool settings, bool trade)

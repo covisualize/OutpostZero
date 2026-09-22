@@ -843,6 +843,33 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void TheStallSpeaksSpanish()
+        {
+            Assert.AreEqual("Use workbench", StallVoice.Prompt(StationKind.Workbench, "en"));
+            Assert.AreEqual("Usar el banco", StallVoice.Prompt(StationKind.Workbench, "es"));
+            Assert.AreEqual("Trade", StallVoice.Prompt(StationKind.Merchant, "en"));
+            Assert.AreEqual("Comerciar", StallVoice.Prompt(StationKind.Merchant, "es"));
+            Assert.AreEqual("Need a workbench", StallVoice.Block("Need a workbench", "en"));
+            Assert.AreEqual("Hace falta un banco", StallVoice.Block("Need a workbench", "es"));
+            Assert.AreEqual("Need a medic on duty", StallVoice.Block("Need a medic on duty", "en"));
+            Assert.AreEqual("Hace falta un médico de turno", StallVoice.Block("Need a medic on duty", "es"));
+            Assert.AreEqual("The Clinic wants 4 medkits", StallVoice.Quest("clinic", false, "en"));
+            Assert.AreEqual("La Clínica pide 4 botiquines", StallVoice.Quest("clinic", false, "es"));
+            Assert.AreEqual("Field dressings learned", StallVoice.Quest("clinic", true, "en"));
+            Assert.AreEqual("Escort complete", StallVoice.Quest("caravan", true, "en"));
+            Assert.AreEqual("Escolta cumplida", StallVoice.Quest("caravan", true, "es"));
+            Assert.AreEqual("Iron Militia sells rifle and shell ammo", StallVoice.Quest("militia", true, "en"));
+            Assert.AreEqual("Iron Militia", StallVoice.Name("militia", "en"));
+            Assert.AreEqual("Milicia de Hierro", StallVoice.Name("militia", "es"));
+            Assert.AreEqual(CaravanBook.Display("clinic"), StallVoice.Name("clinic", "en"));
+            Assert.AreEqual("La Clínica", StallVoice.Name("clinic", "es"));
+            Assert.AreEqual("Buy Medkit (14)", StallVoice.Buy("Medkit", 14, "en"));
+            Assert.AreEqual("Comprar Botiquín (14)", StallVoice.Buy("Botiquín", 14, "es"));
+            Assert.AreEqual("The Caravan will not trade", StallVoice.Refuse("The Caravan", "en"));
+            Assert.AreEqual("La Caravana no comercia", StallVoice.Refuse("La Caravana", "es"));
+        }
+
+        [Test]
         public void MistSitsOnTheStreetWhenTheAirIsThick()
         {
             Assert.IsTrue(MistBank.Shows(WeatherKind.Fog, 0f));
