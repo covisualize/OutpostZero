@@ -385,6 +385,8 @@ namespace OutpostZero.Tests.EditMode
             int water = 6;
             var friendship = ColonyDay.Simulate(friends, ref food, ref water, false, false, "");
             Assert.AreEqual(41, friends[0].opinion);
+            Assert.AreEqual("ellis:2", friends[0].kin);
+            Assert.AreEqual("jonas:2", friends[1].kin);
             Assert.Contains("friendship", friendship);
 
             var ward = new List<ColonistDay>
@@ -3129,6 +3131,8 @@ namespace OutpostZero.Tests.EditMode
             ColonyDay.Simulate(pair, ref food, ref water, true, false, "", 0, ref raw);
             Assert.AreEqual(18, pair[0].opinion);
             Assert.AreEqual(20, pair[1].opinion);
+            Assert.AreEqual("", pair[0].kin);
+            Assert.AreEqual("ada:2", pair[1].kin);
             bool loner = false;
             for (int seed = 1; seed <= 40; seed++)
             {
@@ -3587,6 +3591,35 @@ namespace OutpostZero.Tests.EditMode
             Assert.AreEqual(0f, HearGate.Perceived(0f, 40f, 1f, false, NoiseType.Thunder), 0.001f);
             Assert.AreEqual(0.09f, HearGate.Perceived(8f, 10f, 1f, true, NoiseType.GunshotLoud), 0.001f);
             Assert.AreEqual(0.8f, WeatherSurface.Sight(WeatherKind.Rain), 0.001f);
+            Assert.AreEqual(0, KinBoard.Read("", "ellis"));
+            Assert.AreEqual(0, KinBoard.Read("ellis:2", "jonas"));
+            Assert.AreEqual("ellis:2", KinBoard.Shift("", "ellis", 2));
+            Assert.AreEqual("ellis:100", KinBoard.Shift("ellis:99", "ellis", 5));
+            Assert.AreEqual("ellis:-100", KinBoard.Shift("ellis:0", "ellis", -140));
+            Assert.IsFalse(KinBoard.Close("ellis:39", "ellis"));
+            Assert.IsTrue(KinBoard.Close("ellis:40", "ellis"));
+            Assert.AreEqual("ellis", KinBoard.Closest("jonas:10|ellis:40"));
+            Assert.AreEqual("", KinBoard.Closest("ellis:39"));
+            Assert.IsTrue(KinBoard.Grieves("Close to Mara", "", "Mara Quill", ""));
+            Assert.IsFalse(KinBoard.Grieves("", "", "Mara Quill", "mara"));
+            Assert.IsTrue(KinBoard.Grieves("", "mara:40", "Mara Quill", "mara"));
+            var mourned = new List<ColonistDay>
+            {
+                new ColonistDay { id = "jonas", task = "Guard", kin = "mara:40", morale = 80f, hunger = 78f, thirst = 78f },
+                new ColonistDay { id = "ellis", task = "Scavenge", morale = 80f, hunger = 78f, thirst = 78f },
+                new ColonistDay { id = "mara", name = "Mara Quill", alive = false, task = "Fallen" }
+            };
+            int kinFood = 0;
+            int kinWater = 0;
+            var kinGrief = ColonyDay.Simulate(mourned, ref kinFood, ref kinWater, false, false, "Mara Quill");
+            Assert.AreEqual(40f, mourned[0].morale);
+            Assert.AreEqual(55f, mourned[1].morale);
+            Assert.Contains("grief", kinGrief);
+            Assert.AreEqual("mara", KinBoard.FallenId(mourned, "Mara Quill"));
+            var blank = JsonUtility.FromJson<SurvivorSave>("{\"id\":\"ada\"}");
+            Assert.IsNull(blank.kin);
+            Assert.AreEqual("close", Loc.T("camp.close", "en"));
+            Assert.AreEqual("cercano", Loc.T("camp.close", "es"));
             Assert.AreEqual("[Thunder, east]", Presentation.Caption(NoiseType.Thunder, 4f, 0f, "en"));
             Assert.AreEqual("[Trueno, este]", Presentation.Caption(NoiseType.Thunder, 4f, 0f, "es"));
             Assert.AreEqual(48f, AudioSpace.MaxDistance("thunder"), 0.001f);

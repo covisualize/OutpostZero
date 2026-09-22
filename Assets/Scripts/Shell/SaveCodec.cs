@@ -19,6 +19,7 @@ namespace OutpostZero.Shell
         public bool needsTracked;
         public string task;
         public string bond;
+        public string kin = "";
         public string practice = "";
         public int leadership;
         public int age;

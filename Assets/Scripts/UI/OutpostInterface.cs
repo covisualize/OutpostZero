@@ -793,6 +793,7 @@ namespace OutpostZero.UI
                         + " " + Loc.T("camp.water") + " " + Mathf.RoundToInt(survivor.thirst)
                         + "  " + survivor.bond
                         + "  " + Loc.T("camp.opinion") + " " + survivor.opinion
+                        + (KinBoard.Closest(survivor.kin).Length > 0 ? "  " + Loc.T("camp.close") + " " + KinBoard.Closest(survivor.kin) : "")
                         + (skills.Length > 0 ? "  " + skills : "")
                         + (leads.Length > 0 ? "  " + leads : "")
                         + (LifeLine.Line(survivor.age, survivor.past, null).Length > 0 ? "  " + LifeLine.Line(survivor.age, survivor.past, null) : "")

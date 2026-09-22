@@ -13,6 +13,8 @@ namespace OutpostZero.Colony
         public string aside = "";
         public string task;
         public string bond;
+        public string kin = "";
+        public string name = "";
         public bool alive = true;
         public bool leader;
         public float morale = 70f;
@@ -109,6 +111,7 @@ namespace OutpostZero.Colony
             }
 
             string fallenFirst = FirstName(fallenName);
+            string fallenId = KinBoard.FallenId(people, fallenName);
             for (int i = 0; i < people.Count; i++)
             {
                 var person = people[i];
@@ -141,7 +144,7 @@ namespace OutpostZero.Colony
 
                 if (!string.IsNullOrEmpty(fallenFirst))
                 {
-                    if (!string.IsNullOrEmpty(person.bond) && person.bond.IndexOf(fallenFirst, StringComparison.Ordinal) >= 0)
+                    if (KinBoard.Grieves(person.bond, person.kin, fallenName, fallenId))
                     {
                         person.morale -= 40f;
                         Once(events, "grief");
@@ -150,7 +153,11 @@ namespace OutpostZero.Colony
                 }
 
                 int opinionBefore = person.opinion;
-                if (SharesWork(people, person) && !TraitHook.Holds(person.trait, person.aside, "Loner")) person.opinion += 2;
+                if (SharesWork(people, person) && !TraitHook.Holds(person.trait, person.aside, "Loner"))
+                {
+                    person.opinion += 2;
+                    person.kin = KinBoard.Warm(person.kin, people, person.id, person.task, false);
+                }
                 if (TraitHook.Holds(person.trait, person.aside, "Volatile")) person.opinion -= MealTable.FeudShift(6, leaderPresent, leadSkill);
                 if (opinionBefore < 40 && person.opinion >= 40) Once(events, "friendship");
 

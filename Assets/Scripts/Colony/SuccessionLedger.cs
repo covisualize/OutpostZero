@@ -40,14 +40,12 @@ namespace OutpostZero.Colony
         public static void Grieve(IList<ColonistDay> people, string fallenName)
         {
             if (people == null) return;
-            string first = FirstName(fallenName);
+            string fallenId = KinBoard.FallenId(people, fallenName);
             for (int i = 0; i < people.Count; i++)
             {
                 var person = people[i];
                 if (person == null || !person.alive) continue;
-                bool friend = !string.IsNullOrEmpty(first)
-                    && !string.IsNullOrEmpty(person.bond)
-                    && person.bond.IndexOf(first, StringComparison.Ordinal) >= 0;
+                bool friend = KinBoard.Grieves(person.bond, person.kin, fallenName, fallenId);
                 person.morale = Math.Max(0f, person.morale - (friend ? FriendLoss : CampLoss));
             }
         }

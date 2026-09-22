@@ -29,6 +29,7 @@ namespace OutpostZero.Colony
         public int leadership;
         public string task = "Rest";
         public string bond = "";
+        public string kin = "";
         public int age;
         public string past = "";
     }
@@ -531,6 +532,8 @@ namespace OutpostZero.Colony
                     aside = survivor.aside,
                     task = survivor.task,
                     bond = survivor.bond,
+                    kin = survivor.kin ?? "",
+                    name = survivor.displayName,
                     alive = survivor.alive,
                     leader = survivor.leader,
                     morale = survivor.morale,
@@ -557,6 +560,7 @@ namespace OutpostZero.Colony
                 survivor.hunger = day.hunger;
                 survivor.thirst = day.thirst;
                 survivor.opinion = day.opinion;
+                survivor.kin = day.kin ?? "";
                 survivor.injury = day.injury;
             }
         }
