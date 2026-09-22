@@ -58,6 +58,7 @@ namespace OutpostZero.UI
         private string seedText = "";
         private string codexId = "";
         private string inspected = "";
+        private int packFilter = PackFilter.All;
 
         private void Update()
         {
@@ -485,7 +486,7 @@ namespace OutpostZero.UI
                 RebuildCamp(state == GameState.CampManagement);
             }
 
-            string nextPack = inventory ? PackSignature() + "|" + inspected : "";
+            string nextPack = inventory ? PackSignature() + "|" + inspected + "|" + packFilter : "";
             if (nextPack != packKey)
             {
                 packKey = nextPack;
@@ -1178,6 +1179,15 @@ namespace OutpostZero.UI
             fill.style.backgroundColor = heavy ? HudPalette.Health(vision) : HudPalette.Safe(vision);
             track.Add(fill);
             pack.Add(track);
+            var gear = inventory.GetComponent<PlayerController>();
+            if (gear != null)
+            {
+                var slots = Body();
+                slots.style.whiteSpace = WhiteSpace.PreWrap;
+                slots.text = Loc.T("pack.gear") + "\n" + gear.GearLine() + "\n" + Loc.T("camp.belt") + " " + inventory.BeltLine + "\n" + Loc.T("pack.tier") + " " + inventory.PackTier;
+                pack.Add(slots);
+            }
+            pack.Add(Button(Loc.T("pack.filter") + ": " + Loc.T(PackFilter.Key(packFilter)), () => packFilter = PackFilter.Next(packFilter)));
             if (inventory.MedicalKits > 0)
             {
                 var medRow = new VisualElement { style = { flexDirection = FlexDirection.Row } };
@@ -1205,10 +1215,12 @@ namespace OutpostZero.UI
                 scrapRow.Add(Button(Loc.T("camp.info"), () => Inspect("scrap")));
                 pack.Add(scrapRow);
             }
+            var crate = LootContainer.Open;
             var scroll = new ScrollView();
             scroll.style.height = 220;
             foreach (var item in inventory.Items)
             {
+                if (!PackFilter.Shows(packFilter, item.Category)) continue;
                 string id = item.ItemId;
                 var row = new VisualElement { style = { flexDirection = FlexDirection.Row, alignItems = Align.Center } };
                 var icon = ItemDatabase.Icon(id);
@@ -1234,10 +1246,10 @@ namespace OutpostZero.UI
                     string mark = inventory.BeltMark(id);
                     row.Add(Button(string.IsNullOrEmpty(mark) ? Loc.T("camp.belt") : Loc.T("camp.belt") + " " + mark, () => inventory.ToggleBelt(id)));
                 }
+                if (crate != null && crate.HeldCount > 0) row.Add(Button(Loc.T("pack.stow"), () => crate.Stow(id, inventory)));
                 scroll.Add(row);
             }
             pack.Add(scroll);
-            var crate = LootContainer.Open;
             if (crate != null && crate.HeldCount > 0)
             {
                 pack.Add(Body(Loc.T("camp.container")));
@@ -1437,6 +1449,8 @@ namespace OutpostZero.UI
             builder.Append(Mathf.RoundToInt(inventory.CurrentWeight * 10f));
             if (LootContainer.Open != null) builder.Append(LootContainer.Open.Contents);
             builder.Append(inventory.BeltLine);
+            var body = inventory.GetComponent<PlayerController>();
+            if (body != null) builder.Append(body.GearLine());
             return builder.ToString();
         }
 

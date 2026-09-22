@@ -38,6 +38,24 @@ namespace OutpostZero.Items
             return trimmed;
         }
 
+        public static Stack[] Put(Stack[] stacks, string id, int count)
+        {
+            if (stacks == null) stacks = new Stack[0];
+            if (string.IsNullOrEmpty(id) || count <= 0) return stacks;
+            var next = new Stack[stacks.Length];
+            for (int i = 0; i < stacks.Length; i++)
+            {
+                next[i] = stacks[i];
+                if (next[i].Id != id) continue;
+                next[i].Count += count;
+                return next;
+            }
+            var grown = new Stack[stacks.Length + 1];
+            for (int i = 0; i < stacks.Length; i++) grown[i] = stacks[i];
+            grown[stacks.Length] = new Stack { Id = id, Count = count };
+            return grown;
+        }
+
         public static Stack[] TakeAll(Stack[] stacks, out Stack[] moved)
         {
             if (stacks == null || stacks.Length == 0)

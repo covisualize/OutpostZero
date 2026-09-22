@@ -488,7 +488,18 @@ namespace OutpostZero.Player
 
         public string WheelLine()
         {
-            if (!WheelOpen || equippedWeapons == null) return "";
+            if (!WheelOpen) return "";
+            return SlotLines(WheelSlot);
+        }
+
+        public string GearLine()
+        {
+            return SlotLines(activeWeaponIndex);
+        }
+
+        private string SlotLines(int hot)
+        {
+            if (equippedWeapons == null) return "";
             var builder = new StringBuilder();
             int count = equippedWeapons.Length < WeaponWheel.Slots ? equippedWeapons.Length : WeaponWheel.Slots;
             for (int i = 0; i < count; i++)
@@ -501,7 +512,7 @@ namespace OutpostZero.Player
                     string id = held is FirearmWeapon gun ? gun.CardId : WeaponCard.IdFor(held.Type);
                     name = FightSay.Gun(id, held.WeaponName, null);
                 }
-                builder.Append(WeaponWheel.Row(i, name, i == WheelSlot, null));
+                builder.Append(WeaponWheel.Row(i, name, i == hot, null));
             }
             return builder.ToString();
         }

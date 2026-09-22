@@ -102,6 +102,20 @@ namespace OutpostZero.Items
             return true;
         }
 
+        public bool Stow(string id, PlayerInventory inventory)
+        {
+            if (inventory == null || looted || ItemCatalog.Find(id) == null) return false;
+            int count = 0;
+            foreach (var item in inventory.Items)
+            {
+                if (item.ItemId == id) count = item.Quantity;
+            }
+            if (count <= 0 || !inventory.TryConsume(id, count)) return false;
+            stacks = ContainerHold.Put(stacks, id, count);
+            Remember();
+            return true;
+        }
+
         public int TakeAll(PlayerInventory inventory)
         {
             if (inventory == null || looted) return 0;
