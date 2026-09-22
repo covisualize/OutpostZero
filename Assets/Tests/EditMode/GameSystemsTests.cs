@@ -6239,6 +6239,46 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void AShotHitsTheBarAndABlastSpendsTwo()
+        {
+            Assert.AreEqual(1, BarShot.Bullet);
+            Assert.AreEqual(2, BarShot.Blast);
+            Assert.AreEqual(1, BarShot.Hits(WeaponType.Pistol));
+            Assert.AreEqual(1, BarShot.Hits(WeaponType.Rifle));
+            Assert.AreEqual(1, BarShot.Hits(WeaponType.SMG));
+            Assert.AreEqual(2, BarShot.Hits(WeaponType.Shotgun));
+            Assert.AreEqual(0, BarShot.Hits(WeaponType.Melee));
+            Assert.AreEqual(2, BarShot.Volley(WeaponType.Shotgun, 7));
+            Assert.AreEqual(2, BarShot.Volley(WeaponType.Shotgun, 1));
+            Assert.AreEqual(0, BarShot.Volley(WeaponType.Shotgun, 0));
+            Assert.AreEqual(1, BarShot.Volley(WeaponType.Pistol, 7));
+            Assert.AreEqual(0, BarShot.Volley(WeaponType.Melee, 1));
+            Assert.AreEqual(2, BarShot.After(3, WeaponType.Pistol));
+            Assert.AreEqual(2, BarShot.After(3, WeaponType.Rifle));
+            Assert.AreEqual(2, BarShot.After(3, WeaponType.SMG));
+            Assert.AreEqual(1, BarShot.After(3, WeaponType.Shotgun));
+            Assert.AreEqual(0, BarShot.After(2, WeaponType.Shotgun));
+            Assert.AreEqual(0, BarShot.After(1, WeaponType.Shotgun));
+            Assert.AreEqual(0, BarShot.After(1, WeaponType.Pistol));
+            Assert.AreEqual(0, BarShot.After(0, WeaponType.Shotgun));
+            Assert.AreEqual(0, BarShot.After(-1, WeaponType.Pistol));
+            Assert.AreEqual(3, BarShot.After(3, WeaponType.Melee));
+            Assert.IsFalse(BarShot.Opens(3, WeaponType.Pistol));
+            Assert.IsTrue(BarShot.Opens(1, WeaponType.Pistol));
+            Assert.IsFalse(BarShot.Opens(3, WeaponType.Shotgun));
+            Assert.IsTrue(BarShot.Opens(2, WeaponType.Shotgun));
+            Assert.IsFalse(BarShot.Opens(0, WeaponType.Shotgun));
+            Assert.AreEqual("The shot hits the bar", BarShot.Line("en"));
+            Assert.AreEqual("El disparo pega en la tranca", BarShot.Line("es"));
+            Assert.AreEqual(3, DoorBar.Hits);
+            Assert.AreEqual(19f, WeaponCard.Find("shotgun_pump").Damage, 0.001f);
+            Assert.AreEqual(7, WeaponCard.Find("shotgun_pump").Pellets);
+            Assert.AreEqual(34f, WeaponCard.Find("pistol_9mm").Damage, 0.001f);
+            Assert.AreEqual("The bar holds", DoorBar.Hold("en"));
+            Assert.AreEqual("The bar rattles", BarClaw.Rattle("en"));
+        }
+
+        [Test]
         public void AZombieWithoutARigStillAttacksAndFalls()
         {
             Assert.AreEqual(14f, PoseSheet.Lean(ZombieAI.ZombieState.Chase, 0f), 0.001f);

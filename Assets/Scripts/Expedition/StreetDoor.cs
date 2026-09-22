@@ -13,6 +13,7 @@ namespace OutpostZero.Expedition
         private Vector3 destination;
         private bool leaving;
         private int bar;
+        private int shotStamp = -1;
 
         public string Prompt => DoorBar.Holds(bar) ? DoorBar.Face(null) : DoorMap.Prompt(leaving, null);
 
@@ -54,6 +55,17 @@ namespace OutpostZero.Expedition
             bar = BarClaw.Rush(bar);
             bool open = !DoorBar.Holds(bar);
             GameplayFeedback.Toast(open ? DoorBar.Gives(null) : DoorBar.Hold(null));
+            Ring(open, attacker);
+        }
+
+        public void Shoot(GameObject attacker, OutpostZero.Core.WeaponType type, int stamp)
+        {
+            if (!DoorBar.Holds(bar)) return;
+            if (stamp == shotStamp) return;
+            shotStamp = stamp;
+            bar = BarShot.After(bar, type);
+            bool open = !DoorBar.Holds(bar);
+            GameplayFeedback.Toast(open ? DoorBar.Gives(null) : BarShot.Line(null));
             Ring(open, attacker);
         }
 

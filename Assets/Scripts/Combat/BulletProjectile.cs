@@ -16,8 +16,9 @@ namespace OutpostZero.Combat
         private GameObject shooter;
         private float spawnTime;
         private Core.WeaponType weapon = Core.WeaponType.Pistol;
+        private int volley;
 
-        public void Setup(Vector3 dir, float dmg, GameObject attacker, LayerMask targetLayers, Core.WeaponType type = Core.WeaponType.Pistol, float range = 16f)
+        public void Setup(Vector3 dir, float dmg, GameObject attacker, LayerMask targetLayers, Core.WeaponType type = Core.WeaponType.Pistol, float range = 16f, int shot = 0)
         {
             direction = dir.normalized;
             damage = dmg;
@@ -25,6 +26,7 @@ namespace OutpostZero.Combat
             shooter = attacker;
             hitLayers = targetLayers;
             weapon = type;
+            volley = shot;
             origin = transform.position;
             spawnTime = Time.time;
 
@@ -37,14 +39,24 @@ namespace OutpostZero.Combat
             Vector3 startPos = transform.position;
             Vector3 nextPos = startPos + direction * step;
 
-            if (Physics.Raycast(startPos, direction, out RaycastHit hit, step, hitLayers))
+            bool solid = Physics.Raycast(startPos, direction, out RaycastHit hit, step, hitLayers);
+            if (solid && hit.collider != null && hit.collider.gameObject == shooter) solid = false;
+            bool doorCast = Physics.Raycast(startPos, direction, out RaycastHit slab, step, OutpostZero.Core.GameLayers.InteractableMask);
+            var door = doorCast && slab.collider != null ? slab.collider.GetComponent<OutpostZero.Expedition.StreetDoor>() : null;
+            if (door != null && door.Barred && (!solid || slab.distance < hit.distance))
             {
-                // Don't hit the shooter
-                if (hit.collider.gameObject != shooter)
-                {
-                    OnHit(hit);
-                    return;
-                }
+                door.Shoot(shooter, weapon, volley);
+                CombatVfx.Tracer(transform.position, slab.point);
+                OilPatch.Shot(origin, slab.point);
+                OutpostZero.AI.ZombieAI.WhiffNear(origin.x, origin.z, slab.point.x, slab.point.z, null);
+                Destroy(gameObject);
+                return;
+            }
+
+            if (solid)
+            {
+                OnHit(hit);
+                return;
             }
 
             transform.position = nextPos;

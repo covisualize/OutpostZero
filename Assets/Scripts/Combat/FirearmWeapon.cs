@@ -54,6 +54,7 @@ namespace OutpostZero.Combat
         public event Action OnReloadCompleted;
 
         private float heat;
+        private int volley;
         private bool automatic;
         private bool useProjectile;
         private string cardId = "";
@@ -168,6 +169,7 @@ namespace OutpostZero.Combat
 
             // Fire projectiles
             heat = RecoilBloom.AfterShot(heat);
+            volley++;
             brassRound++;
             bool showTracer = BrassCue.Tracer(weaponType, brassRound);
             int guard = SurvivorRoster.LeaderPractice("Guard");
@@ -198,7 +200,7 @@ namespace OutpostZero.Combat
                     ? Instantiate(bulletPrefab, spawnPos, Quaternion.LookRotation(direction))
                     : CreateBullet(spawnPos, direction);
                 var bullet = projObj.GetComponent<BulletProjectile>() ?? projObj.AddComponent<BulletProjectile>();
-                bullet.Setup(direction, ModifiedDamage, ownerGameObject, hitMask, weaponType, range);
+                bullet.Setup(direction, ModifiedDamage, ownerGameObject, hitMask, weaponType, range, volley);
                 Vector3 eject = muzzlePoint != null ? muzzlePoint.right : transform.right;
                 CombatVfx.Shot(spawnPos, direction, spawnPos + direction * Mathf.Min(range, 8f), eject, tracer, weaponType);
             }
@@ -206,7 +208,15 @@ namespace OutpostZero.Combat
             {
                 Vector3 end = spawnPos + direction * range;
                 OutpostZero.AI.ZombieAI struck = null;
-                if (Physics.Raycast(spawnPos, direction, out RaycastHit hit, range, hitMask, QueryTriggerInteraction.Ignore))
+                bool solid = Physics.Raycast(spawnPos, direction, out RaycastHit hit, range, hitMask, QueryTriggerInteraction.Ignore);
+                bool doorCast = Physics.Raycast(spawnPos, direction, out RaycastHit slab, range, GameLayers.InteractableMask, QueryTriggerInteraction.Ignore);
+                var door = doorCast && slab.collider != null ? slab.collider.GetComponent<OutpostZero.Expedition.StreetDoor>() : null;
+                if (door != null && door.Barred && (!solid || slab.distance < hit.distance))
+                {
+                    end = slab.point;
+                    door.Shoot(ownerGameObject, weaponType, volley);
+                }
+                else if (solid)
                 {
                     end = hit.point;
                     CombatEvents.NoteDir(direction);
