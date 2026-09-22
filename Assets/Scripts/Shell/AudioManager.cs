@@ -28,6 +28,7 @@ namespace OutpostZero.Shell
             if (id == "shriek" || id == "roar" || id == "stomp") return 40f;
             if (id == "gun" || id == "shotgun" || id == "gun_far") return 32f;
             if (id == "groan" || id == "snarl" || id == "grunt") return 22f;
+            if (id == "hum" || id == "crackle" || id == "buzz") return Colony.YardBed.Reach;
             return 18f;
         }
     }
@@ -54,6 +55,9 @@ namespace OutpostZero.Shell
         private float nextHeart;
         private float nextBreath;
         private readonly float[] groanSeats = new float[ZombieVoice.Cap];
+        private AudioSource hum;
+        private AudioSource crackle;
+        private AudioSource buzz;
 
         private void Awake()
         {
@@ -75,6 +79,25 @@ namespace OutpostZero.Shell
             weather.playOnAwake = false;
             percussion = AddBed("stem_perc");
             combat = AddBed("stem_combat");
+            hum = AddWorld("hum");
+            crackle = AddWorld("crackle");
+            buzz = AddWorld("buzz");
+        }
+
+        private AudioSource AddWorld(string id)
+        {
+            var go = new GameObject(id);
+            go.transform.SetParent(transform, false);
+            var bed = go.AddComponent<AudioSource>();
+            bed.loop = true;
+            bed.spatialBlend = 1f;
+            bed.playOnAwake = false;
+            bed.clip = GetClip(id);
+            bed.volume = 0f;
+            bed.minDistance = 2f;
+            bed.maxDistance = Colony.YardBed.Reach;
+            bed.rolloffMode = AudioRolloffMode.Linear;
+            return bed;
         }
 
         private AudioSource AddBed(string id)
@@ -135,6 +158,7 @@ namespace OutpostZero.Shell
             if (percussion != null) ApplyLowpass(percussion, snapshot);
             if (combat != null) ApplyLowpass(combat, snapshot);
             UpdateWeather(snapshot, music, sfx, ambience, ui);
+            UpdateYard(snapshot, music, sfx, ambience, ui);
             if (tension >= 75f && !peaked)
             {
                 peaked = true;
@@ -210,6 +234,46 @@ namespace OutpostZero.Shell
             if (!string.IsNullOrEmpty(weatherId))
                 weather.volume = AudioMix.Gain(weatherId, 0.35f, 1f, music, sfx, ambience, ui, snapshot);
             ApplyLowpass(weather, snapshot);
+        }
+
+        private void UpdateYard(MixSnapshot snapshot, float music, float sfx, float ambience, float ui)
+        {
+            var grid = Colony.GridBuilder.Instance;
+            var modules = grid != null ? grid.Placed : null;
+            bool fire = Colony.YardBed.Spot(modules, "Campfire", out float fireX, out float fireZ);
+            bool lamp = Colony.YardBed.Spot(modules, "Lamp", out float lampX, out float lampZ);
+            bool generator = Colony.YardBed.Spot(modules, "Generator", out float genX, out float genZ);
+            var camp = Colony.CampServices.Instance;
+            if (camp != null && !camp.GeneratorOnline) generator = false;
+            if (camp != null && camp.GeneratorOnline && !generator)
+            {
+                generator = true;
+                genX = camp.transform.position.x;
+                genZ = camp.transform.position.z;
+            }
+            Colony.YardBed.Mix(generator, fire, lamp, out float humGain, out float crackleGain, out float buzzGain);
+            Hold(hum, "hum", genX, genZ, humGain, snapshot, music, sfx, ambience, ui);
+            Hold(crackle, "crackle", fireX, fireZ, crackleGain, snapshot, music, sfx, ambience, ui);
+            Hold(buzz, "buzz", lampX, lampZ, buzzGain, snapshot, music, sfx, ambience, ui);
+        }
+
+        private void Hold(AudioSource source, string id, float x, float z, float gain, MixSnapshot snapshot, float music, float sfx, float ambience, float ui)
+        {
+            if (source == null) return;
+            var at = new Vector3(x, 0f, z);
+            source.transform.position = at;
+            bool wall = gain > 0f && BehindWall(id, at);
+            float heard = gain <= 0f ? 0f : EarWall.Gain(gain, wall, false);
+            source.volume = AudioMix.Gain(id, heard, 1f, music, sfx, ambience, ui, snapshot);
+            ApplyLowpass(source, snapshot, wall);
+            if (source.volume > 0.001f)
+            {
+                if (!source.isPlaying) source.Play();
+            }
+            else if (source.isPlaying)
+            {
+                source.Stop();
+            }
         }
 
         private static MixSnapshot CurrentSnapshot()
@@ -391,6 +455,9 @@ namespace OutpostZero.Shell
             if (id == "snarl") return noise * Mathf.Sin(t * 36f);
             if (id == "stomp") return noise * Mathf.Sin(t * 2.5f);
             if (id == "grunt") return Mathf.Sin(t * 18f);
+            if (id == "hum") return Mathf.Sin(t * 6f);
+            if (id == "crackle") return noise;
+            if (id == "buzz") return Mathf.Sin(t * 55f) * 0.35f;
             return noise;
         }
 
@@ -398,7 +465,7 @@ namespace OutpostZero.Shell
         {
             if (clips.TryGetValue(id, out var clip)) return clip;
             int rate = 22050;
-            bool loop = id == "ambient" || id == "rain" || id == "wind" || id == "stem_perc" || id == "stem_combat";
+            bool loop = id == "ambient" || id == "rain" || id == "wind" || id == "stem_perc" || id == "stem_combat" || id == "hum" || id == "crackle" || id == "buzz";
             float seconds = loop ? 2f : id == "boom_far" ? 0.7f : id == "roar" || id == "stomp" ? 0.5f : id == "boom" ? 0.45f : id == "gun_far" ? 0.42f : id == "breath" || id == "groan" ? 0.5f : id == "shriek" ? 0.28f : id == "heart" ? 0.22f : id == "dry" ? 0.07f : 0.18f;
             int samples = Mathf.CeilToInt(rate * seconds);
             var data = new float[samples];

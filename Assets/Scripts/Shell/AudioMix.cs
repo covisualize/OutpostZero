@@ -30,7 +30,7 @@ namespace OutpostZero.Shell
         {
             if (id == "ambient" || id == "pulse") return MixBus.Music;
             if (id == "ui") return MixBus.Ui;
-            if (id == "rain" || id == "wind" || id == "ambience") return MixBus.Ambience;
+            if (id == "rain" || id == "wind" || id == "ambience" || id == "hum" || id == "crackle" || id == "buzz") return MixBus.Ambience;
             return MixBus.Sfx;
         }
 

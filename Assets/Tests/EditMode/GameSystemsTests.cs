@@ -3098,6 +3098,44 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void TheGeneratorHumsAndTheFireCrackles()
+        {
+            YardBed.Mix(false, false, false, out float hum, out float crackle, out float buzz);
+            Assert.AreEqual(0f, hum, 0.001f);
+            Assert.AreEqual(0f, crackle, 0.001f);
+            Assert.AreEqual(0f, buzz, 0.001f);
+            YardBed.Mix(true, false, true, out hum, out crackle, out buzz);
+            Assert.AreEqual(0.28f, hum, 0.001f);
+            Assert.AreEqual(0f, crackle, 0.001f);
+            Assert.AreEqual(0.14f, buzz, 0.001f);
+            YardBed.Mix(false, true, true, out hum, out crackle, out buzz);
+            Assert.AreEqual(0f, hum, 0.001f);
+            Assert.AreEqual(0.22f, crackle, 0.001f);
+            Assert.AreEqual(0f, buzz, 0.001f);
+            YardBed.Mix(true, true, false, out hum, out crackle, out buzz);
+            Assert.AreEqual(0.28f, hum, 0.001f);
+            Assert.AreEqual(0.22f, crackle, 0.001f);
+            Assert.AreEqual(0f, buzz, 0.001f);
+            var dark = new List<PlacedModule> { new PlacedModule { kind = "Generator", x = 4f, z = -2f, site = 1, integrity = 100 } };
+            Assert.IsFalse(YardBed.Spot(dark, "Generator", out _, out _));
+            var lit = new List<PlacedModule>
+            {
+                new PlacedModule { kind = "Campfire", x = 1f, z = 2f, site = 0, integrity = 80 },
+                new PlacedModule { kind = "Lamp", x = 6f, z = 3f, site = 0, integrity = 40 }
+            };
+            Assert.IsTrue(YardBed.Spot(lit, "Campfire", out float x, out float z));
+            Assert.AreEqual(1f, x, 0.001f);
+            Assert.AreEqual(2f, z, 0.001f);
+            Assert.IsTrue(YardBed.Spot(lit, "Lamp", out x, out z));
+            Assert.AreEqual(6f, x, 0.001f);
+            Assert.AreEqual(18f, YardBed.Reach, 0.001f);
+            Assert.AreEqual(MixBus.Ambience, AudioMix.BusOf("hum"));
+            Assert.AreEqual(MixBus.Ambience, AudioMix.BusOf("crackle"));
+            Assert.AreEqual(MixBus.Ambience, AudioMix.BusOf("buzz"));
+            Assert.AreEqual(1f, AudioSpace.SpatialBlend("hum"), 0.001f);
+        }
+
+        [Test]
         public void GoreOffDropsBloodAndAShotgunSpraysTheWall()
         {
             Assert.AreEqual(0, GoreMark.Splats(0, false, true));
