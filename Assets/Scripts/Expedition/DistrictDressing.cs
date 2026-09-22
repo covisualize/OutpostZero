@@ -75,7 +75,11 @@ namespace OutpostZero.Expedition
             room.transform.localScale = new Vector3(1.1f, 1.3f, 1.1f);
             room.layer = GameLayers.Interactable;
             Paint(room.GetComponent<Renderer>(), plan.PoiRole == "radio" ? new Color(0.72f, 0.58f, 0.22f) : new Color(0.45f, 0.5f, 0.42f));
-            room.AddComponent<DistrictPoi>().Configure(plan.PoiRole);
+            var poi = room.AddComponent<DistrictPoi>();
+            poi.Configure(plan.PoiRole);
+            string poiMark = StreetLedger.Mark("poi", plan.PoiX, plan.PoiZ);
+            poi.Stamp(poiMark);
+            if (WorldMapService.Instance != null && WorldMapService.Instance.StreetTaken(poiMark)) poi.Recall();
 
             var nest = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
             nest.name = "DistrictNest";
@@ -128,7 +132,7 @@ namespace OutpostZero.Expedition
                         Paint(crate.GetComponent<Renderer>(), new Color(0.42f, 0.36f, 0.24f));
                         string table = map.Footprint == "clinic" || map.Footprint == "hospital" ? "medical"
                             : map.Footprint == "warehouse" || map.Footprint == "station" ? "military" : "crate";
-                        crate.AddComponent<LootContainer>().Configure(table);
+                        Keep(crate.AddComponent<LootContainer>(), table, StreetLedger.Mark("road", cell.X, cell.Z));
                     }
                     continue;
                 }
@@ -212,6 +216,13 @@ namespace OutpostZero.Expedition
             Paint(body.GetComponent<Renderer>(), color);
         }
 
+        private static void Keep(LootContainer box, string table, string mark)
+        {
+            box.Configure(table);
+            box.Stamp(mark);
+            if (WorldMapService.Instance != null && WorldMapService.Instance.StreetTaken(mark)) box.MarkEmpty();
+        }
+
         private static bool Close(float a, float b)
         {
             float d = a - b;
@@ -265,7 +276,7 @@ namespace OutpostZero.Expedition
             crate.transform.localScale = new Vector3(0.8f, 0.7f, 0.8f);
             crate.layer = GameLayers.Interactable;
             Paint(crate.GetComponent<Renderer>(), new Color(0.42f, 0.36f, 0.24f));
-            crate.AddComponent<LootContainer>().Configure(plan.Footprint == "clinic" || plan.PoiRole == "radio" ? "medical" : "crate");
+            Keep(crate.AddComponent<LootContainer>(), plan.Footprint == "clinic" || plan.PoiRole == "radio" ? "medical" : "crate", StreetLedger.Mark("room", insideX + 1.6f, insideZ + 1.2f));
 
             var lamp = new GameObject("RoomLamp");
             lamp.transform.SetParent(root, false);
@@ -415,8 +426,8 @@ namespace OutpostZero.Expedition
             else if (piece.Role.StartsWith("crate"))
             {
                 body.layer = GameLayers.Interactable;
-                var container = body.AddComponent<LootContainer>();
-                container.Configure(piece.Role == "crate_medical" ? "medical" : piece.Role == "crate_military" ? "military" : "crate");
+                string table = piece.Role == "crate_medical" ? "medical" : piece.Role == "crate_military" ? "military" : "crate";
+                Keep(body.AddComponent<LootContainer>(), table, StreetLedger.Mark(piece.Role, piece.X, piece.Z));
             }
             else if (piece.Role == "cover")
             {

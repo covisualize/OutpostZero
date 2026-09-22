@@ -42,12 +42,14 @@ namespace OutpostZero.Shell
         private bool broadcastWon;
         private bool endless;
         private int worldSeed = DistrictGenerator.DefaultSeed;
+        private string street = "";
 
         public string Parts => parts;
         public int Difficulty => difficulty;
         public bool BroadcastWon => broadcastWon;
         public bool Endless => endless;
         public int WorldSeed => DistrictGenerator.Resolve(worldSeed);
+        public string Street => street ?? "";
         public bool GeneratorBuilt => GridBuilder.Instance != null && GridBuilder.Instance.HasKind("Generator");
         public bool ReadyToBroadcast => CampaignBoard.Ready(parts, GeneratorBuilt, broadcastWon);
         public bool CampaignWon => CampaignBoard.Won(parts, GeneratorBuilt, broadcastWon);
@@ -75,6 +77,24 @@ namespace OutpostZero.Shell
             parts = "";
             broadcastWon = false;
             endless = false;
+            street = "";
+        }
+
+        public void NoteStreet(string mark)
+        {
+            string district = Current != null ? Current.id : "";
+            street = StreetLedger.Note(street, district, mark);
+        }
+
+        public bool StreetTaken(string mark)
+        {
+            string district = Current != null ? Current.id : "";
+            return StreetLedger.Has(street, district, mark);
+        }
+
+        public void RestoreStreet(string packed)
+        {
+            street = packed ?? "";
         }
 
         public bool TryBeginEndless()

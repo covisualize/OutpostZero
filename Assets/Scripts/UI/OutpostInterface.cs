@@ -992,7 +992,7 @@ namespace OutpostZero.UI
                 foreach (var district in map.Districts)
                 {
                     if (!MapVeil.Seen(district.id, charted)) continue;
-                    string cast = SkyCast(district.id, charted, day) + SiteCast(district.id, charted);
+                    string cast = SkyCast(district.id, charted, day) + SiteCast(district.id, charted) + SearchedCast(map, district.id);
                     if (district.cleared && !map.Endless)
                     {
                         string part = CampaignBoard.PartFor(district.id);
@@ -1202,6 +1202,13 @@ namespace OutpostZero.UI
             return "  " + Loc.T("poi." + site);
         }
 
+        private static string SearchedCast(WorldMapService map, string id)
+        {
+            int searched = StreetLedger.Count(map.Street, id);
+            if (searched <= 0) return "";
+            return "  " + searched + " " + Loc.T("camp.searched");
+        }
+
         private static string[] ClearedDistricts(WorldMapService map)
         {
             int count = 0;
@@ -1251,6 +1258,7 @@ namespace OutpostZero.UI
                 builder.Append(WorldMapService.Instance.BroadcastWon);
                 builder.Append(WorldMapService.Instance.ClearedCount);
                 builder.Append(WorldMapService.Instance.WorldSeed);
+                builder.Append(WorldMapService.Instance.Street);
             }
             if (FactionTrade.Instance != null) builder.Append(FactionTrade.Instance.Signature);
             return builder.ToString();

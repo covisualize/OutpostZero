@@ -10,6 +10,7 @@ namespace OutpostZero.Items
         [SerializeField] private string tableId = "crate";
         [SerializeField] private bool looted;
         private bool rolled;
+        private string stamp = "";
         private ContainerHold.Stack[] stacks = new ContainerHold.Stack[0];
 
         public static LootContainer Open { get; private set; }
@@ -33,6 +34,19 @@ namespace OutpostZero.Items
         public void Configure(string table)
         {
             tableId = string.IsNullOrEmpty(table) ? "crate" : table;
+        }
+
+        public void Stamp(string mark)
+        {
+            stamp = mark ?? "";
+        }
+
+        public void MarkEmpty()
+        {
+            looted = true;
+            rolled = true;
+            stacks = new ContainerHold.Stack[0];
+            if (Open == this) Open = null;
         }
 
         public bool CanInteract(PlayerInventory inventory) => !looted && inventory != null;
@@ -149,6 +163,7 @@ namespace OutpostZero.Items
         {
             looted = true;
             if (Open == this) Open = null;
+            if (!string.IsNullOrEmpty(stamp)) OutpostZero.Shell.WorldMapService.Instance?.NoteStreet(stamp);
         }
     }
 }

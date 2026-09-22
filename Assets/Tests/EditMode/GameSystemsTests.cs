@@ -1067,6 +1067,35 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void AnEmptiedCrateStaysEmptyOnTheSameStreet()
+        {
+            Assert.AreEqual("crate@16,40", StreetLedger.Mark("crate", 1.6f, 4f));
+            Assert.AreEqual("poi@-32,60", StreetLedger.Mark("poi", -3.2f, 6f));
+            Assert.AreEqual("", StreetLedger.Note(null, "", "road"));
+            Assert.AreEqual("", StreetLedger.Note("", "ash_market", ""));
+            string packed = StreetLedger.Note(null, "ash_market", "road@16,40");
+            Assert.AreEqual("ash_market=road@16,40", packed);
+            Assert.AreEqual(packed, StreetLedger.Note(packed, "ash_market", "road@16,40"));
+            packed = StreetLedger.Note(packed, "rail_yard", "poi@0,0");
+            Assert.AreEqual("ash_market=road@16,40|rail_yard=poi@0,0", packed);
+            Assert.IsTrue(StreetLedger.Has(packed, "ash_market", "road@16,40"));
+            Assert.IsTrue(StreetLedger.Has(packed, "rail_yard", "poi@0,0"));
+            Assert.IsFalse(StreetLedger.Has(packed, "rail_yard", "road@16,40"));
+            Assert.IsFalse(StreetLedger.Has(null, "ash_market", "road@16,40"));
+            Assert.AreEqual(1, StreetLedger.Count(packed, "ash_market"));
+            Assert.AreEqual(0, StreetLedger.Count(packed, "old_hospital"));
+            Assert.AreEqual(0, StreetLedger.Count("", "ash_market"));
+            var data = new SaveGameData { street = packed };
+            Assert.IsTrue(SaveCodec.TryDeserialize(SaveCodec.Serialize(data), out var loaded, out var error), error);
+            Assert.AreEqual(1, loaded.schemaVersion);
+            Assert.AreEqual(packed, loaded.street);
+            Assert.IsTrue(SaveCodec.TryDeserialize("{\"schemaVersion\":1}", out var legacy, out var legacyError), legacyError);
+            Assert.IsTrue(string.IsNullOrEmpty(legacy.street));
+            Assert.AreEqual("searched", Loc.T("camp.searched"));
+            Assert.AreEqual("registrado", Loc.T("camp.searched", "es"));
+        }
+
+        [Test]
         public void UnmappedRoadsStayOffTheBoardUntilANeighborIsCleared()
         {
             Assert.IsFalse(MapVeil.Seen("", new string[0]));

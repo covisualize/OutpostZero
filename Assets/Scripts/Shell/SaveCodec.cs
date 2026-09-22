@@ -109,6 +109,7 @@ namespace OutpostZero.Shell
         public string weaponMods = "";
         public string memorial = "";
         public string corpses = "";
+        public string street = "";
         public int mercy;
         public string language = "en";
         public float shake = 1f;
