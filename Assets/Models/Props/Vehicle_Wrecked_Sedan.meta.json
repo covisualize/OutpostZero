@@ -1,0 +1,37 @@
+{
+  "id": "Vehicle_Wrecked_Sedan",
+  "category": "Props",
+  "generator": "generate_props.build_wrecked_sedan",
+  "generatorHash": "b05a59ac5b4b23815f93ffe45fa8e4283d141c6d5092fd273ebbf6f05221a986",
+  "gitSha": "1c0079daacc42fe956aea2c77d58cdfddd98d9c5",
+  "blender": "4.2.11",
+  "tags": [
+    "vehicle",
+    "cover"
+  ],
+  "pivot": "bottom",
+  "collider": "box",
+  "rig": "",
+  "lods": [
+    1.0,
+    0.5
+  ],
+  "tris": 1008,
+  "lodTris": [
+    672,
+    336
+  ],
+  "size": {
+    "width": 2.178,
+    "depth": 4.5,
+    "height": 1.354
+  },
+  "floor": -0.012,
+  "materials": [
+    "Mat_Car_BrokenGlass",
+    "Mat_Car_BumperChrome",
+    "Mat_Car_RimSteel",
+    "Mat_Car_TireRubber",
+    "Mat_Sedan_RustedPaint"
+  ]
+}

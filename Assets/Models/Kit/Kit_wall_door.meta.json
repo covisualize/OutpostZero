@@ -1,0 +1,31 @@
+{
+  "id": "Kit_wall_door",
+  "category": "Kit",
+  "generator": "generate_kit.build_piece",
+  "generatorHash": "b8aa1b2e8f8df377f538f1639e8103c10a1c6f9acc78e76dab718dbe94f97c83",
+  "gitSha": "1c0079daacc42fe956aea2c77d58cdfddd98d9c5",
+  "blender": "4.2.11",
+  "tags": [
+    "kit",
+    "building"
+  ],
+  "pivot": "authored",
+  "collider": "box",
+  "rig": "",
+  "lods": [
+    1.0
+  ],
+  "tris": 36,
+  "lodTris": [
+    36
+  ],
+  "size": {
+    "width": 2.0,
+    "depth": 0.2,
+    "height": 3.0
+  },
+  "floor": 0.0,
+  "materials": [
+    "Mat_concrete"
+  ]
+}

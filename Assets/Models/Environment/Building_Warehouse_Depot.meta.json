@@ -1,0 +1,35 @@
+{
+  "id": "Building_Warehouse_Depot",
+  "category": "Environment",
+  "generator": "generate_architecture.build_industrial_warehouse",
+  "generatorHash": "6772d16feb3ddffc52a3c29eb566a12366d20a8537a7b58e068040aad1080a46",
+  "gitSha": "1c0079daacc42fe956aea2c77d58cdfddd98d9c5",
+  "blender": "4.2.11",
+  "tags": [
+    "building"
+  ],
+  "pivot": "bottom",
+  "collider": "box",
+  "rig": "",
+  "lods": [
+    1.0,
+    0.5
+  ],
+  "tris": 294,
+  "lodTris": [
+    196,
+    98
+  ],
+  "size": {
+    "width": 14.45,
+    "depth": 10.525,
+    "height": 8.4007
+  },
+  "floor": 0.0,
+  "materials": [
+    "Mat_Corrugated_Steel",
+    "Mat_Rollup_Door",
+    "Mat_Warehouse_Foundation",
+    "Mat_Warehouse_IBeam"
+  ]
+}

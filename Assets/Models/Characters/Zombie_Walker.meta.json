@@ -1,0 +1,37 @@
+{
+  "id": "Zombie_Walker",
+  "category": "Characters",
+  "generator": "generate_characters.build_zombie_walker",
+  "generatorHash": "b93c1380a3f430162cd105dbfbb199c8ca710f6f09d57c38502b56cb74a06202",
+  "gitSha": "1c0079daacc42fe956aea2c77d58cdfddd98d9c5",
+  "blender": "4.2.11",
+  "tags": [
+    "character",
+    "zombie"
+  ],
+  "pivot": "bottom",
+  "collider": "box",
+  "rig": "humanoid",
+  "lods": [
+    1.0
+  ],
+  "tris": 832,
+  "lodTris": [
+    832
+  ],
+  "size": {
+    "width": 0.9559,
+    "depth": 1.5982,
+    "height": 1.9444
+  },
+  "floor": -0.0,
+  "materials": [
+    "Mat_Eye_Walker",
+    "Mat_Face_Walker",
+    "Mat_Thumb_Walker",
+    "Mat_Torn_Pants",
+    "Mat_Torn_Shirt",
+    "Mat_Zombie_Blood",
+    "Mat_Zombie_RotFlesh"
+  ]
+}

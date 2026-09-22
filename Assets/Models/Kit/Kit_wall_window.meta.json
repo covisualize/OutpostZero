@@ -1,0 +1,31 @@
+{
+  "id": "Kit_wall_window",
+  "category": "Kit",
+  "generator": "generate_kit.build_piece",
+  "generatorHash": "7c00ab6891996d9ace20c880d8b5d16c5b9fab0d7d6c1ef660ae6a76ff925846",
+  "gitSha": "1c0079daacc42fe956aea2c77d58cdfddd98d9c5",
+  "blender": "4.2.11",
+  "tags": [
+    "kit",
+    "building"
+  ],
+  "pivot": "authored",
+  "collider": "box",
+  "rig": "",
+  "lods": [
+    1.0
+  ],
+  "tris": 60,
+  "lodTris": [
+    60
+  ],
+  "size": {
+    "width": 2.0,
+    "depth": 0.2,
+    "height": 3.0
+  },
+  "floor": 0.0,
+  "materials": [
+    "Mat_concrete"
+  ]
+}

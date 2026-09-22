@@ -1,0 +1,41 @@
+{
+  "id": "Survivor_Leader",
+  "category": "Characters",
+  "generator": "generate_characters.build_player_leader",
+  "generatorHash": "79e083f9e727c2ffd555f194e2cc79b4406bb6652ac11aaa7c96715bd6d57c3c",
+  "gitSha": "1c0079daacc42fe956aea2c77d58cdfddd98d9c5",
+  "blender": "4.2.11",
+  "tags": [
+    "character",
+    "survivor"
+  ],
+  "pivot": "bottom",
+  "collider": "box",
+  "rig": "humanoid",
+  "lods": [
+    1.0
+  ],
+  "tris": 1376,
+  "lodTris": [
+    1376
+  ],
+  "size": {
+    "width": 1.0309,
+    "depth": 1.962,
+    "height": 1.1369
+  },
+  "floor": 0.4031,
+  "materials": [
+    "Mat_Backpack_Tan",
+    "Mat_Boots_Leather",
+    "Mat_Cap_Dark",
+    "Mat_Eye_Survivor",
+    "Mat_Face_Survivor",
+    "Mat_Jacket_Olive",
+    "Mat_Metal_Buckles",
+    "Mat_Pants_Camo",
+    "Mat_Skin_Survivor",
+    "Mat_Thumb_Survivor",
+    "Mat_Vest_Tactical"
+  ]
+}

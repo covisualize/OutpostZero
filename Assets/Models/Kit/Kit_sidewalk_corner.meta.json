@@ -1,0 +1,31 @@
+{
+  "id": "Kit_sidewalk_corner",
+  "category": "Kit",
+  "generator": "generate_kit.build_piece",
+  "generatorHash": "1d65784bdb29ad92c61d33df9a512195345328542c1fb8e9547654da3003f183",
+  "gitSha": "1c0079daacc42fe956aea2c77d58cdfddd98d9c5",
+  "blender": "4.2.11",
+  "tags": [
+    "kit",
+    "road"
+  ],
+  "pivot": "authored",
+  "collider": "box",
+  "rig": "",
+  "lods": [
+    1.0
+  ],
+  "tris": 12,
+  "lodTris": [
+    12
+  ],
+  "size": {
+    "width": 2.0,
+    "depth": 2.0,
+    "height": 0.15
+  },
+  "floor": 0.0,
+  "materials": [
+    "Mat_concrete"
+  ]
+}

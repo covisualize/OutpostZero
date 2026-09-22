@@ -1,0 +1,33 @@
+{
+  "id": "Base_Generator_Diesel",
+  "category": "BaseBuilding",
+  "generator": "generate_base_building.build_generator",
+  "generatorHash": "fe06e1c214533c95ccf19b587145e8c1c2f008b425dbc24784fcc8a49a7437e0",
+  "gitSha": "1c0079daacc42fe956aea2c77d58cdfddd98d9c5",
+  "blender": "4.2.11",
+  "tags": [
+    "camp",
+    "module"
+  ],
+  "pivot": "bottom",
+  "collider": "box",
+  "rig": "",
+  "lods": [
+    1.0
+  ],
+  "tris": 268,
+  "lodTris": [
+    268
+  ],
+  "size": {
+    "width": 1.1,
+    "depth": 0.75,
+    "height": 0.9
+  },
+  "floor": 0.0,
+  "materials": [
+    "Mat_Gen_ControlPanel",
+    "Mat_Gen_EngineMetal",
+    "Mat_Gen_FrameRed"
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "id": "Kit_hospital_bed",
+  "category": "Kit",
+  "generator": "generate_kit.build_piece",
+  "generatorHash": "9eec7f411dea33fd8aee9870638c321c126008435053f74c3d688822f30821d7",
+  "gitSha": "1c0079daacc42fe956aea2c77d58cdfddd98d9c5",
+  "blender": "4.2.11",
+  "tags": [
+    "kit",
+    "interior"
+  ],
+  "pivot": "authored",
+  "collider": "box",
+  "rig": "",
+  "lods": [
+    1.0
+  ],
+  "tris": 12,
+  "lodTris": [
+    12
+  ],
+  "size": {
+    "width": 2.0,
+    "depth": 0.9,
+    "height": 0.7
+  },
+  "floor": 0.0,
+  "materials": [
+    "Mat_metal"
+  ]
+}

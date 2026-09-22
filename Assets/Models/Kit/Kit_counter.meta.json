@@ -1,0 +1,31 @@
+{
+  "id": "Kit_counter",
+  "category": "Kit",
+  "generator": "generate_kit.build_piece",
+  "generatorHash": "9b34974303d9551dfc07786a248d0f5e335bf54a783933e294092ecdab63b8c1",
+  "gitSha": "1c0079daacc42fe956aea2c77d58cdfddd98d9c5",
+  "blender": "4.2.11",
+  "tags": [
+    "kit",
+    "interior"
+  ],
+  "pivot": "authored",
+  "collider": "box",
+  "rig": "",
+  "lods": [
+    1.0
+  ],
+  "tris": 12,
+  "lodTris": [
+    12
+  ],
+  "size": {
+    "width": 1.6,
+    "depth": 0.6,
+    "height": 0.9
+  },
+  "floor": 0.0,
+  "materials": [
+    "Mat_wood"
+  ]
+}

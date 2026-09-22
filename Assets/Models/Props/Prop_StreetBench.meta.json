@@ -1,0 +1,31 @@
+{
+  "id": "Prop_StreetBench",
+  "category": "Props",
+  "generator": "generate_props.build_street_bench",
+  "generatorHash": "530c5371eadf71a6e727cb1706d50495c2ec79143c3822dd1aa8045171f92866",
+  "gitSha": "1c0079daacc42fe956aea2c77d58cdfddd98d9c5",
+  "blender": "4.2.11",
+  "tags": [
+    "street"
+  ],
+  "pivot": "bottom",
+  "collider": "box",
+  "rig": "",
+  "lods": [
+    1.0
+  ],
+  "tris": 48,
+  "lodTris": [
+    48
+  ],
+  "size": {
+    "width": 1.95,
+    "depth": 0.6601,
+    "height": 0.9414
+  },
+  "floor": 0.0,
+  "materials": [
+    "Mat_Bench_CastIron",
+    "Mat_Bench_Wood"
+  ]
+}

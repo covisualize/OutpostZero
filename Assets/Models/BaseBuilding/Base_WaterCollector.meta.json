@@ -1,0 +1,34 @@
+{
+  "id": "Base_WaterCollector",
+  "category": "BaseBuilding",
+  "generator": "generate_base_building.build_water_collector",
+  "generatorHash": "ba39cd96d324171be6eb3785baa301e23ef773a916adaa008a326764852ecc78",
+  "gitSha": "1c0079daacc42fe956aea2c77d58cdfddd98d9c5",
+  "blender": "4.2.11",
+  "tags": [
+    "camp",
+    "module"
+  ],
+  "pivot": "bottom",
+  "collider": "box",
+  "rig": "",
+  "lods": [
+    1.0
+  ],
+  "tris": 160,
+  "lodTris": [
+    160
+  ],
+  "size": {
+    "width": 0.96,
+    "depth": 0.96,
+    "height": 1.69
+  },
+  "floor": 0.0,
+  "materials": [
+    "Mat_Water_BarrelBlue",
+    "Mat_Water_BrassSpigot",
+    "Mat_Water_FunnelTin",
+    "Mat_Water_PedestalWood"
+  ]
+}

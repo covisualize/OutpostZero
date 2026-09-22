@@ -1,0 +1,31 @@
+{
+  "id": "Kit_wire",
+  "category": "Kit",
+  "generator": "generate_kit.build_piece",
+  "generatorHash": "846319bdabca3a34b9223df356b07ea70b0e2f582e1dce180f37d7651daa9256",
+  "gitSha": "1c0079daacc42fe956aea2c77d58cdfddd98d9c5",
+  "blender": "4.2.11",
+  "tags": [
+    "kit",
+    "fort"
+  ],
+  "pivot": "authored",
+  "collider": "box",
+  "rig": "",
+  "lods": [
+    1.0
+  ],
+  "tris": 12,
+  "lodTris": [
+    12
+  ],
+  "size": {
+    "width": 2.0,
+    "depth": 0.4,
+    "height": 1.1
+  },
+  "floor": 0.0,
+  "materials": [
+    "Mat_metal"
+  ]
+}

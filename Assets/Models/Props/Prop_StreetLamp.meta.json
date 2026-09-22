@@ -1,0 +1,31 @@
+{
+  "id": "Prop_StreetLamp",
+  "category": "Props",
+  "generator": "generate_props.build_street_lamp",
+  "generatorHash": "c878b25b89979d81868b5fb4cf97729b5cd1d64d09755f77745788f16811fbf8",
+  "gitSha": "1c0079daacc42fe956aea2c77d58cdfddd98d9c5",
+  "blender": "4.2.11",
+  "tags": [
+    "street"
+  ],
+  "pivot": "bottom",
+  "collider": "box",
+  "rig": "",
+  "lods": [
+    1.0
+  ],
+  "tris": 148,
+  "lodTris": [
+    148
+  ],
+  "size": {
+    "width": 1.465,
+    "depth": 0.48,
+    "height": 5.0975
+  },
+  "floor": 0.0,
+  "materials": [
+    "Mat_Lamp_Bulb",
+    "Mat_Lamp_Metal"
+  ]
+}

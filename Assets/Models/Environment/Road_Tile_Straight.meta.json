@@ -1,0 +1,33 @@
+{
+  "id": "Road_Tile_Straight",
+  "category": "Environment",
+  "generator": "generate_architecture.build_road_straight",
+  "generatorHash": "e94fa6cf895232daaa1e793f582fd6d09d9baec7fb63a35de3139d73c2d5df98",
+  "gitSha": "1c0079daacc42fe956aea2c77d58cdfddd98d9c5",
+  "blender": "4.2.11",
+  "tags": [
+    "road"
+  ],
+  "pivot": "bottom",
+  "collider": "box",
+  "rig": "",
+  "lods": [
+    1.0
+  ],
+  "tris": 108,
+  "lodTris": [
+    108
+  ],
+  "size": {
+    "width": 10.0,
+    "depth": 10.0,
+    "height": 0.16
+  },
+  "floor": 0.0,
+  "materials": [
+    "Mat_Concrete_Curb",
+    "Mat_Road_Asphalt",
+    "Mat_Road_Stripes_Yellow",
+    "Mat_Sidewalk_Tile"
+  ]
+}

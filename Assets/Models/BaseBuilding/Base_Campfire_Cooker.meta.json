@@ -1,0 +1,35 @@
+{
+  "id": "Base_Campfire_Cooker",
+  "category": "BaseBuilding",
+  "generator": "generate_base_building.build_campfire_cooker",
+  "generatorHash": "880dbd93629ec656b1fe181eedd7cc6ce81d1979ad9ebd6f26dd3ddb895199c3",
+  "gitSha": "1c0079daacc42fe956aea2c77d58cdfddd98d9c5",
+  "blender": "4.2.11",
+  "tags": [
+    "camp",
+    "module"
+  ],
+  "pivot": "bottom",
+  "collider": "box",
+  "rig": "",
+  "lods": [
+    1.0
+  ],
+  "tris": 1156,
+  "lodTris": [
+    1156
+  ],
+  "size": {
+    "width": 1.56,
+    "depth": 1.4964,
+    "height": 1.3608
+  },
+  "floor": 0.0,
+  "materials": [
+    "Mat_Cook_CastIron",
+    "Mat_Cook_Stakes",
+    "Mat_Fire_Embers",
+    "Mat_Fire_Logs",
+    "Mat_Fire_Stones"
+  ]
+}

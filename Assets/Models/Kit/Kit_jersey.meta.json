@@ -1,0 +1,31 @@
+{
+  "id": "Kit_jersey",
+  "category": "Kit",
+  "generator": "generate_kit.build_piece",
+  "generatorHash": "053c679c1e6012f06d33d9c2912737a85b3c960769214ca41fc278a3b868ccf0",
+  "gitSha": "1c0079daacc42fe956aea2c77d58cdfddd98d9c5",
+  "blender": "4.2.11",
+  "tags": [
+    "kit",
+    "fort"
+  ],
+  "pivot": "authored",
+  "collider": "box",
+  "rig": "",
+  "lods": [
+    1.0
+  ],
+  "tris": 12,
+  "lodTris": [
+    12
+  ],
+  "size": {
+    "width": 2.0,
+    "depth": 0.6,
+    "height": 0.8
+  },
+  "floor": 0.0,
+  "materials": [
+    "Mat_concrete"
+  ]
+}

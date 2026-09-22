@@ -1,0 +1,39 @@
+{
+  "id": "NPC_Merchant",
+  "category": "Characters",
+  "generator": "generate_characters.build_npc_merchant",
+  "generatorHash": "a6c6627a76270e696964e0c04d70cdb709734c87b60d417118fba6d2968f2352",
+  "gitSha": "1c0079daacc42fe956aea2c77d58cdfddd98d9c5",
+  "blender": "4.2.11",
+  "tags": [
+    "character",
+    "survivor"
+  ],
+  "pivot": "bottom",
+  "collider": "box",
+  "rig": "humanoid",
+  "lods": [
+    1.0
+  ],
+  "tris": 1032,
+  "lodTris": [
+    1032
+  ],
+  "size": {
+    "width": 0.9983,
+    "depth": 1.8678,
+    "height": 1.3978
+  },
+  "floor": 0.3922,
+  "materials": [
+    "Mat_Cloth_Scarf",
+    "Mat_Coat_Duster",
+    "Mat_Eye_Merchant",
+    "Mat_Face_Merchant",
+    "Mat_Hat_Leather",
+    "Mat_Metal_Goods",
+    "Mat_Skin_Merchant",
+    "Mat_Thumb_Merchant",
+    "Mat_Vendor_Pack"
+  ]
+}

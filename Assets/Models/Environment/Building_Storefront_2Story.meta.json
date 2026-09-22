@@ -1,0 +1,36 @@
+{
+  "id": "Building_Storefront_2Story",
+  "category": "Environment",
+  "generator": "generate_architecture.build_storefront_building",
+  "generatorHash": "0e4e7d13e5402adf5f454613ffcd911b5a54e18cd2450c8bf0087ca66c97f6fc",
+  "gitSha": "1c0079daacc42fe956aea2c77d58cdfddd98d9c5",
+  "blender": "4.2.11",
+  "tags": [
+    "building"
+  ],
+  "pivot": "bottom",
+  "collider": "box",
+  "rig": "",
+  "lods": [
+    1.0,
+    0.5
+  ],
+  "tris": 390,
+  "lodTris": [
+    260,
+    130
+  ],
+  "size": {
+    "width": 10.2,
+    "depth": 8.34,
+    "height": 8.35
+  },
+  "floor": 0.0,
+  "materials": [
+    "Mat_Bldg_Brick",
+    "Mat_Bldg_ConcreteTrim",
+    "Mat_Bldg_GlassBroken",
+    "Mat_Bldg_Ironwork",
+    "Mat_Bldg_Signboard"
+  ]
+}

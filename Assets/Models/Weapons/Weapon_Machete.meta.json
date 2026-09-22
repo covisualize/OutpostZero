@@ -1,0 +1,33 @@
+{
+  "id": "Weapon_Machete",
+  "category": "Weapons",
+  "generator": "generate_weapons.build_machete",
+  "generatorHash": "cb5476aea629f8510d67300c913a10900abf501f76230b8b49c345aecd0d4a1b",
+  "gitSha": "1c0079daacc42fe956aea2c77d58cdfddd98d9c5",
+  "blender": "4.2.11",
+  "tags": [
+    "weapon",
+    "melee"
+  ],
+  "pivot": "authored",
+  "collider": "box",
+  "rig": "",
+  "lods": [
+    1.0
+  ],
+  "tris": 220,
+  "lodTris": [
+    220
+  ],
+  "size": {
+    "width": 0.0457,
+    "depth": 0.6165,
+    "height": 0.109
+  },
+  "floor": -0.025,
+  "materials": [
+    "Mat_Blade_Steel",
+    "Mat_Handle_CordWrap",
+    "Mat_Machete_Guard"
+  ]
+}

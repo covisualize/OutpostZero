@@ -1,0 +1,31 @@
+{
+  "id": "Kit_floor",
+  "category": "Kit",
+  "generator": "generate_kit.build_piece",
+  "generatorHash": "7702d75827c35560a9a34786e7e131b8b5f86293db40666b0c3ca8c3ded0df7a",
+  "gitSha": "1c0079daacc42fe956aea2c77d58cdfddd98d9c5",
+  "blender": "4.2.11",
+  "tags": [
+    "kit",
+    "building"
+  ],
+  "pivot": "authored",
+  "collider": "box",
+  "rig": "",
+  "lods": [
+    1.0
+  ],
+  "tris": 12,
+  "lodTris": [
+    12
+  ],
+  "size": {
+    "width": 2.0,
+    "depth": 2.0,
+    "height": 0.1
+  },
+  "floor": 0.0,
+  "materials": [
+    "Mat_concrete"
+  ]
+}

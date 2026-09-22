@@ -1,0 +1,34 @@
+{
+  "id": "Base_MedicalCot",
+  "category": "BaseBuilding",
+  "generator": "generate_base_building.build_medical_cot",
+  "generatorHash": "b35576e1c5021350e3db7dffa40b90955b73b837f8ac405d893e418f8e6ed0fa",
+  "gitSha": "1c0079daacc42fe956aea2c77d58cdfddd98d9c5",
+  "blender": "4.2.11",
+  "tags": [
+    "camp",
+    "module"
+  ],
+  "pivot": "bottom",
+  "collider": "box",
+  "rig": "",
+  "lods": [
+    1.0
+  ],
+  "tris": 372,
+  "lodTris": [
+    372
+  ],
+  "size": {
+    "width": 0.8418,
+    "depth": 2.05,
+    "height": 0.5256
+  },
+  "floor": -0.0,
+  "materials": [
+    "Mat_Cot_Blanket",
+    "Mat_Cot_Canvas",
+    "Mat_Cot_MetalTube",
+    "Mat_Cot_Pillow"
+  ]
+}

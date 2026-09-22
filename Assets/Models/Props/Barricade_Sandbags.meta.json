@@ -1,0 +1,31 @@
+{
+  "id": "Barricade_Sandbags",
+  "category": "Props",
+  "generator": "generate_props.build_sandbags",
+  "generatorHash": "1426d67c4307047bb6432654f510baae1eeca102df6f6a5a2b004bfbcec7ca38",
+  "gitSha": "1c0079daacc42fe956aea2c77d58cdfddd98d9c5",
+  "blender": "4.2.11",
+  "tags": [
+    "barricade",
+    "cover"
+  ],
+  "pivot": "bottom",
+  "collider": "box",
+  "rig": "",
+  "lods": [
+    1.0
+  ],
+  "tris": 1944,
+  "lodTris": [
+    1944
+  ],
+  "size": {
+    "width": 2.42,
+    "depth": 0.385,
+    "height": 0.94
+  },
+  "floor": 0.0,
+  "materials": [
+    "Mat_Sandbag_Canvas"
+  ]
+}

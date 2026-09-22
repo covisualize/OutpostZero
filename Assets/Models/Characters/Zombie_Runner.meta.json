@@ -1,0 +1,37 @@
+{
+  "id": "Zombie_Runner",
+  "category": "Characters",
+  "generator": "generate_characters.build_zombie_runner",
+  "generatorHash": "51b4f8184ce11fe3d47f1803c41accea5364e5cdb4a632c66c1379910e3b44e6",
+  "gitSha": "1c0079daacc42fe956aea2c77d58cdfddd98d9c5",
+  "blender": "4.2.11",
+  "tags": [
+    "character",
+    "zombie"
+  ],
+  "pivot": "bottom",
+  "collider": "box",
+  "rig": "humanoid",
+  "lods": [
+    1.0
+  ],
+  "tris": 820,
+  "lodTris": [
+    820
+  ],
+  "size": {
+    "width": 0.6343,
+    "depth": 1.9724,
+    "height": 2.0136
+  },
+  "floor": 0.0935,
+  "materials": [
+    "Mat_Eye_Runner",
+    "Mat_Face_Runner",
+    "Mat_Runner_Hoodie",
+    "Mat_Runner_Pants",
+    "Mat_Thumb_Runner",
+    "Mat_Zombie_Blood",
+    "Mat_Zombie_RunnerSkin"
+  ]
+}
