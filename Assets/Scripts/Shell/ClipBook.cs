@@ -11,7 +11,7 @@ namespace OutpostZero.Shell
     {
         public static readonly string[] Ids =
         {
-            "ambient", "pulse", "rain", "wind", "ash",
+            "ambient", "pulse", "rain", "storm", "wind", "ash",
             "step", "step_hard", "step_metal", "step_wood", "step_water", "step_gravel",
             "ui", "stem_perc", "stem_combat",
             "stinger_kill", "stinger_death", "stinger_extract", "stinger_raid", "stinger_dawn",
@@ -52,6 +52,7 @@ namespace OutpostZero.Shell
             if (id == "scream") return Mathf.Sin(t * 90f);
             if (id == "pulse") return Mathf.Sin(t * 28f);
             if (id == "rain") return noise;
+            if (id == "storm") return noise * Mathf.Sin(t * 4.4f);
             if (id == "wind") return noise * Mathf.Sin(t * 6f);
             if (id == "ash") return noise * Mathf.Sin(t * 2.2f);
             if (id == "step") return noise * Mathf.Sin(t * 18f);

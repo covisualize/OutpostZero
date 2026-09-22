@@ -594,6 +594,49 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void AnEvenRainDayBecomesAStorm()
+        {
+            Assert.AreEqual(WeatherKind.Rain, SkyBand.Cast(WeatherKind.Rain, 1));
+            Assert.AreEqual(WeatherKind.Storm, SkyBand.Cast(WeatherKind.Rain, 2));
+            Assert.AreEqual(WeatherKind.Rain, SkyBand.Cast(WeatherKind.Rain, 0));
+            Assert.AreEqual(WeatherKind.Fog, SkyBand.Cast(WeatherKind.Fog, 2));
+            Assert.AreEqual(WeatherKind.Clear, SkyBand.Cast(WeatherKind.Clear, 4));
+            Assert.AreEqual(WeatherKind.Clear, DistrictRules.For("ash_market").Weather);
+            Assert.AreEqual(WeatherKind.Rain, DistrictRules.For("rail_yard").Weather);
+            Assert.AreEqual(0.8f, WeatherSurface.Sight(WeatherKind.Rain), 0.001f);
+            Assert.AreEqual(0.62f, WeatherSurface.Sight(WeatherKind.Fog), 0.001f);
+            Assert.AreEqual(1f, WeatherSurface.Sight(WeatherKind.Clear), 0.001f);
+            Assert.AreEqual(0.7f, WeatherSurface.Sight(WeatherKind.Storm), 0.001f);
+            Assert.AreEqual(0.9f, WeatherSurface.Sight(WeatherKind.Overcast), 0.001f);
+            Assert.AreEqual(0.65f, WeatherSurface.Wetness(WeatherKind.Rain), 0.001f);
+            Assert.AreEqual(0.2f, WeatherSurface.Wetness(WeatherKind.Fog), 0.001f);
+            Assert.AreEqual(0f, WeatherSurface.Wetness(WeatherKind.Clear), 0.001f);
+            Assert.AreEqual(0.85f, WeatherSurface.Wetness(WeatherKind.Storm), 0.001f);
+            Assert.AreEqual(0.1f, WeatherSurface.Wetness(WeatherKind.Overcast), 0.001f);
+            Assert.IsTrue(SkyBand.Rains(WeatherKind.Rain));
+            Assert.IsTrue(SkyBand.Rains(WeatherKind.Storm));
+            Assert.IsFalse(SkyBand.Rains(WeatherKind.Fog));
+            Assert.IsFalse(FlashCap.Due(false, 0f, 20f));
+            Assert.IsFalse(SkyBand.BoltDue(WeatherKind.Rain, 0f, 20f));
+            Assert.IsFalse(SkyBand.BoltDue(WeatherKind.Storm, 0f, 4.4f));
+            Assert.IsTrue(SkyBand.BoltDue(WeatherKind.Storm, 0f, 4.5f));
+            Assert.IsTrue(SkyBand.BoltDue(WeatherKind.Storm, 4.5f, 9f));
+            Assert.IsFalse(SkyBand.BoltDue(WeatherKind.Storm, 4.5f, 8.9f));
+            Assert.AreEqual(0.022f, GroundMist.Sheet(WeatherKind.Fog), 0.0001f);
+            Assert.AreEqual(0.012f, GroundMist.Sheet(WeatherKind.Rain), 0.0001f);
+            Assert.AreEqual(0.02f, GroundMist.Sheet(WeatherKind.Storm), 0.0001f);
+            Assert.AreEqual(0.65f, GroundMist.Wind(WeatherKind.Rain), 0.001f);
+            Assert.AreEqual(0.9f, GroundMist.Wind(WeatherKind.Storm), 0.001f);
+            Assert.AreEqual("rain", AshFall.Bed(WeatherKind.Rain, "ash_market"));
+            Assert.AreEqual("storm", AshFall.Bed(WeatherKind.Storm, "rail_yard"));
+            Assert.AreEqual("wind", AshFall.Bed(WeatherKind.Fog, "ash_market"));
+            Assert.AreEqual("wind", AshFall.Bed(WeatherKind.Overcast, "old_hospital"));
+            Assert.IsTrue(ClipBook.Has("storm"));
+            Assert.AreNotEqual(ClipBook.Mark("storm"), ClipBook.Mark("rain"));
+            Assert.AreEqual(MixBus.Ambience, AudioMix.BusOf("storm"));
+        }
+
+        [Test]
         public void EveryPlayedSoundHasATone()
         {
             Assert.IsFalse(ClipBook.Has(null));

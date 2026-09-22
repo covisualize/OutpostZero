@@ -103,7 +103,7 @@ namespace OutpostZero.Sensory
                             wall = true;
                     }
 
-                    bool rain = WeatherController.Instance != null && WeatherController.Instance.Kind == WeatherKind.Rain;
+                    bool rain = WeatherController.Instance != null && SkyBand.Rains(WeatherController.Instance.Kind);
                     float perceivedIntensity = RainMask.Heard(
                         HearGate.Perceived(dist, effectiveRadius, intensity, wall, noiseType),
                         rain);

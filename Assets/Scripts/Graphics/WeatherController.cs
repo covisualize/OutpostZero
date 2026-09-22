@@ -8,7 +8,9 @@ namespace OutpostZero.Graphics
     {
         Clear,
         Fog,
-        Rain
+        Rain,
+        Overcast,
+        Storm
     }
 
     public static class WeatherSurface
@@ -16,14 +18,18 @@ namespace OutpostZero.Graphics
         public static float Wetness(WeatherKind kind)
         {
             if (kind == WeatherKind.Rain) return 0.65f;
+            if (kind == WeatherKind.Storm) return 0.85f;
             if (kind == WeatherKind.Fog) return 0.2f;
+            if (kind == WeatherKind.Overcast) return 0.1f;
             return 0f;
         }
 
         public static float Sight(WeatherKind kind)
         {
             if (kind == WeatherKind.Fog) return 0.62f;
+            if (kind == WeatherKind.Storm) return 0.7f;
             if (kind == WeatherKind.Rain) return 0.8f;
+            if (kind == WeatherKind.Overcast) return 0.9f;
             return 1f;
         }
     }
@@ -72,7 +78,8 @@ namespace OutpostZero.Graphics
                 kind = (WeatherKind)(((int)kind + 1) % 3);
             }
             Apply();
-            if (FlashCap.Due(kind == WeatherKind.Rain, lastBolt, Time.time) && CombatVfx.Bolt(transform.position + Vector3.up * 18f))
+            bool bolt = FlashCap.Due(kind == WeatherKind.Rain, lastBolt, Time.time) || SkyBand.BoltDue(kind, lastBolt, Time.time);
+            if (bolt && CombatVfx.Bolt(transform.position + Vector3.up * 18f))
             {
                 lastBolt = Time.time;
                 thunderSent = false;
@@ -114,8 +121,13 @@ namespace OutpostZero.Graphics
             RenderSettings.fogDensity = density;
             Shader.SetGlobalFloat("_WindStrength", GroundMist.Wind(kind));
             multiplier = WeatherSurface.Sight(kind);
-            if (kind == WeatherKind.Rain) EnsureRain();
-            if (rain != null) rain.gameObject.SetActive(kind == WeatherKind.Rain);
+            if (SkyBand.Rains(kind)) EnsureRain();
+            if (rain != null)
+            {
+                rain.gameObject.SetActive(SkyBand.Rains(kind));
+                var emission = rain.emission;
+                emission.rateOverTime = kind == WeatherKind.Storm ? 160f : 80f;
+            }
             if (kind != WeatherKind.Clear) EnsureDebris();
             if (debris != null) debris.gameObject.SetActive(kind != WeatherKind.Clear);
             if (AshFall.Falls(district)) EnsureAsh();

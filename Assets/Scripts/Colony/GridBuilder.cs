@@ -148,7 +148,7 @@ namespace OutpostZero.Colony
                 plots[i].Integrity = placed[i].integrity;
             }
             CampYield.Advance(plots);
-            bool rain = WeatherController.Instance != null && WeatherController.Instance.Kind == WeatherKind.Rain;
+            bool rain = WeatherController.Instance != null && SkyBand.Rains(WeatherController.Instance.Kind);
             CampYield.Produce(plots, rain, out int food, out int water);
             for (int i = 0; i < placed.Count; i++) placed[i].age = plots[i].Age;
             if (ColonyStorage.Instance == null) return;

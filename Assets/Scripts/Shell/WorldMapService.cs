@@ -148,7 +148,7 @@ namespace OutpostZero.Shell
                 GameplayFeedback.Toast(Loc.T("ambush.warn"));
             }
             WeatherController.Instance?.SetDistrict(districtId);
-            WeatherController.Instance?.SetFor(rules.Weather, 180f);
+            WeatherController.Instance?.SetFor(SkyBand.Cast(rules.Weather, day), 180f);
             DistrictDressing.Instance?.Build(districtId);
             SurvivorRoster.Instance?.RaiseCorpses(districtId);
         }

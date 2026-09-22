@@ -25,7 +25,9 @@ namespace OutpostZero.Graphics
         public static float Sheet(WeatherKind kind)
         {
             if (kind == WeatherKind.Fog) return 0.022f;
+            if (kind == WeatherKind.Storm) return 0.02f;
             if (kind == WeatherKind.Rain) return 0.012f;
+            if (kind == WeatherKind.Overcast) return 0.008f;
             return 0f;
         }
 
@@ -56,7 +58,9 @@ namespace OutpostZero.Graphics
 
         public static float Wind(WeatherKind kind)
         {
+            if (kind == WeatherKind.Storm) return 0.9f;
             if (kind == WeatherKind.Rain) return 0.65f;
+            if (kind == WeatherKind.Overcast) return 0.4f;
             if (kind == WeatherKind.Fog) return 0.25f;
             return 0.08f;
         }
@@ -65,8 +69,9 @@ namespace OutpostZero.Graphics
         {
             if (night < 0f) night = 0f;
             if (night > 1f) night = 1f;
-            Color day = kind == WeatherKind.Rain
-                ? new Color(0.42f, 0.5f, 0.52f)
+            Color day = kind == WeatherKind.Storm ? new Color(0.32f, 0.36f, 0.42f)
+                : kind == WeatherKind.Rain ? new Color(0.42f, 0.5f, 0.52f)
+                : kind == WeatherKind.Overcast ? new Color(0.48f, 0.5f, 0.52f)
                 : new Color(0.55f, 0.62f, 0.6f);
             Color dark = new Color(0.05f, 0.07f, 0.12f);
             return Color.Lerp(day, dark, night);
@@ -90,8 +95,9 @@ namespace OutpostZero.Graphics
 
         public static string Bed(WeatherKind kind, string district)
         {
+            if (kind == WeatherKind.Storm) return "storm";
             if (kind == WeatherKind.Rain) return "rain";
-            if (kind == WeatherKind.Fog) return "wind";
+            if (kind == WeatherKind.Fog || kind == WeatherKind.Overcast) return "wind";
             if (Falls(district)) return "ash";
             return "";
         }
