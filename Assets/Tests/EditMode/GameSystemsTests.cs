@@ -744,6 +744,24 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void ABleedDripCallsNearbyAndGoreOffStaysQuiet()
+        {
+            Assert.IsTrue(BleedScent.Calls(true, true, 1));
+            Assert.IsFalse(BleedScent.Calls(true, true, 0));
+            Assert.IsFalse(BleedScent.Calls(false, true, 2));
+            Assert.IsFalse(BleedScent.Calls(true, false, 2));
+            Assert.AreEqual(4.5f, BleedScent.Radius, 0.001f);
+            Assert.AreEqual(0.35f, BleedScent.Loud, 0.001f);
+            Assert.Less(BleedScent.Radius, 6f);
+            Assert.Greater(BleedScent.Radius, 2f);
+            Assert.AreEqual("[Drip, north]", Presentation.Caption(NoiseType.BleedDrip, 0f, 1f, "en"));
+            Assert.AreEqual("[Goteo, norte]", Presentation.Caption(NoiseType.BleedDrip, 0f, 1f, "es"));
+            Assert.AreEqual("", Presentation.Caption(NoiseType.WalkFootstep, 0f, 1f, "en"));
+            Assert.IsTrue(ClipBook.Has("drip"));
+            Assert.AreEqual(6f, AudioSpace.MaxDistance("drip"), 0.001f);
+        }
+
+        [Test]
         public void MistSitsOnTheStreetWhenTheAirIsThick()
         {
             Assert.IsTrue(MistBank.Shows(WeatherKind.Fog, 0f));
