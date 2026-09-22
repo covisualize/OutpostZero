@@ -50,8 +50,8 @@ namespace OutpostZero.Colony
 
             var roster = SurvivorRoster.Instance;
             if (roster == null) return;
-            string approach = NightRaidController.Instance != null ? NightRaidController.Instance.Approach : "gate";
             int index = 0;
+            int guardSlot = 0;
             foreach (var survivor in roster.Survivors)
             {
                 if (survivor == null || !survivor.alive || survivor.leader)
@@ -65,9 +65,16 @@ namespace OutpostZero.Colony
                     ? GuardStand.Face(survivor.task, survivor.morale, survivor.injury)
                     : CampRoutine.Choose(survivor.task, survivor.hunger, survivor.thirst, survivor.morale, survivor.injury);
                 index++;
-                Vector3 goal = raid && action == "Guard"
-                    ? Line(approach, index - 1)
-                    : Station(action, index - 1);
+                Vector3 goal;
+                if (raid && action == "Guard")
+                {
+                    var night = NightRaidController.Instance;
+                    string side = night != null ? night.SideAt(guardSlot) : "gate";
+                    int post = night != null ? night.PostOnSide(guardSlot) : guardSlot;
+                    goal = Line(side, post);
+                    guardSlot++;
+                }
+                else goal = Station(action, index - 1);
                 float pace = raid ? 3.6f : 1.4f;
                 body.position = Vector3.MoveTowards(body.position, goal, pace * Time.deltaTime);
                 Vector3 face = goal - body.position;

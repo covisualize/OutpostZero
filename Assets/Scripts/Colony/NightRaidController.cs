@@ -28,8 +28,24 @@ namespace OutpostZero.Colony
         private float nextGuard;
         private int calledDay = -1;
         private bool breached;
+        private int fronts = 1;
 
         public string Approach => approach;
+        public int Fronts => fronts;
+
+        public string SideAt(int slot)
+        {
+            int span = fronts < 1 ? 1 : fronts;
+            int index = slot < 0 ? 0 : slot;
+            return RaidPlan.Side(raidDay, raidTowers, index % span);
+        }
+
+        public int PostOnSide(int slot)
+        {
+            if (slot < 0) slot = 0;
+            if (fronts < 1) return slot;
+            return slot / fronts;
+        }
         public bool Running => running;
         public bool Warning => warning;
         public float WarningLeft => warning ? UnityEngine.Mathf.Max(0f, warningEnds - UnityEngine.Time.time) : 0f;
@@ -88,9 +104,19 @@ namespace OutpostZero.Colony
             nextTrap = Time.time + TrapHit.Gap;
             nextGuard = Time.time + GuardVolley.Interval;
             GameManager.Instance.SetState(GameState.RaidActive);
+            int difficulty = WorldMapService.Instance != null ? WorldMapService.Instance.Difficulty : 2;
+            fronts = RaidPlan.Fronts(day, difficulty);
             int spawn = RaidPlan.SpawnCount(day, towers) + (tower ? 4 : 0);
-            if (HordeDirector.Instance != null) HordeDirector.Instance.BeginRaid(spawn, approach);
+            if (HordeDirector.Instance != null)
+            {
+                for (int i = 0; i < fronts; i++)
+                {
+                    int share = RaidPlan.Share(spawn, fronts, i);
+                    if (share > 0) HordeDirector.Instance.BeginRaid(share, RaidPlan.Side(day, towers, i));
+                }
+            }
             string openLine = tower ? "Broadcast night — hold the tower" : "Night raid from the " + approach;
+            if (fronts > 1) openLine += "  " + fronts + " " + Loc.T("camp.sides");
             if (GridBuilder.Instance != null && GridBuilder.Instance.BarricadeCount() > 0)
                 openLine += "  " + Loc.T("camp.chew");
             if (GuardsOnTheLine() > 0) openLine += "  " + Loc.T("camp.line");
@@ -410,7 +436,9 @@ namespace OutpostZero.Colony
                 xs[i] = module.x;
                 zs[i] = module.z;
             }
-            GuardStand.Mark(approach, slot, kinds, xs, zs, sites, integrity, out float x, out float z);
+            string side = SideAt(slot);
+            int post = PostOnSide(slot);
+            GuardStand.Mark(side, post, kinds, xs, zs, sites, integrity, out float x, out float z);
             return new Vector3(x, 1.6f, z);
         }
 

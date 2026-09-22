@@ -2784,6 +2784,27 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void ARaidHitsTwoSidesAndThreeWhenTheNightIsWorse()
+        {
+            Assert.AreEqual(1, RaidPlan.Fronts(1, 2));
+            Assert.AreEqual(2, RaidPlan.Fronts(2, 2));
+            Assert.AreEqual(2, RaidPlan.Fronts(7, 0));
+            Assert.AreEqual(3, RaidPlan.Fronts(2, 3));
+            Assert.AreEqual(3, RaidPlan.Fronts(8, 1));
+            Assert.AreEqual(3, RaidPlan.Fronts(10, 2));
+            Assert.AreEqual("alley", RaidPlan.Side(2, 0, 0));
+            Assert.AreEqual("yard", RaidPlan.Side(2, 0, 1));
+            Assert.AreEqual("fence", RaidPlan.Side(2, 0, 2));
+            Assert.AreEqual(4, RaidPlan.Share(8, 2, 0));
+            Assert.AreEqual(4, RaidPlan.Share(8, 2, 1));
+            Assert.AreEqual(3, RaidPlan.Share(8, 3, 0));
+            Assert.AreEqual(3, RaidPlan.Share(8, 3, 1));
+            Assert.AreEqual(2, RaidPlan.Share(8, 3, 2));
+            Assert.AreEqual(0, RaidPlan.Share(8, 3, 3));
+            Assert.AreEqual("lados", Loc.T("camp.sides", "es"));
+        }
+
+        [Test]
         public void DemolishingAModuleReturnsHalfTheScrap()
         {
             Assert.AreEqual(3, ScrapRefund.Half(6));

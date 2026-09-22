@@ -123,6 +123,38 @@ namespace OutpostZero.Colony
             };
         }
 
+        public static int Fronts(int day, int difficulty)
+        {
+            if (day < 2) return 1;
+            if (difficulty == 3 || day >= 8) return 3;
+            return 2;
+        }
+
+        public static string Side(int day, int towers, int offset)
+        {
+            Wave open = Opening(day, towers);
+            if (offset <= 0) return open.Approach;
+            string[] sides = { "gate", "alley", "yard", "fence" };
+            int start = 0;
+            for (int i = 0; i < sides.Length; i++)
+            {
+                if (sides[i] == open.Approach) start = i;
+            }
+            if (offset > 3) offset = 3;
+            return sides[(start + offset) % sides.Length];
+        }
+
+        public static int Share(int total, int fronts, int index)
+        {
+            if (total < 1) total = 1;
+            if (fronts < 1) fronts = 1;
+            if (fronts > 3) fronts = 3;
+            if (index < 0 || index >= fronts) return 0;
+            int each = total / fronts;
+            int extra = total % fronts;
+            return each + (index < extra ? 1 : 0);
+        }
+
         public static int Reinforcements(int phase)
         {
             if (phase <= 0) return 0;
