@@ -275,7 +275,11 @@ namespace OutpostZero.Colony
                 if (placed[i].kind != "Campfire" || views[i] == null) continue;
                 bool ready = BuildSite.Ready(placed[i].site, placed[i].integrity);
                 var ember = views[i].GetComponent<Light>();
-                if (ember != null) ember.enabled = ready;
+                if (ember != null)
+                {
+                    ember.enabled = ready;
+                    ember.intensity = FirePulse.Peak * FirePulse.Scale(Time.time, ready);
+                }
                 var mote = views[i].GetComponent<YardMote>();
                 if (mote == null) mote = views[i].AddComponent<YardMote>();
                 if (YardGlow.EmbersDue(ready, Time.time, mote.Last))
@@ -349,7 +353,7 @@ namespace OutpostZero.Colony
                 var ember = view.AddComponent<Light>();
                 ember.type = LightType.Point;
                 ember.range = 6f;
-                ember.intensity = 1.6f;
+                ember.intensity = FirePulse.Peak;
                 ember.color = new Color(1f, 0.45f, 0.15f);
                 ember.enabled = false;
             }

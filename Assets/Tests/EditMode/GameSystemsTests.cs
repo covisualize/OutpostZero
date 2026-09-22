@@ -3662,6 +3662,42 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void ASodiumLampFlickersAndAWreckTradesItsLamps()
+        {
+            Assert.AreEqual(9f, SodiumLamp.Range, 0.001f);
+            Assert.AreEqual(1f, SodiumLamp.Tint.r, 0.001f);
+            Assert.AreEqual(184f / 255f, SodiumLamp.Tint.g, 0.001f);
+            Assert.AreEqual(112f / 255f, SodiumLamp.Tint.b, 0.001f);
+            Assert.IsTrue(SodiumLamp.Dead(0));
+            Assert.IsTrue(SodiumLamp.Dead(1));
+            Assert.IsTrue(SodiumLamp.Dead(2));
+            Assert.IsFalse(SodiumLamp.Dead(3));
+            Assert.IsFalse(SodiumLamp.Dead(9));
+            Assert.IsTrue(SodiumLamp.Dead(10));
+            Assert.IsTrue(SodiumLamp.Dead(-1));
+            Assert.AreEqual(1f, SodiumLamp.Flicker(0f, false), 0.001f);
+            Assert.AreEqual(0.78f, SodiumLamp.Flicker(0.28f, false), 0.001f);
+            Assert.AreEqual(0f, SodiumLamp.Flicker(0.28f, true), 0.001f);
+            Assert.AreEqual(1f, SodiumLamp.Flicker(0.1f, false), 0.001f);
+            Assert.AreEqual(1f, FirePulse.Scale(0f, true), 0.001f);
+            Assert.AreEqual(1.18f, FirePulse.Scale(0.1125f, true), 0.001f);
+            Assert.AreEqual(0.82f, FirePulse.Scale(0.3375f, true), 0.001f);
+            Assert.AreEqual(0f, FirePulse.Scale(1f, false), 0.001f);
+            Assert.AreEqual(1.6f, FirePulse.Peak, 0.001f);
+            Assert.IsTrue(HazardBlink.Lit(0f, true));
+            Assert.IsTrue(HazardBlink.Lit(0.27f, true));
+            Assert.IsFalse(HazardBlink.Lit(0.28f, true));
+            Assert.IsFalse(HazardBlink.Lit(0.69f, true));
+            Assert.IsTrue(HazardBlink.Lit(0.7f, true));
+            Assert.IsFalse(HazardBlink.Lit(0f, false));
+            Assert.IsTrue(HazardBlink.Left(0f, true));
+            Assert.IsFalse(HazardBlink.Right(0f, true));
+            Assert.IsFalse(HazardBlink.Left(0.4f, true));
+            Assert.IsTrue(HazardBlink.Right(0.4f, true));
+            Assert.IsFalse(HazardBlink.Right(0f, false));
+        }
+
+        [Test]
         public void ADeepBuilderRaisesExtraAndAFourthShiftDoesNot()
         {
             Assert.AreEqual(0, BuildDepth.Raise(4));

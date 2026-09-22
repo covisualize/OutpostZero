@@ -148,6 +148,9 @@ namespace OutpostZero.Core
             if (name.Contains("Dumpster") && go.GetComponent<FlyMark>() == null)
                 go.AddComponent<FlyMark>();
 
+            if (name.Contains("StreetLamp")) SodiumLamp.Raise(go);
+            if (name.Contains("Sedan") || name.Contains("Truck") || name.Contains("Vehicle")) HazardBlink.Raise(go);
+
             if ((name.Contains("Crate") || name.Contains("Dumpster")) && go.GetComponent<LootContainer>() == null)
             {
                 var container = go.AddComponent<LootContainer>();

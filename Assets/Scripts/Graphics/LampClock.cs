@@ -35,11 +35,20 @@ namespace OutpostZero.Graphics
         private LightSource sight;
         private float peak = 1f;
         private bool armed;
+        private bool sodium;
+        private bool dead;
 
         public void Arm(float intensity)
         {
             peak = intensity < 0f ? 0f : intensity;
             armed = true;
+        }
+
+        public void ArmSodium(int salt, float intensity)
+        {
+            Arm(intensity);
+            sodium = true;
+            dead = SodiumLamp.Dead(salt);
         }
 
         private void Awake()
@@ -55,6 +64,7 @@ namespace OutpostZero.Graphics
             float factor = DayNightCycle.Instance != null ? DayNightCycle.Instance.NightFactor : 0f;
             float hour = Colony.WorldClock.Instance != null ? Colony.WorldClock.Instance.Hour : 12f;
             float glow = LampClock.Glow(LampClock.Resolve(factor, hour), peak);
+            if (sodium) glow *= SodiumLamp.Flicker(Time.time, dead);
             if (bulb != null)
             {
                 bulb.intensity = glow;

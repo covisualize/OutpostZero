@@ -426,13 +426,7 @@ namespace OutpostZero.Expedition
                 var lightObject = new GameObject("DistrictLamp");
                 lightObject.transform.SetParent(body.transform, false);
                 lightObject.transform.localPosition = new Vector3(0f, 1.6f, 0f);
-                var light = lightObject.AddComponent<Light>();
-                light.type = LightType.Point;
-                light.range = 9f;
-                light.intensity = 1.4f;
-                light.color = new Color(1f, 0.86f, 0.62f);
-                lightObject.AddComponent<LightSource>().Configure(light.range);
-                lightObject.AddComponent<DuskBulb>().Arm(1.4f);
+                SodiumLamp.Dress(lightObject, piece.X, piece.Z, SodiumLamp.Peak);
             }
         }
 
