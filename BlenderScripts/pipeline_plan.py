@@ -23,6 +23,7 @@ SHARED_SOURCES = (
     "blender_utils.py",
     "blender_paths.py",
     "texture_set.py",
+    "icon_render.py",
     "character_rig.py",
     "character_detail.py",
     "kit_catalog.py",

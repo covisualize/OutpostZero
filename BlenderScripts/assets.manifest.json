@@ -115,7 +115,8 @@
       "output": "Weapons/Weapon_Pistol_9mm.fbx",
       "tags": [
         "weapon",
-        "firearm"
+        "firearm",
+        "item"
       ],
       "pivot": "authored"
     },
@@ -126,7 +127,8 @@
       "output": "Weapons/Weapon_Shotgun_Pump.fbx",
       "tags": [
         "weapon",
-        "firearm"
+        "firearm",
+        "item"
       ],
       "pivot": "authored"
     },
@@ -137,7 +139,8 @@
       "output": "Weapons/Weapon_Machete.fbx",
       "tags": [
         "weapon",
-        "melee"
+        "melee",
+        "item"
       ],
       "pivot": "authored"
     },
@@ -148,7 +151,8 @@
       "output": "Weapons/Weapon_AssaultRifle.fbx",
       "tags": [
         "weapon",
-        "firearm"
+        "firearm",
+        "item"
       ],
       "pivot": "authored"
     },
@@ -158,7 +162,8 @@
       "generator": "generate_weapons.build_ammo_box_9mm",
       "output": "Weapons/Loot_AmmoBox_9mm.fbx",
       "tags": [
-        "loot"
+        "loot",
+        "item"
       ]
     },
     {
@@ -167,7 +172,8 @@
       "generator": "generate_weapons.build_ammo_box_shotgun",
       "output": "Weapons/Loot_AmmoBox_Shotgun.fbx",
       "tags": [
-        "loot"
+        "loot",
+        "item"
       ]
     },
     {
@@ -176,7 +182,8 @@
       "generator": "generate_weapons.build_medkit",
       "output": "Weapons/Loot_Medkit.fbx",
       "tags": [
-        "loot"
+        "loot",
+        "item"
       ]
     },
     {
@@ -185,7 +192,188 @@
       "generator": "generate_weapons.build_scrap_pile",
       "output": "Weapons/Loot_ScrapPile.fbx",
       "tags": [
-        "loot"
+        "loot",
+        "item"
+      ]
+    },
+    {
+      "id": "Loot_Bandage",
+      "category": "Weapons",
+      "generator": "generate_items.build_bandage",
+      "output": "Weapons/Loot_Bandage.fbx",
+      "tags": [
+        "loot",
+        "item"
+      ]
+    },
+    {
+      "id": "Loot_Antibiotics",
+      "category": "Weapons",
+      "generator": "generate_items.build_antibiotics",
+      "output": "Weapons/Loot_Antibiotics.fbx",
+      "tags": [
+        "loot",
+        "item"
+      ]
+    },
+    {
+      "id": "Loot_Painkillers",
+      "category": "Weapons",
+      "generator": "generate_items.build_painkillers",
+      "output": "Weapons/Loot_Painkillers.fbx",
+      "tags": [
+        "loot",
+        "item"
+      ]
+    },
+    {
+      "id": "Loot_CannedFood",
+      "category": "Weapons",
+      "generator": "generate_items.build_canned_food",
+      "output": "Weapons/Loot_CannedFood.fbx",
+      "tags": [
+        "loot",
+        "item"
+      ]
+    },
+    {
+      "id": "Loot_RawFood",
+      "category": "Weapons",
+      "generator": "generate_items.build_raw_food",
+      "output": "Weapons/Loot_RawFood.fbx",
+      "tags": [
+        "loot",
+        "item"
+      ]
+    },
+    {
+      "id": "Loot_WaterBottle",
+      "category": "Weapons",
+      "generator": "generate_items.build_water_bottle",
+      "output": "Weapons/Loot_WaterBottle.fbx",
+      "tags": [
+        "loot",
+        "item"
+      ]
+    },
+    {
+      "id": "Loot_AmmoBox_Rifle",
+      "category": "Weapons",
+      "generator": "generate_items.build_ammo_box_rifle",
+      "output": "Weapons/Loot_AmmoBox_Rifle.fbx",
+      "tags": [
+        "loot",
+        "item"
+      ]
+    },
+    {
+      "id": "Loot_AmmoBox_SMG",
+      "category": "Weapons",
+      "generator": "generate_items.build_ammo_box_smg",
+      "output": "Weapons/Loot_AmmoBox_SMG.fbx",
+      "tags": [
+        "loot",
+        "item"
+      ]
+    },
+    {
+      "id": "Loot_Cloth",
+      "category": "Weapons",
+      "generator": "generate_items.build_cloth",
+      "output": "Weapons/Loot_Cloth.fbx",
+      "tags": [
+        "loot",
+        "item"
+      ]
+    },
+    {
+      "id": "Loot_Chemicals",
+      "category": "Weapons",
+      "generator": "generate_items.build_chemicals",
+      "output": "Weapons/Loot_Chemicals.fbx",
+      "tags": [
+        "loot",
+        "item"
+      ]
+    },
+    {
+      "id": "Loot_DuctTape",
+      "category": "Weapons",
+      "generator": "generate_items.build_duct_tape",
+      "output": "Weapons/Loot_DuctTape.fbx",
+      "tags": [
+        "loot",
+        "item"
+      ]
+    },
+    {
+      "id": "Loot_NoiseLure",
+      "category": "Weapons",
+      "generator": "generate_items.build_noise_lure",
+      "output": "Weapons/Loot_NoiseLure.fbx",
+      "tags": [
+        "loot",
+        "item"
+      ]
+    },
+    {
+      "id": "Loot_Bottle",
+      "category": "Weapons",
+      "generator": "generate_items.build_bottle",
+      "output": "Weapons/Loot_Bottle.fbx",
+      "tags": [
+        "loot",
+        "item"
+      ]
+    },
+    {
+      "id": "Loot_Molotov",
+      "category": "Weapons",
+      "generator": "generate_items.build_molotov",
+      "output": "Weapons/Loot_Molotov.fbx",
+      "tags": [
+        "loot",
+        "item"
+      ]
+    },
+    {
+      "id": "Loot_Flare",
+      "category": "Weapons",
+      "generator": "generate_items.build_flare",
+      "output": "Weapons/Loot_Flare.fbx",
+      "tags": [
+        "loot",
+        "item"
+      ]
+    },
+    {
+      "id": "Loot_PipeBomb",
+      "category": "Weapons",
+      "generator": "generate_items.build_pipe_bomb",
+      "output": "Weapons/Loot_PipeBomb.fbx",
+      "tags": [
+        "loot",
+        "item"
+      ]
+    },
+    {
+      "id": "Loot_Blueprint",
+      "category": "Weapons",
+      "generator": "generate_items.build_blueprint",
+      "output": "Weapons/Loot_Blueprint.fbx",
+      "tags": [
+        "loot",
+        "item"
+      ]
+    },
+    {
+      "id": "Loot_LampCell",
+      "category": "Weapons",
+      "generator": "generate_items.build_lamp_cell",
+      "output": "Weapons/Loot_LampCell.fbx",
+      "tags": [
+        "loot",
+        "item"
       ]
     },
     {

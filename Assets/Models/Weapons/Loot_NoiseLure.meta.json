@@ -1,0 +1,33 @@
+{
+  "id": "Loot_NoiseLure",
+  "category": "Weapons",
+  "generator": "generate_items.build_noise_lure",
+  "generatorHash": "62f1af5005b64002a5af1a901924cd079834d4bc62ba3766e7b0b4c211fdbc59",
+  "gitSha": "1b175c271e07e37618f23d05ed76737f316f5c42",
+  "blender": "4.2.11",
+  "tags": [
+    "loot",
+    "item"
+  ],
+  "pivot": "bottom",
+  "collider": "box",
+  "rig": "",
+  "lods": [
+    1.0
+  ],
+  "tris": 360,
+  "lodTris": [
+    360
+  ],
+  "size": {
+    "width": 0.0942,
+    "depth": 0.038,
+    "height": 0.126
+  },
+  "floor": 0.0,
+  "materials": [
+    "Mat_Item_ClockBell",
+    "Mat_Item_ClockCase",
+    "Mat_Item_ClockFace"
+  ]
+}

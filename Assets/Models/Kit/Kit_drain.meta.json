@@ -2,8 +2,8 @@
   "id": "Kit_drain",
   "category": "Kit",
   "generator": "generate_kit.build_piece",
-  "generatorHash": "2df267d1bf35bb4849fd93c27d05f138fcc6818f41bf731d3fdec1527ab32b39",
-  "gitSha": "1c0079daacc42fe956aea2c77d58cdfddd98d9c5",
+  "generatorHash": "b42477151950bac777f34aa2c0b5370b4a1efaf62fb337e0e7ef3400759901f7",
+  "gitSha": "1b175c271e07e37618f23d05ed76737f316f5c42",
   "blender": "4.2.11",
   "tags": [
     "kit",

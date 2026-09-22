@@ -43,7 +43,13 @@ blender -b -P BlenderScripts/pipeline.py -- --category props
 python3 BlenderScripts/pipeline.py --changed --dry-run
 ```
 
-One asset builds in well under a second after Blender starts, and the full set of 92 in about 13 s. Output bytes are reproducible: two builds of an unchanged entry give identical FBX and PNG files.
+One asset builds in well under a second after Blender starts, and the full set of 110 in about 16 s. Output bytes are reproducible: two builds of an unchanged entry give identical FBX and PNG files.
+
+## Item icons
+
+Entries tagged `item` (every pack pickup and weapon) get their `Icon` map rendered from the mesh instead of cropped from the albedo. `icon_render.py` rasterises the LOD0 triangles in pure Python at a fixed three-quarter view from above the +Y front, flat-shaded in each material's base colour, 4x supersampled to 64 px with a dark outline. It needs no GPU, so headless CI renders the same bytes. Put an item's label or face on its +Y side so the icon shows it. `asset_audit.py` checks rendered icons are 64 px and not blank, and `ItemDatabaseTests` checks every item links its definition, prefab and icon.
+
+A new FBX with no `.fbx.meta` gets the default importer settings written beside it, with a GUID derived from its path.
 
 ## Generator contract
 
@@ -53,6 +59,7 @@ A generator is `build_<thing>(ctx)` in one of the category modules. It builds in
 |---|---|---|
 | `generate_characters.py` | `characters` | `Characters` |
 | `generate_weapons.py` | `weapons` | `Weapons` |
+| `generate_items.py` (one pickup per pack item) | `weapons` | `Weapons` |
 | `generate_architecture.py` | `environment` (or `architecture`) | `Environment` |
 | `generate_props.py` | `props` | `Props` |
 | `generate_kit.py` (`build_piece`, one entry per `kit_catalog` piece) | `kit` | `Kit` |

@@ -1,0 +1,33 @@
+{
+  "id": "Loot_AmmoBox_SMG",
+  "category": "Weapons",
+  "generator": "generate_items.build_ammo_box_smg",
+  "generatorHash": "3e75237713d51393517d51ca5932f1419c3c134bcd1a36ac4dc6b6ec16bdaf74",
+  "gitSha": "1b175c271e07e37618f23d05ed76737f316f5c42",
+  "blender": "4.2.11",
+  "tags": [
+    "loot",
+    "item"
+  ],
+  "pivot": "bottom",
+  "collider": "box",
+  "rig": "",
+  "lods": [
+    1.0
+  ],
+  "tris": 232,
+  "lodTris": [
+    232
+  ],
+  "size": {
+    "width": 0.14,
+    "depth": 0.0915,
+    "height": 0.104
+  },
+  "floor": 0.0,
+  "materials": [
+    "Mat_Brass_Bullet",
+    "Mat_Item_SmgBox",
+    "Mat_Item_SmgStripe"
+  ]
+}

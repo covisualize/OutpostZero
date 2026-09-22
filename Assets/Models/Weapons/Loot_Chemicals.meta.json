@@ -1,0 +1,33 @@
+{
+  "id": "Loot_Chemicals",
+  "category": "Weapons",
+  "generator": "generate_items.build_chemicals",
+  "generatorHash": "a2d1e2ea5e6fc79d9f0fecf7f4201010dd7b884184a66db722bd5d3d06e9653e",
+  "gitSha": "1b175c271e07e37618f23d05ed76737f316f5c42",
+  "blender": "4.2.11",
+  "tags": [
+    "loot",
+    "item"
+  ],
+  "pivot": "bottom",
+  "collider": "box",
+  "rig": "",
+  "lods": [
+    1.0
+  ],
+  "tris": 176,
+  "lodTris": [
+    176
+  ],
+  "size": {
+    "width": 0.12,
+    "depth": 0.082,
+    "height": 0.205
+  },
+  "floor": 0.0,
+  "materials": [
+    "Mat_Item_ChemCap",
+    "Mat_Item_ChemHazard",
+    "Mat_Item_ChemJug"
+  ]
+}

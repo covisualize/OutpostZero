@@ -1,0 +1,33 @@
+{
+  "id": "Loot_Antibiotics",
+  "category": "Weapons",
+  "generator": "generate_items.build_antibiotics",
+  "generatorHash": "5c65f1af941b56fa425078e349d4e1a4ded995ea44aeeab8b4a231667492f59f",
+  "gitSha": "1b175c271e07e37618f23d05ed76737f316f5c42",
+  "blender": "4.2.11",
+  "tags": [
+    "loot",
+    "item"
+  ],
+  "pivot": "bottom",
+  "collider": "box",
+  "rig": "",
+  "lods": [
+    1.0
+  ],
+  "tris": 180,
+  "lodTris": [
+    180
+  ],
+  "size": {
+    "width": 0.054,
+    "depth": 0.054,
+    "height": 0.107
+  },
+  "floor": 0.0,
+  "materials": [
+    "Mat_Item_PillAmber",
+    "Mat_Item_PillCap",
+    "Mat_Item_PillLabel"
+  ]
+}

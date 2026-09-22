@@ -1,0 +1,34 @@
+{
+  "id": "Loot_PipeBomb",
+  "category": "Weapons",
+  "generator": "generate_items.build_pipe_bomb",
+  "generatorHash": "d3ba832f34d1eb3b511a85ca2c26d97c839bae61ef75d3610a454adef4575e82",
+  "gitSha": "1b175c271e07e37618f23d05ed76737f316f5c42",
+  "blender": "4.2.11",
+  "tags": [
+    "loot",
+    "item"
+  ],
+  "pivot": "bottom",
+  "collider": "box",
+  "rig": "",
+  "lods": [
+    1.0
+  ],
+  "tris": 156,
+  "lodTris": [
+    156
+  ],
+  "size": {
+    "width": 0.212,
+    "depth": 0.06,
+    "height": 0.0737
+  },
+  "floor": 0.0,
+  "materials": [
+    "Mat_Item_BombCap",
+    "Mat_Item_BombPipe",
+    "Mat_Item_BombTape",
+    "Mat_Item_BombWire"
+  ]
+}

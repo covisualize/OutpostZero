@@ -131,7 +131,21 @@ def build_one(entry, models_root):
     blender_utils.export_fbx(output, animated=rigged, texture_size=bake.get("size"), unwrap=bake.get("uv", True))
     stats = dict(blender_utils.EXPORTS[-1])
     stats["lodTris"] = lod_triangles(names)
+    if "item" in (entry.get("tags") or ()):
+        render_item_icon(output)
     return stats
+
+
+def render_item_icon(output):
+    """Items show in the pack, so their Icon map is a render of the mesh rather than an albedo crop."""
+    import bpy
+    import icon_render
+    import texture_set
+
+    pixels = icon_render.render(icon_render.mesh_triangles(bpy.context.scene.objects))
+    size = icon_render.ICON_RENDER_SIZE
+    with open(texture_set.map_paths(output)["Icon"], "wb") as handle:
+        handle.write(texture_set.encode_png(size, size, pixels))
 
 
 def require_blender():

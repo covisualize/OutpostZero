@@ -2,8 +2,8 @@
   "id": "Kit_wire",
   "category": "Kit",
   "generator": "generate_kit.build_piece",
-  "generatorHash": "846319bdabca3a34b9223df356b07ea70b0e2f582e1dce180f37d7651daa9256",
-  "gitSha": "1c0079daacc42fe956aea2c77d58cdfddd98d9c5",
+  "generatorHash": "1f86ac442247fb054db6d83eeb80a2090d67cac98347d48573d186c2771ab27c",
+  "gitSha": "1b175c271e07e37618f23d05ed76737f316f5c42",
   "blender": "4.2.11",
   "tags": [
     "kit",

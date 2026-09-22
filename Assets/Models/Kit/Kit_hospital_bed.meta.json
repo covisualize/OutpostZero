@@ -2,8 +2,8 @@
   "id": "Kit_hospital_bed",
   "category": "Kit",
   "generator": "generate_kit.build_piece",
-  "generatorHash": "9eec7f411dea33fd8aee9870638c321c126008435053f74c3d688822f30821d7",
-  "gitSha": "1c0079daacc42fe956aea2c77d58cdfddd98d9c5",
+  "generatorHash": "920e1e1b9b22be7c74d281a564934046b973f0083f9a4204f626ab90ad69e056",
+  "gitSha": "1b175c271e07e37618f23d05ed76737f316f5c42",
   "blender": "4.2.11",
   "tags": [
     "kit",

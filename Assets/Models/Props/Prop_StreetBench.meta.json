@@ -2,8 +2,8 @@
   "id": "Prop_StreetBench",
   "category": "Props",
   "generator": "generate_props.build_street_bench",
-  "generatorHash": "530c5371eadf71a6e727cb1706d50495c2ec79143c3822dd1aa8045171f92866",
-  "gitSha": "1c0079daacc42fe956aea2c77d58cdfddd98d9c5",
+  "generatorHash": "7dc26bfc1cdaf5d4cffc2a16f5b31d9eba72ef3dd0682d4c5bbd045d97a0731a",
+  "gitSha": "1b175c271e07e37618f23d05ed76737f316f5c42",
   "blender": "4.2.11",
   "tags": [
     "street"

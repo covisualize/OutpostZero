@@ -8,6 +8,7 @@ import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from pipeline_plan import asset_paths
+from icon_render import ICON_RENDER_SIZE
 
 from texture_set import (
     ICON_SIZE,
@@ -106,6 +107,8 @@ class TextureSetTests(unittest.TestCase):
         self.assertEqual(manifest["textures"], list(SUFFIXES))
         self.assertEqual(manifest["textureSize"], SIZE)
         missing = []
+        rendered = {"Assets/Models/" + e["output"] for e in manifest["entries"] if "item" in (e.get("tags") or ())}
+        self.assertGreaterEqual(len(rendered), 26)
         for relative in asset_paths(manifest):
             stem = relative[:-4]
             for suffix in SUFFIXES:
@@ -116,7 +119,8 @@ class TextureSetTests(unittest.TestCase):
                     continue
                 with open(path, "rb") as handle:
                     width, height, _pixels = decode_png(handle.read())
-                expected = ICON_SIZE if suffix == "Icon" else SIZE
+                icon_side = ICON_RENDER_SIZE if relative in rendered else ICON_SIZE
+                expected = icon_side if suffix == "Icon" else SIZE
                 if (width, height) != (expected, expected):
                     missing.append(stem + "_" + suffix + ":size")
         self.assertEqual(missing, [])

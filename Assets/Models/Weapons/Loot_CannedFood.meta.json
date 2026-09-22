@@ -1,0 +1,32 @@
+{
+  "id": "Loot_CannedFood",
+  "category": "Weapons",
+  "generator": "generate_items.build_canned_food",
+  "generatorHash": "bbfbc9e127495ca6a727f542c22597e657af491f1a2377cd0136e4b28739a850",
+  "gitSha": "1b175c271e07e37618f23d05ed76737f316f5c42",
+  "blender": "4.2.11",
+  "tags": [
+    "loot",
+    "item"
+  ],
+  "pivot": "bottom",
+  "collider": "box",
+  "rig": "",
+  "lods": [
+    1.0
+  ],
+  "tris": 204,
+  "lodTris": [
+    204
+  ],
+  "size": {
+    "width": 0.0758,
+    "depth": 0.077,
+    "height": 0.113
+  },
+  "floor": 0.0,
+  "materials": [
+    "Mat_Item_Tin",
+    "Mat_Item_TinLabel"
+  ]
+}

@@ -9,6 +9,8 @@ import zlib
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 TEXTURES = ("Albedo", "Normal", "AO", "Mask", "Icon")
+RENDERED_ICON = 64
+MIN_ICON_COVERAGE = 0.08
 BUDGETS = (
     ("/Characters/", 6000),
     ("/Kit/", 1500),
@@ -87,6 +89,15 @@ def _triangles(values):
             count += max(0, run - 2)
             run = 0
     return count
+
+
+def icon_coverage(path):
+    from icon_render import coverage
+    from texture_set import decode_png
+
+    with open(path, "rb") as handle:
+        _w, _h, pixels = decode_png(handle.read())
+    return coverage(pixels)
 
 
 def budget_for(relative):
@@ -168,9 +179,13 @@ def audit(root=None, manifest=None):
                 problems.append(stem + "_" + suffix + " missing texture")
                 continue
             size = png_size(map_path)
-            expected = (icon, icon) if suffix == "Icon" else (full, full)
+            rendered = suffix == "Icon" and "item" in (entry.get("tags") or ())
+            side = RENDERED_ICON if rendered else icon
+            expected = (side, side) if suffix == "Icon" else (full, full)
             if size != expected:
                 problems.append(stem + "_" + suffix + " size " + str(size))
+            elif rendered and icon_coverage(map_path) < MIN_ICON_COVERAGE:
+                problems.append(stem + "_Icon blank render")
             if not os.path.isfile(meta_path):
                 problems.append(stem + "_" + suffix + " missing meta")
                 continue

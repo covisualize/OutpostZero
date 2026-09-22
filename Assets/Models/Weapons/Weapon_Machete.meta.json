@@ -2,12 +2,13 @@
   "id": "Weapon_Machete",
   "category": "Weapons",
   "generator": "generate_weapons.build_machete",
-  "generatorHash": "cb5476aea629f8510d67300c913a10900abf501f76230b8b49c345aecd0d4a1b",
-  "gitSha": "1c0079daacc42fe956aea2c77d58cdfddd98d9c5",
+  "generatorHash": "f681ba76dda99b97056511418db5de8dbd8b96ccff8d013806fa671826fac4e1",
+  "gitSha": "1b175c271e07e37618f23d05ed76737f316f5c42",
   "blender": "4.2.11",
   "tags": [
     "weapon",
-    "melee"
+    "melee",
+    "item"
   ],
   "pivot": "authored",
   "collider": "box",

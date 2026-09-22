@@ -2,8 +2,8 @@
   "id": "Road_Tile_Straight",
   "category": "Environment",
   "generator": "generate_architecture.build_road_straight",
-  "generatorHash": "e94fa6cf895232daaa1e793f582fd6d09d9baec7fb63a35de3139d73c2d5df98",
-  "gitSha": "1c0079daacc42fe956aea2c77d58cdfddd98d9c5",
+  "generatorHash": "f30f2e00a106f92c82a44e5c2d6484cd6d819105ba8923855cbca75b87c29e2b",
+  "gitSha": "1b175c271e07e37618f23d05ed76737f316f5c42",
   "blender": "4.2.11",
   "tags": [
     "road"

@@ -2,8 +2,8 @@
   "id": "Zombie_Brute",
   "category": "Characters",
   "generator": "generate_characters.build_zombie_brute",
-  "generatorHash": "7bf008a775574638f3843585c5049a39536348755132e56726f7590a48ab6b5b",
-  "gitSha": "1c0079daacc42fe956aea2c77d58cdfddd98d9c5",
+  "generatorHash": "6d8c72b4afb19db68d7e27ad70abb2105fa0d075d64793c6a450050fcdb96dd6",
+  "gitSha": "1b175c271e07e37618f23d05ed76737f316f5c42",
   "blender": "4.2.11",
   "tags": [
     "character",

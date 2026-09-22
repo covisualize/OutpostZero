@@ -2,8 +2,8 @@
   "id": "Base_MedicalCot",
   "category": "BaseBuilding",
   "generator": "generate_base_building.build_medical_cot",
-  "generatorHash": "b35576e1c5021350e3db7dffa40b90955b73b837f8ac405d893e418f8e6ed0fa",
-  "gitSha": "1c0079daacc42fe956aea2c77d58cdfddd98d9c5",
+  "generatorHash": "60c6b0120b7dc6d3d84ffe18bf7626dd9302e64d37438778e2fe2393b3be18f5",
+  "gitSha": "1b175c271e07e37618f23d05ed76737f316f5c42",
   "blender": "4.2.11",
   "tags": [
     "camp",

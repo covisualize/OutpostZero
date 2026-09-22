@@ -2,8 +2,8 @@
   "id": "Building_Warehouse_Depot",
   "category": "Environment",
   "generator": "generate_architecture.build_industrial_warehouse",
-  "generatorHash": "6772d16feb3ddffc52a3c29eb566a12366d20a8537a7b58e068040aad1080a46",
-  "gitSha": "1c0079daacc42fe956aea2c77d58cdfddd98d9c5",
+  "generatorHash": "56d41932d568be9ba61786ffd304a2ec87469476cb2db30361bf1e33a06bd998",
+  "gitSha": "1b175c271e07e37618f23d05ed76737f316f5c42",
   "blender": "4.2.11",
   "tags": [
     "building"

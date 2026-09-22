@@ -2,8 +2,8 @@
   "id": "Kit_sidewalk_straight",
   "category": "Kit",
   "generator": "generate_kit.build_piece",
-  "generatorHash": "3ed289042f382f4572d4b18d0c4723471ad69dfa1f3379805d8a736ae6e58a18",
-  "gitSha": "1c0079daacc42fe956aea2c77d58cdfddd98d9c5",
+  "generatorHash": "cf53dcb3a9c3683d84f1062d3d1c4858a0d0961a640fa01929e32d52e20ed335",
+  "gitSha": "1b175c271e07e37618f23d05ed76737f316f5c42",
   "blender": "4.2.11",
   "tags": [
     "kit",

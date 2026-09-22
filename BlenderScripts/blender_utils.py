@@ -326,8 +326,11 @@ def export_fbx(output_filepath, animated=False, texture_size=None, unwrap=True):
         bake_anim_use_nla_strips=False,
         bake_anim_simplify_factor=0.0,
     )
-    from texture_set import SIZE, write_set
+    from texture_set import SIZE, model_meta_text, write_set
     write_set(output_filepath, texture_size or SIZE)
+    if not os.path.isfile(output_filepath + ".meta"):
+        with open(output_filepath + ".meta", "w", encoding="utf-8", newline="\n") as handle:
+            handle.write(model_meta_text(output_filepath))
     stats["path"] = output_filepath
     EXPORTS.append(stats)
     print(f"[Blender] Successfully exported: {output_filepath}")

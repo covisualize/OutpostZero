@@ -2,8 +2,8 @@
   "id": "NPC_Merchant",
   "category": "Characters",
   "generator": "generate_characters.build_npc_merchant",
-  "generatorHash": "a6c6627a76270e696964e0c04d70cdb709734c87b60d417118fba6d2968f2352",
-  "gitSha": "1c0079daacc42fe956aea2c77d58cdfddd98d9c5",
+  "generatorHash": "863e5de8c95a5963b8b1dad2e96b61d95bdbd5267c8f4ec4dd1d50cc46f466bd",
+  "gitSha": "1b175c271e07e37618f23d05ed76737f316f5c42",
   "blender": "4.2.11",
   "tags": [
     "character",
