@@ -171,7 +171,11 @@ namespace OutpostZero.Shell
                 data.food = ColonyStorage.Instance.Food;
                 data.water = ColonyStorage.Instance.Water;
             }
-            if (GameManager.Instance != null) data.kills = GameManager.Instance.ZombiesKilled;
+            if (GameManager.Instance != null)
+            {
+                data.kills = GameManager.Instance.ZombiesKilled;
+                data.lifetimeKills = GameManager.Instance.LifetimeKills;
+            }
             if (WorldMapService.Instance != null)
             {
                 data.districtsCleared = WorldMapService.Instance.ClearedCount;
@@ -266,6 +270,7 @@ namespace OutpostZero.Shell
         {
             if (data == null) return;
             WorldClock.Instance?.Set(data.day, data.hour);
+            GameManager.Instance?.SetLifetimeKills(data.lifetimeKills);
             ColonyStorage.Instance?.Set(data.colonyScrap, data.food, data.water);
             FactionTrade.Instance?.Restore(data.factionStanding, data.factions, data.quests);
             SettingsService.Instance?.ApplySnapshot(data.shake, data.volume, data.textScale, data.subtitles, data.language);

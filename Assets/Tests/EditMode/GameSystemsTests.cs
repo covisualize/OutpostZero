@@ -1136,5 +1136,35 @@ namespace OutpostZero.Tests.EditMode
             Assert.AreEqual("120 fps", PlayOptions.FrameName(3));
             Assert.AreEqual("Uncapped", PlayOptions.FrameName(4));
         }
+
+        [Test]
+        public void FinishedRunsRankByDaysAndKeepEight()
+        {
+            var first = RunBoard.Make("Ada", 3, 4, 1, 1, false);
+            var longer = RunBoard.Make("Bo", 9, 2, 0, 3, true);
+            var sameDay = RunBoard.Make("Cy", 9, 8, 0, 1, false);
+            var board = RunBoard.Insert(null, first);
+            board = RunBoard.Insert(board, longer);
+            board = RunBoard.Insert(board, sameDay);
+            Assert.AreEqual("Cy", board[0].Name);
+            Assert.AreEqual("Bo", board[1].Name);
+            Assert.AreEqual("Ada", board[2].Name);
+            Assert.AreEqual("Held  day 9  kills 2  lost 0  streets 3", RunBoard.Line(longer));
+            Assert.AreEqual("Fell  day 3  kills 4  lost 1  streets 1", RunBoard.Line(first));
+
+            var packed = RunBoard.Pack(board);
+            var again = RunBoard.Unpack(packed);
+            Assert.AreEqual(3, again.Length);
+            Assert.AreEqual(board[0].Kills, again[0].Kills);
+            Assert.AreEqual(board[0].Won, again[0].Won);
+            Assert.AreEqual(0, RunBoard.Unpack("").Length);
+            Assert.AreEqual(0, RunBoard.Unpack("nope").Length);
+
+            var many = new RunBoard.Run[0];
+            for (int day = 1; day <= 9; day++) many = RunBoard.Insert(many, RunBoard.Make("N", day, 1, 0, 0, false));
+            Assert.AreEqual(RunBoard.Limit, many.Length);
+            Assert.AreEqual(9, many[0].Day);
+            Assert.AreEqual(2, many[many.Length - 1].Day);
+        }
     }
 }

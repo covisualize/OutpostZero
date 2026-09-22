@@ -384,6 +384,7 @@ namespace OutpostZero.UI
                 case GameState.Victory:
                     menu.Add(Title("OUTPOST HOLDS"));
                     menu.Add(Body("The broadcast went out. The gate can stay shut."));
+                    DrawBoard(menu);
                     menu.Add(Button("Enter sanctuary", () => Go(FlowStep.Sanctuary, () => GameManager.Instance.EnterCamp())));
                     menu.Add(Button("Keep the nights", () => Go(FlowStep.Sanctuary, () =>
                     {
@@ -403,6 +404,7 @@ namespace OutpostZero.UI
                     menu.Add(Title(Loc.T("gameover.title")));
                     int remembered = SurvivorRoster.Instance != null ? SurvivorRoster.Instance.Memorials.Count : 0;
                     menu.Add(Body(remembered > 0 ? remembered + " names on the memorial wall." : "Every name on the roster is gone."));
+                    DrawBoard(menu);
                     menu.Add(Button("New outpost", () => Go(FlowStep.Sanctuary, () => GameManager.Instance.BeginNewOutpost())));
                     break;
                 case GameState.MainMenu:
@@ -436,6 +438,19 @@ namespace OutpostZero.UI
                     break;
             }
             menu.style.display = menu.childCount > 0 ? DisplayStyle.Flex : DisplayStyle.None;
+        }
+
+        private void DrawBoard(VisualElement menu)
+        {
+            menu.Add(Body("Local board"));
+            var runs = RunArchive.Instance != null ? RunArchive.Instance.Runs : null;
+            if (runs == null || runs.Length == 0)
+            {
+                menu.Add(Body("No finished runs yet."));
+                return;
+            }
+            int count = runs.Length < 4 ? runs.Length : 4;
+            for (int i = 0; i < count; i++) menu.Add(Body(RunBoard.Line(runs[i])));
         }
 
         private void BuildSettings(VisualElement parent)

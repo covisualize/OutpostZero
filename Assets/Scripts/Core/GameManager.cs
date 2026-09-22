@@ -19,6 +19,7 @@ namespace OutpostZero.Core
         [Header("Expedition Stats")]
         [SerializeField] private float expeditionTimer = 0f;
         [SerializeField] private int zombiesKilled = 0;
+        [SerializeField] private int lifetimeKills = 0;
         [SerializeField] private int scrapLooted = 0;
 
         private GameState resumeState = GameState.ExpeditionActive;
@@ -26,6 +27,7 @@ namespace OutpostZero.Core
 
         public float ExpeditionTime => expeditionTimer;
         public int ZombiesKilled => zombiesKilled;
+        public int LifetimeKills => lifetimeKills;
         public int ScrapLooted => scrapLooted;
 
         public event Action<GameState> OnGameStateChanged;
@@ -84,6 +86,7 @@ namespace OutpostZero.Core
             if (currentState == newState) return;
 
             currentState = newState;
+            if (newState == GameState.Victory || newState == GameState.GameOver) RunArchive.NoteCurrent(newState == GameState.Victory);
             bool frozen = newState == GameState.Paused
                 || newState == GameState.SuccessionScreen
                 || newState == GameState.GameOver
@@ -136,6 +139,7 @@ namespace OutpostZero.Core
         public void RecordZombieKill(string archetypeId = null)
         {
             zombiesKilled++;
+            lifetimeKills++;
             OnZombiesKilledChanged?.Invoke(zombiesKilled);
             if (!string.IsNullOrEmpty(archetypeId)) CodexDirector.Instance?.Unlock("zombie." + archetypeId);
         }
@@ -217,6 +221,7 @@ namespace OutpostZero.Core
             CodexDirector.Instance?.Restore("");
             PlayerRegistry.Current?.RestoreMods("");
             zombiesKilled = 0;
+            lifetimeKills = 0;
             scrapLooted = 0;
             expeditionTimer = 0f;
             OnZombiesKilledChanged?.Invoke(zombiesKilled);
@@ -234,6 +239,11 @@ namespace OutpostZero.Core
             SetState(GameState.CampManagement);
         }
 
+        public void SetLifetimeKills(int kills)
+        {
+            lifetimeKills = kills < 0 ? 0 : kills;
+        }
+
         public void RestartCurrentScene()
         {
             Time.timeScale = 1f;
@@ -245,6 +255,7 @@ namespace OutpostZero.Core
             TutorialDirector.Instance?.SetFinished(false);
             CodexDirector.Instance?.Restore("");
             zombiesKilled = 0;
+            lifetimeKills = 0;
             scrapLooted = 0;
             expeditionTimer = 0f;
             currentState = GameState.ExpeditionActive;

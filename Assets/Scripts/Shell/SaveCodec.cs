@@ -40,6 +40,7 @@ namespace OutpostZero.Shell
         public int food;
         public int water;
         public int kills;
+        public int lifetimeKills;
         public int districtsCleared;
         public int districtIndex;
         public string radio = "";
