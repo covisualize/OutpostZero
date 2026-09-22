@@ -6098,6 +6098,34 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void AMacheteSwingSpendsBreathAndAGunDoesNot()
+        {
+            Assert.AreEqual(8f, SwingCost.Melee, 0.001f);
+            Assert.AreEqual(8f, SwingCost.Of(WeaponType.Melee), 0.001f);
+            Assert.AreEqual(0f, SwingCost.Of(WeaponType.Pistol), 0.001f);
+            Assert.AreEqual(0f, SwingCost.Of(WeaponType.Shotgun), 0.001f);
+            Assert.AreEqual(0f, SwingCost.Of(WeaponType.Rifle), 0.001f);
+            Assert.AreEqual(0f, SwingCost.Of(WeaponType.SMG), 0.001f);
+            Assert.IsTrue(SwingCost.Pays(8f, WeaponType.Melee));
+            Assert.IsTrue(SwingCost.Pays(40f, WeaponType.Melee));
+            Assert.IsFalse(SwingCost.Pays(7.9f, WeaponType.Melee));
+            Assert.IsFalse(SwingCost.Pays(0f, WeaponType.Melee));
+            Assert.IsTrue(SwingCost.Pays(0f, WeaponType.Pistol));
+            Assert.AreEqual(92f, SwingCost.After(100f, WeaponType.Melee), 0.001f);
+            Assert.AreEqual(0f, SwingCost.After(8f, WeaponType.Melee), 0.001f);
+            Assert.AreEqual(0f, SwingCost.After(3f, WeaponType.Melee), 0.001f);
+            Assert.AreEqual(0f, SwingCost.After(-2f, WeaponType.Melee), 0.001f);
+            Assert.AreEqual(40f, SwingCost.After(40f, WeaponType.Pistol), 0.001f);
+            Assert.AreEqual("Too tired to swing", SwingCost.Line("en"));
+            Assert.AreEqual("Demasiado cansado para cortar", SwingCost.Line("es"));
+            Assert.AreEqual(48f, WeaponCard.Find("machete").Damage, 0.001f);
+            Assert.AreEqual(1.8f, WeaponCard.Find("machete").Rate, 0.001f);
+            Assert.AreEqual(1.9f, WeaponCard.Find("machete").Range, 0.001f);
+            Assert.AreEqual(2f, WeaponCard.Find("machete").Noise, 0.001f);
+            Assert.AreEqual(34f, WeaponCard.Find("pistol_9mm").Damage, 0.001f);
+        }
+
+        [Test]
         public void AZombieWithoutARigStillAttacksAndFalls()
         {
             Assert.AreEqual(14f, PoseSheet.Lean(ZombieAI.ZombieState.Chase, 0f), 0.001f);

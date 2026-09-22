@@ -786,8 +786,18 @@ namespace OutpostZero.Player
                 : ExpeditionInput.FireHeld;
             if (fire && GameManager.Instance != null && GameManager.Instance.CurrentState != GameState.CampManagement)
             {
-                if (ActiveWeapon.TryAttack(transform.forward))
+                if (!SwingCost.Pays(currentStamina, ActiveWeapon.Type))
                 {
+                    if (ExpeditionInput.FirePressed) GameplayFeedback.Toast(SwingCost.Line(null));
+                }
+                else if (ActiveWeapon.TryAttack(transform.forward))
+                {
+                    if (SwingCost.Of(ActiveWeapon.Type) > 0f)
+                    {
+                        currentStamina = SwingCost.After(currentStamina, ActiveWeapon.Type);
+                        lastStaminaDrainTime = Time.time;
+                        OnStaminaChanged?.Invoke(currentStamina, StaminaPool());
+                    }
                     CodexDirector.Hear("fire");
                     GetComponent<SurvivorLocomotion>()?.NotifyAttack();
                     GetComponent<ProceduralSurvivorMotion>()?.Strike();
