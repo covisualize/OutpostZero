@@ -56,6 +56,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Loot_DuctTape
       objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: b003c97e43f07159bcca96cf60893a59, type: 3}
+      propertyPath: m_Layer
+      value: 9
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -63,6 +67,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: b003c97e43f07159bcca96cf60893a59, type: 3}
       insertIndex: -1
       addedObject: {fileID: 484517402099038133}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: b003c97e43f07159bcca96cf60893a59, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 268958483572307654}
   m_SourcePrefab: {fileID: 100100000, guid: b003c97e43f07159bcca96cf60893a59, type: 3}
 --- !u!1 &505489516952542313 stripped
 GameObject:
@@ -90,3 +97,16 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.141701, y: 0.054, z: 0.101103}
   m_Center: {x: -0.02085, y: 0.027, z: 0.000552}
+--- !u!114 &268958483572307654
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 505489516952542313}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c75b34f8091a2b3c4d5e6f708192a462, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  kind: 2

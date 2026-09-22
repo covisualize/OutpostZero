@@ -66,7 +66,19 @@ namespace OutpostZero.EditorTools
                     string prefabPath = "Assets/Prefabs/" + Path.ChangeExtension(relative, ".prefab");
                     string directory = Path.GetDirectoryName(prefabPath);
                     if (!string.IsNullOrEmpty(directory)) Directory.CreateDirectory(directory);
-                    if (File.Exists(prefabPath)) continue;
+                    if (File.Exists(prefabPath))
+                    {
+                        var contents = PrefabUtility.LoadPrefabContents(prefabPath);
+                        try
+                        {
+                            if (PrefabTags.Apply(contents, ModelSidecar.Load(path))) PrefabUtility.SaveAsPrefabAsset(contents, prefabPath);
+                        }
+                        finally
+                        {
+                            PrefabUtility.UnloadPrefabContents(contents);
+                        }
+                        continue;
+                    }
 
                     var source = AssetDatabase.LoadAssetAtPath<GameObject>(path);
                     if (source == null) continue;
@@ -76,8 +88,10 @@ namespace OutpostZero.EditorTools
                         foreach (var renderer in instance.GetComponentsInChildren<Renderer>())
                             renderer.sharedMaterial = baked;
                     }
+                    var sidecar = ModelSidecar.Load(path);
                     if (instance.GetComponentInChildren<Collider>() == null)
-                        ModelSidecar.AddCollider(instance, ModelSidecar.Load(path));
+                        ModelSidecar.AddCollider(instance, sidecar);
+                    PrefabTags.Apply(instance, sidecar);
                     PrefabUtility.SaveAsPrefabAsset(instance, prefabPath);
                     Object.DestroyImmediate(instance);
                 }

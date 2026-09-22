@@ -56,6 +56,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Ruin_Wall_Corner
       objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: e2d21daced955f64dbd19138990edc27, type: 3}
+      propertyPath: m_Layer
+      value: 8
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -63,6 +67,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: e2d21daced955f64dbd19138990edc27, type: 3}
       insertIndex: -1
       addedObject: {fileID: 7798294783244106895}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: e2d21daced955f64dbd19138990edc27, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 420287761682003843}
   m_SourcePrefab: {fileID: 100100000, guid: e2d21daced955f64dbd19138990edc27, type: 3}
 --- !u!1 &6484238384753875951 stripped
 GameObject:
@@ -90,3 +97,16 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 4.9028387, y: 3, z: 4.25}
   m_Center: {x: -1.5485806, y: 1.5, z: -1.875}
+--- !u!114 &420287761682003843
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6484238384753875951}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c75b34f8091a2b3c4d5e6f708192a462, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  kind: 1

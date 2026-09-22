@@ -215,6 +215,31 @@ namespace OutpostZero.Tests.EditMode.Artifacts
             return problems;
         }
 
+        public const string SurfaceTagGuid = "c75b34f8091a2b3c4d5e6f708192a462";
+        public const string RootObject = "919132149155446097";
+
+        public static List<string> SurfaceTagsAndLayers(string root, Manifest manifest)
+        {
+            var problems = new List<string>();
+            foreach (var entry in manifest.Entries)
+            {
+                string path = Path.Combine(root, entry.Prefab);
+                var sidecar = Sidecar(root, entry);
+                if (!File.Exists(path) || sidecar == null) continue;
+                string text = File.ReadAllText(path);
+                var kind = Regex.Match(text, @"m_Script: \{fileID: 11500000, guid: " + SurfaceTagGuid + @", type: 3\}\n(?:.*\n)*?\s+kind: (\d+)");
+                var want = OutpostZero.Core.SurfaceTag.Guess(entry.Category, MiniJson.Strings(sidecar, "materials"));
+                if (!kind.Success) problems.Add(entry.Prefab + " has no SurfaceTag (run BlenderScripts/prefab_tags.py --fix)");
+                else if (int.Parse(kind.Groups[1].Value, CultureInfo.InvariantCulture) != (int)want)
+                    problems.Add(entry.Prefab + " SurfaceTag is " + (OutpostZero.Core.SurfaceKind)int.Parse(kind.Groups[1].Value, CultureInfo.InvariantCulture) + " but its materials say " + want);
+                var layer = Regex.Match(text, @"target: \{fileID: " + RootObject + @", guid: \w+, type: 3\}\n\s+propertyPath: m_Layer\n\s+value: (\d+)");
+                int got = layer.Success ? int.Parse(layer.Groups[1].Value, CultureInfo.InvariantCulture) : 0;
+                int wantLayer = OutpostZero.Core.GameLayers.ForAsset(entry.Category, entry.Id);
+                if (got != wantLayer) problems.Add(entry.Prefab + " is on layer " + got + " not " + wantLayer);
+            }
+            return problems;
+        }
+
         public static List<string> MaterialsResolved(string root, Manifest manifest)
         {
             var problems = new List<string>();

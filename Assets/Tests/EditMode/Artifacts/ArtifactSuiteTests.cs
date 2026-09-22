@@ -54,6 +54,29 @@ namespace OutpostZero.Tests.EditMode.Artifacts
         }
 
         [Test]
+        public void SurfaceTagsAndLayersFollowTheSidecar()
+        {
+            Clean("surface tags and layers", ArtifactSuite.SurfaceTagsAndLayers(Root, ArtifactSuite.LoadManifest(Root)));
+        }
+
+        [Test]
+        public void SurfaceGuessReadsMaterialNames()
+        {
+            Assert.AreEqual(SurfaceKind.Flesh, SurfaceTag.Guess("Characters", new[] { "Mat_Metal_Buckles" }));
+            Assert.AreEqual(SurfaceKind.Concrete, SurfaceTag.Guess("Props", new[] { "Mat_Concrete_Weathered", "Mat_Rebar_Rusted" }));
+            Assert.AreEqual(SurfaceKind.Gravel, SurfaceTag.Guess("Props", new[] { "Mat_Sandbag_Canvas" }));
+            Assert.AreEqual(SurfaceKind.Wood, SurfaceTag.Guess("Kit", new[] { "Mat_Wood_Planks", "Mat_Wood_Nails" }));
+            Assert.AreEqual(SurfaceKind.Concrete, SurfaceTag.Guess("Kit", new[] { "Mat_Item_Grey" }));
+            Assert.AreEqual(SurfaceKind.Default, SurfaceTag.Guess("Unknown", null));
+            Assert.AreEqual("step_hard", SurfaceTag.StepId(SurfaceKind.Concrete));
+            Assert.AreEqual("step", SurfaceTag.StepId(SurfaceKind.Flesh));
+            Assert.AreEqual(GameLayers.Enemy, GameLayers.ForAsset("Characters", "Zombie_Brute"));
+            Assert.AreEqual(0, GameLayers.ForAsset("Characters", "Survivor_Leader"));
+            Assert.AreEqual(GameLayers.Loot, GameLayers.ForAsset("Weapons", "Loot_Flare"));
+            Assert.AreEqual(GameLayers.Environment, GameLayers.ForAsset("Kit", "Kit_floor"));
+        }
+
+        [Test]
         public void MaterialsResolved()
         {
             Clean("materials", ArtifactSuite.MaterialsResolved(Root, ArtifactSuite.LoadManifest(Root)));

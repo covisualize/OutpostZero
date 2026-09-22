@@ -56,6 +56,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Loot_Antibiotics
       objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 858648a1bf556fa42a112f3b9c322c22, type: 3}
+      propertyPath: m_Layer
+      value: 9
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -63,6 +67,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 858648a1bf556fa42a112f3b9c322c22, type: 3}
       insertIndex: -1
       addedObject: {fileID: 629047485488818922}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 858648a1bf556fa42a112f3b9c322c22, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1053350613005890650}
   m_SourcePrefab: {fileID: 100100000, guid: 858648a1bf556fa42a112f3b9c322c22, type: 3}
 --- !u!1 &954680734064767014 stripped
 GameObject:
@@ -90,3 +97,16 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.054, y: 0.107, z: 0.054}
   m_Center: {x: 0, y: 0.0535, z: 0}
+--- !u!114 &1053350613005890650
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 954680734064767014}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c75b34f8091a2b3c4d5e6f708192a462, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  kind: 2

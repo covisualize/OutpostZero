@@ -401,12 +401,12 @@ namespace OutpostZero.Shell
             if (player == null) return;
             var body = player.GetComponent<CharacterController>();
             if (body == null || body.velocity.magnitude < 0.8f) return;
-            string surface = "";
+            string step = AudioMix.StepId("");
             if (Physics.Raycast(player.transform.position + Vector3.up, Vector3.down, out var hit, 2.2f, GameLayers.VisionOcclusionMask, QueryTriggerInteraction.Ignore))
             {
-                surface = hit.collider.name;
+                var tag = SurfaceTag.Of(hit.collider);
+                step = tag != null && tag.Kind != SurfaceKind.Default ? SurfaceTag.StepId(tag.Kind) : AudioMix.StepId(hit.collider.name);
             }
-            string step = AudioMix.StepId(surface);
             if (OutpostZero.Expedition.GlassShard.Covers(player.transform.position.x, player.transform.position.z))
                 step = "step_glass";
             bool hard = step == "step_hard" || step == "step_metal";

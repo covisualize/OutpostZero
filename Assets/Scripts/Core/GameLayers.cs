@@ -40,6 +40,26 @@ namespace OutpostZero.Core
             return current.value == 0 ? fallback : current;
         }
 
+        /// <summary>The layer a generated prefab starts on. Scene placement and spawners may still move it.</summary>
+        public static int ForAsset(string category, string id)
+        {
+            id = id ?? "";
+            switch (category)
+            {
+                case "Kit":
+                case "Environment":
+                case "Props":
+                case "BaseBuilding":
+                    return Environment;
+                case "Weapons":
+                    return id.StartsWith("Loot_") ? Loot : 0;
+                case "Characters":
+                    return id.StartsWith("Zombie_") ? Enemy : 0;
+                default:
+                    return 0;
+            }
+        }
+
         public static void ApplyRecursively(GameObject root, int layer)
         {
             if (root == null) return;
