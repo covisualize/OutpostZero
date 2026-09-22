@@ -66,7 +66,6 @@ namespace OutpostZero.Items
             {
                 if (i > 0) text += "   ";
                 string id = IdAt(slots, i);
-                var record = string.IsNullOrEmpty(id) ? null : ItemCatalog.Find(id);
                 string name = string.IsNullOrEmpty(id) ? "-" : Loc.Item(id);
                 text += (i + 5) + " " + name;
             }
