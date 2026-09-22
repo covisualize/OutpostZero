@@ -64,16 +64,32 @@ namespace OutpostZero.Expedition
 
         public static string Mark(string label, float delta)
         {
-            if (!OnStrip(delta, 1f, out _)) return label + " behind";
-            return label + " " + Sector(delta);
+            return Mark(label, delta, "en");
+        }
+
+        public static string Mark(string label, float delta, string language)
+        {
+            if (!OnStrip(delta, 1f, out _)) return label + " " + Word("head.behind", language);
+            return label + " " + Word("head." + Sector(delta), language);
         }
 
         public static string Readout(float faceX, float faceZ, float fromX, float fromZ, bool showPoi, float poiX, float poiZ, bool showGate, float gateX, float gateZ)
         {
+            return Readout(faceX, faceZ, fromX, fromZ, showPoi, poiX, poiZ, showGate, gateX, gateZ, "en");
+        }
+
+        public static string Readout(float faceX, float faceZ, float fromX, float fromZ, bool showPoi, float poiX, float poiZ, bool showGate, float gateX, float gateZ, string language)
+        {
             string text = Cardinal(Degrees(faceX, faceZ));
-            if (showPoi) text += "   " + Mark("POI", Delta(faceX, faceZ, fromX, fromZ, poiX, poiZ));
-            if (showGate) text += "   " + Mark("Gate", Delta(faceX, faceZ, fromX, fromZ, gateX, gateZ));
+            if (showPoi) text += "   " + Mark(Word("head.poi", language), Delta(faceX, faceZ, fromX, fromZ, poiX, poiZ), language);
+            if (showGate) text += "   " + Mark(Word("head.gate", language), Delta(faceX, faceZ, fromX, fromZ, gateX, gateZ), language);
             return text;
+        }
+
+        private static string Word(string key, string language)
+        {
+            if (string.IsNullOrEmpty(language)) return Shell.Loc.T(key);
+            return Shell.Loc.T(key, language);
         }
     }
 }

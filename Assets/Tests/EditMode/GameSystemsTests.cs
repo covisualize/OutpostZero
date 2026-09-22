@@ -4564,6 +4564,20 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void ACompassMarkFollowsTheLanguage()
+        {
+            Assert.AreEqual("N   Gate right", StreetHeading.Readout(0f, 1f, 0f, 0f, false, 0f, 0f, true, 10f, 0f));
+            Assert.AreEqual("N   Gate behind", StreetHeading.Readout(0f, 1f, 0f, 0f, false, 0f, 0f, true, 0f, -10f));
+            Assert.AreEqual("E   POI left", StreetHeading.Readout(1f, 0f, 0f, 0f, true, 0f, 12f, false, 0f, 0f));
+            Assert.AreEqual("N   Puerta derecha", StreetHeading.Readout(0f, 1f, 0f, 0f, false, 0f, 0f, true, 10f, 0f, "es"));
+            Assert.AreEqual("N   Puerta detrás", StreetHeading.Readout(0f, 1f, 0f, 0f, false, 0f, 0f, true, 0f, -10f, "es"));
+            Assert.AreEqual("E   Punto izquierda", StreetHeading.Readout(1f, 0f, 0f, 0f, true, 0f, 12f, false, 0f, 0f, "es"));
+            Assert.AreEqual("Gate front", StreetHeading.Mark("Gate", 0f, "en"));
+            Assert.AreEqual("Puerta frente", StreetHeading.Mark("Puerta", 0f, "es"));
+            Assert.AreEqual("front", StreetHeading.Sector(0f));
+        }
+
+        [Test]
         public void StreetLampsFollowTheDarkAndNoonStaysOut()
         {
             Assert.AreEqual(0f, DayNightCycle.HourToNight(12f), 0.001f);

@@ -353,7 +353,8 @@ namespace OutpostZero.UI
                 compass.text = StreetHeading.Readout(
                     face.x, face.z, at.x, at.z,
                     showPoi, showPoi ? poi.transform.position.x : 0f, showPoi ? poi.transform.position.z : 0f,
-                    gate != null, gate != null ? gate.transform.position.x : 0f, gate != null ? gate.transform.position.z : 0f);
+                    gate != null, gate != null ? gate.transform.position.x : 0f, gate != null ? gate.transform.position.z : 0f,
+                    null);
             }
             else compass.text = "";
 
