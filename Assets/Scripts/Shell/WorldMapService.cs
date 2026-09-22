@@ -37,7 +37,16 @@ namespace OutpostZero.Shell
                 return count;
             }
         }
-        public bool CampaignWon => ClearedCount >= 3;
+        private string parts = "";
+        private int difficulty = 2;
+        private bool broadcastWon;
+
+        public string Parts => parts;
+        public int Difficulty => difficulty;
+        public bool BroadcastWon => broadcastWon;
+        public bool GeneratorBuilt => GridBuilder.Instance != null && GridBuilder.Instance.HasKind("Generator");
+        public bool ReadyToBroadcast => CampaignBoard.Ready(parts, GeneratorBuilt, broadcastWon);
+        public bool CampaignWon => CampaignBoard.Won(parts, GeneratorBuilt, broadcastWon);
 
         private void Awake()
         {
@@ -52,14 +61,15 @@ namespace OutpostZero.Shell
 
         public void Seed()
         {
-            districts = new List<District>
+            var board = CampaignBoard.All();
+            districts = new List<District>(board.Length);
+            for (int i = 0; i < board.Length; i++)
             {
-                new District { id = "ash_market", displayName = "Ash Market", encounter = "Loot the stalls, watch the alleys" },
-                new District { id = "rail_yard", displayName = "Rail Yard", encounter = "Barrels and a brute pack" },
-                new District { id = "old_hospital", displayName = "Old Hospital", encounter = "Medical caches, infected wards" },
-                new District { id = "north_gate", displayName = "North Gate", encounter = "Final push to clear the ring" }
-            };
+                districts.Add(new District { id = board[i].Id, displayName = board[i].Name, encounter = board[i].Encounter });
+            }
             currentIndex = 0;
+            parts = "";
+            broadcastWon = false;
         }
 
         public void SelectIndex(int index)
@@ -67,6 +77,7 @@ namespace OutpostZero.Shell
             if (districts.Count == 0) Seed();
             index = Mathf.Clamp(index, 0, districts.Count - 1);
             if (districts[index].cleared) return;
+            if (!CampaignBoard.Reachable(districts[index].id, ClearedIds())) return;
             currentIndex = index;
         }
 
@@ -76,22 +87,38 @@ namespace OutpostZero.Shell
             for (int i = 0; i < districts.Count; i++)
             {
                 if (districts[i].id != id || districts[i].cleared) continue;
+                if (!CampaignBoard.Reachable(id, ClearedIds()))
+                {
+                    GameplayFeedback.Toast("That road is still closed");
+                    return false;
+                }
                 currentIndex = i;
                 return true;
             }
             return false;
         }
 
+        public void SpendTravel()
+        {
+            float hours = CampaignBoard.TravelHours(Current != null ? Current.id : "ash_market");
+            WorldClock.Instance?.Advance(hours);
+        }
+
         public void ApplyOpening()
         {
-            var rules = DistrictRules.For(Current != null ? Current.id : "ash_market");
-            DistrictRules.SetActiveTable(rules.LootTable);
-            ObjectiveTracker.Instance?.SetGoals(rules.KillGoal, rules.ScrapGoal);
-            float tension = rules.OpeningTension;
-            if (FactionTrade.Instance != null && FactionTrade.Instance.Ambush) tension += 12f;
-            HordeDirector.Instance?.ApplyOpening(tension, rules.SpawnInterval, rules.PreferredVariant);
-            WeatherController.Instance?.SetFor(rules.Weather, 180f);
             string districtId = Current != null ? Current.id : "ash_market";
+            var rules = DistrictRules.For(districtId);
+            DistrictRules.SetActiveTable(rules.LootTable);
+            int day = WorldClock.Instance != null ? WorldClock.Instance.Day : 1;
+            var curve = DifficultyProfile.For(CampaignBoard.Tier(districtId), day, difficulty);
+            int kills = rules.KillGoal + curve.ExtraKills;
+            ObjectiveTracker.Instance?.SetGoals(kills, rules.ScrapGoal);
+            float tension = rules.OpeningTension + curve.Tension;
+            if (FactionTrade.Instance != null && FactionTrade.Instance.Ambush) tension += 12f;
+            float interval = Mathf.Max(3f, rules.SpawnInterval * curve.Interval);
+            string prefer = string.IsNullOrEmpty(rules.PreferredVariant) ? curve.Prefer : rules.PreferredVariant;
+            HordeDirector.Instance?.ApplyOpening(tension, interval, prefer, difficulty);
+            WeatherController.Instance?.SetFor(rules.Weather, 180f);
             DistrictDressing.Instance?.Build(districtId);
             SurvivorRoster.Instance?.RaiseCorpses(districtId);
         }
@@ -101,9 +128,24 @@ namespace OutpostZero.Shell
             var district = Current;
             if (district == null || district.cleared) return;
             district.cleared = true;
-            if (currentIndex < districts.Count - 1) currentIndex++;
-            if (CampaignWon) GameplayFeedback.Toast("The ring is quiet. Outpost Zero holds.");
+            string before = parts;
+            parts = CampaignBoard.AddPart(parts, CampaignBoard.PartFor(district.id));
+            if (parts != before) GameplayFeedback.Toast("Radio part recovered");
+            if (!CurrentOpen()) SelectFirstOpen();
             FactionTrade.Instance?.NoteDistrictCleared();
+        }
+
+        public void NoteBroadcast()
+        {
+            broadcastWon = true;
+        }
+
+        public void RestoreCampaign(string radio, int storedDifficulty, int broadcast)
+        {
+            parts = radio ?? "";
+            difficulty = DifficultyProfile.Resolve(storedDifficulty);
+            broadcastWon = broadcast != 0;
+            if (!CurrentOpen()) SelectFirstOpen();
         }
 
         public void RestoreCleared(int count)
@@ -111,12 +153,52 @@ namespace OutpostZero.Shell
             if (districts.Count == 0) Seed();
             for (int i = 0; i < districts.Count; i++) districts[i].cleared = i < count;
             currentIndex = Mathf.Clamp(count, 0, districts.Count - 1);
+            if (!CurrentOpen()) SelectFirstOpen();
         }
 
         public void ResetMap()
         {
+            ResetMap(difficulty);
+        }
+
+        public void ResetMap(int storedDifficulty)
+        {
             Seed();
+            difficulty = DifficultyProfile.Resolve(storedDifficulty);
             DistrictRules.SetActiveTable("");
+        }
+
+        private bool CurrentOpen()
+        {
+            var district = Current;
+            if (district == null || district.cleared) return false;
+            return CampaignBoard.Reachable(district.id, ClearedIds());
+        }
+
+        private void SelectFirstOpen()
+        {
+            var cleared = ClearedIds();
+            for (int i = 0; i < districts.Count; i++)
+            {
+                if (districts[i].cleared) continue;
+                if (!CampaignBoard.Reachable(districts[i].id, cleared)) continue;
+                currentIndex = i;
+                return;
+            }
+        }
+
+        private string[] ClearedIds()
+        {
+            int count = ClearedCount;
+            var ids = new string[count];
+            int write = 0;
+            for (int i = 0; i < districts.Count; i++)
+            {
+                if (!districts[i].cleared) continue;
+                ids[write] = districts[i].id;
+                write++;
+            }
+            return ids;
         }
     }
 }

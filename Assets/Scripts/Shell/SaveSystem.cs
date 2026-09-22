@@ -87,6 +87,9 @@ namespace OutpostZero.Shell
             {
                 data.districtsCleared = WorldMapService.Instance.ClearedCount;
                 data.districtIndex = WorldMapService.Instance.CurrentIndex;
+                data.radio = WorldMapService.Instance.Parts;
+                data.difficulty = WorldMapService.Instance.Difficulty;
+                data.broadcast = WorldMapService.Instance.BroadcastWon ? 1 : 0;
             }
             if (FactionTrade.Instance != null)
             {
@@ -118,6 +121,7 @@ namespace OutpostZero.Shell
                 data.textScale = SettingsService.Instance.TextScale;
                 data.subtitles = SettingsService.Instance.Subtitles;
                 data.mercy = SettingsService.Instance.Merciful ? 1 : 0;
+                data.nextDifficulty = SettingsService.Instance.NextDifficulty;
             }
             if (SurvivorRoster.Instance != null)
             {
@@ -169,7 +173,9 @@ namespace OutpostZero.Shell
             CodexDirector.Instance?.Restore(data.codex);
             OutpostZero.Player.PlayerRegistry.Current?.RestoreMods(data.weaponMods);
             WorldMapService.Instance?.RestoreCleared(data.districtsCleared);
+            WorldMapService.Instance?.RestoreCampaign(data.radio, data.difficulty, data.broadcast);
             if (data.districtIndex > data.districtsCleared) WorldMapService.Instance?.SelectIndex(data.districtIndex);
+            if (data.nextDifficulty > 0) SettingsService.Instance?.SetNextDifficulty(data.nextDifficulty);
             if (data.survivors != null && data.survivors.Length > 0 && SurvivorRoster.Instance != null)
             {
                 var list = new List<Survivor>();

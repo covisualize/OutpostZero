@@ -763,5 +763,103 @@ namespace OutpostZero.Tests.EditMode
             Assert.AreEqual(-6f, ux);
             Assert.AreEqual(-8f, uz);
         }
+
+        [Test]
+        public void TenDistrictsOpenByRoadAndTheTowerEndsTheRun()
+        {
+            var board = CampaignBoard.All();
+            Assert.AreEqual(10, board.Length);
+            Assert.AreEqual("ash_market", board[0].Id);
+            Assert.AreEqual("rail_yard", board[1].Id);
+            Assert.AreEqual("old_hospital", board[2].Id);
+            Assert.AreEqual("north_gate", board[3].Id);
+
+            var seen = new HashSet<string>();
+            for (int i = 0; i < board.Length; i++)
+            {
+                Assert.IsFalse(seen.Contains(board[i].Id));
+                seen.Add(board[i].Id);
+                var pieces = DistrictLayout.For(board[i].Id);
+                Assert.Greater(pieces.Length, 0);
+                for (int p = 0; p < pieces.Length; p++)
+                {
+                    Assert.IsTrue(DistrictLayout.StaysOnTheStreet(pieces[p]), board[i].Id);
+                }
+            }
+
+            Assert.IsTrue(CampaignBoard.Reachable("ash_market", new string[0]));
+            Assert.IsFalse(CampaignBoard.Reachable("rail_yard", new string[0]));
+            Assert.IsTrue(CampaignBoard.Reachable("rail_yard", new[] { "ash_market" }));
+            Assert.IsTrue(CampaignBoard.Reachable("commercial_strip", new[] { "ash_market" }));
+            Assert.IsFalse(CampaignBoard.Reachable("downtown_core", new[] { "ash_market", "rail_yard", "old_hospital" }));
+            Assert.IsFalse(CampaignBoard.Reachable("north_gate", new[] { "ash_market", "rail_yard", "old_hospital" }));
+            Assert.IsTrue(CampaignBoard.Reachable("north_gate", new[] { "water_plant" }));
+            Assert.IsTrue(CampaignBoard.Reachable("downtown_core", new[] { "mall" }));
+            Assert.AreEqual(2f, CampaignBoard.TravelHours("ash_market"));
+            Assert.AreEqual(8f, CampaignBoard.TravelHours("downtown_core"));
+
+            Assert.AreEqual("hospital", CampaignBoard.PartFor("old_hospital"));
+            Assert.AreEqual("police", CampaignBoard.PartFor("police_station"));
+            Assert.AreEqual("downtown", CampaignBoard.PartFor("downtown_core"));
+            Assert.AreEqual("", CampaignBoard.PartFor("ash_market"));
+            string parts = CampaignBoard.AddPart("", "hospital");
+            parts = CampaignBoard.AddPart(parts, "downtown");
+            parts = CampaignBoard.AddPart(parts, "hospital");
+            Assert.AreEqual("downtown,hospital", parts);
+            Assert.IsFalse(CampaignBoard.PartsComplete(parts));
+            parts = CampaignBoard.AddPart(parts, "police");
+            Assert.AreEqual("downtown,hospital,police", parts);
+            Assert.IsTrue(CampaignBoard.PartsComplete(parts));
+            Assert.IsTrue(CampaignBoard.Ready(parts, true, false));
+            Assert.IsFalse(CampaignBoard.Ready(parts, false, false));
+            Assert.IsFalse(CampaignBoard.Won(parts, true, false));
+            Assert.IsTrue(CampaignBoard.Won(parts, true, true));
+            Assert.IsFalse(CampaignBoard.Won(parts, false, true));
+
+            Assert.AreEqual("warehouse", KitPlan.RecipeName("water_plant"));
+            Assert.AreEqual("hospital", KitPlan.RecipeName("police_station"));
+            Assert.AreEqual("apartment", KitPlan.RecipeName("downtown_core"));
+            Assert.AreEqual("storefront", KitPlan.RecipeName("commercial_strip"));
+            var downtown = DistrictRules.For("downtown_core");
+            Assert.AreEqual(18, downtown.KillGoal);
+            Assert.Greater(downtown.OpeningTension, DistrictRules.For("north_gate").OpeningTension);
+
+            Assert.AreEqual(2, DifficultyProfile.Resolve(0));
+            Assert.AreEqual(1, DifficultyProfile.Resolve(1));
+            Assert.AreEqual(3, DifficultyProfile.Resolve(9));
+            Assert.AreEqual("Survivor", DifficultyProfile.Name(0));
+            Assert.AreEqual("Nightmare", DifficultyProfile.Name(3));
+            var easy = DifficultyProfile.For(1, 1, 2);
+            Assert.AreEqual(0f, easy.Tension, 0.001f);
+            Assert.AreEqual(1f, easy.Interval, 0.001f);
+            Assert.AreEqual(0, easy.ExtraKills);
+            Assert.AreEqual("", easy.Prefer);
+            var mid = DifficultyProfile.For(2, 1, 2);
+            Assert.AreEqual(4f, mid.Tension, 0.001f);
+            Assert.AreEqual(1, mid.ExtraKills);
+            Assert.AreEqual("Runner", mid.Prefer);
+            var hard = DifficultyProfile.For(3, 1, 3);
+            Assert.AreEqual(16.5f, hard.Tension, 0.001f);
+            Assert.AreEqual(0.75f, hard.Interval, 0.001f);
+            Assert.AreEqual(4, hard.ExtraKills);
+            Assert.AreEqual("Brute", hard.Prefer);
+            var scavenger = DifficultyProfile.For(4, 1, 1);
+            Assert.AreEqual(6f, scavenger.Tension, 0.001f);
+            Assert.AreEqual(1.15f, scavenger.Interval, 0.001f);
+            Assert.AreEqual(0, scavenger.ExtraKills);
+            Assert.AreEqual("", scavenger.Prefer);
+            Assert.AreEqual(4, DifficultyProfile.Batch((int)TensionState.Peak, 2));
+            Assert.AreEqual(6, DifficultyProfile.Batch((int)TensionState.Peak, 3));
+            Assert.AreEqual(1, DifficultyProfile.Batch((int)TensionState.BuildUp, 1));
+            Assert.AreEqual(0, DifficultyProfile.Batch((int)TensionState.Calm, 3));
+
+            Assert.IsFalse(SpawnRing.Allowed(10f, 0f, 0f, 0f));
+            Assert.IsTrue(SpawnRing.Allowed(20f, 0f, 0f, 0f));
+            Assert.IsFalse(SpawnRing.Allowed(-10f, -10f, 0f, 0f));
+            Assert.IsTrue(SpawnRing.Allowed(-20f, 5f, 0f, 0f));
+            Assert.IsTrue(SpawnRing.InFront(0f, 0f, 0f, 1f, 0f, 10f));
+            Assert.IsFalse(SpawnRing.InFront(0f, 0f, 0f, 1f, 0f, -10f));
+            Assert.IsFalse(SpawnRing.InFront(0f, 0f, 0f, 0.1f, 0f, 10f));
+        }
     }
 }

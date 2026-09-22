@@ -29,6 +29,7 @@ namespace OutpostZero.AI
         private float nextSpawn;
         private float nextAllowedReinforcement;
         private bool subscribedNoise;
+        private int runDifficulty = 2;
 
         public float Tension => tension;
         public TensionState State => state;
@@ -77,11 +78,8 @@ namespace OutpostZero.AI
 
             if (spawner == null || Time.time < nextSpawn) return;
             nextSpawn = Time.time + spawnInterval;
-            int batch = state == TensionState.Peak ? 4 : state == TensionState.BuildUp ? 2 : 1;
-            if (state != TensionState.Calm)
-            {
-                spawner.SpawnZombies(batch);
-            }
+            int batch = DifficultyProfile.Batch((int)state, runDifficulty);
+            if (batch > 0) spawner.SpawnZombies(batch);
         }
 
         private void OnNoise(Vector3 origin, float radius, NoiseType type)
@@ -105,8 +103,9 @@ namespace OutpostZero.AI
             return TensionState.Calm;
         }
 
-        public void ApplyOpening(float openingTension, float interval, string preferredVariant)
+        public void ApplyOpening(float openingTension, float interval, string preferredVariant, int difficulty = 2)
         {
+            runDifficulty = DifficultyProfile.Resolve(difficulty);
             tension = Mathf.Clamp(openingTension, 0f, 100f);
             spawnInterval = Mathf.Max(3f, interval);
             state = Evaluate(tension);

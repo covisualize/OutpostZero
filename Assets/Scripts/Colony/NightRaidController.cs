@@ -1,6 +1,7 @@
 using UnityEngine;
 using OutpostZero.AI;
 using OutpostZero.Core;
+using OutpostZero.Shell;
 
 namespace OutpostZero.Colony
 {
@@ -15,6 +16,7 @@ namespace OutpostZero.Colony
         private int pressure = 6;
         private string approach = "gate";
         private bool running;
+        private bool broadcast;
 
         public bool Running => running;
         public float Remaining => running ? Mathf.Max(0f, endsAt - Time.time) : 0f;
@@ -31,21 +33,38 @@ namespace OutpostZero.Colony
 
         public void Begin()
         {
+            Open(false);
+        }
+
+        public void BeginBroadcast()
+        {
+            Open(true);
+        }
+
+        private void Open(bool tower)
+        {
             if (GameManager.Instance == null) return;
+            if (tower && (WorldMapService.Instance == null || !WorldMapService.Instance.ReadyToBroadcast))
+            {
+                GameplayFeedback.Toast("The tower is not ready");
+                return;
+            }
             int day = WorldClock.Instance != null ? WorldClock.Instance.Day : 1;
             int placed = GridBuilder.Instance != null ? GridBuilder.Instance.CountKind("Watchtower") : 0;
             int sceneTower = CampServices.Instance != null && CampServices.Instance.WatchtowerOnline ? 1 : 0;
             int towers = placed > sceneTower ? placed : sceneTower;
             var wave = RaidPlan.Opening(day, towers);
-            approach = wave.Approach;
-            pressure = wave.Pressure;
-            strikeInterval = wave.Interval;
+            approach = tower ? "gate" : wave.Approach;
+            pressure = wave.Pressure + (tower ? 4 : 0);
+            strikeInterval = tower ? 1.2f : wave.Interval;
+            broadcast = tower;
             running = true;
             endsAt = Time.time + duration;
             nextStrike = Time.time + strikeInterval;
             GameManager.Instance.SetState(GameState.RaidActive);
-            if (HordeDirector.Instance != null) HordeDirector.Instance.BeginRaid(RaidPlan.SpawnCount(day, towers));
-            GameplayFeedback.Toast("Night raid from the " + approach);
+            int spawn = RaidPlan.SpawnCount(day, towers) + (tower ? 4 : 0);
+            if (HordeDirector.Instance != null) HordeDirector.Instance.BeginRaid(spawn);
+            GameplayFeedback.Toast(tower ? "Broadcast night — hold the tower" : "Night raid from the " + approach);
         }
 
         private void Update()
@@ -88,13 +107,22 @@ namespace OutpostZero.Colony
                         if (survivor.alive) survivor.morale = Mathf.Min(100f, survivor.morale + 6f);
                     }
                 }
-                GameplayFeedback.Toast("The gate held");
+                GameplayFeedback.Toast(broadcast ? "The broadcast went out" : "The gate held");
+                if (broadcast && WorldMapService.Instance != null && WorldMapService.Instance.GeneratorBuilt)
+                {
+                    WorldMapService.Instance.NoteBroadcast();
+                    GameManager.Instance?.SetState(GameState.Victory);
+                    SaveSystem.Instance?.Save(false);
+                    broadcast = false;
+                    return;
+                }
             }
             else
             {
                 ColonyStorage.Instance?.AddScrap(-6);
                 GameplayFeedback.Toast("The raid broke the stores");
             }
+            broadcast = false;
             GameManager.Instance?.SetState(GameState.CampManagement);
         }
     }

@@ -112,9 +112,9 @@ namespace OutpostZero.Expedition
 
         public static string RecipeName(string districtId)
         {
-            if (districtId == "rail_yard") return "warehouse";
-            if (districtId == "old_hospital") return "hospital";
-            if (districtId == "north_gate") return "apartment";
+            if (districtId == "rail_yard" || districtId == "water_plant") return "warehouse";
+            if (districtId == "old_hospital" || districtId == "police_station") return "hospital";
+            if (districtId == "north_gate" || districtId == "downtown_core" || districtId == "highway_overpass") return "apartment";
             return "storefront";
         }
 
@@ -132,8 +132,8 @@ namespace OutpostZero.Expedition
 
         public static string Variant(string districtId)
         {
-            if (districtId == "rail_yard") return "concrete";
-            if (districtId == "old_hospital") return "plaster";
+            if (districtId == "rail_yard" || districtId == "water_plant") return "concrete";
+            if (districtId == "old_hospital" || districtId == "police_station") return "plaster";
             return "brick";
         }
     }

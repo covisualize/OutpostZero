@@ -136,17 +136,27 @@ namespace OutpostZero.AI
 
             Vector3 center = playerTransform != null ? playerTransform.position : transform.position;
 
+            var camera = Camera.main;
             for (int i = 0; i < count; i++)
             {
                 if (activeZombies.Count >= maxAliveZombies) break;
 
                 GameObject chosenPrefab = ChoosePrefab(defaultPrefab);
-
-                Vector2 randomCircle = Random.insideUnitCircle.normalized * Random.Range(minDistanceFromPlayer, spawnRadius);
-                Vector3 candidatePos = center + new Vector3(randomCircle.x, 0f, randomCircle.y);
-
-                if (NavMesh.SamplePosition(candidatePos, out NavMeshHit hit, 5f, NavMesh.AllAreas))
+                bool placed = false;
+                for (int attempt = 0; attempt < 8 && !placed; attempt++)
                 {
+                    float reach = Mathf.Max(SpawnRing.MinDistance, minDistanceFromPlayer);
+                    Vector2 randomCircle = Random.insideUnitCircle.normalized * Random.Range(reach, spawnRadius);
+                    Vector3 candidatePos = center + new Vector3(randomCircle.x, 0f, randomCircle.y);
+                    if (!NavMesh.SamplePosition(candidatePos, out NavMeshHit hit, 5f, NavMesh.AllAreas)) continue;
+                    if (!SpawnRing.Allowed(hit.position.x, hit.position.z, center.x, center.z)) continue;
+                    if (camera != null)
+                    {
+                        Vector3 forward = camera.transform.forward;
+                        Vector3 origin = camera.transform.position;
+                        if (SpawnRing.InFront(origin.x, origin.z, forward.x, forward.z, hit.position.x, hit.position.z)) continue;
+                    }
+
                     Quaternion rotation = Quaternion.Euler(0f, Random.Range(0f, 360f), 0f);
                     GameObject zombie = pool != null
                         ? pool.Rent(chosenPrefab, hit.position, rotation)
@@ -154,6 +164,7 @@ namespace OutpostZero.AI
                     if (zombie == null) continue;
                     zombie.SetActive(true);
                     activeZombies.Add(zombie);
+                    placed = true;
                 }
             }
         }

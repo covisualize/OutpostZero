@@ -26,6 +26,7 @@ namespace OutpostZero.Core
         [SerializeField] private int vsync = 1;
         [SerializeField] private float fieldOfView = 55f;
         [SerializeField] private bool merciful;
+        [SerializeField] private int nextDifficulty = 2;
 
         public float ScreenShake => screenShake;
         public float MasterVolume => masterVolume;
@@ -41,7 +42,8 @@ namespace OutpostZero.Core
         public bool VSync => vsync != 0;
         public float FieldOfView => fieldOfView;
         public bool Merciful => merciful;
-        public string DiscreteKey => (subtitles ? "1" : "0") + colorblindMode + quality + vsync + (merciful ? "1" : "0");
+        public int NextDifficulty => nextDifficulty < 1 ? 2 : nextDifficulty > 3 ? 3 : nextDifficulty;
+        public string DiscreteKey => (subtitles ? "1" : "0") + colorblindMode + quality + vsync + (merciful ? "1" : "0") + NextDifficulty;
         public bool ShowSettings { get; private set; }
 
         public event Action OnChanged;
@@ -141,6 +143,20 @@ namespace OutpostZero.Core
         public void SetMerciful(bool value)
         {
             merciful = value;
+            OnChanged?.Invoke();
+        }
+
+        public void CycleDifficulty()
+        {
+            int current = NextDifficulty;
+            nextDifficulty = current >= 3 ? 1 : current + 1;
+            OnChanged?.Invoke();
+        }
+
+        public void SetNextDifficulty(int value)
+        {
+            if (value <= 0) return;
+            nextDifficulty = value >= 3 ? 3 : value;
             OnChanged?.Invoke();
         }
 

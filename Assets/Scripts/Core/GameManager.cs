@@ -117,6 +117,12 @@ namespace OutpostZero.Core
 
         public void BeginExpedition()
         {
+            if (WorldMapService.Instance != null && WorldMapService.Instance.Current != null && WorldMapService.Instance.Current.cleared)
+            {
+                GameplayFeedback.Toast("Pick an open district");
+                return;
+            }
+            if (currentState == GameState.CampManagement) WorldMapService.Instance?.SpendTravel();
             zombiesKilled = 0;
             scrapLooted = 0;
             expeditionTimer = 0f;
@@ -151,7 +157,7 @@ namespace OutpostZero.Core
             FactionTrade.Instance?.NoteExtracted();
             SetState(won ? GameState.Victory : GameState.ExpeditionResults);
             SaveSystem.Instance?.Save(false);
-            GameplayFeedback.Toast(won ? "The ring is clear" : "Extracted");
+            GameplayFeedback.Toast(won ? "The broadcast is already out" : "Extracted");
         }
 
         public void TriggerPlayerDeath()
@@ -203,7 +209,8 @@ namespace OutpostZero.Core
         {
             SurvivorRoster.Instance?.ResetRoster();
             ObjectiveTracker.Instance?.ResetProgress();
-            WorldMapService.Instance?.ResetMap();
+            int next = SettingsService.Instance != null ? SettingsService.Instance.NextDifficulty : 2;
+            WorldMapService.Instance?.ResetMap(next);
             ColonyStorage.Instance?.ResetStores();
             GridBuilder.Instance?.ClearAll();
             TutorialDirector.Instance?.SetFinished(false);

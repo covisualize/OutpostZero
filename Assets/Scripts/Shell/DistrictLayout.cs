@@ -40,6 +40,55 @@ namespace OutpostZero.Shell
                         PieceAt("cover", 0.5f, 15f, 0f),
                         PieceAt("lamp", -4f, 10f, 0f)
                     };
+                case "commercial_strip":
+                    return new[]
+                    {
+                        PieceAt("stall", -4f, 5f, 90f),
+                        PieceAt("stall", 4.2f, 8f, 90f),
+                        PieceAt("crate", 2.2f, 12f, -8f),
+                        PieceAt("lamp", 0f, 16f, 0f)
+                    };
+                case "police_station":
+                    return new[]
+                    {
+                        PieceAt("cover", -3.2f, 4f, 80f),
+                        PieceAt("cover", 3.4f, 5f, 90f),
+                        PieceAt("crate_military", 5.5f, 11f, 15f),
+                        PieceAt("lamp", -4f, 14f, 0f)
+                    };
+                case "water_plant":
+                    return new[]
+                    {
+                        PieceAt("barrel_oil", 2.4f, 6f, 0f),
+                        PieceAt("barrel_oil", -2.2f, 9f, 20f),
+                        PieceAt("cover", 4.5f, 12f, 90f),
+                        PieceAt("lamp", 0f, 16f, 0f)
+                    };
+                case "mall":
+                    return new[]
+                    {
+                        PieceAt("stall", -4f, 6f, 90f),
+                        PieceAt("stall", 4.2f, 10f, 90f),
+                        PieceAt("crate", -2.5f, 13f, 12f),
+                        PieceAt("crate", 2.2f, 8f, -8f)
+                    };
+                case "highway_overpass":
+                    return new[]
+                    {
+                        PieceAt("cover", -3.2f, 3.5f, 80f),
+                        PieceAt("cover", 2.4f, 4.2f, 100f),
+                        PieceAt("barrel_explosive", 3.5f, 9f, 0f),
+                        PieceAt("crate_military", 6f, 14f, 25f)
+                    };
+                case "downtown_core":
+                    return new[]
+                    {
+                        PieceAt("cover", -3f, 4f, 80f),
+                        PieceAt("cover", 3f, 5f, 90f),
+                        PieceAt("crate_military", 5.5f, 12f, 15f),
+                        PieceAt("barrel_explosive", -2f, 9f, 0f),
+                        PieceAt("lamp", 0f, 16f, 0f)
+                    };
                 case "north_gate":
                     return new[]
                     {

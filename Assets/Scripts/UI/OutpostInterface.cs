@@ -370,14 +370,14 @@ namespace OutpostZero.UI
                     break;
                 case GameState.Victory:
                     menu.Add(Title("OUTPOST HOLDS"));
-                    menu.Add(Body("Three districts are quiet. The gate can stay shut."));
+                    menu.Add(Body("The broadcast went out. The gate can stay shut."));
                     menu.Add(Button("Enter sanctuary", () => Go(FlowStep.Sanctuary, () => GameManager.Instance.EnterCamp())));
                     menu.Add(Button("New outpost", () => Go(FlowStep.Sanctuary, () => GameManager.Instance.BeginNewOutpost())));
                     break;
                 case GameState.ExpeditionResults:
                     menu.Add(Title(Loc.T("result.title")));
                     var map = WorldMapService.Instance;
-                    menu.Add(Body(map != null && map.CampaignWon ? "The district ring is clear." : "Supplies are back inside the gate."));
+                    menu.Add(Body(map != null && map.CampaignWon ? "The tower is on the air." : "Supplies are back inside the gate."));
                     if (map != null && map.Current != null) menu.Add(Body("Next: " + map.Current.displayName));
                     menu.Add(Button("Enter sanctuary", () => Go(FlowStep.Sanctuary, () => GameManager.Instance.EnterCamp())));
                     break;
@@ -403,6 +403,7 @@ namespace OutpostZero.UI
                         if (SaveSystem.Instance == null || !SaveSystem.Instance.Load())
                             GameManager.Instance.SetState(GameState.MainMenu);
                     })));
+                    menu.Add(Button("Difficulty: " + DifficultyProfile.Name(SettingsService.Instance != null ? SettingsService.Instance.NextDifficulty : 2), () => SettingsService.Instance?.CycleDifficulty()));
                     menu.Add(Button("New outpost", () => Go(FlowStep.Sanctuary, () => GameManager.Instance.BeginNewOutpost())));
                     menu.Add(Button(Loc.T("menu.settings"), () => SettingsService.Instance?.TogglePanel()));
                     menu.Add(Button("Credits", () => credits = true));
@@ -432,6 +433,7 @@ namespace OutpostZero.UI
             parent.Add(Button("Quality: " + tiers[Mathf.Clamp(settings.Quality, 0, 3)], settings.CycleQuality));
             parent.Add(Button(settings.VSync ? "VSync on" : "VSync off", settings.ToggleVSync));
             parent.Add(Button(settings.Merciful ? "Death: merciful" : "Death: permadeath", settings.ToggleMerciful));
+            parent.Add(Button("Next run: " + DifficultyProfile.Name(settings.NextDifficulty), settings.CycleDifficulty));
             parent.Add(Body("Click an action, then press a key. Escape cancels."));
             for (int i = 0; i < ControlBindings.Count; i++)
             {
@@ -533,17 +535,28 @@ namespace OutpostZero.UI
             var map = WorldMapService.Instance;
             if (map != null)
             {
+                camp.Add(Body("Radio " + CampaignBoard.PartCount(map.Parts) + "/3  " + DifficultyProfile.Name(map.Difficulty)));
+                if (map.CampaignWon) camp.Add(Body("The tower is on the air."));
+                else if (map.ReadyToBroadcast) camp.Add(Button("Broadcast night", () => NightRaidController.Instance?.BeginBroadcast()));
+                else camp.Add(Body("The tower needs three radio parts and a built generator."));
                 camp.Add(Body("District"));
                 foreach (var district in map.Districts)
                 {
                     if (district.cleared)
                     {
-                        camp.Add(Body(district.displayName + " — clear"));
+                        string part = CampaignBoard.PartFor(district.id);
+                        camp.Add(Body(district.displayName + " — clear" + (string.IsNullOrEmpty(part) ? "" : "  part")));
                         continue;
                     }
                     string id = district.id;
+                    if (!CampaignBoard.Reachable(id, ClearedDistricts(map)))
+                    {
+                        camp.Add(Body(district.displayName + " — road closed"));
+                        continue;
+                    }
                     string mark = map.Current != null && map.Current.id == id ? "> " : "";
-                    camp.Add(Button(mark + district.displayName, () => map.Select(id)));
+                    string hours = CampaignBoard.TravelHours(id).ToString("0");
+                    camp.Add(Button(mark + district.displayName + "  " + hours + "h", () => map.Select(id)));
                 }
             }
             camp.Add(Button("Leave for the district", () => Go(FlowStep.Expedition, () => GameManager.Instance.BeginExpedition())));
@@ -604,6 +617,21 @@ namespace OutpostZero.UI
             }
         }
 
+        private static string[] ClearedDistricts(WorldMapService map)
+        {
+            int count = 0;
+            foreach (var district in map.Districts) if (district.cleared) count++;
+            var ids = new string[count];
+            int write = 0;
+            foreach (var district in map.Districts)
+            {
+                if (!district.cleared) continue;
+                ids[write] = district.id;
+                write++;
+            }
+            return ids;
+        }
+
         private static string CampSignature()
         {
             var builder = new StringBuilder();
@@ -628,6 +656,9 @@ namespace OutpostZero.UI
             if (WorldMapService.Instance != null && WorldMapService.Instance.Current != null)
             {
                 builder.Append(WorldMapService.Instance.Current.id);
+                builder.Append(WorldMapService.Instance.Parts);
+                builder.Append(WorldMapService.Instance.BroadcastWon);
+                builder.Append(WorldMapService.Instance.ClearedCount);
             }
             if (FactionTrade.Instance != null) builder.Append(FactionTrade.Instance.Signature);
             return builder.ToString();

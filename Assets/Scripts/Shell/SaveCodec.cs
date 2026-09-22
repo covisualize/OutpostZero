@@ -42,6 +42,10 @@ namespace OutpostZero.Shell
         public int kills;
         public int districtsCleared;
         public int districtIndex;
+        public string radio = "";
+        public int difficulty;
+        public int broadcast;
+        public int nextDifficulty;
         public float sfxVolume = 1f;
         public float musicVolume = 0.7f;
         public float ambienceVolume = 0.8f;
