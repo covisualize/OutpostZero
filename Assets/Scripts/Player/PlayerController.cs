@@ -366,6 +366,7 @@ namespace OutpostZero.Player
             dodgeDir = new Vector3(dx, 0f, dz);
             lastDodge = Time.time;
             dodgeUntil = Time.time + DodgeClock.Duration;
+            healthSystem.Shielded = true;
             currentStamina = Mathf.Max(0f, currentStamina - DodgeClock.Cost);
             lastStaminaDrainTime = Time.time;
             IsAimingDownSights = false;
