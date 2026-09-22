@@ -1591,5 +1591,24 @@ namespace OutpostZero.Tests.EditMode
             Assert.AreEqual("", ThreatMark.Line(0, 0));
             Assert.AreEqual("! ! ! ! ? ? +", ThreatMark.Line(5, 3));
         }
+
+        [Test]
+        public void AMagazineReadsLowAtOneThirdAndTheReloadFills()
+        {
+            Assert.IsTrue(MagPulse.Low(4, 12, false));
+            Assert.IsFalse(MagPulse.Low(5, 12, false));
+            Assert.IsTrue(MagPulse.Low(0, 30, false));
+            Assert.IsFalse(MagPulse.Low(0, 30, true));
+            Assert.IsTrue(MagPulse.Low(2, 6, false));
+            Assert.IsFalse(MagPulse.Low(10, 0, false));
+            Assert.AreEqual(0f, MagPulse.Fill(0f, 2.1f), 0.001f);
+            Assert.AreEqual(0.5f, MagPulse.Fill(1.05f, 2.1f), 0.001f);
+            Assert.AreEqual(1f, MagPulse.Fill(3f, 2.1f), 0.001f);
+            Assert.AreEqual(1f, MagPulse.Alpha(0f, false), 0.001f);
+            Assert.AreEqual(0.45f, MagPulse.Alpha(0f, true), 0.001f);
+            float mid = MagPulse.Alpha(0.4f, true);
+            Assert.Greater(mid, 0.7f);
+            Assert.Less(mid, 0.95f);
+        }
     }
 }

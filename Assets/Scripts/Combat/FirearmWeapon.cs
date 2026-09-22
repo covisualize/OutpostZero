@@ -41,6 +41,8 @@ namespace OutpostZero.Combat
         }
         public int ReserveAmmo => reserveAmmo;
         public bool IsReloading => isReloading;
+        public float ReloadFill => isReloading ? MagPulse.Fill(reloadElapsed, reloadDuration) : 0f;
+        private float reloadElapsed;
 
         public event Action<int, int> OnAmmoChanged; // current, reserve
         public event Action OnReloadStarted;
@@ -232,10 +234,16 @@ namespace OutpostZero.Combat
         private IEnumerator ReloadRoutine()
         {
             isReloading = true;
+            reloadElapsed = 0f;
             OnReloadStarted?.Invoke();
             PlaySound(reloadSound);
 
-            yield return new WaitForSeconds(reloadDuration);
+            while (reloadElapsed < reloadDuration)
+            {
+                reloadElapsed += Time.deltaTime;
+                yield return null;
+            }
+            reloadElapsed = reloadDuration;
 
             int needed = MagazineCapacity - currentAmmo;
             int loaded = Mathf.Min(needed, reserveAmmo);

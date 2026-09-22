@@ -320,13 +320,24 @@ namespace OutpostZero.UI
 
             if (player != null && player.ActiveWeapon is FirearmWeapon gun)
             {
-                weapon.text = gun.WeaponName + "   " + gun.CurrentAmmo + " / " + gun.ReserveAmmo + (gun.IsReloading ? "  reloading" : "");
+                bool low = MagPulse.Low(gun.CurrentAmmo, gun.MaxMagazine, gun.IsReloading);
+                string reload = gun.IsReloading ? "  reload " + Mathf.RoundToInt(gun.ReloadFill * 100f) + "%" : low ? "  low" : "";
+                weapon.text = gun.WeaponName + "   " + gun.CurrentAmmo + " / " + gun.ReserveAmmo + reload;
+                weapon.style.color = low ? new Color(0.95f, 0.55f, 0.25f) : Color.white;
+                weapon.style.opacity = MagPulse.Alpha(Time.unscaledTime, low);
             }
             else if (player != null && player.ActiveWeapon != null)
             {
                 weapon.text = player.ActiveWeapon.WeaponName;
+                weapon.style.color = Color.white;
+                weapon.style.opacity = 1f;
             }
-            else weapon.text = "No weapon";
+            else
+            {
+                weapon.text = "No weapon";
+                weapon.style.color = Color.white;
+                weapon.style.opacity = 1f;
+            }
             var carried = player != null ? player.GetComponent<PlayerInventory>() : null;
             if (carried != null)
             {
