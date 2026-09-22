@@ -25,7 +25,8 @@ namespace OutpostZero.Core
         ObjectBroken,
         ZombieScream,
         Thunder,
-        BleedDrip
+        BleedDrip,
+        DoorSwing
     }
 
     public enum WeaponType

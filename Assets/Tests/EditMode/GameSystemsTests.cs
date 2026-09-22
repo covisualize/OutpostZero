@@ -762,6 +762,20 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void OpeningADoorCarriesFartherThanAWalk()
+        {
+            Assert.AreEqual(9f, DoorCreak.Radius, 0.001f);
+            Assert.AreEqual(0.8f, DoorCreak.Loud, 0.001f);
+            Assert.Greater(DoorCreak.Radius, 6f);
+            Assert.Less(DoorCreak.Radius, 13f);
+            Assert.AreEqual("[Door, east]", Presentation.Caption(NoiseType.DoorSwing, 1f, 0f, "en"));
+            Assert.AreEqual("[Puerta, este]", Presentation.Caption(NoiseType.DoorSwing, 1f, 0f, "es"));
+            Assert.AreEqual("", Presentation.Caption(NoiseType.SneakFootstep, 1f, 0f, "en"));
+            Assert.IsTrue(ClipBook.Has("creak"));
+            Assert.AreEqual(12f, AudioSpace.MaxDistance("creak"), 0.001f);
+        }
+
+        [Test]
         public void MistSitsOnTheStreetWhenTheAirIsThick()
         {
             Assert.IsTrue(MistBank.Shows(WeatherKind.Fog, 0f));

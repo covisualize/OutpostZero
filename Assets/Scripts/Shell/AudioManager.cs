@@ -41,6 +41,7 @@ namespace OutpostZero.Shell
             if (id == "splash") return 8f;
             if (id == "spit") return 8f;
             if (id == "drip") return 6f;
+            if (id == "creak") return 12f;
             if (id == "whoosh") return 14f;
             return 18f;
         }
@@ -483,6 +484,7 @@ namespace OutpostZero.Shell
             }
             else if (type == NoiseType.ZombieScream) PlayAt("scream", origin, 0.55f);
             else if (type == NoiseType.BleedDrip) PlayAt("drip", origin, 0.2f);
+            else if (type == NoiseType.DoorSwing) PlayAt("creak", origin, 0.45f);
         }
 
         public void Groan(string breed, Vector3 at, float now, float last, out float next)

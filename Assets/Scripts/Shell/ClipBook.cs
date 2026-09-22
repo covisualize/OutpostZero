@@ -20,7 +20,7 @@ namespace OutpostZero.Shell
             "groan", "shriek", "roar", "snarl", "stomp", "grunt",
             "hum", "crackle", "buzz", "flies", "hiss", "chop", "whoosh", "clang", "pained",
             "take_soft", "take_box", "take_metal", "clink", "clack",
-            "spark", "splinter", "dust", "spray", "mist", "splash", "burn", "cloud", "spit", "scream", "drip"
+            "spark", "splinter", "dust", "spray", "mist", "splash", "burn", "cloud", "spit", "scream", "drip", "creak"
         };
 
         public static string Fire(WeaponType type)
@@ -115,6 +115,7 @@ namespace OutpostZero.Shell
             if (id == "cloud") return noise * Mathf.Sin(t * 4f);
             if (id == "spit") return Mathf.Sin(t * 160f);
             if (id == "drip") return Mathf.Sin(t * 48f);
+            if (id == "creak") return noise * Mathf.Sin(t * 7f);
             return noise;
         }
     }

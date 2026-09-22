@@ -99,6 +99,7 @@ namespace OutpostZero.Graphics
             if (type == NoiseType.ObjectBroken) return es ? "[Rotura, " + where + "]" : "[Something broke, " + where + "]";
             if (type == NoiseType.MeleeSwing) return es ? "[Corte, " + where + "]" : "[Blade, " + where + "]";
             if (type == NoiseType.BleedDrip) return es ? "[Goteo, " + where + "]" : "[Drip, " + where + "]";
+            if (type == NoiseType.DoorSwing) return es ? "[Puerta, " + where + "]" : "[Door, " + where + "]";
             return "";
         }
     }

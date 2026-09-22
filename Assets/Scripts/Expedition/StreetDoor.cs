@@ -33,6 +33,8 @@ namespace OutpostZero.Expedition
             var from = player.transform.position;
             var dest = new Vector3(destination.x, from.y, destination.z);
             DoorCross.Note(from.x, from.z, dest.x, dest.z, Time.time);
+            if (Sensory.NoiseManager.Instance != null)
+                Sensory.NoiseManager.Instance.EmitNoise(from, DoorCreak.Radius, DoorCreak.Loud, NoiseType.DoorSwing, player.gameObject);
             if (body != null) body.enabled = false;
             player.transform.position = dest;
             if (body != null) body.enabled = true;
