@@ -17,6 +17,9 @@ namespace OutpostZero.Colony
         private string approach = "gate";
         private bool running;
         private bool broadcast;
+        private int phase;
+        private int raidDay = 1;
+        private int raidTowers;
 
         public bool Running => running;
         public float Remaining => running ? Mathf.Max(0f, endsAt - Time.time) : 0f;
@@ -53,11 +56,10 @@ namespace OutpostZero.Colony
             int placed = GridBuilder.Instance != null ? GridBuilder.Instance.CountKind("Watchtower") : 0;
             int sceneTower = CampServices.Instance != null && CampServices.Instance.WatchtowerOnline ? 1 : 0;
             int towers = placed > sceneTower ? placed : sceneTower;
-            var wave = RaidPlan.Opening(day, towers);
-            approach = tower ? "gate" : wave.Approach;
-            pressure = wave.Pressure + (tower ? 4 : 0);
-            strikeInterval = tower ? 1.2f : wave.Interval;
+            raidDay = day;
+            raidTowers = towers;
             broadcast = tower;
+            ApplyWave(0, false);
             running = true;
             endsAt = Time.time + duration;
             nextStrike = Time.time + strikeInterval;
@@ -75,6 +77,10 @@ namespace OutpostZero.Colony
                 running = false;
                 return;
             }
+            float elapsed = duration - Remaining;
+            int nextPhase = RaidPlan.PhaseAt(elapsed, duration);
+            if (nextPhase != phase) ApplyWave(nextPhase, true);
+
             if (Time.time >= nextStrike)
             {
                 nextStrike = Time.time + strikeInterval;
@@ -90,7 +96,8 @@ namespace OutpostZero.Colony
                 int hit = RaidPlan.Strike(pressure, guards, cover);
                 if (GridBuilder.Instance != null && GridBuilder.Instance.BarricadeCount() > 0)
                 {
-                    GridBuilder.Instance.StrikeFrom(approach, hit);
+                    if (GridBuilder.Instance.StrikeFrom(approach, hit))
+                        SurvivorRoster.Instance?.WoundFromRaid(raidDay + phase);
                 }
             }
             if (Time.time < endsAt) return;
@@ -124,6 +131,19 @@ namespace OutpostZero.Colony
             }
             broadcast = false;
             GameManager.Instance?.SetState(GameState.CampManagement);
+        }
+
+        private void ApplyWave(int index, bool announce)
+        {
+            var wave = RaidPlan.WaveAt(raidDay, raidTowers, index);
+            approach = broadcast && index == 0 ? "gate" : wave.Approach;
+            pressure = wave.Pressure + (broadcast ? 4 : 0);
+            strikeInterval = broadcast && index == 0 ? 1.2f : wave.Interval;
+            phase = index;
+            if (!announce) return;
+            GameplayFeedback.Toast("They come from the " + approach);
+            int extra = RaidPlan.Reinforcements(index);
+            if (extra > 0 && HordeDirector.Instance != null) HordeDirector.Instance.BeginRaid(extra);
         }
     }
 }

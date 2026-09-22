@@ -220,6 +220,25 @@ namespace OutpostZero.Colony
             return next;
         }
 
+        public void WoundFromRaid(int salt)
+        {
+            int count = survivors.Count;
+            if (count == 0) return;
+            var alive = new bool[count];
+            var guard = new bool[count];
+            for (int i = 0; i < count; i++)
+            {
+                alive[i] = survivors[i].alive && survivors[i].task != "Fallen" && survivors[i].task != "Left";
+                guard[i] = survivors[i].task == "Guard";
+            }
+            int index = RaidPlan.Pick(alive, guard, salt);
+            if (index < 0) return;
+            var person = survivors[index];
+            person.injury = RaidPlan.Hurt(person.injury);
+            GameplayFeedback.Toast(person.displayName + " is hit");
+            OnRosterChanged?.Invoke();
+        }
+
         public void Assign(string id, string task)
         {
             var survivor = Find(id);

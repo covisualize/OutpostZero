@@ -90,5 +90,87 @@ namespace OutpostZero.Colony
             float dz = z - anchorZ;
             return dx * dx + dz * dz <= 36f;
         }
+
+        public static int PhaseAt(float elapsed, float duration)
+        {
+            if (duration <= 0f || elapsed <= 0f) return 0;
+            int phase = (int)(elapsed / (duration / 3f));
+            if (phase < 0) return 0;
+            if (phase > 2) return 2;
+            return phase;
+        }
+
+        public static Wave WaveAt(int day, int towers, int phase)
+        {
+            Wave open = Opening(day, towers);
+            if (phase <= 0) return open;
+            if (phase > 2) phase = 2;
+            string[] sides = { "gate", "alley", "yard", "fence" };
+            int start = 0;
+            for (int i = 0; i < sides.Length; i++)
+            {
+                if (sides[i] == open.Approach) start = i;
+            }
+            int pressure = open.Pressure + phase * 2;
+            if (pressure > 14) pressure = 14;
+            float interval = open.Interval - phase * 0.2f;
+            if (interval < 0.7f) interval = 0.7f;
+            return new Wave
+            {
+                Approach = sides[(start + phase) % sides.Length],
+                Pressure = pressure,
+                Interval = interval
+            };
+        }
+
+        public static int Reinforcements(int phase)
+        {
+            if (phase <= 0) return 0;
+            if (phase == 1) return 3;
+            return 4;
+        }
+
+        public static int Hurt(int injury)
+        {
+            if (injury < 0) injury = 0;
+            if (injury >= 3) return 3;
+            return injury + 1;
+        }
+
+        public static int Pick(bool[] alive, bool[] guard, int salt)
+        {
+            if (alive == null || alive.Length == 0) return -1;
+            if (salt < 0) salt = 0;
+            int guards = Count(alive, guard, true);
+            if (guards > 0) return Nth(alive, guard, true, salt % guards);
+            int living = Count(alive, null, false);
+            if (living <= 0) return -1;
+            return Nth(alive, null, false, salt % living);
+        }
+
+        private static int Count(bool[] alive, bool[] guard, bool onlyGuards)
+        {
+            int count = 0;
+            for (int i = 0; i < alive.Length; i++)
+            {
+                if (!alive[i]) continue;
+                if (onlyGuards && (guard == null || i >= guard.Length || !guard[i])) continue;
+                count++;
+            }
+            return count;
+        }
+
+        private static int Nth(bool[] alive, bool[] guard, bool onlyGuards, int nth)
+        {
+            int seen = 0;
+            for (int i = 0; i < alive.Length; i++)
+            {
+                if (!alive[i]) continue;
+                if (onlyGuards && (guard == null || i >= guard.Length || !guard[i])) continue;
+                if (seen == nth) return i;
+                seen++;
+            }
+            return -1;
+        }
     }
 }

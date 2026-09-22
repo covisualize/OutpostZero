@@ -1706,5 +1706,40 @@ namespace OutpostZero.Tests.EditMode
             Assert.AreEqual(0, chemicals);
             Assert.AreEqual(1, tape);
         }
+
+        [Test]
+        public void ARaidSwingsToANewSideAndAGuardTakesTheBreach()
+        {
+            Assert.AreEqual(0, RaidPlan.PhaseAt(0f, 75f));
+            Assert.AreEqual(0, RaidPlan.PhaseAt(24f, 75f));
+            Assert.AreEqual(1, RaidPlan.PhaseAt(25f, 75f));
+            Assert.AreEqual(2, RaidPlan.PhaseAt(50f, 75f));
+            Assert.AreEqual(2, RaidPlan.PhaseAt(80f, 75f));
+
+            var first = RaidPlan.WaveAt(1, 0, 0);
+            Assert.AreEqual("gate", first.Approach);
+            Assert.AreEqual(6, first.Pressure);
+            Assert.AreEqual(1.2f, first.Interval, 0.001f);
+            var second = RaidPlan.WaveAt(1, 0, 1);
+            Assert.AreEqual("alley", second.Approach);
+            Assert.AreEqual(8, second.Pressure);
+            Assert.AreEqual(1f, second.Interval, 0.001f);
+            var third = RaidPlan.WaveAt(1, 0, 2);
+            Assert.AreEqual("yard", third.Approach);
+            Assert.AreEqual(10, third.Pressure);
+            Assert.AreEqual(0.8f, third.Interval, 0.001f);
+            Assert.AreEqual("yard", RaidPlan.WaveAt(1, 1, 1).Approach);
+            Assert.AreEqual(0, RaidPlan.Reinforcements(0));
+            Assert.AreEqual(3, RaidPlan.Reinforcements(1));
+            Assert.AreEqual(4, RaidPlan.Reinforcements(2));
+
+            Assert.AreEqual(1, RaidPlan.Pick(new[] { true, true, false }, new[] { false, true, false }, 0));
+            Assert.AreEqual(2, RaidPlan.Pick(new[] { true, true, true }, new[] { true, false, true }, 1));
+            Assert.AreEqual(1, RaidPlan.Pick(new[] { true, true, false }, new[] { false, false, false }, 1));
+            Assert.AreEqual(-1, RaidPlan.Pick(new[] { false, false }, new[] { true, true }, 0));
+            Assert.AreEqual(1, RaidPlan.Hurt(0));
+            Assert.AreEqual(3, RaidPlan.Hurt(2));
+            Assert.AreEqual(3, RaidPlan.Hurt(3));
+        }
     }
 }
