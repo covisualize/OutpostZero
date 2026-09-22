@@ -5336,6 +5336,22 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void APlayerKeepsBurningAfterTheyLeaveTheFire()
+        {
+            Assert.AreEqual("On fire", Loc.T("hud.burn", "en"));
+            Assert.AreEqual("En llamas", Loc.T("hud.burn", "es"));
+            Assert.AreEqual("You're on fire", Loc.T("burn.you", "en"));
+            Assert.AreEqual("Estás en llamas", Loc.T("burn.you", "es"));
+            Assert.AreEqual(3.5f, Ember.Catch(0f), 0.001f);
+            Assert.AreEqual(2f, Ember.Catch(2f), 0.001f);
+            Assert.IsTrue(Ember.Due(3.5f, 3f));
+            Assert.IsFalse(Ember.Due(0.4f, 0f));
+            Assert.AreEqual(4f, Ember.Damage, 0.001f);
+            Assert.AreEqual(1.4f, Ember.Spread, 0.001f);
+            Assert.AreEqual(3.5f, Ember.Seconds, 0.001f);
+        }
+
+        [Test]
         public void AZombieWithoutARigStillAttacksAndFalls()
         {
             Assert.AreEqual(14f, PoseSheet.Lean(ZombieAI.ZombieState.Chase, 0f), 0.001f);

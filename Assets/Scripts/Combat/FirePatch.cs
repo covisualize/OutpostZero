@@ -84,6 +84,7 @@ namespace OutpostZero.Combat
                 if (!FirePatch.Inside(Vector3.Distance(transform.position, hit.bounds.center))) continue;
                 damageable.TakeDamage(FirePatch.Damage, hit.bounds.center, (hit.transform.position - transform.position).normalized, gameObject);
                 hit.GetComponentInParent<OutpostZero.AI.ZombieAI>()?.Ignite();
+                hit.GetComponentInParent<OutpostZero.Player.StatusEffectController>()?.Ignite();
             }
         }
     }

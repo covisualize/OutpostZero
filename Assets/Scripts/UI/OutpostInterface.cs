@@ -317,6 +317,7 @@ namespace OutpostZero.UI
                 if (effects.IsPoisoned) vitalText.Append("  ").Append(StreetHud.Flag("hud.poison", null));
                 if (effects.InfectionStage > 0) vitalText.Append("  ").Append(StreetHud.Infection(effects.InfectionStage, null));
                 if (effects.SprintBonus > 1f) vitalText.Append("  ").Append(StreetHud.Flag("hud.adrenaline", null));
+                if (effects.IsBurning) vitalText.Append("  ").Append(StreetHud.Flag("hud.burn", null));
             }
             var services = CampServices.Instance;
             if (services != null && services.Contacts > 0) vitalText.Append("  ").Append(StreetHud.Watch(services.Contacts, null));

@@ -88,6 +88,7 @@ namespace OutpostZero.Combat
                 if (!PowderBed.Inside(Vector3.Distance(transform.position, hit.bounds.center))) continue;
                 damageable.TakeDamage(PowderBed.Damage, hit.bounds.center, (hit.transform.position - transform.position).normalized, gameObject);
                 hit.GetComponentInParent<OutpostZero.AI.ZombieAI>()?.Ignite();
+                hit.GetComponentInParent<OutpostZero.Player.StatusEffectController>()?.Ignite();
             }
         }
     }

@@ -291,6 +291,19 @@ namespace OutpostZero.AI
             ShowEmber();
         }
 
+        public static void IgniteNear(float x, float z)
+        {
+            for (int i = 0; i < aliveCrowd.Count; i++)
+            {
+                var other = aliveCrowd[i];
+                if (other == null) continue;
+                float dx = other.transform.position.x - x;
+                float dz = other.transform.position.z - z;
+                if (!Ember.Reaches(dx, dz)) continue;
+                other.Ignite();
+            }
+        }
+
         private void TickEmber()
         {
             float before = burnLeft;

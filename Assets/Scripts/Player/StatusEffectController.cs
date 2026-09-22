@@ -14,6 +14,8 @@ namespace OutpostZero.Player
         [SerializeField] private float knockdownRemaining;
         [SerializeField] private float painRemaining;
         [SerializeField] private float adrenaline;
+        [SerializeField] private float burnLeft;
+        private Light burnLight;
 
         private HealthSystem health;
         private float tick;
@@ -26,6 +28,7 @@ namespace OutpostZero.Player
         public int InfectionStage => Affliction.Stage(infection);
         public bool IsKnockedDown => knockdownRemaining > 0f;
         public float SprintBonus => adrenaline > 0f ? Affliction.AdrenalineSprint : 1f;
+        public bool IsBurning => burnLeft > 0f;
         public float SlowMultiplier
         {
             get
@@ -88,6 +91,16 @@ namespace OutpostZero.Player
             adrenaline = Mathf.Max(adrenaline, seconds);
         }
 
+        public void Ignite()
+        {
+            if (health != null && health.IsDead) return;
+            bool fresh = burnLeft <= 0f;
+            burnLeft = Ember.Catch(burnLeft);
+            if (!fresh) return;
+            GameplayFeedback.Toast(OutpostZero.Shell.Loc.T("burn.you"));
+            ShowBurn();
+        }
+
         public void ApplySlow(float seconds)
         {
             slowRemaining = Mathf.Max(slowRemaining, seconds);
@@ -112,7 +125,29 @@ namespace OutpostZero.Player
             knockdownRemaining = 0f;
             painRemaining = 0f;
             adrenaline = 0f;
+            burnLeft = 0f;
             infection = 0f;
+            ShowBurn();
+        }
+
+        private void ShowBurn()
+        {
+            if (burnLeft > 0f)
+            {
+                if (burnLight != null) return;
+                var go = new GameObject("PlayerEmber");
+                go.transform.SetParent(transform, false);
+                go.transform.localPosition = new Vector3(0f, 1.1f, 0f);
+                burnLight = go.AddComponent<Light>();
+                burnLight.type = LightType.Point;
+                burnLight.range = 3.2f;
+                burnLight.intensity = 1.3f;
+                burnLight.color = new Color(1f, 0.42f, 0.08f);
+                return;
+            }
+            if (burnLight == null) return;
+            Destroy(burnLight.gameObject);
+            burnLight = null;
         }
 
         private void Update()
@@ -123,6 +158,15 @@ namespace OutpostZero.Player
             if (slowRemaining > 0f) slowRemaining -= dt;
             if (knockdownRemaining > 0f) knockdownRemaining -= dt;
             if (adrenaline > 0f) adrenaline -= dt;
+            float beforeBurn = burnLeft;
+            burnLeft = Ember.Tick(burnLeft, dt);
+            ShowBurn();
+            if (Ember.Due(beforeBurn, burnLeft) && health != null && !health.IsDead)
+            {
+                health.TakeDamage(Ember.Damage, transform.position + Vector3.up * 1.1f, Vector3.up, gameObject);
+                OilPatch.Blast(transform.position);
+                if (!health.IsDead) OutpostZero.AI.ZombieAI.IgniteNear(transform.position.x, transform.position.z);
+            }
             if (infection > 0.01f) infection = Affliction.Advance(infection, dt);
             if (painRemaining > 0f && health != null && !health.IsDead)
             {
