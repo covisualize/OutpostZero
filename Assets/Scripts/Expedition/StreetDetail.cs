@@ -15,6 +15,7 @@ namespace OutpostZero.Expedition
             if (parent == null) return;
             Spawn(DressingPlan.Debris(districtId), parent, false);
             Spawn(DressingPlan.Patches(districtId), parent, false);
+            Spawn(LanePaint.Marks(districtId), parent, false);
             var horizon = DressingPlan.Horizon();
             Spawn(horizon, parent, true);
             ConnectPoles(horizon, parent);
@@ -38,7 +39,7 @@ namespace OutpostZero.Expedition
                 var mark = marks[i];
                 PrimitiveType shape = PrimitiveType.Cube;
                 if (mark.Role == "bulb") shape = PrimitiveType.Sphere;
-                else if (mark.Role == "tyre" || mark.Role == "bottle" || mark.Role == "tower" || mark.Role == "pole") shape = PrimitiveType.Cylinder;
+                else if (mark.Role == "tyre" || mark.Role == "bottle" || mark.Role == "tower" || mark.Role == "pole" || mark.Role == "manhole") shape = PrimitiveType.Cylinder;
                 var body = GameObject.CreatePrimitive(shape);
                 body.name = "Dress_" + mark.Role;
                 body.transform.SetParent(parent, false);
@@ -48,7 +49,8 @@ namespace OutpostZero.Expedition
                 body.transform.position = new Vector3(mark.X, mark.Y + lift, mark.Z);
                 body.transform.rotation = Quaternion.Euler(mark.Role == "tyre" ? 90f : 0f, mark.Yaw, 0f);
                 body.transform.localScale = new Vector3(mark.W, mark.H, mark.D);
-                bool solid = solidLarge && (mark.Role == "overpass" || mark.Role == "pole" || mark.Role == "tower" || mark.Role == "tent" || mark.Role == "sandbag");
+                bool plate = mark.Role == "manhole" || mark.Role == "grate";
+                bool solid = plate || (solidLarge && (mark.Role == "overpass" || mark.Role == "pole" || mark.Role == "tower" || mark.Role == "tent" || mark.Role == "sandbag"));
                 if (!solid)
                 {
                     var collider = body.GetComponent<Collider>();
@@ -128,6 +130,9 @@ namespace OutpostZero.Expedition
                 case "brick": return new Color(0.48f, 0.24f, 0.18f);
                 case "glass": return new Color(0.55f, 0.7f, 0.72f);
                 case "patch": return new Color(0.22f, 0.22f, 0.22f);
+                case "stripe": return new Color(0.72f, 0.7f, 0.62f);
+                case "manhole": return new Color(0.22f, 0.22f, 0.24f);
+                case "grate": return new Color(0.16f, 0.17f, 0.18f);
                 case "skyline": return new Color(0.12f, 0.13f, 0.16f);
                 case "tower": return new Color(0.32f, 0.34f, 0.36f);
                 case "pole": return new Color(0.25f, 0.25f, 0.24f);

@@ -765,6 +765,27 @@ namespace OutpostZero.Tests.EditMode
             }
             Assert.AreEqual(2, poles);
             Assert.IsTrue(gap);
+
+            var paint = LanePaint.Marks("ash_market");
+            var painted = LanePaint.Marks("ash_market");
+            var slid = LanePaint.Marks("rail_yard");
+            Assert.AreEqual(6, paint.Length);
+            Assert.AreEqual(0f, LanePaint.Shift("ash_market"), 0.001f);
+            Assert.AreEqual(0f, LanePaint.Shift(""), 0.001f);
+            Assert.Greater(LanePaint.Shift("rail_yard"), 0f);
+            Assert.AreEqual("stripe", paint[0].Role);
+            Assert.AreEqual("stripe", paint[3].Role);
+            Assert.AreEqual("manhole", paint[4].Role);
+            Assert.AreEqual("grate", paint[5].Role);
+            Assert.AreEqual(8f, paint[0].Z, 0.001f);
+            Assert.AreEqual(-1.2f, paint[0].X, 0.001f);
+            Assert.AreEqual(1.2f, paint[3].X, 0.001f);
+            Assert.AreEqual(paint[0].Z, painted[0].Z, 0.001f);
+            Assert.AreNotEqual(paint[0].Z, slid[0].Z);
+            for (int i = 0; i < paint.Length; i++) Assert.IsTrue(DressingPlan.OnTheStreet(paint[i].X, paint[i].Z));
+            for (int i = 0; i < slid.Length; i++) Assert.IsTrue(DressingPlan.OnTheStreet(slid[i].X, slid[i].Z));
+            Assert.AreEqual("step_metal", AudioMix.StepId("Dress_manhole"));
+            Assert.AreEqual("step_metal", AudioMix.StepId("Dress_grate"));
         }
 
         [Test]
