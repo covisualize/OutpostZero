@@ -12,6 +12,31 @@ namespace OutpostZero.Colony
         public const float PlainHunger = 18f;
         public const float GluttonHunger = 23.4f;
 
+        public static int CookPlate(string trait, bool cooked)
+        {
+            if (!cooked || trait != "Cook") return 0;
+            return 4;
+        }
+
+        public static float Aim(string trait)
+        {
+            if (trait == "Sharpshooter") return 0.8f;
+            return 1f;
+        }
+
+        public static int WatchCost(string trait)
+        {
+            if (trait == "Brave") return 0;
+            if (trait == "Cowardly") return 6;
+            return 2;
+        }
+
+        public static int WatchPay(string trait, int watch)
+        {
+            if (watch <= 0 || trait == "Cowardly") return 0;
+            return watch;
+        }
+
         public static float Warning(int towers, int guards, int watchful, int sleepers)
         {
             float time = RaidWarn.Seconds(towers, guards);

@@ -165,7 +165,7 @@ namespace OutpostZero.Combat
 
             // Fire projectiles
             heat = RecoilBloom.AfterShot(heat);
-            float spread = RecoilBloom.Spread(spreadAngle, SpreadMultiplier * FieldHand.Spread(SurvivorRoster.LeaderPractice("Guard")), heat);
+            float spread = RecoilBloom.Spread(spreadAngle, SpreadMultiplier * FieldHand.Spread(SurvivorRoster.LeaderPractice("Guard")) * TraitHook.Aim(SurvivorRoster.LeaderTrait()), heat);
             for (int i = 0; i < projectilesPerShot; i++)
             {
                 Vector3 shootDir = ApplySpread(targetDirection, spread);

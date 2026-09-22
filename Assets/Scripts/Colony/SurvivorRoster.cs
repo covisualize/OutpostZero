@@ -64,6 +64,13 @@ namespace OutpostZero.Colony
             return 0;
         }
 
+        public static string LeaderTrait()
+        {
+            var leader = Instance != null ? Instance.Leader : null;
+            if (leader == null || string.IsNullOrEmpty(leader.trait)) return "";
+            return leader.trait;
+        }
+
         public void CopyLeaderNeeds(float hunger, float thirst)
         {
             var leader = Leader;
@@ -395,7 +402,7 @@ namespace OutpostZero.Colony
                         }
                         if (spent > 0 && storage != null) storage.TakeRaw(spent);
                         if (served > 0 && storage != null) storage.AddFood(served);
-                        if (lift > 0) survivor.morale = Mathf.Min(100f, survivor.morale + lift);
+                        if (lift > 0) survivor.morale = Mathf.Min(100f, survivor.morale + lift + TraitHook.CookPlate(survivor.trait, spent > 0));
                         break;
                     case "Guard":
                         int watch = Pay(1, survivor.morale);
@@ -403,8 +410,9 @@ namespace OutpostZero.Colony
                         {
                             survivor.combat = Practice.Gain(survivor.combat);
                             watch += Practice.Bonus(survivor.combat);
-                            survivor.morale = Mathf.Max(0f, survivor.morale - 2f);
+                            survivor.morale = Mathf.Max(0f, survivor.morale - TraitHook.WatchCost(survivor.trait));
                         }
+                        watch = TraitHook.WatchPay(survivor.trait, watch);
                         if (watch > 0 && storage != null) storage.AddSecurity(watch);
                         break;
                     case "Rest":

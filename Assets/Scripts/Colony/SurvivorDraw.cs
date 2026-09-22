@@ -34,7 +34,8 @@ namespace OutpostZero.Colony
 
         private static readonly string[] Traits =
         {
-            "Steady Hands", "Light Sleeper", "Field Medic", "Scrounger", "Watchful", "Volatile", "Glutton"
+            "Steady Hands", "Light Sleeper", "Field Medic", "Scrounger", "Watchful", "Volatile", "Glutton",
+            "Engineer", "Cook", "Sharpshooter", "Brave", "Cowardly"
         };
 
         public static Draft[] Open(int seed)
@@ -101,10 +102,14 @@ namespace OutpostZero.Colony
 
         private static int Skill(string trait, string kind)
         {
+            if (kind == "combat" && trait == "Sharpshooter") return 4;
             if (kind == "combat" && (trait == "Steady Hands" || trait == "Watchful")) return 3;
+            if (kind == "combat" && trait == "Brave") return 2;
             if (kind == "medicine" && trait == "Field Medic") return 4;
             if (kind == "scavenge" && trait == "Scrounger") return 3;
+            if (kind == "engineering" && trait == "Engineer") return 4;
             if (kind == "engineering" && trait == "Steady Hands") return 2;
+            if (kind == "cooking" && trait == "Cook") return 4;
             if (kind == "cooking" && trait == "Light Sleeper") return 1;
             return 0;
         }

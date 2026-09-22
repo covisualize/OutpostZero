@@ -3046,6 +3046,58 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void AnEngineerBuildsACookPlatesAndACowardFlinches()
+        {
+            Assert.AreEqual(2, BuildSite.Shift("Engineer", 40f));
+            Assert.AreEqual(4, TraitHook.CookPlate("Cook", true));
+            Assert.AreEqual(0, TraitHook.CookPlate("Cook", false));
+            Assert.AreEqual(0, TraitHook.CookPlate("Glutton", true));
+            Assert.AreEqual(0.8f, TraitHook.Aim("Sharpshooter"), 0.001f);
+            Assert.AreEqual(1f, TraitHook.Aim("Steady Hands"), 0.001f);
+            Assert.AreEqual(1f, TraitHook.Aim(null), 0.001f);
+            Assert.AreEqual(0, TraitHook.WatchCost("Brave"));
+            Assert.AreEqual(2, TraitHook.WatchCost("Watchful"));
+            Assert.AreEqual(2, TraitHook.WatchCost(null));
+            Assert.AreEqual(6, TraitHook.WatchCost("Cowardly"));
+            Assert.AreEqual(0, TraitHook.WatchPay("Cowardly", 2));
+            Assert.AreEqual(2, TraitHook.WatchPay("Brave", 2));
+            Assert.AreEqual(0, TraitHook.WatchPay("Brave", 0));
+            bool engineer = false;
+            bool cook = false;
+            bool sharp = false;
+            for (int seed = 1; seed <= 40; seed++)
+            {
+                var camp = SurvivorDraw.Open(seed);
+                for (int i = 0; i < camp.Length; i++)
+                {
+                    if (camp[i].Trait == "Engineer")
+                    {
+                        Assert.AreEqual(4, camp[i].Engineering);
+                        engineer = true;
+                    }
+                    if (camp[i].Trait == "Cook")
+                    {
+                        Assert.AreEqual(4, camp[i].Cooking);
+                        cook = true;
+                    }
+                    if (camp[i].Trait == "Sharpshooter")
+                    {
+                        Assert.AreEqual(4, camp[i].Combat);
+                        sharp = true;
+                    }
+                }
+            }
+            Assert.IsTrue(engineer);
+            Assert.IsTrue(cook);
+            Assert.IsTrue(sharp);
+            Assert.AreEqual("Ingeniero", Loc.T("trait.engineer", "es"));
+            Assert.AreEqual("Cocinero", Loc.T("trait.cook", "es"));
+            Assert.AreEqual("Tirador", Loc.T("trait.sharp", "es"));
+            Assert.AreEqual("Valiente", Loc.T("trait.brave", "es"));
+            Assert.AreEqual("Cobarde", Loc.T("trait.coward", "es"));
+        }
+
+        [Test]
         public void GoreOffDropsBloodAndAShotgunSpraysTheWall()
         {
             Assert.AreEqual(0, GoreMark.Splats(0, false, true));

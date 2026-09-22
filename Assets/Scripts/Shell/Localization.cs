@@ -291,6 +291,11 @@ namespace OutpostZero.Shell
             { "trait.watchful", "Watchful" },
             { "trait.volatile", "Volatile" },
             { "trait.glutton", "Glutton" },
+            { "trait.engineer", "Engineer" },
+            { "trait.cook", "Cook" },
+            { "trait.sharp", "Sharpshooter" },
+            { "trait.brave", "Brave" },
+            { "trait.coward", "Cowardly" },
             { "mood.inspired", "Inspired" },
             { "mood.steady", "Steady" },
             { "mood.depressed", "Depressed" },
@@ -651,6 +656,11 @@ namespace OutpostZero.Shell
             { "trait.watchful", "Vigilante" },
             { "trait.volatile", "Volátil" },
             { "trait.glutton", "Glotón" },
+            { "trait.engineer", "Ingeniero" },
+            { "trait.cook", "Cocinero" },
+            { "trait.sharp", "Tirador" },
+            { "trait.brave", "Valiente" },
+            { "trait.coward", "Cobarde" },
             { "mood.inspired", "Inspirado" },
             { "mood.steady", "Estable" },
             { "mood.depressed", "Deprimido" },
@@ -785,6 +795,11 @@ namespace OutpostZero.Shell
                 : trait == "Watchful" ? "trait.watchful"
                 : trait == "Volatile" ? "trait.volatile"
                 : trait == "Glutton" ? "trait.glutton"
+                : trait == "Engineer" ? "trait.engineer"
+                : trait == "Cook" ? "trait.cook"
+                : trait == "Sharpshooter" ? "trait.sharp"
+                : trait == "Brave" ? "trait.brave"
+                : trait == "Cowardly" ? "trait.coward"
                 : "";
             if (key.Length == 0) return trait ?? "";
             return Pick(key, trait);
