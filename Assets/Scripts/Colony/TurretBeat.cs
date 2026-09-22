@@ -31,6 +31,18 @@ namespace OutpostZero.Colony
             return best;
         }
 
+        public static bool Fed(bool powered, int finished, int benchTier, int stored)
+        {
+            if (!powered || finished <= 0 || stored <= 0) return false;
+            return benchTier >= 2;
+        }
+
+        public static int Draw(int stored)
+        {
+            if (stored <= 0) return 0;
+            return 1;
+        }
+
         public static int Prefer(bool[] rifle, int[] rounds)
         {
             if (rounds == null) return -1;

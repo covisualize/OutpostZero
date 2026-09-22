@@ -2417,6 +2417,16 @@ namespace OutpostZero.Tests.EditMode
             Assert.AreEqual(1, TurretBeat.Prefer(new[] { false, false }, new[] { 0, 3 }));
             Assert.AreEqual(-1, TurretBeat.Prefer(null, new[] { 0, 0 }));
             Assert.AreEqual(22, GridBuilder.Cost(ModuleKind.Turret));
+            Assert.IsFalse(TurretBeat.Fed(true, 1, 2, 0));
+            Assert.IsFalse(TurretBeat.Fed(false, 1, 2, 4));
+            Assert.IsFalse(TurretBeat.Fed(true, 0, 2, 4));
+            Assert.IsFalse(TurretBeat.Fed(true, 1, 1, 4));
+            Assert.IsTrue(TurretBeat.Fed(true, 1, 2, 1));
+            Assert.AreEqual(1, TurretBeat.Draw(4));
+            Assert.AreEqual(1, TurretBeat.Draw(1));
+            Assert.AreEqual(0, TurretBeat.Draw(0));
+            Assert.AreEqual(0, TurretBeat.Draw(-2));
+            Assert.AreEqual("La torreta quiere un banco de nivel 2", Loc.T("camp.turret_tier", "es"));
         }
 
         [Test]

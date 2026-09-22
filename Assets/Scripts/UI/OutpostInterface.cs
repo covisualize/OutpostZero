@@ -860,6 +860,8 @@ namespace OutpostZero.UI
                 }
             }
             camp.Add(build);
+            if (GridBuilder.Instance != null && GridBuilder.Instance.CountKind("Turret") > 0 && GridBuilder.Instance.BenchTier() < 2)
+                camp.Add(Body(Loc.T("camp.turret_tier")));
             camp.Add(Body(Loc.T("camp.craft")));
             bool bench = GridBuilder.Instance != null && GridBuilder.Instance.HasKind("Workbench");
             int benchTier = GridBuilder.Instance != null ? GridBuilder.Instance.BenchTier() : 1;

@@ -181,19 +181,9 @@ namespace OutpostZero.Colony
             if (Time.time < nextTurret) return;
             int guns = GridBuilder.Instance != null ? GridBuilder.Instance.CountKind("Turret") : 0;
             bool powered = CampServices.Instance != null && CampServices.Instance.GeneratorOnline;
-            var player = PlayerRegistry.Current;
-            var carried = player != null ? player.GetComponentsInChildren<FirearmWeapon>(true) : System.Array.Empty<FirearmWeapon>();
-            var rifle = new bool[carried.Length];
-            var rounds = new int[carried.Length];
-            int total = 0;
-            for (int i = 0; i < carried.Length; i++)
-            {
-                if (carried[i] == null) continue;
-                rounds[i] = carried[i].CurrentAmmo + carried[i].ReserveAmmo;
-                rifle[i] = carried[i].Type == WeaponType.Rifle;
-                total += rounds[i];
-            }
-            if (!TurretBeat.Ready(TurretBeat.Interval, powered, guns, total)) return;
+            int tier = GridBuilder.Instance != null ? GridBuilder.Instance.BenchTier() : 1;
+            int stored = ColonyStorage.Instance != null ? ColonyStorage.Instance.Rounds : 0;
+            if (!TurretBeat.Fed(powered, guns, tier, stored)) return;
 
             Vector3 origin = TurretOrigin();
             var horde = Object.FindObjectsByType<ZombieAI>(FindObjectsSortMode.None);
@@ -209,16 +199,16 @@ namespace OutpostZero.Colony
                 distance.Add((float)System.Math.Sqrt(dx * dx + dz * dz));
             }
             int mark = TurretBeat.Pick(distance.ToArray(), TurretBeat.Range);
-            if (mark < 0) return;
-            int feed = TurretBeat.Prefer(rifle, rounds);
-            if (feed < 0 || !carried[feed].TrySpendRound()) return;
+            int spent = TurretBeat.Draw(stored);
+            if (mark < 0 || spent <= 0) return;
+            ColonyStorage.Instance?.TakeRounds(spent);
 
             var target = living[mark];
             var health = target.GetComponent<HealthSystem>();
             if (health != null)
-                health.TakeDamage(TurretBeat.Damage, target.transform.position, (origin - target.transform.position).normalized, player != null ? player.gameObject : gameObject);
+                health.TakeDamage(TurretBeat.Damage, target.transform.position, (origin - target.transform.position).normalized, gameObject);
             if (Sensory.NoiseManager.Instance != null)
-                Sensory.NoiseManager.Instance.EmitNoise(origin, 18f, 0.7f, NoiseType.GunshotLoud, player != null ? player.gameObject : gameObject);
+                Sensory.NoiseManager.Instance.EmitNoise(origin, 18f, 0.7f, NoiseType.GunshotLoud, gameObject);
             nextTurret = Time.time + TurretBeat.Interval;
         }
 
