@@ -66,6 +66,7 @@ Shader "OutpostZero/TriplanarRim"
             SAMPLER(sampler_MaskMap);
             float _OutpostWet;
             float _WindStrength;
+            // A property block can override these. Values inside UnityPerMaterial cannot.
             float4 _BaseColor;
             float4 _RimColor;
             float _RimPower;
