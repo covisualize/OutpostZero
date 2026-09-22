@@ -55,6 +55,7 @@ namespace OutpostZero.Colony
                     {
                         ColonyStorage.Instance.AddFood(-1);
                     }
+                    if (NightRaidController.Instance != null && NightRaidController.Instance.HoldTheNight()) return;
                     WorldClock.Instance?.SleepUntilMorning();
                     SurvivorRoster.Instance?.TickTasks();
                     SurvivorRoster.Instance?.EndDay(false);

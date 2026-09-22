@@ -2573,6 +2573,27 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void DuskHoldsTheWatchUntilTheRaidIsMet()
+        {
+            Assert.IsFalse(RaidWatch.Night(19.9f));
+            Assert.IsTrue(RaidWatch.Night(20f));
+            Assert.IsTrue(RaidWatch.Night(23.5f));
+            Assert.IsTrue(RaidWatch.Night(0f));
+            Assert.IsTrue(RaidWatch.Night(4.9f));
+            Assert.IsFalse(RaidWatch.Night(5f));
+            Assert.IsFalse(RaidWatch.Night(12f));
+            Assert.IsFalse(RaidWatch.Night(-1f));
+            Assert.IsTrue(RaidWatch.Crosses(22f, 0f));
+            Assert.IsFalse(RaidWatch.Crosses(8f, 0f));
+            Assert.IsFalse(RaidWatch.Crosses(12f, 6f));
+            Assert.IsTrue(RaidWatch.Crosses(18.5f, 6f));
+            Assert.IsFalse(RaidWatch.Crosses(19f, 0.5f));
+            Assert.IsTrue(RaidWatch.Crosses(19f, 1f));
+            Assert.IsTrue(RaidWatch.Crosses(16f, 8f));
+            Assert.AreEqual("El anochecer los trae", Loc.T("camp.dusk", "es"));
+        }
+
+        [Test]
         public void DemolishingAModuleReturnsHalfTheScrap()
         {
             Assert.AreEqual(3, ScrapRefund.Half(6));

@@ -26,6 +26,7 @@ namespace OutpostZero.Colony
         private float nextTurret;
         private float nextTrap;
         private float nextGuard;
+        private int calledDay = -1;
 
         public bool Running => running;
         public bool Warning => warning;
@@ -78,6 +79,7 @@ namespace OutpostZero.Colony
             broadcast = tower;
             ApplyWave(0, false);
             running = true;
+            calledDay = day;
             endsAt = Time.time + duration;
             nextStrike = Time.time + strikeInterval;
             nextTurret = Time.time + TurretBeat.Interval;
@@ -89,8 +91,50 @@ namespace OutpostZero.Colony
             GameplayFeedback.Toast(tower ? "Broadcast night — hold the tower" : "Night raid from the " + approach);
         }
 
+        public bool HoldWatch(float added)
+        {
+            if (running || warning) return true;
+            if (GameManager.Instance == null || GameManager.Instance.CurrentState != GameState.CampManagement) return false;
+            float hour = WorldClock.Instance != null ? WorldClock.Instance.Hour : 12f;
+            int day = WorldClock.Instance != null ? WorldClock.Instance.Day : 1;
+            if (calledDay == day) return false;
+            if (!RaidWatch.Crosses(hour, added)) return false;
+            if (!LikelyNow()) return false;
+            if (!RaidWatch.Night(hour)) WorldClock.Instance?.Set(day, RaidWatch.Dusk);
+            GameplayFeedback.Toast(Loc.T("camp.dusk"));
+            Begin();
+            return true;
+        }
+
+        public bool HoldTheNight()
+        {
+            if (running || warning) return true;
+            if (GameManager.Instance == null || GameManager.Instance.CurrentState != GameState.CampManagement) return false;
+            int day = WorldClock.Instance != null ? WorldClock.Instance.Day : 1;
+            if (calledDay == day) return false;
+            if (!LikelyNow()) return false;
+            float hour = WorldClock.Instance != null ? WorldClock.Instance.Hour : 12f;
+            if (!RaidWatch.Night(hour)) WorldClock.Instance?.Set(day, RaidWatch.Dusk);
+            GameplayFeedback.Toast(Loc.T("camp.dusk"));
+            Begin();
+            return true;
+        }
+
+        private bool LikelyNow()
+        {
+            int day = WorldClock.Instance != null ? WorldClock.Instance.Day : 1;
+            int security = ColonyStorage.Instance != null ? ColonyStorage.Instance.Security : 0;
+            int shots = ColonyStorage.Instance != null ? ColonyStorage.Instance.Shots : 0;
+            bool endless = WorldMapService.Instance != null && WorldMapService.Instance.Endless;
+            bool generator = CampServices.Instance != null && CampServices.Instance.GeneratorOnline;
+            int walls = GridBuilder.Instance != null ? GridBuilder.Instance.BarricadeCount() : 0;
+            int difficulty = WorldMapService.Instance != null ? WorldMapService.Instance.Difficulty : 2;
+            return RaidCall.Likely(day, security, endless, shots, generator, walls, difficulty);
+        }
+
         private void Update()
         {
+            if (!running && !warning) HoldWatch(0f);
             if (warning)
             {
                 if (GameManager.Instance != null && GameManager.Instance.CurrentState != GameState.CampManagement)

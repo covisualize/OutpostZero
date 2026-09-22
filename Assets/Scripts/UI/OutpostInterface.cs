@@ -807,6 +807,7 @@ namespace OutpostZero.UI
             camp.Add(Button(Loc.T("camp.caravan"), () => FactionTrade.Instance?.Toggle()));
             camp.Add(Button(Loc.T("camp.advance"), () =>
             {
+                if (NightRaidController.Instance != null && NightRaidController.Instance.HoldWatch(6f)) return;
                 WorldClock.Instance?.Advance(6f);
                 SurvivorRoster.Instance?.TickTasks();
             }));
