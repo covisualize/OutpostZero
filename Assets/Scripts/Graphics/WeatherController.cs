@@ -113,6 +113,7 @@ namespace OutpostZero.Graphics
         private ParticleSystem rain;
         private ParticleSystem debris;
         private ParticleSystem ash;
+        private Transform[] sheets;
         private GameObject puddles;
         private GameObject mist;
         private Material mistMat;
@@ -205,6 +206,7 @@ namespace OutpostZero.Graphics
             }
             if (kind != WeatherKind.Clear) EnsureDebris();
             if (debris != null) debris.gameObject.SetActive(kind != WeatherKind.Clear);
+            HoldSheets();
             if (AshFall.Falls(district)) EnsureAsh();
             if (ash != null) ash.gameObject.SetActive(AshFall.Falls(district));
             if (applied != kind)
@@ -325,6 +327,51 @@ namespace OutpostZero.Graphics
             shape.shapeType = ParticleSystemShapeType.Box;
             shape.scale = new Vector3(30f, 1f, 30f);
             go.transform.position = new Vector3(0f, 12f, 0f);
+        }
+
+        private void HoldSheets()
+        {
+            if (sheets == null)
+            {
+                sheets = new Transform[WindSheet.Count];
+                var root = new GameObject("WindSheets");
+                root.transform.SetParent(transform, false);
+                var shader = Shader.Find("OutpostZero/TriplanarRim");
+                Material mat = null;
+                if (shader != null)
+                {
+                    mat = new Material(shader);
+                    mat.SetColor("_BaseColor", new Color(0.72f, 0.66f, 0.48f));
+                    mat.SetFloat("_Sway", 0.4f);
+                }
+                for (int i = 0; i < WindSheet.Count; i++)
+                {
+                    var body = GameObject.CreatePrimitive(PrimitiveType.Quad);
+                    body.name = "Sheet";
+                    body.transform.SetParent(root.transform, false);
+                    body.transform.localScale = new Vector3(0.42f, 0.28f, 1f);
+                    var collider = body.GetComponent<Collider>();
+                    if (collider != null) Destroy(collider);
+                    var renderer = body.GetComponent<Renderer>();
+                    if (mat != null) renderer.sharedMaterial = mat;
+                    else renderer.material.color = new Color(0.72f, 0.66f, 0.48f);
+                    WindSheet.Home(i, out float hx, out float hz);
+                    body.transform.position = new Vector3(hx, 0.05f, hz);
+                    sheets[i] = body.transform;
+                }
+            }
+            bool show = WindSheet.Skims(kind);
+            float wind = GroundMist.Wind(kind);
+            for (int i = 0; i < sheets.Length; i++)
+            {
+                if (sheets[i] == null) continue;
+                sheets[i].gameObject.SetActive(show);
+                if (!show) continue;
+                var place = sheets[i].position;
+                WindSheet.Step(place.x, place.z, wind, Time.deltaTime, out float nx, out float nz);
+                sheets[i].position = new Vector3(nx, 0.05f, nz);
+                sheets[i].rotation = Quaternion.Euler(90f, 0f, WindSheet.Tilt(Time.time, i, wind));
+            }
         }
 
         private void EnsureDebris()

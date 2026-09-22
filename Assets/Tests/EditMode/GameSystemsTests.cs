@@ -5490,6 +5490,39 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void WindSlidesPaperAlongTheStreetAndAClearDayLeavesItDown()
+        {
+            Assert.IsFalse(WindSheet.Skims(WeatherKind.Clear));
+            Assert.IsTrue(WindSheet.Skims(WeatherKind.Rain));
+            Assert.IsTrue(WindSheet.Skims(WeatherKind.Storm));
+            Assert.IsTrue(WindSheet.Skims(WeatherKind.Fog));
+            Assert.IsTrue(WindSheet.Skims(WeatherKind.Overcast));
+            Assert.AreEqual(0.65f, GroundMist.Wind(WeatherKind.Rain), 0.001f);
+            Assert.AreEqual(0.9f, GroundMist.Wind(WeatherKind.Storm), 0.001f);
+            Assert.AreEqual(0.08f, GroundMist.Wind(WeatherKind.Clear), 0.001f);
+            WindSheet.Step(0f, 6f, 0.65f, 1f, out float x, out float z);
+            Assert.AreEqual(2.08f, x, 0.001f);
+            Assert.AreEqual(6f, z, 0.001f);
+            WindSheet.Step(0f, 6f, 0.9f, 1f, out x, out z);
+            Assert.AreEqual(2.88f, x, 0.001f);
+            WindSheet.Step(0f, 6f, 0f, 5f, out x, out z);
+            Assert.AreEqual(0f, x, 0.001f);
+            WindSheet.Step(0f, 6f, 1f, -2f, out x, out z);
+            Assert.AreEqual(0f, x, 0.001f);
+            WindSheet.Step(21f, 6f, 1f, 1f, out x, out z);
+            Assert.AreEqual(-19.8f, x, 0.001f);
+            Assert.AreEqual(6f, z, 0.001f);
+            WindSheet.Home(0, out x, out z);
+            Assert.AreEqual(-18f, x, 0.001f);
+            Assert.AreEqual(6f, z, 0.001f);
+            WindSheet.Home(4, out x, out z);
+            Assert.AreEqual(18f, x, 0.001f);
+            Assert.AreEqual(0f, WindSheet.Tilt(0f, 0, 1f), 0.001f);
+            Assert.AreEqual(18.512f, WindSheet.Tilt(0.2f, 0, 1f), 0.01f);
+            Assert.AreEqual(0f, WindSheet.Tilt(0.2f, 0, 0f), 0.001f);
+        }
+
+        [Test]
         public void AZombieWithoutARigStillAttacksAndFalls()
         {
             Assert.AreEqual(14f, PoseSheet.Lean(ZombieAI.ZombieState.Chase, 0f), 0.001f);

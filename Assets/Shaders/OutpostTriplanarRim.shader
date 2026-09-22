@@ -8,6 +8,7 @@ Shader "OutpostZero/TriplanarRim"
         _Tile ("Tile", Float) = 1.6
         _Dissolve ("Dissolve", Range(0, 1)) = 0
         _Wetness ("Wetness", Range(0, 1)) = 0
+        _Sway ("Sway", Range(0, 1)) = 0
         _Metallic ("Metallic", Range(0, 1)) = 0.05
         _HasMaps ("Has Maps", Float) = 0
         _BaseMap ("Albedo", 2D) = "white" {}
@@ -56,6 +57,7 @@ Shader "OutpostZero/TriplanarRim"
                 float _Tile;
                 float _Dissolve;
                 float _Wetness;
+                float _Sway;
                 float _Metallic;
                 float _HasMaps;
                 float4 _Tint;
@@ -71,6 +73,7 @@ Shader "OutpostZero/TriplanarRim"
             TEXTURE2D(_MaskMap);
             SAMPLER(sampler_MaskMap);
             float _OutpostWet;
+            float _WindStrength;
 
             float Hash(float3 p)
             {
@@ -105,7 +108,14 @@ Shader "OutpostZero/TriplanarRim"
                 Varyings output;
                 UNITY_SETUP_INSTANCE_ID(input);
                 UNITY_TRANSFER_INSTANCE_ID(input, output);
-                VertexPositionInputs pos = GetVertexPositionInputs(input.positionOS.xyz);
+                float3 swayed = input.positionOS.xyz;
+                if (_Sway > 0.001)
+                {
+                    float3 world = TransformObjectToWorld(swayed);
+                    float gust = sin(_Time.y * 3.2 + world.x * 0.7 + world.z) * _WindStrength * _Sway;
+                    swayed.y += gust;
+                }
+                VertexPositionInputs pos = GetVertexPositionInputs(swayed);
                 output.positionCS = pos.positionCS;
                 output.positionWS = pos.positionWS;
                 output.normalWS = TransformObjectToWorldNormal(input.normalOS);
