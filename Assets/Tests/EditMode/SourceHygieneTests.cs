@@ -33,6 +33,19 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void UiTextGoesThroughTheStringTable()
+        {
+            var literal = new Regex(@"(\b(Body|Button|Title|Label)\(\s*""[A-Za-z]|\.text\s*=\s*""[A-Za-z])");
+            string ui = Path.Combine(Scripts, "UI");
+            var hits = Directory.GetFiles(ui, "*.cs", SearchOption.AllDirectories)
+                .SelectMany(f => File.ReadAllLines(f).Select((line, i) => new { f, line, i }))
+                .Where(x => literal.IsMatch(x.line))
+                .Select(x => Rel(x.f) + ":" + (x.i + 1) + "  " + x.line.Trim())
+                .ToArray();
+            CollectionAssert.IsEmpty(hits, "UI text literals; add a Loc key instead");
+        }
+
+        [Test]
         public void SceneBuilderPlacesPrefabsNotModelFiles()
         {
             string builder = Path.Combine(Scripts, "Editor", "PrototypeSceneBuilder.cs");

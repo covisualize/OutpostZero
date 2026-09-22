@@ -1575,6 +1575,25 @@ namespace OutpostZero.Shell
             return T(key, language);
         }
 
+        public static IEnumerable<string> Keys => english.Keys;
+
+        public static List<string> MissingIn(string language)
+        {
+            var table = language == "es" ? spanish : english;
+            var missing = new List<string>();
+            foreach (var key in english.Keys)
+            {
+                if (!table.ContainsKey(key)) missing.Add(key);
+            }
+            return missing;
+        }
+
+        public static bool Has(string key, string language)
+        {
+            var table = language == "es" ? spanish : english;
+            return key != null && table.ContainsKey(key);
+        }
+
         public static string T(string key, string language)
         {
             var table = language == "es" ? spanish : english;

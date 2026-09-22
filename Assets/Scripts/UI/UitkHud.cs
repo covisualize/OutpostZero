@@ -35,10 +35,10 @@ namespace OutpostZero.UI
             column.style.left = 16;
             column.style.top = 140;
             column.style.width = 280;
-            health = new Label("Health");
+            health = new Label(OutpostZero.Shell.Loc.T("hud.health"));
             health.style.color = Color.white;
             health.style.unityFontStyleAndWeight = FontStyle.Bold;
-            ammo = new Label("Ammo");
+            ammo = new Label(OutpostZero.Shell.Loc.T("hud.noweapon"));
             ammo.style.color = Color.white;
             healthFill = new VisualElement();
             healthFill.style.height = 8;
