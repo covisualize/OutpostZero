@@ -14,9 +14,18 @@ namespace OutpostZero.Colony
 
         public static bool Due(int day, int security)
         {
-            if (day < 2) return false;
+            return Due(day, security, false);
+        }
+
+        public static bool Due(int day, int security, bool endless)
+        {
             if (security >= 8) return false;
-            return day % 2 == 0;
+            if (!endless)
+            {
+                if (day < 2) return false;
+                return day % 2 == 0;
+            }
+            return day >= 1;
         }
 
         public static Wave Opening(int day, int towers)

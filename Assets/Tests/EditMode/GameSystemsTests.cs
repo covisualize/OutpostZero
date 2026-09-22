@@ -1086,5 +1086,26 @@ namespace OutpostZero.Tests.EditMode
             Assert.IsFalse(ExtractWatch.Threatened(0f, 0f, new[] { 21f }, new[] { 0f }));
             Assert.IsFalse(ExtractWatch.Threatened(0f, 0f, null, null));
         }
+
+        [Test]
+        public void CoverShortensSightAndAWonRunKeepsTheNights()
+        {
+            Assert.AreEqual(0.4f, CoverSight.Scale(0f, -1f, 0f, 4f, 0f, 0f, 0f, true), 0.001f);
+            Assert.AreEqual(0.62f, CoverSight.Scale(0f, -1f, 0f, 4f, 0f, 0f, 0f, false), 0.001f);
+            Assert.AreEqual(1f, CoverSight.Scale(0f, -1f, 0f, -4f, 0f, 0f, 0f, true), 0.001f);
+            Assert.AreEqual(1f, CoverSight.Scale(5f, 0f, 0f, 4f, 0f, 0f, 0f, true), 0.001f);
+            Assert.AreEqual(0.4f, CoverSight.Scale(-1f, 0f, 4f, 0f, 0f, 0f, 90f, true), 0.001f);
+            Assert.AreEqual(0.4f, CoverSight.Best(0f, -1f, 0f, 4f, new[] { 8f, 0f }, new[] { 0f, 0f }, new[] { 0f, 0f }, true), 0.001f);
+
+            Assert.IsFalse(RaidPlan.Due(1, 0));
+            Assert.IsTrue(RaidPlan.Due(1, 0, true));
+            Assert.IsFalse(RaidPlan.Due(4, 8, true));
+            Assert.IsTrue(RaidPlan.Due(2, 0, false));
+            Assert.AreEqual(0f, EndlessShift.Tension(0), 0.001f);
+            Assert.AreEqual(8f, EndlessShift.Tension(2), 0.001f);
+            Assert.AreEqual(24f, EndlessShift.Tension(9), 0.001f);
+            Assert.AreEqual(1f, EndlessShift.IntervalScale(0), 0.001f);
+            Assert.Less(EndlessShift.IntervalScale(6), 0.6f);
+        }
     }
 }

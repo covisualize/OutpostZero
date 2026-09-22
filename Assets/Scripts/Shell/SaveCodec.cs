@@ -54,6 +54,7 @@ namespace OutpostZero.Shell
         public int motionBlur;
         public int windowMode;
         public int worldSeed;
+        public int endless;
         public int slot;
         public string seal = "";
         public float sfxVolume = 1f;

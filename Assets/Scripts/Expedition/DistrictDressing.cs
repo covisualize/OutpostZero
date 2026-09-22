@@ -166,6 +166,10 @@ namespace OutpostZero.Expedition
                 var container = body.AddComponent<LootContainer>();
                 container.Configure(piece.Role == "crate_medical" ? "medical" : piece.Role == "crate_military" ? "military" : "crate");
             }
+            else if (piece.Role == "cover")
+            {
+                body.AddComponent<CoverPost>();
+            }
             else if (piece.Role == "lamp")
             {
                 var lightObject = new GameObject("DistrictLamp");

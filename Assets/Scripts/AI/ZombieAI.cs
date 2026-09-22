@@ -448,6 +448,7 @@ namespace OutpostZero.AI
             float effectiveSightRange = sightRange * Mathf.Lerp(0.35f, 1.2f, exposure);
             if (player.IsCrouching) effectiveSightRange *= 0.75f;
             effectiveSightRange *= WeatherController.SightMultiplier;
+            effectiveSightRange *= OutpostZero.Expedition.CoverPost.ScaleFor(player.transform.position, transform.position, player.IsCrouching);
 
             if (dist <= effectiveSightRange)
             {

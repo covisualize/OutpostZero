@@ -385,6 +385,11 @@ namespace OutpostZero.UI
                     menu.Add(Title("OUTPOST HOLDS"));
                     menu.Add(Body("The broadcast went out. The gate can stay shut."));
                     menu.Add(Button("Enter sanctuary", () => Go(FlowStep.Sanctuary, () => GameManager.Instance.EnterCamp())));
+                    menu.Add(Button("Keep the nights", () => Go(FlowStep.Sanctuary, () =>
+                    {
+                        WorldMapService.Instance?.TryBeginEndless();
+                        GameManager.Instance.EnterCamp();
+                    })));
                     menu.Add(Button("New outpost", () => Go(FlowStep.Sanctuary, () => GameManager.Instance.BeginNewOutpost())));
                     break;
                 case GameState.ExpeditionResults:
@@ -538,7 +543,8 @@ namespace OutpostZero.UI
             }));
             int raidDay = WorldClock.Instance != null ? WorldClock.Instance.Day : 1;
             int raidSecurity = ColonyStorage.Instance != null ? ColonyStorage.Instance.Security : 0;
-            camp.Add(Body(RaidPlan.Due(raidDay, raidSecurity) ? "A raid is likely tonight." : "The street is quiet tonight."));
+            bool endlessNights = WorldMapService.Instance != null && WorldMapService.Instance.Endless;
+            camp.Add(Body(RaidPlan.Due(raidDay, raidSecurity, endlessNights) ? "A raid is likely tonight." : "The street is quiet tonight."));
             camp.Add(Button("Endure the night", () => NightRaidController.Instance?.Begin()));
             camp.Add(Body("Build [B] then click. " + (GridBuilder.Instance != null ? GridBuilder.Instance.Selected.ToString() : "")));
             var build = new VisualElement { style = { flexDirection = FlexDirection.Row } };
@@ -563,13 +569,14 @@ namespace OutpostZero.UI
             {
                 camp.Add(Body("Radio " + CampaignBoard.PartCount(map.Parts) + "/3  " + DifficultyProfile.Name(map.Difficulty) + "  seed " + map.WorldSeed));
                 camp.Add(Button("Reroll street", () => map.RerollSeed()));
-                if (map.CampaignWon) camp.Add(Body("The tower is on the air."));
+                if (map.Endless) camp.Add(Body("The broadcast holds. The nights keep coming."));
+                else if (map.CampaignWon) camp.Add(Body("The tower is on the air."));
                 else if (map.ReadyToBroadcast) camp.Add(Button("Broadcast night", () => NightRaidController.Instance?.BeginBroadcast()));
                 else camp.Add(Body("The tower needs three radio parts and a built generator."));
                 camp.Add(Body("District"));
                 foreach (var district in map.Districts)
                 {
-                    if (district.cleared)
+                    if (district.cleared && !map.Endless)
                     {
                         string part = CampaignBoard.PartFor(district.id);
                         camp.Add(Body(district.displayName + " — clear" + (string.IsNullOrEmpty(part) ? "" : "  part")));

@@ -40,11 +40,13 @@ namespace OutpostZero.Shell
         private string parts = "";
         private int difficulty = 2;
         private bool broadcastWon;
+        private bool endless;
         private int worldSeed = DistrictGenerator.DefaultSeed;
 
         public string Parts => parts;
         public int Difficulty => difficulty;
         public bool BroadcastWon => broadcastWon;
+        public bool Endless => endless;
         public int WorldSeed => DistrictGenerator.Resolve(worldSeed);
         public bool GeneratorBuilt => GridBuilder.Instance != null && GridBuilder.Instance.HasKind("Generator");
         public bool ReadyToBroadcast => CampaignBoard.Ready(parts, GeneratorBuilt, broadcastWon);
@@ -72,6 +74,14 @@ namespace OutpostZero.Shell
             currentIndex = 0;
             parts = "";
             broadcastWon = false;
+            endless = false;
+        }
+
+        public bool TryBeginEndless()
+        {
+            if (!CampaignWon) return false;
+            endless = true;
+            return true;
         }
 
         public void RerollSeed()
@@ -83,7 +93,7 @@ namespace OutpostZero.Shell
         {
             if (districts.Count == 0) Seed();
             index = Mathf.Clamp(index, 0, districts.Count - 1);
-            if (districts[index].cleared) return;
+            if (districts[index].cleared && !endless) return;
             if (!CampaignBoard.Reachable(districts[index].id, ClearedIds())) return;
             currentIndex = index;
         }
@@ -93,7 +103,8 @@ namespace OutpostZero.Shell
             if (districts.Count == 0) Seed();
             for (int i = 0; i < districts.Count; i++)
             {
-                if (districts[i].id != id || districts[i].cleared) continue;
+                if (districts[i].id != id) continue;
+                if (districts[i].cleared && !endless) continue;
                 if (!CampaignBoard.Reachable(id, ClearedIds()))
                 {
                     GameplayFeedback.Toast("That road is still closed");
@@ -123,6 +134,11 @@ namespace OutpostZero.Shell
             float tension = rules.OpeningTension + curve.Tension;
             if (FactionTrade.Instance != null && FactionTrade.Instance.Ambush) tension += 12f;
             float interval = Mathf.Max(3f, rules.SpawnInterval * curve.Interval);
+            if (endless)
+            {
+                tension += EndlessShift.Tension(day);
+                interval = Mathf.Max(3f, interval * EndlessShift.IntervalScale(day));
+            }
             string prefer = string.IsNullOrEmpty(rules.PreferredVariant) ? curve.Prefer : rules.PreferredVariant;
             HordeDirector.Instance?.ApplyOpening(tension, interval, prefer, difficulty, CampaignBoard.Tier(districtId));
             WeatherController.Instance?.SetFor(rules.Weather, 180f);
@@ -147,12 +163,13 @@ namespace OutpostZero.Shell
             broadcastWon = true;
         }
 
-        public void RestoreCampaign(string radio, int storedDifficulty, int broadcast, int seed = 0)
+        public void RestoreCampaign(string radio, int storedDifficulty, int broadcast, int seed = 0, int endlessFlag = 0)
         {
             parts = radio ?? "";
             difficulty = DifficultyProfile.Resolve(storedDifficulty);
             broadcastWon = broadcast != 0;
             worldSeed = DistrictGenerator.Resolve(seed);
+            endless = endlessFlag != 0 && broadcastWon;
             if (!CurrentOpen()) SelectFirstOpen();
         }
 

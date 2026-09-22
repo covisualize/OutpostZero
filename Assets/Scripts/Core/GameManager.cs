@@ -117,7 +117,7 @@ namespace OutpostZero.Core
 
         public void BeginExpedition()
         {
-            if (WorldMapService.Instance != null && WorldMapService.Instance.Current != null && WorldMapService.Instance.Current.cleared)
+            if (WorldMapService.Instance != null && WorldMapService.Instance.Current != null && WorldMapService.Instance.Current.cleared && !WorldMapService.Instance.Endless)
             {
                 GameplayFeedback.Toast("Pick an open district");
                 return;
@@ -152,7 +152,7 @@ namespace OutpostZero.Core
             inventory?.DepositScrapToColony();
             WorldMapService.Instance?.ClearCurrent();
             ObjectiveTracker.Instance?.MarkExtracted();
-            bool won = WorldMapService.Instance != null && WorldMapService.Instance.CampaignWon;
+            bool won = WorldMapService.Instance != null && WorldMapService.Instance.CampaignWon && !WorldMapService.Instance.Endless;
             SurvivorRoster.Instance?.RewardReturn();
             FactionTrade.Instance?.NoteExtracted();
             SetState(won ? GameState.Victory : GameState.ExpeditionResults);
