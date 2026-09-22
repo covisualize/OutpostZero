@@ -2,8 +2,8 @@
   "id": "Loot_Blueprint",
   "category": "Weapons",
   "generator": "generate_items.build_blueprint",
-  "generatorHash": "bd8e372927ea55044efd3f4551e3d51d187740a296383083fed9b250c2f4fa51",
-  "gitSha": "8db3f1cd9f7ef7df289a8b9b4d6ba8500d8db5f7",
+  "generatorHash": "81083506848fb6f591074608457247e589157906b557ea2e0a6caef553c660f6",
+  "gitSha": "d914dbebffd2fe166ff62b598070041b9d596484",
   "blender": "4.2.11",
   "tags": [
     "loot",
@@ -25,6 +25,10 @@
     "height": 0.038
   },
   "floor": 0.0,
+  "center": {
+    "x": 0.0,
+    "y": 0.0043
+  },
   "materials": [
     "Mat_Item_Blueprint",
     "Mat_Item_BlueprintBand",

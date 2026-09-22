@@ -2,8 +2,8 @@
   "id": "Kit_sandbag_straight",
   "category": "Kit",
   "generator": "generate_kit.build_piece",
-  "generatorHash": "18f56c1d4981e55fff3b8a5493c72e6dfdffd0bc3044f8d8b158e9e35fb76a62",
-  "gitSha": "8db3f1cd9f7ef7df289a8b9b4d6ba8500d8db5f7",
+  "generatorHash": "36217aa670e46b57382514aec62df95923d850bd1e3d9409d660e996ddb6650e",
+  "gitSha": "d914dbebffd2fe166ff62b598070041b9d596484",
   "blender": "4.2.11",
   "tags": [
     "kit",
@@ -25,6 +25,10 @@
     "height": 0.6
   },
   "floor": 0.0,
+  "center": {
+    "x": 1.0,
+    "y": 0.25
+  },
   "materials": [
     "Mat_concrete"
   ]

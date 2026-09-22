@@ -2,8 +2,8 @@
   "id": "Kit_wall_double_door",
   "category": "Kit",
   "generator": "generate_kit.build_piece",
-  "generatorHash": "b93de8f648a6a153106452743d9d33363b5905dc308463ceea5e581d0e244ae0",
-  "gitSha": "8db3f1cd9f7ef7df289a8b9b4d6ba8500d8db5f7",
+  "generatorHash": "c80e8ec5a8ea0fb79a44981c6245e9be9c7e096c9b27487d6a7c4357f530a944",
+  "gitSha": "d914dbebffd2fe166ff62b598070041b9d596484",
   "blender": "4.2.11",
   "tags": [
     "kit",
@@ -25,6 +25,10 @@
     "height": 3.0
   },
   "floor": 0.0,
+  "center": {
+    "x": 1.0,
+    "y": 0.1
+  },
   "materials": [
     "Mat_concrete"
   ]

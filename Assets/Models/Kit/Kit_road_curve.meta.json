@@ -2,8 +2,8 @@
   "id": "Kit_road_curve",
   "category": "Kit",
   "generator": "generate_kit.build_piece",
-  "generatorHash": "6c78b18f8dd61ff4f1d29d50f028150852a3110c580a35521ed7c1b3e9dbfb7b",
-  "gitSha": "8db3f1cd9f7ef7df289a8b9b4d6ba8500d8db5f7",
+  "generatorHash": "b7ccc135ba51cd0a3982d3e7e97308b1c6ca86746e29af77855d17e525f08f8a",
+  "gitSha": "d914dbebffd2fe166ff62b598070041b9d596484",
   "blender": "4.2.11",
   "tags": [
     "kit",
@@ -25,6 +25,10 @@
     "height": 0.08
   },
   "floor": 0.0,
+  "center": {
+    "x": 1.0,
+    "y": 1.0
+  },
   "materials": [
     "Mat_concrete"
   ]

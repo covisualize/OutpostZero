@@ -2,8 +2,8 @@
   "id": "Kit_manhole",
   "category": "Kit",
   "generator": "generate_kit.build_piece",
-  "generatorHash": "4214f76771c1370d391586058d667010e36ef3402c582f30baa722e62a599b8f",
-  "gitSha": "8db3f1cd9f7ef7df289a8b9b4d6ba8500d8db5f7",
+  "generatorHash": "3798411601f37f64189f8692eb3b1bd41dadb59577572529eae0bb0bb9600515",
+  "gitSha": "d914dbebffd2fe166ff62b598070041b9d596484",
   "blender": "4.2.11",
   "tags": [
     "kit",
@@ -25,6 +25,10 @@
     "height": 0.04
   },
   "floor": 0.0,
+  "center": {
+    "x": 0.5,
+    "y": 0.5
+  },
   "materials": [
     "Mat_metal"
   ]

@@ -2,8 +2,8 @@
   "id": "Kit_wall_door",
   "category": "Kit",
   "generator": "generate_kit.build_piece",
-  "generatorHash": "be4e6d2fe83de54653b2b8d0c66980ba3d4e983952ae130ad25dd603eb350643",
-  "gitSha": "8db3f1cd9f7ef7df289a8b9b4d6ba8500d8db5f7",
+  "generatorHash": "3c4a0c0a322f39bf666e443fdda9d5d6ba3720474d7f1d71384557647de1d639",
+  "gitSha": "d914dbebffd2fe166ff62b598070041b9d596484",
   "blender": "4.2.11",
   "tags": [
     "kit",
@@ -25,6 +25,10 @@
     "height": 3.0
   },
   "floor": 0.0,
+  "center": {
+    "x": 1.0,
+    "y": 0.1
+  },
   "materials": [
     "Mat_concrete"
   ]

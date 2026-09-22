@@ -2,8 +2,8 @@
   "id": "Base_MedicalCot",
   "category": "BaseBuilding",
   "generator": "generate_base_building.build_medical_cot",
-  "generatorHash": "e15444e435ef9e167d97571ba0fc266920e9fcd1dfd655e2b09ba0a4ed528cb0",
-  "gitSha": "8db3f1cd9f7ef7df289a8b9b4d6ba8500d8db5f7",
+  "generatorHash": "347ced6d21c6752d180a217199bcc8fee5901e37bcd08618538465226e266b60",
+  "gitSha": "d914dbebffd2fe166ff62b598070041b9d596484",
   "blender": "4.2.11",
   "tags": [
     "camp",
@@ -25,6 +25,10 @@
     "height": 0.5256
   },
   "floor": -0.0,
+  "center": {
+    "x": 0.0,
+    "y": 0.0
+  },
   "materials": [
     "Mat_Cot_Blanket",
     "Mat_Cot_Canvas",

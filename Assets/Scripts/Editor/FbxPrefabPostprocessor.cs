@@ -77,7 +77,7 @@ namespace OutpostZero.EditorTools
                             renderer.sharedMaterial = baked;
                     }
                     if (instance.GetComponentInChildren<Collider>() == null)
-                        ModelSidecar.AddCollider(instance, ModelSidecar.ColliderOf(ModelSidecar.Load(path)));
+                        ModelSidecar.AddCollider(instance, ModelSidecar.Load(path));
                     PrefabUtility.SaveAsPrefabAsset(instance, prefabPath);
                     Object.DestroyImmediate(instance);
                 }

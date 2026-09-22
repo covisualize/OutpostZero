@@ -2,8 +2,8 @@
   "id": "Kit_pallet",
   "category": "Kit",
   "generator": "generate_kit.build_piece",
-  "generatorHash": "157dbb3d6a0dd8f5b89566d2a9d81cb14854c71f57fac512cff9d30b2db84c9e",
-  "gitSha": "8db3f1cd9f7ef7df289a8b9b4d6ba8500d8db5f7",
+  "generatorHash": "3aac3ccce3151ac85f4420ddbea535c0296cf5d30584ebede9548c59d6bbea3c",
+  "gitSha": "d914dbebffd2fe166ff62b598070041b9d596484",
   "blender": "4.2.11",
   "tags": [
     "kit",
@@ -25,6 +25,10 @@
     "height": 0.8
   },
   "floor": 0.0,
+  "center": {
+    "x": 0.6,
+    "y": 0.5
+  },
   "materials": [
     "Mat_wood"
   ]

@@ -2,8 +2,8 @@
   "id": "Kit_curb_ramp",
   "category": "Kit",
   "generator": "generate_kit.build_piece",
-  "generatorHash": "2f50beeeec22c0d816db39e5cc18360fc522cba44feee98976f5704d651ad945",
-  "gitSha": "8db3f1cd9f7ef7df289a8b9b4d6ba8500d8db5f7",
+  "generatorHash": "594772111b19d523b37a1e8a1c5de7a4e9205e3dedd629fa71e89dcf8bef4137",
+  "gitSha": "d914dbebffd2fe166ff62b598070041b9d596484",
   "blender": "4.2.11",
   "tags": [
     "kit",
@@ -25,6 +25,10 @@
     "height": 0.08
   },
   "floor": 0.0,
+  "center": {
+    "x": 1.0,
+    "y": 0.5
+  },
   "materials": [
     "Mat_concrete"
   ]

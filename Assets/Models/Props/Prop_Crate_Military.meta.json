@@ -2,8 +2,8 @@
   "id": "Prop_Crate_Military",
   "category": "Props",
   "generator": "generate_props.build_crate_military",
-  "generatorHash": "4f901a8074ae2ec09575989472209bf78e8d78a9af3cd53fe6616bd1f5258591",
-  "gitSha": "8db3f1cd9f7ef7df289a8b9b4d6ba8500d8db5f7",
+  "generatorHash": "c4568bcf08dbafb4c47013e3ebf055873ee9fbd32e017006db51271d11768d33",
+  "gitSha": "d914dbebffd2fe166ff62b598070041b9d596484",
   "blender": "4.2.11",
   "tags": [
     "container"
@@ -24,6 +24,10 @@
     "height": 0.5
   },
   "floor": 0.0,
+  "center": {
+    "x": 0.0,
+    "y": 0.0075
+  },
   "materials": [
     "Mat_Mil_Latches",
     "Mat_Mil_OliveDrab"

@@ -2,8 +2,8 @@
   "id": "Kit_chair",
   "category": "Kit",
   "generator": "generate_kit.build_piece",
-  "generatorHash": "92f538708a6b9c3e1114b5542776a2a7b41787215dbc1e13e2f07a52b454b305",
-  "gitSha": "8db3f1cd9f7ef7df289a8b9b4d6ba8500d8db5f7",
+  "generatorHash": "441ae4c4687f9e9b8cf82e85f438b8daa889f2e73a3f4bab93872bbcf3ef9af4",
+  "gitSha": "d914dbebffd2fe166ff62b598070041b9d596484",
   "blender": "4.2.11",
   "tags": [
     "kit",
@@ -25,6 +25,10 @@
     "height": 0.9
   },
   "floor": 0.0,
+  "center": {
+    "x": 0.25,
+    "y": 0.25
+  },
   "materials": [
     "Mat_wood"
   ]

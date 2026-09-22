@@ -2,8 +2,8 @@
   "id": "Kit_parking",
   "category": "Kit",
   "generator": "generate_kit.build_piece",
-  "generatorHash": "18d22e480c32bde1d934b845916a0319a0c82527747da0cb5320ffdf30c0d3e4",
-  "gitSha": "8db3f1cd9f7ef7df289a8b9b4d6ba8500d8db5f7",
+  "generatorHash": "7d50a5edd7730e4a6baa39aefa75524ab24ff1b5eb603321f6007568cb0526a8",
+  "gitSha": "d914dbebffd2fe166ff62b598070041b9d596484",
   "blender": "4.2.11",
   "tags": [
     "kit",
@@ -25,6 +25,10 @@
     "height": 0.08
   },
   "floor": 0.0,
+  "center": {
+    "x": 1.0,
+    "y": 1.0
+  },
   "materials": [
     "Mat_concrete"
   ]

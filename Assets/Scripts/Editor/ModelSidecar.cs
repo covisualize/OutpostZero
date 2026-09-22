@@ -23,6 +23,13 @@ namespace OutpostZero.EditorTools
             public float height;
         }
 
+        [Serializable]
+        public class Center
+        {
+            public float x;
+            public float y;
+        }
+
         public string id;
         public string category;
         public string generator;
@@ -38,6 +45,7 @@ namespace OutpostZero.EditorTools
         public int[] lodTris = new int[0];
         public Size size = new Size();
         public float floor;
+        public Center center = new Center();
         public string[] materials = new string[0];
 
         private static readonly Regex LowerLod = new Regex("_LOD([1-9][0-9]*)$");
@@ -78,6 +86,37 @@ namespace OutpostZero.EditorTools
         {
             string kind = sidecar != null ? sidecar.collider : null;
             return kind == "mesh" || kind == "convex" || kind == "none" ? kind : "box";
+        }
+
+        /// <summary>
+        /// The bind-pose bounds in Unity axes. Skinned renderers report bounds that cover every
+        /// animation pose, so the sidecar is the only honest size for a character.
+        /// </summary>
+        public static bool Box(ModelSidecar sidecar, out Vector3 middle, out Vector3 extent)
+        {
+            middle = Vector3.zero;
+            extent = Vector3.zero;
+            if (sidecar == null || sidecar.size == null) return false;
+            if (sidecar.size.width <= 0f || sidecar.size.height <= 0f || sidecar.size.depth <= 0f) return false;
+            float x = sidecar.center != null ? sidecar.center.x : 0f;
+            float y = sidecar.center != null ? sidecar.center.y : 0f;
+            middle = new Vector3(-x, sidecar.floor + sidecar.size.height * 0.5f, -y);
+            extent = new Vector3(sidecar.size.width, sidecar.size.height, sidecar.size.depth);
+            return true;
+        }
+
+        public static void AddCollider(GameObject root, ModelSidecar sidecar)
+        {
+            string kind = ColliderOf(sidecar);
+            if (root == null) return;
+            if (kind == "box" && Box(sidecar, out var middle, out var extent))
+            {
+                var box = root.AddComponent<BoxCollider>();
+                box.center = middle;
+                box.size = extent;
+                return;
+            }
+            AddCollider(root, kind);
         }
 
         /// <summary>

@@ -2,8 +2,8 @@
   "id": "Kit_road_straight",
   "category": "Kit",
   "generator": "generate_kit.build_piece",
-  "generatorHash": "d5338b4a77905c1a5e35b7060ef2cf8ff27f9a362ab315465a785953e78f9b0b",
-  "gitSha": "8db3f1cd9f7ef7df289a8b9b4d6ba8500d8db5f7",
+  "generatorHash": "09d92e7211f9b2e9a78e46f07bb4ab4dcd2fdb4aec17dacc6cd1788ae823469d",
+  "gitSha": "d914dbebffd2fe166ff62b598070041b9d596484",
   "blender": "4.2.11",
   "tags": [
     "kit",
@@ -25,6 +25,10 @@
     "height": 0.08
   },
   "floor": 0.0,
+  "center": {
+    "x": 1.0,
+    "y": 1.0
+  },
   "materials": [
     "Mat_concrete"
   ]

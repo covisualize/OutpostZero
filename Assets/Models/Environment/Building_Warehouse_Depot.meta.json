@@ -2,8 +2,8 @@
   "id": "Building_Warehouse_Depot",
   "category": "Environment",
   "generator": "generate_architecture.build_industrial_warehouse",
-  "generatorHash": "a45fd97e7d41f51646fb7f3668317c05e18e785a5faa5d75c5ba36e7c008ed67",
-  "gitSha": "8db3f1cd9f7ef7df289a8b9b4d6ba8500d8db5f7",
+  "generatorHash": "183a23cd99784e58cb7c8c69bc0abb4340cb84402525ff91ec43068a8eda337e",
+  "gitSha": "d914dbebffd2fe166ff62b598070041b9d596484",
   "blender": "4.2.11",
   "tags": [
     "building"
@@ -26,6 +26,10 @@
     "height": 8.4007
   },
   "floor": 0.0,
+  "center": {
+    "x": 0.0,
+    "y": 0.1125
+  },
   "materials": [
     "Mat_Corrugated_Steel",
     "Mat_Rollup_Door",

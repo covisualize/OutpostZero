@@ -2,8 +2,8 @@
   "id": "Road_Tile_Intersection",
   "category": "Environment",
   "generator": "generate_architecture.build_road_intersection",
-  "generatorHash": "6d3d0c324fe3292cfa0cbafddf4043a97efc70d628df22c3fbf0b81095029884",
-  "gitSha": "8db3f1cd9f7ef7df289a8b9b4d6ba8500d8db5f7",
+  "generatorHash": "fb6e47afe6d5cd78d75f74c9b9284de7a13ecc8e2507ca378fde004ad49b8114",
+  "gitSha": "d914dbebffd2fe166ff62b598070041b9d596484",
   "blender": "4.2.11",
   "tags": [
     "road"
@@ -24,6 +24,10 @@
     "height": 0.16
   },
   "floor": 0.0,
+  "center": {
+    "x": 0.0,
+    "y": 0.0
+  },
   "materials": [
     "Mat_Road_Asphalt",
     "Mat_Road_Stripes_White",

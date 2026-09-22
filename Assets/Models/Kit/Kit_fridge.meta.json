@@ -2,8 +2,8 @@
   "id": "Kit_fridge",
   "category": "Kit",
   "generator": "generate_kit.build_piece",
-  "generatorHash": "74de2c2489d4c4d88fa048f7f9c7862a828479d0098afc4c381c7727ecb3e3c8",
-  "gitSha": "8db3f1cd9f7ef7df289a8b9b4d6ba8500d8db5f7",
+  "generatorHash": "348705082793ef2b4fe3c1f88b2cdaad846474623daf528dfec465db17eca9e1",
+  "gitSha": "d914dbebffd2fe166ff62b598070041b9d596484",
   "blender": "4.2.11",
   "tags": [
     "kit",
@@ -25,6 +25,10 @@
     "height": 1.8
   },
   "floor": 0.0,
+  "center": {
+    "x": 0.35,
+    "y": 0.35
+  },
   "materials": [
     "Mat_metal"
   ]

@@ -2,8 +2,8 @@
   "id": "Kit_toilet",
   "category": "Kit",
   "generator": "generate_kit.build_piece",
-  "generatorHash": "bd51977dd3155acb19332f509014292d9609fe015930d2daffe27cfcf2953ba4",
-  "gitSha": "8db3f1cd9f7ef7df289a8b9b4d6ba8500d8db5f7",
+  "generatorHash": "e6ea9874c54c195d1641baeb5f4291ffd8efa1f15b33f7188b9a4d80f1e36905",
+  "gitSha": "d914dbebffd2fe166ff62b598070041b9d596484",
   "blender": "4.2.11",
   "tags": [
     "kit",
@@ -25,6 +25,10 @@
     "height": 1.2
   },
   "floor": 0.0,
+  "center": {
+    "x": 0.4,
+    "y": 0.6
+  },
   "materials": [
     "Mat_concrete"
   ]

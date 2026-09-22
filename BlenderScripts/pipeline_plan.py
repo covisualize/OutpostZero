@@ -240,6 +240,10 @@ def sidecar(entry, stats, digest, git_sha, blender):
             "height": stats.get("height", 0.0),
         },
         "floor": stats.get("floor", 0.0),
+        "center": {
+            "x": stats.get("centerX", 0.0),
+            "y": stats.get("centerY", 0.0),
+        },
         "materials": list(stats.get("materials") or []),
     }
 

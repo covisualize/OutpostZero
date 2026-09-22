@@ -2,8 +2,8 @@
   "id": "Loot_Painkillers",
   "category": "Weapons",
   "generator": "generate_items.build_painkillers",
-  "generatorHash": "7068382681a4185835287cece33bf8185d20639133042442b0745a2eb382b791",
-  "gitSha": "8db3f1cd9f7ef7df289a8b9b4d6ba8500d8db5f7",
+  "generatorHash": "cb05b9e8c19905283f104c59aeba8dbf1854cceb1b465001e1e1ffe3e5a878dc",
+  "gitSha": "d914dbebffd2fe166ff62b598070041b9d596484",
   "blender": "4.2.11",
   "tags": [
     "loot",
@@ -25,6 +25,10 @@
     "height": 0.045
   },
   "floor": 0.0,
+  "center": {
+    "x": 0.0069,
+    "y": 0.0
+  },
   "materials": [
     "Mat_Item_BlisterCard",
     "Mat_Item_BlisterFoil",

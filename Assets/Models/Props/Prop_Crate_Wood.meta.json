@@ -2,8 +2,8 @@
   "id": "Prop_Crate_Wood",
   "category": "Props",
   "generator": "generate_props.build_crate_wood",
-  "generatorHash": "f78959c66881d48152f6afacf9fc38ca150c18a8dda147f2e1c86de82c32fb25",
-  "gitSha": "8db3f1cd9f7ef7df289a8b9b4d6ba8500d8db5f7",
+  "generatorHash": "965da7ffe794caaf7483c7d25d668f4422870b92234abf51f78db0d9dd8d7e7f",
+  "gitSha": "d914dbebffd2fe166ff62b598070041b9d596484",
   "blender": "4.2.11",
   "tags": [
     "container"
@@ -24,6 +24,10 @@
     "height": 1.18
   },
   "floor": 0.0,
+  "center": {
+    "x": 0.0,
+    "y": 0.0
+  },
   "materials": [
     "Mat_Crate_Bracing",
     "Mat_Crate_Lumber"

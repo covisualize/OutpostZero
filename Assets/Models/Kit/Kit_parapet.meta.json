@@ -2,8 +2,8 @@
   "id": "Kit_parapet",
   "category": "Kit",
   "generator": "generate_kit.build_piece",
-  "generatorHash": "f2181e99c92936443e3107fe17f642d9841b4f1d1f008d2f4690a0a107b8b0a7",
-  "gitSha": "8db3f1cd9f7ef7df289a8b9b4d6ba8500d8db5f7",
+  "generatorHash": "4875951b045f1083771b28fcd5d7493868482bbee23b9400185e78f279a768a7",
+  "gitSha": "d914dbebffd2fe166ff62b598070041b9d596484",
   "blender": "4.2.11",
   "tags": [
     "kit",
@@ -25,6 +25,10 @@
     "height": 0.4
   },
   "floor": 0.0,
+  "center": {
+    "x": 1.0,
+    "y": 0.1
+  },
   "materials": [
     "Mat_concrete"
   ]

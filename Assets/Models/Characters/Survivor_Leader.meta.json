@@ -2,8 +2,8 @@
   "id": "Survivor_Leader",
   "category": "Characters",
   "generator": "generate_characters.build_player_leader",
-  "generatorHash": "f4031e448b53d2d346d53767822c5ef2dfb3c2c4124e11a7c11c212b403e9d2b",
-  "gitSha": "8db3f1cd9f7ef7df289a8b9b4d6ba8500d8db5f7",
+  "generatorHash": "d5a9b58cdea9404c0ce552a1b1cd779f48077cd168dd4ad156df332399aa6516",
+  "gitSha": "d914dbebffd2fe166ff62b598070041b9d596484",
   "blender": "4.2.11",
   "tags": [
     "character",
@@ -25,6 +25,10 @@
     "height": 1.86
   },
   "floor": -0.0,
+  "center": {
+    "x": -0.01,
+    "y": 0.0175
+  },
   "materials": [
     "Mat_Backpack_Tan",
     "Mat_Boots_Leather",

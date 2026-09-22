@@ -2,8 +2,8 @@
   "id": "Kit_tower_segment",
   "category": "Kit",
   "generator": "generate_kit.build_piece",
-  "generatorHash": "157822b79c81d4c984069f3e18cde78f4ecb74b19fe006badc687319e04446d4",
-  "gitSha": "8db3f1cd9f7ef7df289a8b9b4d6ba8500d8db5f7",
+  "generatorHash": "aaaf6571cdf2e561c77ff15d1b733ee0a549ad41694b2e19d908c21ab6578743",
+  "gitSha": "d914dbebffd2fe166ff62b598070041b9d596484",
   "blender": "4.2.11",
   "tags": [
     "kit",
@@ -25,6 +25,10 @@
     "height": 2.0
   },
   "floor": 0.0,
+  "center": {
+    "x": 1.0,
+    "y": 1.0
+  },
   "materials": [
     "Mat_wood"
   ]

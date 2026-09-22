@@ -2,8 +2,8 @@
   "id": "Prop_Barrel_Toxic",
   "category": "Props",
   "generator": "generate_props.build_barrel_toxic",
-  "generatorHash": "c74238946206b79c890cdb71b2c5d7d553cb04ed001f767d079e69413403fdde",
-  "gitSha": "8db3f1cd9f7ef7df289a8b9b4d6ba8500d8db5f7",
+  "generatorHash": "ba158fa60ae2d28755382a303a9f5ceb28046093afb5c186555d12441e9a323a",
+  "gitSha": "d914dbebffd2fe166ff62b598070041b9d596484",
   "blender": "4.2.11",
   "tags": [
     "barrel"
@@ -24,6 +24,10 @@
     "height": 0.94
   },
   "floor": 0.0,
+  "center": {
+    "x": 0.0,
+    "y": 0.0
+  },
   "materials": [
     "Mat_Barrel_ToxicYellow",
     "Mat_Biohazard_Black"

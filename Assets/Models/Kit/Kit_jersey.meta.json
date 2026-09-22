@@ -2,8 +2,8 @@
   "id": "Kit_jersey",
   "category": "Kit",
   "generator": "generate_kit.build_piece",
-  "generatorHash": "f4a359ff03140baafd3b0847411c2743557f9cd566c66fd2884de14013710e33",
-  "gitSha": "8db3f1cd9f7ef7df289a8b9b4d6ba8500d8db5f7",
+  "generatorHash": "af1eceda07734bcf7817f8568e4c59c2024d739edbc00432d17cdff0a6148729",
+  "gitSha": "d914dbebffd2fe166ff62b598070041b9d596484",
   "blender": "4.2.11",
   "tags": [
     "kit",
@@ -25,6 +25,10 @@
     "height": 0.8
   },
   "floor": 0.0,
+  "center": {
+    "x": 1.0,
+    "y": 0.3
+  },
   "materials": [
     "Mat_concrete"
   ]

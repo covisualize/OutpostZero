@@ -2,8 +2,8 @@
   "id": "Kit_alley",
   "category": "Kit",
   "generator": "generate_kit.build_piece",
-  "generatorHash": "45874dbc820ba096b1dc4df6aedc81da25f401c231362dcec874cc078d726302",
-  "gitSha": "8db3f1cd9f7ef7df289a8b9b4d6ba8500d8db5f7",
+  "generatorHash": "2ff4ff8033e85b781491c4ea311cb63b48d5f66ec91950c52398b3cf2d9ece8c",
+  "gitSha": "d914dbebffd2fe166ff62b598070041b9d596484",
   "blender": "4.2.11",
   "tags": [
     "kit",
@@ -25,6 +25,10 @@
     "height": 0.08
   },
   "floor": 0.0,
+  "center": {
+    "x": 1.0,
+    "y": 1.0
+  },
   "materials": [
     "Mat_concrete"
   ]

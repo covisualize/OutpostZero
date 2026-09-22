@@ -2,8 +2,8 @@
   "id": "Kit_desk",
   "category": "Kit",
   "generator": "generate_kit.build_piece",
-  "generatorHash": "1384b389191a0ee4f9494f3e11d9ac467e763f5a9fc7495812f5e34210c992aa",
-  "gitSha": "8db3f1cd9f7ef7df289a8b9b4d6ba8500d8db5f7",
+  "generatorHash": "07fe60216c315363d15a179b7b7d66c6d740763eccfa9c380bc4fd6a0e95c434",
+  "gitSha": "d914dbebffd2fe166ff62b598070041b9d596484",
   "blender": "4.2.11",
   "tags": [
     "kit",
@@ -25,6 +25,10 @@
     "height": 0.75
   },
   "floor": 0.0,
+  "center": {
+    "x": 0.7,
+    "y": 0.35
+  },
   "materials": [
     "Mat_wood"
   ]

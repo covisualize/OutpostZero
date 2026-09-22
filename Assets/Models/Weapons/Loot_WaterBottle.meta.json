@@ -2,8 +2,8 @@
   "id": "Loot_WaterBottle",
   "category": "Weapons",
   "generator": "generate_items.build_water_bottle",
-  "generatorHash": "e717816f16446a30d763d0b523e5977c3c8e3df759b11ebc1afe800cda3193c9",
-  "gitSha": "8db3f1cd9f7ef7df289a8b9b4d6ba8500d8db5f7",
+  "generatorHash": "4b9b063d1b86feca03527206f48229a3234503fb905ffb17c2e1521727933368",
+  "gitSha": "d914dbebffd2fe166ff62b598070041b9d596484",
   "blender": "4.2.11",
   "tags": [
     "loot",
@@ -25,6 +25,10 @@
     "height": 0.237
   },
   "floor": 0.0,
+  "center": {
+    "x": 0.0,
+    "y": 0.0
+  },
   "materials": [
     "Mat_Item_BottleCap",
     "Mat_Item_BottleLabel",

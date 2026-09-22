@@ -2,8 +2,8 @@
   "id": "Base_CraftingWorkbench",
   "category": "BaseBuilding",
   "generator": "generate_base_building.build_workbench",
-  "generatorHash": "37689fb372eafcc15e885d13dbcaa560b92bb1d51e59b84053cc330929817cfa",
-  "gitSha": "8db3f1cd9f7ef7df289a8b9b4d6ba8500d8db5f7",
+  "generatorHash": "8569afe76484467d7b66fa002477acf0617dbd5de8928c460c194fd4be3056b5",
+  "gitSha": "d914dbebffd2fe166ff62b598070041b9d596484",
   "blender": "4.2.11",
   "tags": [
     "camp",
@@ -25,6 +25,10 @@
     "height": 1.875
   },
   "floor": 0.0,
+  "center": {
+    "x": 0.0,
+    "y": 0.0
+  },
   "materials": [
     "Mat_Bench_Timber",
     "Mat_Bench_ViseMetal",

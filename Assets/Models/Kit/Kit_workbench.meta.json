@@ -2,8 +2,8 @@
   "id": "Kit_workbench",
   "category": "Kit",
   "generator": "generate_kit.build_piece",
-  "generatorHash": "67a89f0ba202b0fead0e477ccb3d16ddd678d0e606662051c2a5c942c4b66e85",
-  "gitSha": "8db3f1cd9f7ef7df289a8b9b4d6ba8500d8db5f7",
+  "generatorHash": "7b4e210541008e4e47bf1d7aaf0c344f9f3b5e055fd38fdd127caf0ff5a6fdc2",
+  "gitSha": "d914dbebffd2fe166ff62b598070041b9d596484",
   "blender": "4.2.11",
   "tags": [
     "kit",
@@ -25,6 +25,10 @@
     "height": 0.9
   },
   "floor": 0.0,
+  "center": {
+    "x": 0.8,
+    "y": 0.35
+  },
   "materials": [
     "Mat_wood"
   ]

@@ -2,8 +2,8 @@
   "id": "Kit_fence",
   "category": "Kit",
   "generator": "generate_kit.build_piece",
-  "generatorHash": "83b9f370f8d07fa8ec7f74885e84e0afb0057eeb73e58e7210fafaeb1a7b6ff1",
-  "gitSha": "8db3f1cd9f7ef7df289a8b9b4d6ba8500d8db5f7",
+  "generatorHash": "6261381ae0e3a80b4613d19bdb67572b7753a072a7fb571c0daa6c1ac4a40433",
+  "gitSha": "d914dbebffd2fe166ff62b598070041b9d596484",
   "blender": "4.2.11",
   "tags": [
     "kit",
@@ -25,6 +25,10 @@
     "height": 2.0
   },
   "floor": 0.0,
+  "center": {
+    "x": 1.0,
+    "y": 0.04
+  },
   "materials": [
     "Mat_metal"
   ]

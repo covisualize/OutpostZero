@@ -2,8 +2,8 @@
   "id": "Kit_drain",
   "category": "Kit",
   "generator": "generate_kit.build_piece",
-  "generatorHash": "40fca5367bcee6c6eb90bf7c294de7c85907708e03bc0d335fe670ed3402c12c",
-  "gitSha": "8db3f1cd9f7ef7df289a8b9b4d6ba8500d8db5f7",
+  "generatorHash": "5e8429dea6281ae4aee985f0f1ece1978286193b12fb4aa48129fe8e4d395591",
+  "gitSha": "d914dbebffd2fe166ff62b598070041b9d596484",
   "blender": "4.2.11",
   "tags": [
     "kit",
@@ -25,6 +25,10 @@
     "height": 0.08
   },
   "floor": 0.0,
+  "center": {
+    "x": 0.2,
+    "y": 1.0
+  },
   "materials": [
     "Mat_metal"
   ]

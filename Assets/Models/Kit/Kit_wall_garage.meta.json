@@ -2,8 +2,8 @@
   "id": "Kit_wall_garage",
   "category": "Kit",
   "generator": "generate_kit.build_piece",
-  "generatorHash": "e8ccf6c4f20ad791ece41bcbfd75382d9a224259f8957fccb5ef4c4969e57f99",
-  "gitSha": "8db3f1cd9f7ef7df289a8b9b4d6ba8500d8db5f7",
+  "generatorHash": "9c9f25565dc14c763d6a59e819e47dfc4599c33996c8753c7132491f3cc3d6f7",
+  "gitSha": "d914dbebffd2fe166ff62b598070041b9d596484",
   "blender": "4.2.11",
   "tags": [
     "kit",
@@ -25,6 +25,10 @@
     "height": 3.0
   },
   "floor": 0.0,
+  "center": {
+    "x": 2.0,
+    "y": 0.1
+  },
   "materials": [
     "Mat_concrete"
   ]

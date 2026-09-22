@@ -2,8 +2,8 @@
   "id": "Kit_floor",
   "category": "Kit",
   "generator": "generate_kit.build_piece",
-  "generatorHash": "d20728aeb6aa15927a2ceb5ec32f904df6ecbd7bf209943dea9f7f3acedf3863",
-  "gitSha": "8db3f1cd9f7ef7df289a8b9b4d6ba8500d8db5f7",
+  "generatorHash": "a2aad57023f654bc6a79fd9e98b2a8547b065551bf15fd32c6bd8e8fd649bd1f",
+  "gitSha": "d914dbebffd2fe166ff62b598070041b9d596484",
   "blender": "4.2.11",
   "tags": [
     "kit",
@@ -25,6 +25,10 @@
     "height": 0.1
   },
   "floor": 0.0,
+  "center": {
+    "x": 1.0,
+    "y": 1.0
+  },
   "materials": [
     "Mat_concrete"
   ]

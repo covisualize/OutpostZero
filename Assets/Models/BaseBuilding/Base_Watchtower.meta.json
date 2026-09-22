@@ -2,8 +2,8 @@
   "id": "Base_Watchtower",
   "category": "BaseBuilding",
   "generator": "generate_base_building.build_watchtower",
-  "generatorHash": "f6ba51dca89e4224963cc4b042384343da7a4c51a5c1c004c3fbec6a0705c4d4",
-  "gitSha": "8db3f1cd9f7ef7df289a8b9b4d6ba8500d8db5f7",
+  "generatorHash": "2c23204614533c20fc01235c35c60d30a3f8113d53a3bba15cdb6ce910b122c1",
+  "gitSha": "d914dbebffd2fe166ff62b598070041b9d596484",
   "blender": "4.2.11",
   "tags": [
     "camp",
@@ -25,6 +25,10 @@
     "height": 5.4802
   },
   "floor": 0.0,
+  "center": {
+    "x": -0.0,
+    "y": 0.0
+  },
   "materials": [
     "Mat_Tower_Timber",
     "Mat_Tower_TinRoof"

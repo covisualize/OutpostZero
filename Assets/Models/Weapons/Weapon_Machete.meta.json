@@ -2,8 +2,8 @@
   "id": "Weapon_Machete",
   "category": "Weapons",
   "generator": "generate_weapons.build_machete",
-  "generatorHash": "e023f99b0e5ecf803f7749258a6f442588258a8e3b168795bc3f27c53d2b4ec8",
-  "gitSha": "8db3f1cd9f7ef7df289a8b9b4d6ba8500d8db5f7",
+  "generatorHash": "b0812037a4dbdb13424f9b04d5c524527d711f7cc6d920171dde18cfccbeece3",
+  "gitSha": "d914dbebffd2fe166ff62b598070041b9d596484",
   "blender": "4.2.11",
   "tags": [
     "weapon",
@@ -26,6 +26,10 @@
     "height": 0.109
   },
   "floor": -0.025,
+  "center": {
+    "x": -0.0,
+    "y": 0.1193
+  },
   "materials": [
     "Mat_Blade_Steel",
     "Mat_Handle_CordWrap",

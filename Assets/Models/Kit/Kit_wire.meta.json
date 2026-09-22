@@ -2,8 +2,8 @@
   "id": "Kit_wire",
   "category": "Kit",
   "generator": "generate_kit.build_piece",
-  "generatorHash": "b2795a56095f0dd77ee224c2d3a07ef194283ef97f0b86c1f2b8d19764998b03",
-  "gitSha": "8db3f1cd9f7ef7df289a8b9b4d6ba8500d8db5f7",
+  "generatorHash": "cd08d56777a97d3cef8d2694541b90f6ede24de65af0f4169b78e893b79be7ff",
+  "gitSha": "d914dbebffd2fe166ff62b598070041b9d596484",
   "blender": "4.2.11",
   "tags": [
     "kit",
@@ -25,6 +25,10 @@
     "height": 1.1
   },
   "floor": 0.0,
+  "center": {
+    "x": 1.0,
+    "y": 0.2
+  },
   "materials": [
     "Mat_metal"
   ]

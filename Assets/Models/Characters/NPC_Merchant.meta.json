@@ -2,8 +2,8 @@
   "id": "NPC_Merchant",
   "category": "Characters",
   "generator": "generate_characters.build_npc_merchant",
-  "generatorHash": "5f161a984cb89fe1849d867fd130a186935bc923510d6be2ce478f3287c01966",
-  "gitSha": "8db3f1cd9f7ef7df289a8b9b4d6ba8500d8db5f7",
+  "generatorHash": "80a1feda03893b639edf369214a658daef354b63eae97120ca97134f0e62e0a1",
+  "gitSha": "d914dbebffd2fe166ff62b598070041b9d596484",
   "blender": "4.2.11",
   "tags": [
     "character",
@@ -25,6 +25,10 @@
     "height": 1.86
   },
   "floor": -0.0,
+  "center": {
+    "x": 0.0,
+    "y": -0.03
+  },
   "materials": [
     "Mat_Cloth_Scarf",
     "Mat_Coat_Duster",

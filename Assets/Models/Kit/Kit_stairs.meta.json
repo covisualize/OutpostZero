@@ -2,8 +2,8 @@
   "id": "Kit_stairs",
   "category": "Kit",
   "generator": "generate_kit.build_piece",
-  "generatorHash": "4665d1bbf3fe2e88e024606be559333ee6a724879e374c671eacd31a32f841aa",
-  "gitSha": "8db3f1cd9f7ef7df289a8b9b4d6ba8500d8db5f7",
+  "generatorHash": "e6595795d99e173c0679275bb583f7b47323b9c01877780032baf01e2e169123",
+  "gitSha": "d914dbebffd2fe166ff62b598070041b9d596484",
   "blender": "4.2.11",
   "tags": [
     "kit",
@@ -25,6 +25,10 @@
     "height": 3.0
   },
   "floor": 0.0,
+  "center": {
+    "x": 1.0,
+    "y": 2.04
+  },
   "materials": [
     "Mat_concrete"
   ]

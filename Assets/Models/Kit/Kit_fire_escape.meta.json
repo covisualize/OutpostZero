@@ -2,8 +2,8 @@
   "id": "Kit_fire_escape",
   "category": "Kit",
   "generator": "generate_kit.build_piece",
-  "generatorHash": "2f4e4aa9c485d8ea7bbe8a575d0cb3759cccfe86b13bd5746117fbb549f9938e",
-  "gitSha": "8db3f1cd9f7ef7df289a8b9b4d6ba8500d8db5f7",
+  "generatorHash": "82d5f1519612b946ef2b7f8aded656e2cacea7ccbf2079552ad2ec584193d29d",
+  "gitSha": "d914dbebffd2fe166ff62b598070041b9d596484",
   "blender": "4.2.11",
   "tags": [
     "kit",
@@ -25,6 +25,10 @@
     "height": 3.0
   },
   "floor": 0.0,
+  "center": {
+    "x": 0.6,
+    "y": 1.1
+  },
   "materials": [
     "Mat_metal"
   ]

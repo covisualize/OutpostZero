@@ -2,8 +2,8 @@
   "id": "Kit_vending",
   "category": "Kit",
   "generator": "generate_kit.build_piece",
-  "generatorHash": "98a08dcab9c007ce9c08659f61a64849676ee30872c96809b5e3c37328814460",
-  "gitSha": "8db3f1cd9f7ef7df289a8b9b4d6ba8500d8db5f7",
+  "generatorHash": "1c7408acf4459ad6d918fdb2428d9e2292793a911a2b0d02efe2c51205433e6a",
+  "gitSha": "d914dbebffd2fe166ff62b598070041b9d596484",
   "blender": "4.2.11",
   "tags": [
     "kit",
@@ -25,6 +25,10 @@
     "height": 1.8
   },
   "floor": 0.0,
+  "center": {
+    "x": 0.45,
+    "y": 0.35
+  },
   "materials": [
     "Mat_metal"
   ]

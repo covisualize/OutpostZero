@@ -212,7 +212,7 @@ class SidecarTests(unittest.TestCase):
     def test_sidecar_records_what_unity_reads(self):
         manifest = plan.load_manifest(repo_root())
         entry = plan.select(manifest, only=["Vehicle_Wrecked_Sedan"])[0]
-        stats = {"tris": 1500, "lodTris": [1000, 500], "width": 1.9, "depth": 4.4, "height": 1.3, "floor": 0.0, "materials": ["B", "A"]}
+        stats = {"tris": 1500, "lodTris": [1000, 500], "width": 1.9, "depth": 4.4, "height": 1.3, "floor": 0.0, "centerX": 0.1, "centerY": -0.2, "materials": ["B", "A"]}
         record = plan.sidecar(entry, stats, "abc", "deadbeef", "4.2.11")
         self.assertEqual(record["collider"], "box")
         self.assertEqual(record["pivot"], "bottom")
@@ -221,6 +221,7 @@ class SidecarTests(unittest.TestCase):
         self.assertEqual(record["gitSha"], "deadbeef")
         self.assertEqual(record["generatorHash"], "abc")
         self.assertEqual(record["size"], {"width": 1.9, "depth": 4.4, "height": 1.3})
+        self.assertEqual(record["center"], {"x": 0.1, "y": -0.2})
 
     def test_sidecar_paths_sit_beside_the_fbx(self):
         entry = {"output": "Props/Prop_Dumpster.fbx"}

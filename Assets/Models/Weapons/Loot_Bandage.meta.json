@@ -2,8 +2,8 @@
   "id": "Loot_Bandage",
   "category": "Weapons",
   "generator": "generate_items.build_bandage",
-  "generatorHash": "2013b95e906239fc457dbe61eea9ec9cf27c1885ceb94e24e856ecf656991a63",
-  "gitSha": "8db3f1cd9f7ef7df289a8b9b4d6ba8500d8db5f7",
+  "generatorHash": "d6c877baf4142b2c558ca44e7f2616f30880e86b2b35b9e4ee3264bde729fd3d",
+  "gitSha": "d914dbebffd2fe166ff62b598070041b9d596484",
   "blender": "4.2.11",
   "tags": [
     "loot",
@@ -25,6 +25,10 @@
     "height": 0.07
   },
   "floor": 0.0,
+  "center": {
+    "x": 0.0015,
+    "y": -0.025
+  },
   "materials": [
     "Mat_Item_Clip",
     "Mat_Item_Gauze"

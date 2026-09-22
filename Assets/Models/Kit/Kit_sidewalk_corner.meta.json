@@ -2,8 +2,8 @@
   "id": "Kit_sidewalk_corner",
   "category": "Kit",
   "generator": "generate_kit.build_piece",
-  "generatorHash": "a990c0d90d6fcf36cf95bc1f96c48358fa30bb3e6bf815cc1cece52d05ecc411",
-  "gitSha": "8db3f1cd9f7ef7df289a8b9b4d6ba8500d8db5f7",
+  "generatorHash": "aa23be7cab75900d7e574e3880c0b0027ea3307234a959f3d82dbed6b358a3da",
+  "gitSha": "d914dbebffd2fe166ff62b598070041b9d596484",
   "blender": "4.2.11",
   "tags": [
     "kit",
@@ -25,6 +25,10 @@
     "height": 0.15
   },
   "floor": 0.0,
+  "center": {
+    "x": 1.0,
+    "y": 1.0
+  },
   "materials": [
     "Mat_concrete"
   ]

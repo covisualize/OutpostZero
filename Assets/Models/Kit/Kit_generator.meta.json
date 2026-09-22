@@ -2,8 +2,8 @@
   "id": "Kit_generator",
   "category": "Kit",
   "generator": "generate_kit.build_piece",
-  "generatorHash": "db36fb0bc67b6f8de3125fea3ddadfb38f2239ac87cdc7d421d96ffc1df10f4e",
-  "gitSha": "8db3f1cd9f7ef7df289a8b9b4d6ba8500d8db5f7",
+  "generatorHash": "010f9a677631649cfa869142d771eb85d36e97bc4dd72efc0915311abe0c10c7",
+  "gitSha": "d914dbebffd2fe166ff62b598070041b9d596484",
   "blender": "4.2.11",
   "tags": [
     "kit",
@@ -25,6 +25,10 @@
     "height": 0.8
   },
   "floor": 0.0,
+  "center": {
+    "x": 0.55,
+    "y": 0.35
+  },
   "materials": [
     "Mat_metal"
   ]

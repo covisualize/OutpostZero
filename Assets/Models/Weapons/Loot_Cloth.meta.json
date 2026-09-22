@@ -2,8 +2,8 @@
   "id": "Loot_Cloth",
   "category": "Weapons",
   "generator": "generate_items.build_cloth",
-  "generatorHash": "4752975fa2bde69e3f292f348a0f312519332b68fc8b7f73cd2918d6227dad08",
-  "gitSha": "8db3f1cd9f7ef7df289a8b9b4d6ba8500d8db5f7",
+  "generatorHash": "69b43c49a76be06e9729c1feaec5301c569cdabeea875d07fa2257a2ccf27c0e",
+  "gitSha": "d914dbebffd2fe166ff62b598070041b9d596484",
   "blender": "4.2.11",
   "tags": [
     "loot",
@@ -25,6 +25,10 @@
     "height": 0.066
   },
   "floor": 0.0,
+  "center": {
+    "x": 0.008,
+    "y": -0.006
+  },
   "materials": [
     "Mat_Item_Cloth0",
     "Mat_Item_Cloth1",

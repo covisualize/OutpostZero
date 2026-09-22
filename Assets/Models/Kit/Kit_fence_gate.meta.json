@@ -2,8 +2,8 @@
   "id": "Kit_fence_gate",
   "category": "Kit",
   "generator": "generate_kit.build_piece",
-  "generatorHash": "d3a1331e79a6b681dfcfaa5897a49f78ca6befd075294bfb959ff1d3185185ab",
-  "gitSha": "8db3f1cd9f7ef7df289a8b9b4d6ba8500d8db5f7",
+  "generatorHash": "2474620fb2996c93a532de4729f4410e6e6ea43542d77b421ab8d2f19a80c1ae",
+  "gitSha": "d914dbebffd2fe166ff62b598070041b9d596484",
   "blender": "4.2.11",
   "tags": [
     "kit",
@@ -25,6 +25,10 @@
     "height": 2.0
   },
   "floor": 0.0,
+  "center": {
+    "x": 1.0,
+    "y": 0.04
+  },
   "materials": [
     "Mat_metal"
   ]

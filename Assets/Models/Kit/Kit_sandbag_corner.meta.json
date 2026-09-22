@@ -2,8 +2,8 @@
   "id": "Kit_sandbag_corner",
   "category": "Kit",
   "generator": "generate_kit.build_piece",
-  "generatorHash": "2ab46914c15b368f5a00b30b0e4d5e9b0b629756eb27636e58c175172c51e6cd",
-  "gitSha": "8db3f1cd9f7ef7df289a8b9b4d6ba8500d8db5f7",
+  "generatorHash": "ac1115bb7ba7d250f826e404ee1e89734c8b4769dea250a1f833dd563370a659",
+  "gitSha": "d914dbebffd2fe166ff62b598070041b9d596484",
   "blender": "4.2.11",
   "tags": [
     "kit",
@@ -25,6 +25,10 @@
     "height": 0.6
   },
   "floor": 0.0,
+  "center": {
+    "x": 0.3,
+    "y": 0.3
+  },
   "materials": [
     "Mat_concrete"
   ]

@@ -2,8 +2,8 @@
   "id": "Weapon_Shotgun_Pump",
   "category": "Weapons",
   "generator": "generate_weapons.build_shotgun",
-  "generatorHash": "112b1ef2b6795f9130a9e97f6a37b9c7a59dd3d19774d1a7e22fa16b89355968",
-  "gitSha": "8db3f1cd9f7ef7df289a8b9b4d6ba8500d8db5f7",
+  "generatorHash": "a5675c531b4593767b78d3bdeeb0d4e027f7f12baf1d70164502a0464e50f492",
+  "gitSha": "d914dbebffd2fe166ff62b598070041b9d596484",
   "blender": "4.2.11",
   "tags": [
     "weapon",
@@ -26,6 +26,10 @@
     "height": 0.1755
   },
   "floor": -0.0875,
+  "center": {
+    "x": 0.0,
+    "y": 0.103
+  },
   "materials": [
     "Mat_Shotgun_Metal",
     "Mat_Shotgun_RecoilPad",

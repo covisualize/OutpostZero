@@ -2,8 +2,8 @@
   "id": "Weapon_AssaultRifle",
   "category": "Weapons",
   "generator": "generate_weapons.build_assault_rifle",
-  "generatorHash": "f4373481aabf72b140840e6b4d7d79ac5877f082e0df30c76839105e7bd8b087",
-  "gitSha": "8db3f1cd9f7ef7df289a8b9b4d6ba8500d8db5f7",
+  "generatorHash": "acc58f8870ede2ef4a5236357b21c5b5507bb513518acda664a1fa6636897dd2",
+  "gitSha": "d914dbebffd2fe166ff62b598070041b9d596484",
   "blender": "4.2.11",
   "tags": [
     "weapon",
@@ -26,6 +26,10 @@
     "height": 0.2739
   },
   "floor": -0.1564,
+  "center": {
+    "x": 0.0,
+    "y": 0.115
+  },
   "materials": [
     "Mat_Rifle_Gunmetal",
     "Mat_Rifle_Mag",

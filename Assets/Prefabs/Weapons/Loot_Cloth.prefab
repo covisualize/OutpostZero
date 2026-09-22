@@ -30,11 +30,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: f1aa9203e301f2c483e75bc6a29af2b5, type: 3}
       propertyPath: m_LocalRotation.y
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: f1aa9203e301f2c483e75bc6a29af2b5, type: 3}
       propertyPath: m_LocalRotation.z
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: f1aa9203e301f2c483e75bc6a29af2b5, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
@@ -88,5 +88,5 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 0.19893, y: 0.066, z: 0.152431}
-  m_Center: {x: -0.004, y: 0.033, z: 0.003}
+  m_Size: {x: 0.2155, y: 0.066, z: 0.1813}
+  m_Center: {x: -0.008, y: 0.033, z: 0.006}

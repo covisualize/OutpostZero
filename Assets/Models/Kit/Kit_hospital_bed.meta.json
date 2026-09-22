@@ -2,8 +2,8 @@
   "id": "Kit_hospital_bed",
   "category": "Kit",
   "generator": "generate_kit.build_piece",
-  "generatorHash": "d32de7a04436dc142060439fe63cc545e39b9f032d377950699cdbd355ff1b9d",
-  "gitSha": "8db3f1cd9f7ef7df289a8b9b4d6ba8500d8db5f7",
+  "generatorHash": "630c85c15b274b903fa54d112f649b7ba566e416ea689a3fe3cc16003d43e9f8",
+  "gitSha": "d914dbebffd2fe166ff62b598070041b9d596484",
   "blender": "4.2.11",
   "tags": [
     "kit",
@@ -25,6 +25,10 @@
     "height": 0.7
   },
   "floor": 0.0,
+  "center": {
+    "x": 1.0,
+    "y": 0.45
+  },
   "materials": [
     "Mat_metal"
   ]

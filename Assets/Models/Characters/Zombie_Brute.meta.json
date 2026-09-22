@@ -2,8 +2,8 @@
   "id": "Zombie_Brute",
   "category": "Characters",
   "generator": "generate_characters.build_zombie_brute",
-  "generatorHash": "bab1444544700e857316a1528edc60f14438fa4893bd7802e5d36742c5bfc2e6",
-  "gitSha": "8db3f1cd9f7ef7df289a8b9b4d6ba8500d8db5f7",
+  "generatorHash": "bec29132562457dd583413b686d2bd743cde4cdb18db92710817144dce399913",
+  "gitSha": "d914dbebffd2fe166ff62b598070041b9d596484",
   "blender": "4.2.11",
   "tags": [
     "character",
@@ -25,6 +25,10 @@
     "height": 2.15
   },
   "floor": 0.0,
+  "center": {
+    "x": 0.0975,
+    "y": 0.0889
+  },
   "materials": [
     "Mat_Bone_Calcified",
     "Mat_Brute_Overalls",

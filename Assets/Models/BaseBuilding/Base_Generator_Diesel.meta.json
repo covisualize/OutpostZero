@@ -2,8 +2,8 @@
   "id": "Base_Generator_Diesel",
   "category": "BaseBuilding",
   "generator": "generate_base_building.build_generator",
-  "generatorHash": "4e5a36ae80af606f37ce7b2cc7c8f0e322f02feef64db9d24817baa1471358f5",
-  "gitSha": "8db3f1cd9f7ef7df289a8b9b4d6ba8500d8db5f7",
+  "generatorHash": "59b444efc96361215bcef83267ffd678946149bf7d9371c5d5749a7b0ac857d6",
+  "gitSha": "d914dbebffd2fe166ff62b598070041b9d596484",
   "blender": "4.2.11",
   "tags": [
     "camp",
@@ -25,6 +25,10 @@
     "height": 0.9
   },
   "floor": 0.0,
+  "center": {
+    "x": 0.0,
+    "y": 0.0
+  },
   "materials": [
     "Mat_Gen_ControlPanel",
     "Mat_Gen_EngineMetal",

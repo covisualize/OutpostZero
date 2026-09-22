@@ -2,8 +2,8 @@
   "id": "Base_Campfire_Cooker",
   "category": "BaseBuilding",
   "generator": "generate_base_building.build_campfire_cooker",
-  "generatorHash": "a56af02c1ea4cc03d88fb46255d0399d7b0e3674a585213ebaa5924e50306271",
-  "gitSha": "8db3f1cd9f7ef7df289a8b9b4d6ba8500d8db5f7",
+  "generatorHash": "74ad9240fd1c42dad9487a8cf08428c2fa59b0791ba3b065690a6e234619dd46",
+  "gitSha": "d914dbebffd2fe166ff62b598070041b9d596484",
   "blender": "4.2.11",
   "tags": [
     "camp",
@@ -25,6 +25,10 @@
     "height": 1.3608
   },
   "floor": 0.0,
+  "center": {
+    "x": 0.0,
+    "y": 0.0
+  },
   "materials": [
     "Mat_Cook_CastIron",
     "Mat_Cook_Stakes",

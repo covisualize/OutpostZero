@@ -2,8 +2,8 @@
   "id": "Loot_RawFood",
   "category": "Weapons",
   "generator": "generate_items.build_raw_food",
-  "generatorHash": "e5cdac14cae8976d22976afba3b028d51eb5260065bc95695f1d7ff1820cda95",
-  "gitSha": "8db3f1cd9f7ef7df289a8b9b4d6ba8500d8db5f7",
+  "generatorHash": "0d3c40ea079de1bd527dc69f5559e3183ad2b61d2bd8d2191f815cdec467791d",
+  "gitSha": "d914dbebffd2fe166ff62b598070041b9d596484",
   "blender": "4.2.11",
   "tags": [
     "loot",
@@ -25,6 +25,10 @@
     "height": 0.065
   },
   "floor": 0.0,
+  "center": {
+    "x": 0.0,
+    "y": 0.0
+  },
   "materials": [
     "Mat_Item_ButcherPaper",
     "Mat_Item_Meat",

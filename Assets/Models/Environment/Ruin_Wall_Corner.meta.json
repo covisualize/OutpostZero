@@ -2,8 +2,8 @@
   "id": "Ruin_Wall_Corner",
   "category": "Environment",
   "generator": "generate_architecture.build_ruin_wall_corner",
-  "generatorHash": "2a5a94c545605c60878b77e3c46ceceedaa677b886830d5605cc89346d73f5f0",
-  "gitSha": "8db3f1cd9f7ef7df289a8b9b4d6ba8500d8db5f7",
+  "generatorHash": "57e2133d9b252d3be478ff21771bc2d172769271940840b8e35ef4b43d1d1f84",
+  "gitSha": "d914dbebffd2fe166ff62b598070041b9d596484",
   "blender": "4.2.11",
   "tags": [
     "ruin"
@@ -24,6 +24,10 @@
     "height": 3.0
   },
   "floor": 0.0,
+  "center": {
+    "x": 1.5486,
+    "y": 1.875
+  },
   "materials": [
     "Mat_Ruin_Brick",
     "Mat_Ruin_Plaster",

@@ -2,8 +2,8 @@
   "id": "Kit_counter",
   "category": "Kit",
   "generator": "generate_kit.build_piece",
-  "generatorHash": "3a9ca9daa2ef54404a8d8ac2fe6d99f3e8234b0da03715353c0f94016c101da9",
-  "gitSha": "8db3f1cd9f7ef7df289a8b9b4d6ba8500d8db5f7",
+  "generatorHash": "6cc6f528c355f03b8390459a03bb1d3bb4fcac654346544d2ff49916792a6c21",
+  "gitSha": "d914dbebffd2fe166ff62b598070041b9d596484",
   "blender": "4.2.11",
   "tags": [
     "kit",
@@ -25,6 +25,10 @@
     "height": 0.9
   },
   "floor": 0.0,
+  "center": {
+    "x": 0.8,
+    "y": 0.3
+  },
   "materials": [
     "Mat_wood"
   ]

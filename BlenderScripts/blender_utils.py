@@ -71,6 +71,8 @@ def scene_stats():
         "depth": round(highs[1] - lows[1], 4),
         "height": round(highs[2] - lows[2], 4),
         "floor": round(lows[2], 4),
+        "centerX": round((highs[0] + lows[0]) * 0.5, 4),
+        "centerY": round((highs[1] + lows[1]) * 0.5, 4),
         "materials": sorted(materials),
     }
 

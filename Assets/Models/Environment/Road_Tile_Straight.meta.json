@@ -2,8 +2,8 @@
   "id": "Road_Tile_Straight",
   "category": "Environment",
   "generator": "generate_architecture.build_road_straight",
-  "generatorHash": "ada59febb46cdc7558c43e0bb43daf57dc7352a2564f7db0ab9d034026e830b1",
-  "gitSha": "8db3f1cd9f7ef7df289a8b9b4d6ba8500d8db5f7",
+  "generatorHash": "06c51ff3a1fd9b374952ba39e4e3b548a09135917f384239f231d2d9f7e38353",
+  "gitSha": "d914dbebffd2fe166ff62b598070041b9d596484",
   "blender": "4.2.11",
   "tags": [
     "road"
@@ -24,6 +24,10 @@
     "height": 0.16
   },
   "floor": 0.0,
+  "center": {
+    "x": 0.0,
+    "y": 0.0
+  },
   "materials": [
     "Mat_Concrete_Curb",
     "Mat_Road_Asphalt",

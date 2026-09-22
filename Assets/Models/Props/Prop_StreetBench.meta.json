@@ -2,8 +2,8 @@
   "id": "Prop_StreetBench",
   "category": "Props",
   "generator": "generate_props.build_street_bench",
-  "generatorHash": "d703e4bfe699366a3d769794f2d2cb7fc0eaf6bacdd3a03494d8d7905f7e1cf2",
-  "gitSha": "8db3f1cd9f7ef7df289a8b9b4d6ba8500d8db5f7",
+  "generatorHash": "1b6022a7d6c54d0af35252e1b144ceec8de182c93ea3903ac0fab9bd55f9fbb0",
+  "gitSha": "d914dbebffd2fe166ff62b598070041b9d596484",
   "blender": "4.2.11",
   "tags": [
     "street"
@@ -24,6 +24,10 @@
     "height": 0.9414
   },
   "floor": 0.0,
+  "center": {
+    "x": 0.0,
+    "y": -0.005
+  },
   "materials": [
     "Mat_Bench_CastIron",
     "Mat_Bench_Wood"

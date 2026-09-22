@@ -2,8 +2,8 @@
   "id": "Barricade_Sandbags",
   "category": "Props",
   "generator": "generate_props.build_sandbags",
-  "generatorHash": "273d8610a6e31d0530461f4ec9198006963ff2c5b3f3f70144034d570589c068",
-  "gitSha": "8db3f1cd9f7ef7df289a8b9b4d6ba8500d8db5f7",
+  "generatorHash": "283154ffee576dd007a8dbd68ee6963dc3e59d5dc4e8fb5633956e8a11cf8eae",
+  "gitSha": "d914dbebffd2fe166ff62b598070041b9d596484",
   "blender": "4.2.11",
   "tags": [
     "barricade",
@@ -25,6 +25,10 @@
     "height": 0.94
   },
   "floor": 0.0,
+  "center": {
+    "x": 0.0,
+    "y": 0.1175
+  },
   "materials": [
     "Mat_Sandbag_Canvas"
   ]

@@ -2,8 +2,8 @@
   "id": "Kit_ceiling_light",
   "category": "Kit",
   "generator": "generate_kit.build_piece",
-  "generatorHash": "2bc538bb25d57847e1301611371611529528cdba6a6829d6ce9783350776923d",
-  "gitSha": "8db3f1cd9f7ef7df289a8b9b4d6ba8500d8db5f7",
+  "generatorHash": "cc4ce3b23424f385d0d8c180b1f1f22b246aee7064768d83f5d83459d648e679",
+  "gitSha": "d914dbebffd2fe166ff62b598070041b9d596484",
   "blender": "4.2.11",
   "tags": [
     "kit",
@@ -25,6 +25,10 @@
     "height": 0.15
   },
   "floor": 0.0,
+  "center": {
+    "x": 0.2,
+    "y": 0.4
+  },
   "materials": [
     "Mat_metal"
   ]

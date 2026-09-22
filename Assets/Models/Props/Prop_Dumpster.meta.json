@@ -2,8 +2,8 @@
   "id": "Prop_Dumpster",
   "category": "Props",
   "generator": "generate_props.build_dumpster",
-  "generatorHash": "1972bdbfe66246c95e078bf78ed84bc7188503dc9da2a58f6e5e835c1a931971",
-  "gitSha": "8db3f1cd9f7ef7df289a8b9b4d6ba8500d8db5f7",
+  "generatorHash": "52f5077a65f3bd54a48783ac63b52cbd2f175510251cf1e2564b1a626df8bc24",
+  "gitSha": "d914dbebffd2fe166ff62b598070041b9d596484",
   "blender": "4.2.11",
   "tags": [
     "container"
@@ -24,6 +24,10 @@
     "height": 1.8671
   },
   "floor": 0.0,
+  "center": {
+    "x": 0.0,
+    "y": 0.0609
+  },
   "materials": [
     "Mat_Dumpster_BlackLid",
     "Mat_Dumpster_Green",
