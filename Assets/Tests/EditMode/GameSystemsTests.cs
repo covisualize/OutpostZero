@@ -3099,6 +3099,23 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void AFarShotCarriesALowerTail()
+        {
+            Assert.AreEqual(0f, SoundTail.Gun(11.9f), 0.001f);
+            Assert.AreEqual(0f, SoundTail.Gun(12f), 0.001f);
+            Assert.AreEqual(0.175f, SoundTail.Gun(22f), 0.001f);
+            Assert.AreEqual(0.35f, SoundTail.Gun(32f), 0.001f);
+            Assert.AreEqual(0.35f, SoundTail.Gun(80f), 0.001f);
+            Assert.AreEqual(0f, SoundTail.Echo(18f), 0.001f);
+            Assert.AreEqual(0.2f, SoundTail.Echo(33f), 0.001f);
+            Assert.AreEqual(0.4f, SoundTail.Echo(48f), 0.001f);
+            Assert.AreEqual(1f, SoundTail.Pitch(12f), 0.001f);
+            Assert.AreEqual(0.62f, SoundTail.Pitch(32f), 0.001f);
+            Assert.AreEqual(48f, AudioSpace.MaxDistance("boom_far"), 0.001f);
+            Assert.AreEqual(32f, AudioSpace.MaxDistance("gun_far"), 0.001f);
+        }
+
+        [Test]
         public void DemolishingAModuleReturnsHalfTheScrap()
         {
             Assert.AreEqual(3, ScrapRefund.Half(6));

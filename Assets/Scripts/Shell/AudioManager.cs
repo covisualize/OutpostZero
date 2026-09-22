@@ -23,9 +23,9 @@ namespace OutpostZero.Shell
 
         public static float MaxDistance(string id)
         {
-            if (id == "boom") return 48f;
+            if (id == "boom" || id == "boom_far") return 48f;
             if (id == "scream") return 36f;
-            if (id == "gun" || id == "shotgun") return 32f;
+            if (id == "gun" || id == "shotgun" || id == "gun_far") return 32f;
             return 18f;
         }
     }
@@ -261,6 +261,10 @@ namespace OutpostZero.Shell
             if (weapon == null) return;
             string id = weapon.Type == WeaponType.Shotgun ? "shotgun" : weapon.Type == WeaponType.Melee ? "swing" : "gun";
             PlayAt(id, muzzle, 0.8f);
+            if (id == "swing") return;
+            float distance = HearDistance(muzzle);
+            float tail = SoundTail.Gun(distance);
+            if (tail > 0.001f) PlayAt("gun_far", muzzle, tail, SoundTail.Pitch(distance));
         }
 
         private void OnHit(Vector3 point, Vector3 normal, GameObject target) => PlayAt("hit", point, 0.45f);
@@ -277,8 +281,21 @@ namespace OutpostZero.Shell
 
         private void OnNoise(Vector3 origin, float radius, NoiseType type)
         {
-            if (type == NoiseType.Explosion) PlayAt("boom", origin, 0.9f);
+            if (type == NoiseType.Explosion)
+            {
+                PlayAt("boom", origin, 0.9f);
+                float distance = HearDistance(origin);
+                float echo = SoundTail.Echo(distance);
+                if (echo > 0.001f) PlayAt("boom_far", origin, echo, SoundTail.Pitch(distance));
+            }
             else if (type == NoiseType.ZombieScream) PlayAt("scream", origin, 0.55f);
+        }
+
+        private static float HearDistance(Vector3 position)
+        {
+            var listener = PlayerRegistry.Current;
+            if (listener == null) return 0f;
+            return Vector3.Distance(listener.transform.position, position);
         }
 
         private AudioSource Rent()
@@ -316,6 +333,8 @@ namespace OutpostZero.Shell
             if (id == "stinger_extract") return Mathf.Sin(t * 32f);
             if (id == "stinger_raid") return noise * Mathf.Sin(t * 12f);
             if (id == "stinger_dawn") return Mathf.Sin(t * 22f);
+            if (id == "gun_far") return Mathf.Sin(t * 9f);
+            if (id == "boom_far") return noise * Mathf.Sin(t * 4f);
             return noise;
         }
 
@@ -324,7 +343,7 @@ namespace OutpostZero.Shell
             if (clips.TryGetValue(id, out var clip)) return clip;
             int rate = 22050;
             bool loop = id == "ambient" || id == "rain" || id == "wind" || id == "stem_perc" || id == "stem_combat";
-            float seconds = loop ? 2f : id == "boom" ? 0.45f : 0.18f;
+            float seconds = loop ? 2f : id == "boom_far" ? 0.7f : id == "boom" ? 0.45f : id == "gun_far" ? 0.42f : 0.18f;
             int samples = Mathf.CeilToInt(rate * seconds);
             var data = new float[samples];
             var random = new System.Random(id.GetHashCode());
@@ -332,7 +351,8 @@ namespace OutpostZero.Shell
             {
                 float t = i / (float)samples;
                 float noise = (float)(random.NextDouble() * 2.0 - 1.0);
-                float envelope = loop ? 0.25f : Mathf.Exp(-t * (id == "boom" ? 4f : 10f));
+                float decay = id == "boom_far" || id == "gun_far" ? 2.4f : id == "boom" ? 4f : 10f;
+                float envelope = loop ? 0.25f : Mathf.Exp(-t * decay);
                 float tone = Tone(id, t, noise);
                 data[i] = tone * envelope * (loop ? 0.2f : 0.6f);
             }
