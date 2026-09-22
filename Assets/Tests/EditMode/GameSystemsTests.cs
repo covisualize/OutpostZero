@@ -6486,6 +6486,26 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void AStreetLossHurtsLessThanALeaderAndLeavesAMemorial()
+        {
+            Assert.AreEqual(8f, StreetMourn.Loss, 0.001f);
+            Assert.AreEqual(64f, StreetMourn.After(72f), 0.001f);
+            Assert.AreEqual(0f, StreetMourn.After(8f), 0.001f);
+            Assert.AreEqual(0f, StreetMourn.After(3f), 0.001f);
+            Assert.AreEqual(0f, StreetMourn.After(0f), 0.001f);
+            Assert.AreEqual(0f, StreetMourn.After(-4f), 0.001f);
+            Assert.AreEqual(92f, StreetMourn.After(100f), 0.001f);
+            Assert.AreEqual("street", StreetMourn.Cause());
+            Assert.AreEqual(25f, SuccessionLedger.CampLoss, 0.001f);
+            Assert.AreEqual(40f, SuccessionLedger.FriendLoss, 0.001f);
+            var row = new SuccessionLedger.Memorial { name = "Maya", day = 2, kills = 0, cause = StreetMourn.Cause(), district = "mall" };
+            Assert.AreEqual("Maya  day 2  kills 0  street", SuccessionLedger.Card(row));
+            Assert.AreEqual(3, FollowBite.Cap);
+            Assert.IsTrue(FollowFall.Drops(3));
+            Assert.IsFalse(FollowFall.Drops(2));
+        }
+
+        [Test]
         public void AZombieWithoutARigStillAttacksAndFalls()
         {
             Assert.AreEqual(14f, PoseSheet.Lean(ZombieAI.ZombieState.Chase, 0f), 0.001f);

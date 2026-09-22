@@ -158,7 +158,7 @@ namespace OutpostZero.Expedition
             joined = true;
             following = false;
             GameplayFeedback.Toast(FollowFall.Line(personName, null));
-            SurvivorRoster.Instance?.Lose(personId, personName, Trait());
+            SurvivorRoster.Instance?.Lose(personId, personName, Trait(), transform.position);
             gameObject.SetActive(false);
         }
 

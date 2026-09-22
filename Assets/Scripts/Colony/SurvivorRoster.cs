@@ -741,15 +741,43 @@ namespace OutpostZero.Colony
             return true;
         }
 
-        public bool Lose(string id, string name, string trait)
+        public bool Lose(string id, string name, string trait, Vector3 where)
         {
             if (string.IsNullOrEmpty(id) || Has(id)) return false;
             if (survivors.Count >= RescueBook.RosterCap) return false;
+            for (int i = 0; i < survivors.Count; i++)
+            {
+                if (survivors[i] == null || !survivors[i].alive) continue;
+                survivors[i].morale = StreetMourn.After(survivors[i].morale);
+            }
             var person = Make(id, name, trait, false, "Lost on the street");
             person.alive = false;
             person.injury = OutpostZero.Expedition.FollowBite.Cap;
             person.task = "Fallen";
             survivors.Add(person);
+            string district = WorldMapService.Instance != null && WorldMapService.Instance.Current != null
+                ? WorldMapService.Instance.Current.id
+                : "ash_market";
+            int day = WorldClock.Instance != null ? WorldClock.Instance.Day : 1;
+            memorials.Add(new SuccessionLedger.Memorial
+            {
+                name = person.displayName,
+                day = day,
+                kills = 0,
+                cause = StreetMourn.Cause(),
+                district = district
+            });
+            corpses.Add(new SuccessionLedger.CorpseMark
+            {
+                district = district,
+                x = where.x,
+                y = where.y,
+                z = where.z,
+                name = person.displayName,
+                gear = "",
+                recovered = false
+            });
+            SpawnCorpse(where, corpses.Count - 1, "");
             OnRosterChanged?.Invoke();
             return true;
         }
