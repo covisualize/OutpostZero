@@ -208,12 +208,12 @@ namespace OutpostZero.Colony
                 int cover = GridBuilder.Instance != null ? GridBuilder.Instance.CoverCount(approach) : 0;
                 int hit = RaidPlan.Strike(pressure, guards, cover);
                 int blow = RaidBreach.Blow(hit, RaidBreach.Brute(phase));
-                bool walls = GridBuilder.Instance != null && GridBuilder.Instance.BarricadeCount() > 0;
+                bool hasWalls = GridBuilder.Instance != null && GridBuilder.Instance.BarricadeCount() > 0;
                 if (BoardBite.CrowdChews(ZombieAI.PostedCount()))
                 {
                     blow = 0;
                 }
-                if (walls && blow > 0)
+                if (hasWalls && blow > 0)
                 {
                     if (GridBuilder.Instance.StrikeFrom(approach, blow))
                         SurvivorRoster.Instance?.WoundFromRaid(raidDay + phase);

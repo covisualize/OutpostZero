@@ -549,7 +549,7 @@ namespace OutpostZero.Colony
             }
             if (changed) RefreshViews();
             if (burning.Count == 0) return;
-            var horde = Object.FindObjectsByType<ZombieAI>(FindObjectsSortMode.None);
+            var horde = UnityEngine.Object.FindObjectsByType<ZombieAI>(FindObjectsSortMode.None);
             var living = new List<ZombieAI>();
             for (int i = 0; i < horde.Length; i++)
             {

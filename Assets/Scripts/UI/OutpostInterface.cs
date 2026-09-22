@@ -1217,6 +1217,13 @@ namespace OutpostZero.UI
             return label;
         }
 
+        private static Label Body(string text)
+        {
+            var label = Body();
+            label.text = text;
+            return label;
+        }
+
         private static Label Body()
         {
             var label = new Label();

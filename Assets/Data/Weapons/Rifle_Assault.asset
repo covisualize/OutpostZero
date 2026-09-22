@@ -28,4 +28,6 @@ MonoBehaviour:
   noiseType: 5
   staminaCost: 0
   isMelee: 0
+  automatic: 1
+  useProjectile: 1
   modelPath: Assets/Models/Weapons/Weapon_AssaultRifle.fbx

@@ -206,10 +206,10 @@ namespace OutpostZero.Player
                 case "RightTrigger": return pad.rightTrigger;
                 case "LeftStick": return pad.leftStickButton;
                 case "RightStick": return pad.rightStickButton;
-                case "DpadUp": return pad.dpadUp;
-                case "DpadDown": return pad.dpadDown;
-                case "DpadLeft": return pad.dpadLeft;
-                case "DpadRight": return pad.dpadRight;
+                case "DpadUp": return pad.dpad.up;
+                case "DpadDown": return pad.dpad.down;
+                case "DpadLeft": return pad.dpad.left;
+                case "DpadRight": return pad.dpad.right;
                 default: return null;
             }
         }

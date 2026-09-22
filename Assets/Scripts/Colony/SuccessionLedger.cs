@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using UnityEngine;
+using OutpostZero.Core;
 using OutpostZero.Items;
 using OutpostZero.Player;
 
