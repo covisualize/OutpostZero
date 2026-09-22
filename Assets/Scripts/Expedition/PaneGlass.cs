@@ -87,4 +87,22 @@ namespace OutpostZero.Expedition
             Destroy(gameObject);
         }
     }
+
+    /// <summary>
+    /// A brute charge breaks a pane and keeps going. A wall still stops the rush.
+    /// </summary>
+    public static class PaneCharge
+    {
+        public const float Hit = 18f;
+
+        public static bool Smashes(string colliderName)
+        {
+            return colliderName == PaneGlass.Name;
+        }
+
+        public static bool Through(float hp, float hit)
+        {
+            return PaneGlass.Gone(PaneGlass.After(hp, hit));
+        }
+    }
 }

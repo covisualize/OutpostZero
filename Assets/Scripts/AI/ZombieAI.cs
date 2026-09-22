@@ -846,6 +846,12 @@ namespace OutpostZero.AI
                 board.Strike(BoardBreak.ChargeHit);
                 if (board.Broken) return;
             }
+            var pane = wall.collider.GetComponent<GlassPane>();
+            if (pane != null)
+            {
+                pane.TakeDamage(PaneCharge.Hit, wall.point, dash, gameObject);
+                if (PaneCharge.Through(PaneGlass.Hp, PaneCharge.Hit)) return;
+            }
             abilityClock.Phase = 0;
             abilityClock.Left = 0f;
             abilityClock.Ready = Time.time + SpecialBeat.Cooldown;

@@ -5779,6 +5779,20 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void ABruteChargeSmashesAPaneAndAWallStillStopsIt()
+        {
+            Assert.AreEqual(18f, PaneCharge.Hit, 0.001f);
+            Assert.AreEqual(12f, PaneGlass.Hp, 0.001f);
+            Assert.IsTrue(PaneCharge.Smashes("KitGlass"));
+            Assert.IsFalse(PaneCharge.Smashes("KitBlock"));
+            Assert.IsFalse(PaneCharge.Smashes(""));
+            Assert.IsTrue(PaneCharge.Through(12f, 18f));
+            Assert.IsFalse(PaneCharge.Through(12f, 4f));
+            Assert.AreEqual(45f, BoardBreak.ChargeHit, 0.001f);
+            Assert.AreEqual(1.5f, SpecialBeat.WallStun, 0.001f);
+        }
+
+        [Test]
         public void AZombieWithoutARigStillAttacksAndFalls()
         {
             Assert.AreEqual(14f, PoseSheet.Lean(ZombieAI.ZombieState.Chase, 0f), 0.001f);
