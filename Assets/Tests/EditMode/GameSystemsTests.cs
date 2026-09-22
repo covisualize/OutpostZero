@@ -1067,6 +1067,37 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void UnmappedRoadsStayOffTheBoardUntilANeighborIsCleared()
+        {
+            Assert.IsFalse(MapVeil.Seen("", new string[0]));
+            Assert.IsFalse(MapVeil.Seen(null, new string[0]));
+            Assert.IsFalse(MapVeil.Seen("nowhere", null));
+            Assert.IsTrue(MapVeil.Seen("ash_market", new string[0]));
+            Assert.IsTrue(MapVeil.Seen("rail_yard", null));
+            Assert.IsTrue(MapVeil.Seen("commercial_strip", new string[0]));
+            Assert.IsFalse(MapVeil.Seen("old_hospital", new string[0]));
+            Assert.IsFalse(MapVeil.Seen("downtown_core", new string[0]));
+            Assert.IsFalse(MapVeil.Seen("old_hospital", new[] { "ash_market" }));
+            Assert.IsTrue(MapVeil.Seen("police_station", new[] { "rail_yard" }));
+            Assert.IsFalse(MapVeil.Seen("north_gate", new[] { "rail_yard" }));
+            Assert.IsTrue(MapVeil.Seen("north_gate", new[] { "water_plant" }));
+            Assert.IsTrue(MapVeil.Seen("downtown_core", new[] { "mall" }));
+            Assert.AreEqual(7, MapVeil.Hidden(null));
+            Assert.AreEqual(7, MapVeil.Hidden(new string[0]));
+            Assert.AreEqual(5, MapVeil.Hidden(new[] { "rail_yard" }));
+            Assert.AreEqual("clear", MapVeil.Forecast("ash_market", new string[0], 1));
+            Assert.AreEqual("rain", MapVeil.Forecast("rail_yard", null, 1));
+            Assert.AreEqual("storm", MapVeil.Forecast("rail_yard", null, 2));
+            Assert.AreEqual("", MapVeil.Forecast("old_hospital", new string[0], 3));
+            Assert.AreEqual("fog", MapVeil.Forecast("old_hospital", new[] { "commercial_strip" }, 1));
+            Assert.AreEqual("overcast", MapVeil.Forecast("old_hospital", new[] { "commercial_strip" }, 3));
+            Assert.AreEqual("Unmapped roads", Loc.T("camp.fog"));
+            Assert.AreEqual("Caminos sin mapa", Loc.T("camp.fog", "es"));
+            Assert.AreEqual("Niebla", Loc.T("sky.fog", "es"));
+            Assert.AreEqual("Tormenta", Loc.T("sky.storm", "es"));
+        }
+
+        [Test]
         public void TenDistrictsOpenByRoadAndTheTowerEndsTheRun()
         {
             var board = CampaignBoard.All();

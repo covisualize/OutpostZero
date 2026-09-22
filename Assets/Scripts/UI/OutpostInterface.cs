@@ -986,24 +986,30 @@ namespace OutpostZero.UI
                 else if (map.ReadyToBroadcast) camp.Add(Button(Loc.T("camp.broadcast"), () => NightRaidController.Instance?.BeginBroadcast()));
                 else camp.Add(Body(Loc.T("camp.tower_needs")));
                 camp.Add(Body(Loc.T("camp.district")));
+                string[] charted = ClearedDistricts(map);
+                int day = WorldClock.Instance != null ? WorldClock.Instance.Day : 1;
+                int hidden = MapVeil.Hidden(charted);
                 foreach (var district in map.Districts)
                 {
+                    if (!MapVeil.Seen(district.id, charted)) continue;
+                    string cast = SkyCast(district.id, charted, day);
                     if (district.cleared && !map.Endless)
                     {
                         string part = CampaignBoard.PartFor(district.id);
-                        camp.Add(Body(Loc.District(district.id) + " — " + Loc.T("camp.clear") + (string.IsNullOrEmpty(part) ? "" : "  " + Loc.T("camp.part"))));
+                        camp.Add(Body(Loc.District(district.id) + " — " + Loc.T("camp.clear") + (string.IsNullOrEmpty(part) ? "" : "  " + Loc.T("camp.part")) + cast));
                         continue;
                     }
                     string id = district.id;
-                    if (!CampaignBoard.Reachable(id, ClearedDistricts(map)))
+                    if (!CampaignBoard.Reachable(id, charted))
                     {
-                        camp.Add(Body(Loc.District(id) + " — " + Loc.T("camp.closed")));
+                        camp.Add(Body(Loc.District(id) + " — " + Loc.T("camp.closed") + cast));
                         continue;
                     }
                     string mark = map.Current != null && map.Current.id == id ? "> " : "";
                     string hours = CampaignBoard.TravelHours(id).ToString("0");
-                    camp.Add(Button(mark + Loc.District(id) + "  " + hours + "h", () => map.Select(id)));
+                    camp.Add(Button(mark + Loc.District(id) + "  " + hours + "h" + cast, () => map.Select(id)));
                 }
+                if (hidden > 0) camp.Add(Body(Loc.T("camp.fog") + "  " + hidden));
             }
             camp.Add(Button(Loc.T("camp.leave"), () => Go(FlowStep.Expedition, () => GameManager.Instance.BeginExpedition())));
         }
@@ -1179,6 +1185,13 @@ namespace OutpostZero.UI
                 }));
             }
             menu.Add(Button("Back", () => slotsOpen = false));
+        }
+
+        private static string SkyCast(string id, string[] charted, int day)
+        {
+            string sky = MapVeil.Forecast(id, charted, day);
+            if (string.IsNullOrEmpty(sky)) return "";
+            return "  " + Loc.T("sky." + sky);
         }
 
         private static string[] ClearedDistricts(WorldMapService map)
