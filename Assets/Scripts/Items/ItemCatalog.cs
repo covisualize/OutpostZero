@@ -58,6 +58,7 @@ namespace OutpostZero.Items
             new ItemRecord { Id = "chemicals", DisplayName = "Chemicals", Category = Core.ItemCategory.ScrapMaterial, Weight = 0.2f, Use = ItemUse.Material },
             new ItemRecord { Id = "tape", DisplayName = "Duct Tape", Category = Core.ItemCategory.ScrapMaterial, Weight = 0.1f, Use = ItemUse.Material },
             new ItemRecord { Id = "noise_lure", DisplayName = "Noise Lure", Category = Core.ItemCategory.KeyItem, Weight = 0.2f, Use = ItemUse.Lure },
+            new ItemRecord { Id = "street_bottle", DisplayName = "Street Bottle", Category = Core.ItemCategory.KeyItem, Weight = 0.25f, Use = ItemUse.Lure },
             new ItemRecord { Id = "molotov", DisplayName = "Molotov", Category = Core.ItemCategory.Fuel, Weight = 0.6f, Use = ItemUse.Molotov },
             new ItemRecord { Id = "flare", DisplayName = "Flare", Category = Core.ItemCategory.KeyItem, Weight = 0.3f, Use = ItemUse.Flare },
             new ItemRecord { Id = "pipe_bomb", DisplayName = "Pipe Bomb", Category = Core.ItemCategory.Fuel, Weight = 0.8f, Use = ItemUse.Bomb },

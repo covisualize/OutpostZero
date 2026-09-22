@@ -13,7 +13,7 @@ namespace OutpostZero.Player
 
         public static int Of(string id)
         {
-            if (id == "noise_lure") return Lure;
+            if (id == "noise_lure" || id == "street_bottle") return Lure;
             if (id == "molotov") return Fire;
             if (id == "flare") return Flare;
             if (id == "pipe_bomb") return Bomb;

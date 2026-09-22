@@ -57,6 +57,13 @@ namespace OutpostZero.Expedition
                     if (collider != null) Object.Destroy(collider);
                 }
                 else body.layer = GameLayers.Environment;
+                if (mark.Role == "bottle")
+                {
+                    var trigger = body.AddComponent<SphereCollider>();
+                    trigger.isTrigger = true;
+                    trigger.radius = 1.2f;
+                    body.AddComponent<StreetBottle>();
+                }
                 Paint(body.GetComponent<Renderer>(), ColorFor(mark.Role));
                 if (mark.Role == "bulb")
                 {

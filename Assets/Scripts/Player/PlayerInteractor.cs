@@ -144,6 +144,7 @@ namespace OutpostZero.Player
         private void ThrowHeldItem()
         {
             if (ThrowId("molotov")) return;
+            if (ThrowId("street_bottle")) return;
             if (ThrowId("noise_lure")) return;
             if (ThrowId("flare")) return;
             if (ThrowId("pipe_bomb")) return;

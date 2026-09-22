@@ -5551,6 +5551,30 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void AStreetBottleThrowsLikeALureAndSpeaksBothLanguages()
+        {
+            var bottle = ItemCatalog.Find("street_bottle");
+            Assert.IsNotNull(bottle);
+            Assert.AreEqual(0.25f, bottle.Weight, 0.001f);
+            Assert.AreEqual(ItemUse.Lure, bottle.Use);
+            Assert.AreEqual(0.2f, ItemCatalog.Find("noise_lure").Weight, 0.001f);
+            Assert.AreEqual(TossKind.Lure, TossKind.Of("street_bottle"));
+            Assert.AreEqual(TossKind.Lure, TossKind.Of("noise_lure"));
+            Assert.IsTrue(TossKind.Throws("street_bottle"));
+            Assert.AreEqual(TossKind.None, TossKind.Of("water"));
+            Assert.AreEqual(18f, ThrowArc.LureRadius, 0.001f);
+            Assert.Greater(ThrowArc.Flight(ThrowArc.Height, ThrowArc.Forward, ThrowArc.Lift, ThrowArc.Gravity), 15f);
+            Assert.AreEqual("Street Bottle", Loc.Item("street_bottle", "en"));
+            Assert.AreEqual("Botella de la calle", Loc.Item("street_bottle", "es"));
+            Assert.AreEqual("Take the bottle", Loc.T("toss.take_bottle", "en"));
+            Assert.AreEqual("Coge la botella", Loc.T("toss.take_bottle", "es"));
+            Assert.AreEqual("Breaks loud enough to pull a group.", Loc.T("blurb.street_bottle", "en"));
+            Assert.AreEqual("Se rompe lo bastante fuerte para atraer a un grupo.", Loc.T("blurb.street_bottle", "es"));
+            Assert.AreEqual("pipe_bomb", LootTables.Roll("street", 2)[5].ItemId);
+            Assert.AreEqual("raw_food", LootTables.Roll("street", 2)[6].ItemId);
+        }
+
+        [Test]
         public void AZombieWithoutARigStillAttacksAndFalls()
         {
             Assert.AreEqual(14f, PoseSheet.Lean(ZombieAI.ZombieState.Chase, 0f), 0.001f);
