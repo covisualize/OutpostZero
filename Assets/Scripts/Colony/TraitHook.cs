@@ -1,9 +1,11 @@
 namespace OutpostZero.Colony
 {
     /// <summary>
-    /// Traits that change the night and the plate.
+    /// Traits that change the night, the plate, the watch, and the shot.
     /// A watchtower is still required. Watchful and Light Sleeper only stretch a warning that already exists.
     /// A Glutton spends hunger faster. Every other trait keeps the old drop.
+    /// A Cook adds four morale only when a meal was actually cooked. A Sharpshooter tightens the leader's shot to 0.8.
+    /// A Brave watch costs no morale. A Cowardly watch costs six and adds no security.
     /// </summary>
     public static class TraitHook
     {
