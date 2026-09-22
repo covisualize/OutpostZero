@@ -552,7 +552,9 @@ namespace OutpostZero.EditorTools
             lightObj.transform.localPosition = new Vector3(0.25f, 1.4f, 0.2f);
             var spot = lightObj.AddComponent<Light>();
             spot.type = LightType.Spot;
-            spot.spotAngle = 65f;
+            spot.spotAngle = LampCookie.Outer;
+            spot.innerSpotAngle = LampCookie.Inner;
+            spot.shadows = LightShadows.Soft;
             spot.range = 32f;
             spot.intensity = 2.8f;
             spot.color = new Color(1f, 0.96f, 0.88f);

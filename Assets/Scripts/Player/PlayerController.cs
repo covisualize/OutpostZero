@@ -47,6 +47,7 @@ namespace OutpostZero.Player
         [SerializeField] private bool flashlightOn = false;
         [SerializeField] private float lampCell = LampCell.Full;
         private Light railLight;
+        private Texture2D lampCookie;
 
         // Components
         private CharacterController characterController;
@@ -249,6 +250,12 @@ namespace OutpostZero.Player
         private void ApplyLamp()
         {
             if (flashlight == null) return;
+            if (lampCookie == null) lampCookie = LampCookie.Bake();
+            if (flashlight.cookie == null) flashlight.cookie = lampCookie;
+            flashlight.type = LightType.Spot;
+            flashlight.spotAngle = LampCookie.Outer;
+            flashlight.innerSpotAngle = LampCookie.Inner;
+            flashlight.shadows = LightShadows.Soft;
             bool shine = flashlightOn && LampCell.Live(lampCell);
             flashlight.enabled = shine;
             if (shine) flashlight.intensity = LampCell.Intensity(lampCell);

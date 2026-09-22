@@ -846,6 +846,24 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void TheFlashlightCookieKeepsABrightCenterAndADirtRing()
+        {
+            Assert.AreEqual(256, LampCookie.Size);
+            Assert.AreEqual(40f, LampCookie.Inner, 0.001f);
+            Assert.AreEqual(62f, LampCookie.Outer, 0.001f);
+            Assert.AreEqual(1f, LampCookie.Shade(0.5f, 0.5f), 0.001f);
+            Assert.AreEqual(0f, LampCookie.Shade(0f, 0f), 0.001f);
+            Assert.AreEqual(0f, LampCookie.Shade(1f, 1f), 0.001f);
+            float ring = LampCookie.Shade(0.5f + LampCookie.Ring * 0.5f, 0.5f);
+            float inside = LampCookie.Shade(0.5f + 0.30f, 0.5f);
+            Assert.AreEqual(0.182f, ring, 0.001f);
+            Assert.AreEqual(0.4f, inside, 0.001f);
+            Assert.Less(ring, inside);
+            Assert.AreEqual(LampCookie.Shade(0.2f, 0.5f), LampCookie.Shade(0.8f, 0.5f), 0.001f);
+            Assert.AreEqual(LampCookie.Shade(0.5f, 0.2f), LampCookie.Shade(0.5f, 0.8f), 0.001f);
+        }
+
+        [Test]
         public void CharactersKeepDistinctEyesAndAGoreLine()
         {
             var walker = CharacterLook.Eye("walker");
