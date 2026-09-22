@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using OutpostZero.Colony;
 using OutpostZero.Core;
 
 namespace OutpostZero.AI
@@ -37,6 +38,7 @@ namespace OutpostZero.AI
 
         public float Tension => tension;
         public TensionState State => state;
+        public int AliveCap => spawner != null ? spawner.MaxAlive : maxAlive;
         public event Action<TensionState> OnTensionStateChanged;
 
         private void Awake()
@@ -135,6 +137,13 @@ namespace OutpostZero.AI
             nextSpawn = Time.time + 2f;
             spawner?.Prefer(preferredVariant);
             OnTensionStateChanged?.Invoke(state);
+        }
+
+        public void DropAmbush(bool ambush)
+        {
+            int extra = AmbushBeat.Bodies(ambush, AliveCap);
+            if (extra <= 0 || spawner == null) return;
+            spawner.SpawnZombies(extra);
         }
 
         public void BeginRaid()

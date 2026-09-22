@@ -132,7 +132,8 @@ namespace OutpostZero.Shell
             int kills = rules.KillGoal + curve.ExtraKills;
             ObjectiveTracker.Instance?.SetGoals(kills, rules.ScrapGoal);
             float tension = rules.OpeningTension + curve.Tension;
-            if (FactionTrade.Instance != null && FactionTrade.Instance.Ambush) tension += 12f;
+            bool ambush = FactionTrade.Instance != null && FactionTrade.Instance.Ambush;
+            if (ambush) tension += 12f;
             float interval = Mathf.Max(3f, rules.SpawnInterval * curve.Interval);
             if (endless)
             {
@@ -141,6 +142,11 @@ namespace OutpostZero.Shell
             }
             string prefer = string.IsNullOrEmpty(rules.PreferredVariant) ? curve.Prefer : rules.PreferredVariant;
             HordeDirector.Instance?.ApplyOpening(tension, interval, prefer, difficulty, CampaignBoard.Tier(districtId));
+            if (ambush)
+            {
+                HordeDirector.Instance?.DropAmbush(true);
+                GameplayFeedback.Toast(Loc.T("ambush.warn"));
+            }
             WeatherController.Instance?.SetFor(rules.Weather, 180f);
             DistrictDressing.Instance?.Build(districtId);
             SurvivorRoster.Instance?.RaiseCorpses(districtId);

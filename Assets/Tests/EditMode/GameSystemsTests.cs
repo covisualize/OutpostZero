@@ -3215,6 +3215,22 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void AHostileMilitiaOpensWithExtraBodies()
+        {
+            Assert.IsFalse(CaravanBook.Ambush(-40));
+            Assert.IsTrue(CaravanBook.Ambush(-41));
+            Assert.AreEqual(0, AmbushBeat.Bodies(false, 32));
+            Assert.AreEqual(0, AmbushBeat.Bodies(false, 8));
+            Assert.AreEqual(4, AmbushBeat.Bodies(true, 16));
+            Assert.AreEqual(4, AmbushBeat.Bodies(true, 32));
+            Assert.AreEqual(4, AmbushBeat.Bodies(true, 40));
+            Assert.AreEqual(2, AmbushBeat.Bodies(true, 15));
+            Assert.AreEqual(2, AmbushBeat.Bodies(true, 4));
+            Assert.AreEqual("The militia has the dead waiting", Loc.T("ambush.warn", "en"));
+            Assert.AreEqual("La milicia tiene a los muertos esperando", Loc.T("ambush.warn", "es"));
+        }
+
+        [Test]
         public void GoreOffDropsBloodAndAShotgunSpraysTheWall()
         {
             Assert.AreEqual(0, GoreMark.Splats(0, false, true));
