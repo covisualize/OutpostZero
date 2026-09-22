@@ -41,6 +41,7 @@ namespace OutpostZero.Expedition
             for (int i = 0; i < generated.Length; i++) Spawn(generated[i]);
             var blocks = DistrictBlocks.Build(seed, districtId);
             RaiseBlocks(blocks);
+            RaiseGraph(districtId, seed);
             ObjectiveTracker.Instance?.ExpectPoi(blocks.PoiRole);
             ExtractionZone.MoveTo(new Vector3(blocks.ExtractX, 0.5f, blocks.ExtractZ));
             RaiseRescue(districtId, blocks);
@@ -92,6 +93,83 @@ namespace OutpostZero.Expedition
             if (exitCollider != null) Destroy(exitCollider);
             Paint(exit.GetComponent<Renderer>(), new Color(0.25f, 0.75f, 0.45f));
             RaiseRoom(plan);
+        }
+
+        private void RaiseGraph(string districtId, int seed)
+        {
+            var map = RoadGraph.Build(seed, districtId);
+            var cells = map.Cells;
+            if (cells == null) return;
+            var tint = BlockTint(map.Footprint);
+            for (int i = 0; i < cells.Length; i++)
+            {
+                var cell = cells[i];
+                if (cell.Kind == "hole") continue;
+                if (cell.Kind == "lot")
+                {
+                    var shell = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                    shell.name = "RoadLot";
+                    shell.transform.SetParent(root, false);
+                    shell.transform.position = new Vector3(cell.X, 1.1f, cell.Z);
+                    shell.transform.localScale = new Vector3(2.5f, 2.2f, 2.5f);
+                    shell.layer = GameLayers.Environment;
+                    Paint(shell.GetComponent<Renderer>(), tint);
+                    if (map.HasLoot && Close(cell.X, map.LootX) && Close(cell.Z, map.LootZ))
+                    {
+                        var crate = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                        crate.name = "RoadCrate";
+                        crate.transform.SetParent(root, false);
+                        crate.transform.position = new Vector3(cell.X, 0.35f, cell.Z - 1.9f);
+                        crate.transform.localScale = new Vector3(0.7f, 0.6f, 0.7f);
+                        crate.layer = GameLayers.Interactable;
+                        Paint(crate.GetComponent<Renderer>(), new Color(0.42f, 0.36f, 0.24f));
+                        string table = map.Footprint == "clinic" || map.Footprint == "hospital" ? "medical"
+                            : map.Footprint == "warehouse" || map.Footprint == "station" ? "military" : "crate";
+                        crate.AddComponent<LootContainer>().Configure(table);
+                    }
+                    continue;
+                }
+
+                var slab = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                slab.name = cell.Kind == "extract" ? "SideGate" : "RoadSlab";
+                slab.transform.SetParent(root, false);
+                slab.transform.position = new Vector3(cell.X, 0.03f, cell.Z);
+                float span = cell.Kind == "alley" ? 1.35f : 1.8f;
+                slab.transform.localScale = new Vector3(span, 0.04f, span);
+                var slabCollider = slab.GetComponent<Collider>();
+                if (slabCollider != null) Destroy(slabCollider);
+                Color asphalt = cell.Kind == "extract"
+                    ? new Color(0.2f, 0.45f, 0.3f)
+                    : cell.Kind == "alley" ? new Color(0.24f, 0.23f, 0.21f) : new Color(0.16f, 0.16f, 0.15f);
+                Paint(slab.GetComponent<Renderer>(), asphalt);
+                if (cell.Kind == "poi")
+                {
+                    var post = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                    post.name = "RoadPost";
+                    post.transform.SetParent(root, false);
+                    post.transform.position = new Vector3(cell.X, 0.7f, cell.Z);
+                    post.transform.localScale = new Vector3(0.4f, 1.4f, 0.4f);
+                    post.layer = GameLayers.Environment;
+                    Paint(post.GetComponent<Renderer>(), new Color(0.72f, 0.58f, 0.22f));
+                }
+            }
+
+            if (!map.HasNest) return;
+            var nest = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            nest.name = "EastNest";
+            nest.transform.SetParent(root, false);
+            nest.transform.position = new Vector3(map.NestX, 0.08f, map.NestZ);
+            nest.transform.localScale = new Vector3(1.4f, 0.05f, 1.4f);
+            var nestCollider = nest.GetComponent<Collider>();
+            if (nestCollider != null) Destroy(nestCollider);
+            Paint(nest.GetComponent<Renderer>(), new Color(0.28f, 0.1f, 0.08f));
+        }
+
+        private static bool Close(float a, float b)
+        {
+            float d = a - b;
+            if (d < 0f) d = -d;
+            return d < 0.2f;
         }
 
         private void RaiseRoom(DistrictBlocks.Plan plan)

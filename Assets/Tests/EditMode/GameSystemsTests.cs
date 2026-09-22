@@ -1772,6 +1772,59 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void AnEastGridKeepsAWalkFromTheSpawnToTheFarGate()
+        {
+            var ash = RoadGraph.Build(1701, "ash_market");
+            Assert.AreEqual(25, ash.Cells.Length);
+            Assert.AreEqual("storefront", ash.Footprint);
+            Assert.AreEqual(32f, ash.PoiX, 0.001f);
+            Assert.AreEqual(12f, ash.PoiZ, 0.001f);
+            Assert.AreEqual(40f, ash.ExtractX, 0.001f);
+            Assert.AreEqual(0f, ash.ExtractZ, 0.001f);
+            Assert.AreEqual("spine", RoadGraph.KindAt(ash, 4f, 0f));
+            Assert.AreEqual("alley", RoadGraph.KindAt(ash, 24f, 4f));
+            Assert.AreEqual("lot", RoadGraph.KindAt(ash, 24f, 8f));
+            Assert.AreEqual("hole", RoadGraph.KindAt(ash, 24f, 12f));
+            Assert.IsTrue(ash.HasLoot);
+            Assert.IsTrue(RoadGraph.Navigable(ash));
+
+            var hospital = RoadGraph.Build(1701, "old_hospital");
+            Assert.AreEqual("clinic", hospital.Footprint);
+            Assert.AreEqual("alley", RoadGraph.KindAt(hospital, 24f, 4f));
+            Assert.AreEqual("hole", RoadGraph.KindAt(hospital, 40f, 4f));
+            Assert.AreEqual(40f, hospital.NestX, 0.001f);
+            Assert.AreEqual(4f, hospital.NestZ, 0.001f);
+
+            var downtown = RoadGraph.Build(4, "downtown_core");
+            Assert.AreEqual("station", downtown.Footprint);
+            Assert.AreEqual("road", RoadGraph.KindAt(downtown, 24f, 8f));
+            Assert.AreEqual("hole", RoadGraph.KindAt(downtown, 40f, 4f));
+            Assert.AreEqual("poi", RoadGraph.KindAt(downtown, 32f, 12f));
+
+            var mall = RoadGraph.Build(1701, "mall");
+            var mallAgain = RoadGraph.Build(1701, "mall");
+            Assert.AreEqual(RoadGraph.Signature(mall), RoadGraph.Signature(mallAgain));
+            Assert.AreEqual("alley", RoadGraph.KindAt(mall, 24f, 4f));
+            Assert.AreEqual("lot", RoadGraph.KindAt(mall, 28f, 4f));
+            Assert.AreEqual("hole", RoadGraph.KindAt(mall, 40f, 8f));
+            Assert.AreEqual(28f, mall.LootX, 0.001f);
+            Assert.AreEqual(4f, mall.LootZ, 0.001f);
+            Assert.AreEqual(40f, mall.NestX, 0.001f);
+            Assert.AreEqual(8f, mall.NestZ, 0.001f);
+            Assert.AreNotEqual(RoadGraph.Signature(mall), RoadGraph.Signature(RoadGraph.Build(99991, "mall")));
+
+            var ids = CampaignBoard.All();
+            for (int seed = 1; seed <= 100; seed++)
+            {
+                for (int d = 0; d < ids.Length; d++)
+                {
+                    var map = RoadGraph.Build(seed, ids[d].Id);
+                    Assert.IsTrue(RoadGraph.Navigable(map), ids[d].Id + " " + seed);
+                }
+            }
+        }
+
+        [Test]
         public void ADodgeSpendsStaminaAndIgnoresTheOpeningOfTheRoll()
         {
             Assert.IsTrue(DodgeClock.Ready(22f, 0.85f));
