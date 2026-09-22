@@ -57,6 +57,7 @@ namespace OutpostZero.Combat
             if (id == "pistol_9mm") return Gun("pistol_9mm", "Tactical 9mm Pistol", WeaponType.Pistol, 34f, 3.2f, 25f, 2.5f, 1, 12, 60, 1.8f, 20f, NoiseType.GunshotQuiet, false, false);
             if (id == "shotgun_pump") return Gun("shotgun_pump", "Remington 870 Shotgun", WeaponType.Shotgun, 19f, 1.1f, 16f, 8.5f, 7, 6, 24, 2.4f, 38f, NoiseType.GunshotLoud, false, true);
             if (id == "rifle_assault") return Gun("rifle_assault", "Assault Rifle", WeaponType.Rifle, 26f, 9f, 32f, 3f, 1, 30, 90, 2.1f, 34f, NoiseType.GunshotLoud, true, true);
+            if (id == "smg") return Gun("smg", "Compact SMG", WeaponType.SMG, 16f, 14f, 22f, 5.5f, 1, 25, 75, 1.6f, 18f, NoiseType.GunshotLoud, true, true);
             if (id == "machete")
             {
                 return new Spec

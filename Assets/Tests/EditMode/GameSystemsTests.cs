@@ -3862,6 +3862,46 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void ACompactSmgFiresFasterThanTheRifle()
+        {
+            var rifle = WeaponCard.Find("rifle_assault");
+            var smg = WeaponCard.Find("smg");
+            Assert.AreEqual(26f, rifle.Damage, 0.001f);
+            Assert.AreEqual(9f, rifle.Rate, 0.001f);
+            Assert.AreEqual(30, rifle.Magazine);
+            Assert.AreEqual(34f, rifle.Noise, 0.001f);
+            Assert.AreEqual(16f, smg.Damage, 0.001f);
+            Assert.AreEqual(14f, smg.Rate, 0.001f);
+            Assert.AreEqual(22f, smg.Range, 0.001f);
+            Assert.AreEqual(5.5f, smg.Spread, 0.001f);
+            Assert.AreEqual(25, smg.Magazine);
+            Assert.AreEqual(18f, smg.Noise, 0.001f);
+            Assert.AreEqual(WeaponType.SMG, smg.Type);
+            Assert.IsTrue(smg.Automatic);
+            Assert.IsTrue(smg.Projectile);
+            Assert.AreEqual("smg", WeaponCard.IdFor(WeaponType.SMG));
+            var rounds = ItemCatalog.Find("ammo_smg");
+            Assert.AreEqual(ItemUse.Ammo, rounds.Use);
+            Assert.AreEqual(WeaponType.SMG, rounds.AmmoType);
+            Assert.AreEqual(25, rounds.AmmoAmount);
+            Assert.AreEqual(0.05f, rounds.Weight, 0.001f);
+            Assert.IsTrue(CraftBill.TryOf("ammo_smg", out var bill));
+            Assert.AreEqual(6, bill.Scrap);
+            Assert.AreEqual(1, bill.Chemicals);
+            Assert.AreEqual(5, AmmoPress.Rounds("ammo_smg", 1));
+            Assert.AreEqual(24, AmmoPress.Rounds("ammo_smg", 5));
+            Assert.AreEqual(8, AmmoPress.Rounds("ammo_rifle", 1));
+            Assert.AreEqual(7, CaravanBook.BasePrice("ammo_smg"));
+            Assert.AreEqual(3, CaravanBook.Stock("militia").Length);
+            Assert.AreEqual("ammo_smg", CaravanBook.Stock("militia")[2]);
+            var street = LootTables.Roll("street", 2);
+            Assert.AreEqual(7, street.Length);
+            Assert.AreEqual("raw_food", street[6].ItemId);
+            Assert.AreEqual("Cargador de subfusil", Loc.T("item.ammo_smg", "es"));
+            Assert.AreEqual("Sirve para el subfusil.", Loc.T("blurb.ammo_smg", "es"));
+        }
+
+        [Test]
         public void AZombieWithoutARigStillAttacksAndFalls()
         {
             Assert.AreEqual(14f, PoseSheet.Lean(ZombieAI.ZombieState.Chase, 0f), 0.001f);

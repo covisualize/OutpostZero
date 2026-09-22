@@ -15,6 +15,7 @@ namespace OutpostZero.Colony
             if (id == "ammo_9mm") each = 4;
             else if (id == "ammo_shells") each = 6;
             else if (id == "ammo_rifle") each = 8;
+            else if (id == "ammo_smg") each = 5;
             if (each == 0) return 0;
             int next = each * batches;
             return next > Cap ? Cap : next;

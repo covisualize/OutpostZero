@@ -25,7 +25,7 @@ namespace OutpostZero.Colony
         {
             switch (id)
             {
-                case "militia": return new[] { "ammo_rifle", "ammo_shells" };
+                case "militia": return new[] { "ammo_rifle", "ammo_shells", "ammo_smg" };
                 case "clinic": return new[] { "medkit", "bandage" };
                 case "farmers": return new[] { "canned_food", "water" };
                 default: return new[] { "bandage", "ammo_9mm", "medkit" };
@@ -38,6 +38,7 @@ namespace OutpostZero.Colony
             {
                 case "medkit": return 14;
                 case "ammo_rifle": return 9;
+                case "ammo_smg": return 7;
                 case "ammo_shells": return 8;
                 case "ammo_9mm": return 5;
                 case "water": return 6;

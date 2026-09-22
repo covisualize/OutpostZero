@@ -46,6 +46,7 @@ namespace OutpostZero.Expedition
             ExtractionZone.MoveTo(new Vector3(blocks.ExtractX, 0.5f, blocks.ExtractZ));
             RaiseRescue(districtId, blocks);
             RaiseArmory(districtId);
+            RaiseSmg(districtId);
             KitStructure.Raise(districtId, root);
             RaiseCaravan();
             StreetDetail.RaiseStreet(districtId, root);
@@ -327,6 +328,18 @@ namespace OutpostZero.Expedition
             gun.transform.localScale = new Vector3(0.7f, 0.12f, 0.18f);
             gun.layer = GameLayers.Interactable;
             gun.AddComponent<GroundWeapon>().Configure("rifle_assault", 12, 30);
+        }
+
+        private void RaiseSmg(string districtId)
+        {
+            if (districtId != "mall") return;
+            var gun = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            gun.name = "GroundSmg";
+            gun.transform.SetParent(root, false);
+            gun.transform.position = new Vector3(6f, 0.22f, 8f);
+            gun.transform.localScale = new Vector3(0.46f, 0.1f, 0.16f);
+            gun.layer = GameLayers.Interactable;
+            gun.AddComponent<GroundWeapon>().Configure("smg", 18, 25);
         }
 
         private static Color BlockTint(string footprint)

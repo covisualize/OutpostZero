@@ -33,6 +33,7 @@ namespace OutpostZero.Colony
             else if (id == "ammo_9mm") cost = Make(4, 0, 1, 0, Workbench, "");
             else if (id == "ammo_shells") cost = Make(5, 0, 1, 0, Workbench, "");
             else if (id == "ammo_rifle") cost = Make(7, 0, 1, 0, Workbench, "");
+            else if (id == "ammo_smg") cost = Make(6, 0, 1, 0, Workbench, "");
             else if (id == "noise_lure") cost = Make(2, 0, 0, 0, Any, "");
             else if (id == "molotov") cost = Make(6, 1, 0, 0, Any, "");
             else if (id == "pipe_bomb") cost = Make(8, 0, 1, 1, Workbench, "");

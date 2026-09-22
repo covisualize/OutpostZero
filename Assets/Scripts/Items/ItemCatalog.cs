@@ -52,6 +52,7 @@ namespace OutpostZero.Items
             new ItemRecord { Id = "ammo_9mm", DisplayName = "9mm Rounds", Category = Core.ItemCategory.Ammunition, Weight = 0.02f, AmmoType = Core.WeaponType.Pistol, AmmoAmount = 12, Use = ItemUse.Ammo },
             new ItemRecord { Id = "ammo_shells", DisplayName = "Shotgun Shells", Category = Core.ItemCategory.Ammunition, Weight = 0.04f, AmmoType = Core.WeaponType.Shotgun, AmmoAmount = 6, Use = ItemUse.Ammo },
             new ItemRecord { Id = "ammo_rifle", DisplayName = "Rifle Magazine", Category = Core.ItemCategory.Ammunition, Weight = 0.08f, AmmoType = Core.WeaponType.Rifle, AmmoAmount = 30, Use = ItemUse.Ammo },
+            new ItemRecord { Id = "ammo_smg", DisplayName = "SMG Magazine", Category = Core.ItemCategory.Ammunition, Weight = 0.05f, AmmoType = Core.WeaponType.SMG, AmmoAmount = 25, Use = ItemUse.Ammo },
             new ItemRecord { Id = "scrap", DisplayName = "Scrap", Category = Core.ItemCategory.ScrapMaterial, Weight = 0.1f, Use = ItemUse.Material },
             new ItemRecord { Id = "cloth", DisplayName = "Cloth", Category = Core.ItemCategory.ScrapMaterial, Weight = 0.15f, Use = ItemUse.Material },
             new ItemRecord { Id = "chemicals", DisplayName = "Chemicals", Category = Core.ItemCategory.ScrapMaterial, Weight = 0.2f, Use = ItemUse.Material },
@@ -110,7 +111,8 @@ namespace OutpostZero.Items
                 {
                     new Grant { ItemId = rng.NextDouble() > 0.4 ? "ammo_rifle" : "ammo_9mm", Count = 1 },
                     new Grant { ItemId = "bandage", Count = rng.NextDouble() > 0.5 ? 1 : 0 },
-                    new Grant { ItemId = "print_flare", Count = rng.NextDouble() > 0.62 ? 1 : 0 }
+                    new Grant { ItemId = "print_flare", Count = rng.NextDouble() > 0.62 ? 1 : 0 },
+                    new Grant { ItemId = "ammo_smg", Count = rng.NextDouble() > 0.7 ? 1 : 0 }
                 };
             }
 
