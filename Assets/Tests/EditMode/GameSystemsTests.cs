@@ -3149,6 +3149,34 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void ARunnerShrieksAndABruteStomps()
+        {
+            Assert.AreEqual("walker", ZombieVoice.Breed("walker", 0));
+            Assert.AreEqual("runner", ZombieVoice.Breed("walker", 1));
+            Assert.AreEqual("brute", ZombieVoice.Breed("", 2));
+            Assert.AreEqual("runner", ZombieVoice.Breed("Zombie_Runner", 0));
+            Assert.AreEqual("groan", ZombieVoice.Idle("walker"));
+            Assert.AreEqual("shriek", ZombieVoice.Idle("runner"));
+            Assert.AreEqual("roar", ZombieVoice.Idle("brute"));
+            Assert.AreEqual("snarl", ZombieVoice.Bite("runner"));
+            Assert.AreEqual("stomp", ZombieVoice.Bite("brute"));
+            Assert.AreEqual("shriek", ZombieVoice.Hurt("runner"));
+            Assert.AreEqual("roar", ZombieVoice.Death("brute"));
+            Assert.IsFalse(ZombieVoice.IdleDue(22.1f, 0, 10f, 0f));
+            Assert.IsFalse(ZombieVoice.IdleDue(10f, 6, 10f, 0f));
+            Assert.IsFalse(ZombieVoice.IdleDue(10f, 2, 10f, 6f));
+            Assert.IsTrue(ZombieVoice.IdleDue(10f, 5, 10.8f, 6f));
+            var seats = new float[6];
+            ZombieVoice.Seat(seats, 1f);
+            ZombieVoice.Seat(seats, 1f);
+            Assert.AreEqual(2, ZombieVoice.Live(1.1f, seats));
+            Assert.AreEqual(0, ZombieVoice.Live(1f + ZombieVoice.Hold, seats));
+            Assert.AreEqual(40f, AudioSpace.MaxDistance("stomp"), 0.001f);
+            Assert.AreEqual(36f, AudioSpace.MaxDistance("scream"), 0.001f);
+            Assert.AreEqual(22f, AudioSpace.MaxDistance("groan"), 0.001f);
+        }
+
+        [Test]
         public void DemolishingAModuleReturnsHalfTheScrap()
         {
             Assert.AreEqual(3, ScrapRefund.Half(6));

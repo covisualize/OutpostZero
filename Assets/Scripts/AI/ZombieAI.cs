@@ -92,6 +92,7 @@ namespace OutpostZero.AI
         private float postX;
         private float postZ;
         private float nextBite;
+        private float nextGroan;
         private bool fromRaid;
         private bool leaving;
         private static readonly List<ZombieAI> aliveCrowd = new List<ZombieAI>();
@@ -454,6 +455,7 @@ namespace OutpostZero.AI
 
         private void UpdateIdle()
         {
+            Voice("idle");
             stateTimer -= Time.deltaTime;
             if (stateTimer <= 0f)
             {
@@ -463,6 +465,7 @@ namespace OutpostZero.AI
 
         private void UpdateWander()
         {
+            Voice("idle");
             if (!agent.pathPending && agent.remainingDistance <= agent.stoppingDistance + 0.2f)
             {
                 SetState(ZombieState.Idle);
@@ -720,6 +723,7 @@ namespace OutpostZero.AI
                 if (Time.time < nextAttackTime) return;
                 swing = 0f;
                 nextAttackTime = Time.time + attackCooldown;
+                Voice("bite");
             }
 
             float before = swing;
@@ -832,6 +836,7 @@ namespace OutpostZero.AI
 
         private void HandleDamaged(float amount, Vector3 hitPoint)
         {
+            Voice("hurt");
             if (currentState != ZombieState.Chase && currentState != ZombieState.Attack)
             {
                 // Turn around towards damage source
@@ -846,6 +851,7 @@ namespace OutpostZero.AI
 
         private void HandleDeath(Vector3 hitPoint, Vector3 hitDir, GameObject killer)
         {
+            Voice("death");
             SetState(ZombieState.Dead);
 
             if (GameManager.Instance != null)
@@ -867,6 +873,29 @@ namespace OutpostZero.AI
             {
                 Destroy(gameObject, 4f);
             }
+        }
+
+        private string Breed()
+        {
+            int ability = specialAbility == ZombieSpecialAbility.Charge ? 2 : specialAbility == ZombieSpecialAbility.Lunge ? 1 : 0;
+            string id = string.IsNullOrEmpty(archetypeId) ? name : archetypeId;
+            return ZombieVoice.Breed(id, ability);
+        }
+
+        private void Voice(string moment)
+        {
+            var ear = OutpostZero.Shell.AudioManager.Instance;
+            if (ear == null) return;
+            string breed = Breed();
+            if (moment == "idle")
+            {
+                ear.Groan(breed, transform.position, Time.time, nextGroan, out nextGroan);
+                return;
+            }
+            string id = moment == "bite" ? ZombieVoice.Bite(breed) : moment == "hurt" ? ZombieVoice.Hurt(breed) : ZombieVoice.Death(breed);
+            float volume = breed == "brute" ? 0.72f : 0.48f;
+            float pitch = breed == "brute" ? 0.55f : breed == "runner" ? 1.12f : 0f;
+            ear.PlayAt(id, transform.position, volume, pitch);
         }
 
         private void OnDrawGizmosSelected()

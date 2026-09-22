@@ -25,7 +25,9 @@ namespace OutpostZero.Shell
         {
             if (id == "boom" || id == "boom_far") return 48f;
             if (id == "scream") return 36f;
+            if (id == "shriek" || id == "roar" || id == "stomp") return 40f;
             if (id == "gun" || id == "shotgun" || id == "gun_far") return 32f;
+            if (id == "groan" || id == "snarl" || id == "grunt") return 22f;
             return 18f;
         }
     }
@@ -51,6 +53,7 @@ namespace OutpostZero.Shell
         private float streakAt;
         private float nextHeart;
         private float nextBreath;
+        private readonly float[] groanSeats = new float[ZombieVoice.Cap];
 
         private void Awake()
         {
@@ -321,6 +324,18 @@ namespace OutpostZero.Shell
             else if (type == NoiseType.ZombieScream) PlayAt("scream", origin, 0.55f);
         }
 
+        public void Groan(string breed, Vector3 at, float now, float last, out float next)
+        {
+            next = last;
+            if (PlayerRegistry.Current == null) return;
+            float distance = HearDistance(at);
+            if (!ZombieVoice.IdleDue(distance, ZombieVoice.Live(now, groanSeats), now, last)) return;
+            ZombieVoice.Seat(groanSeats, now);
+            next = now;
+            float pitch = breed == "brute" ? 0.55f : breed == "runner" ? 1.12f : 0f;
+            PlayAt(ZombieVoice.Idle(breed), at, breed == "brute" ? 0.7f : 0.4f, pitch);
+        }
+
         private static float HearDistance(Vector3 position)
         {
             var listener = PlayerRegistry.Current;
@@ -370,6 +385,12 @@ namespace OutpostZero.Shell
             if (id == "dry") return Mathf.Sin(t * 90f);
             if (id == "mag_out" || id == "mag_in") return noise * Mathf.Sin(t * 14f);
             if (id == "rack") return Mathf.Sin(t * 28f);
+            if (id == "groan") return noise * Mathf.Sin(t * 5f);
+            if (id == "shriek") return Mathf.Sin(t * 74f);
+            if (id == "roar") return noise * Mathf.Sin(t * 3.5f);
+            if (id == "snarl") return noise * Mathf.Sin(t * 36f);
+            if (id == "stomp") return noise * Mathf.Sin(t * 2.5f);
+            if (id == "grunt") return Mathf.Sin(t * 18f);
             return noise;
         }
 
@@ -378,7 +399,7 @@ namespace OutpostZero.Shell
             if (clips.TryGetValue(id, out var clip)) return clip;
             int rate = 22050;
             bool loop = id == "ambient" || id == "rain" || id == "wind" || id == "stem_perc" || id == "stem_combat";
-            float seconds = loop ? 2f : id == "boom_far" ? 0.7f : id == "boom" ? 0.45f : id == "gun_far" ? 0.42f : id == "breath" ? 0.5f : id == "heart" ? 0.22f : id == "dry" ? 0.07f : 0.18f;
+            float seconds = loop ? 2f : id == "boom_far" ? 0.7f : id == "roar" || id == "stomp" ? 0.5f : id == "boom" ? 0.45f : id == "gun_far" ? 0.42f : id == "breath" || id == "groan" ? 0.5f : id == "shriek" ? 0.28f : id == "heart" ? 0.22f : id == "dry" ? 0.07f : 0.18f;
             int samples = Mathf.CeilToInt(rate * seconds);
             var data = new float[samples];
             var random = new System.Random(id.GetHashCode());
@@ -386,7 +407,7 @@ namespace OutpostZero.Shell
             {
                 float t = i / (float)samples;
                 float noise = (float)(random.NextDouble() * 2.0 - 1.0);
-                float decay = id == "boom_far" || id == "gun_far" ? 2.4f : id == "boom" ? 4f : id == "heart" || id == "breath" ? 5f : 10f;
+                float decay = id == "boom_far" || id == "gun_far" || id == "roar" || id == "stomp" ? 2.4f : id == "boom" ? 4f : id == "heart" || id == "breath" ? 5f : 10f;
                 float envelope = loop ? 0.25f : Mathf.Exp(-t * decay);
                 float tone = Tone(id, t, noise);
                 data[i] = tone * envelope * (loop ? 0.2f : 0.6f);
