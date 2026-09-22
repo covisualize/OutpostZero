@@ -5687,6 +5687,32 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void AshHangsOverTheMarketAndAClearYardStaysOpen()
+        {
+            Assert.AreEqual(0.82f, AshVeil.Cut, 0.001f);
+            Assert.AreEqual(0.28f, AshVeil.Mix, 0.001f);
+            Assert.AreEqual(1f, WeatherSurface.Sight(WeatherKind.Clear), 0.001f);
+            Assert.AreEqual(0.62f, WeatherSurface.Sight(WeatherKind.Fog), 0.001f);
+            Assert.AreEqual(1f, AshVeil.Scale(1f, false), 0.001f);
+            Assert.AreEqual(0.82f, AshVeil.Scale(1f, true), 0.001f);
+            Assert.AreEqual(0.5084f, AshVeil.Scale(0.62f, true), 0.001f);
+            Assert.AreEqual(0.8f, AshVeil.Scale(0.8f, false), 0.001f);
+            Assert.AreEqual(0f, AshVeil.Scale(-1f, true), 0.001f);
+            Assert.IsTrue(AshFall.Falls("ash_market"));
+            Assert.IsFalse(AshFall.Falls("rail_yard"));
+            AshVeil.Grit(false, 1f, 0.96f, 0.9f, out float openR, out float openG, out float openB);
+            Assert.AreEqual(1f, openR, 0.001f);
+            Assert.AreEqual(0.96f, openG, 0.001f);
+            Assert.AreEqual(0.9f, openB, 0.001f);
+            AshVeil.Grit(true, 1f, 0.96f, 0.9f, out float gritR, out float gritG, out float gritB);
+            Assert.AreEqual(0.874f, gritR, 0.001f);
+            Assert.AreEqual(0.8368f, gritG, 0.001f);
+            Assert.AreEqual(0.7824f, gritB, 0.001f);
+            Assert.AreEqual("Ash hangs in the air", Loc.T("ash.air", "en"));
+            Assert.AreEqual("La ceniza flota en el aire", Loc.T("ash.air", "es"));
+        }
+
+        [Test]
         public void AZombieWithoutARigStillAttacksAndFalls()
         {
             Assert.AreEqual(14f, PoseSheet.Lean(ZombieAI.ZombieState.Chase, 0f), 0.001f);

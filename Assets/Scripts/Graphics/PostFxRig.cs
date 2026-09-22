@@ -91,6 +91,8 @@ namespace OutpostZero.Graphics
                 RaidGrade.Filter(raid, out float red, out float green, out float blue);
                 PoisonVeil.Tint(poisoned, red, green, blue, out red, out green, out blue);
                 BoltGlare.Wash(flash, red, green, blue, out red, out green, out blue);
+                bool ash = WeatherController.Instance != null && AshFall.Falls(WeatherController.Instance.District);
+                AshVeil.Grit(ash, red, green, blue, out red, out green, out blue);
                 color.colorFilter.Override(new Color(red, green, blue));
             }
             if (blur != null)

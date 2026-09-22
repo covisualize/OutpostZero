@@ -128,8 +128,11 @@ namespace OutpostZero.Graphics
 
         public void SetDistrict(string id)
         {
-            district = id ?? "";
+            string next = id ?? "";
+            bool arrived = next != district && AshFall.Falls(next);
+            district = next;
             Apply();
+            if (arrived) GameplayFeedback.Toast(OutpostZero.Shell.Loc.T("ash.air"));
         }
 
         private void Awake()
@@ -196,7 +199,7 @@ namespace OutpostZero.Graphics
             Shader.SetGlobalFloat("_OutpostWet", WeatherSurface.Wetness(kind));
             HoldPuddles(WeatherSurface.Wetness(kind));
             HoldMist(kind, night);
-            multiplier = WeatherSurface.Sight(kind);
+            multiplier = AshVeil.Scale(WeatherSurface.Sight(kind), AshFall.Falls(district));
             if (SkyBand.Rains(kind)) EnsureRain();
             if (rain != null)
             {
