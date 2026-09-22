@@ -936,6 +936,36 @@ namespace OutpostZero.UI
                 }));
             }
             if (bench && benchTier >= 2) camp.Add(Body(Loc.T("camp.bench_t2")));
+            var heldGun = PlayerRegistry.Current != null ? PlayerRegistry.Current.ActiveWeapon as FirearmWeapon : null;
+            string heldId = heldGun != null ? heldGun.CardId : "";
+            int stripScrap = StripYield.Scrap(heldId);
+            int stripCount = PlayerRegistry.Current != null ? PlayerRegistry.Current.WeaponCount : 0;
+            bool stripMelee = PlayerRegistry.Current != null && PlayerRegistry.Current.ActiveWeapon != null && PlayerRegistry.Current.ActiveWeapon.Type == WeaponType.Melee;
+            if (StripYield.Can(stripCount, stripMelee, bench) && stripScrap > 0)
+            {
+                camp.Add(Button(Loc.T("camp.strip") + "  " + stripScrap, () =>
+                {
+                    var who = PlayerRegistry.Current;
+                    var gun = who != null ? who.ActiveWeapon as FirearmWeapon : null;
+                    string card = gun != null ? gun.CardId : "";
+                    int due = StripYield.Scrap(card);
+                    int chem = StripYield.Chemicals(card);
+                    var bin = ColonyStorage.Instance;
+                    if (who == null || bin == null || due <= 0 || !StripYield.RoomFor(bin.Used, bin.Room, due, chem))
+                    {
+                        GameplayFeedback.Toast(Loc.T(due > 0 ? "camp.strip_full" : "camp.strip_none"));
+                        return;
+                    }
+                    if (!who.TryStrip())
+                    {
+                        GameplayFeedback.Toast(Loc.T("camp.strip_none"));
+                        return;
+                    }
+                    bin.AddScrap(due);
+                    if (chem > 0) bin.AddChemicals(chem);
+                    GameplayFeedback.Toast(Loc.T("camp.strip_ok"));
+                }));
+            }
             else if (bench && GridBuilder.Instance.BenchOrdered()) camp.Add(Body(Loc.T("camp.bench_raise") + " " + GridBuilder.Instance.BenchWork() + "/" + CraftGate.Hours));
             else if (bench) camp.Add(Button(Loc.T("camp.bench_raise") + "  " + CraftGate.UpgradeScrap, () => GridBuilder.Instance.OrderBench()));
             foreach (var recipe in CraftingBench.Recipes)

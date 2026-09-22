@@ -85,6 +85,43 @@ namespace OutpostZero.Player
         public float MaxStamina => maxStamina;
         public WeaponBase ActiveWeapon => (equippedWeapons != null && equippedWeapons.Length > activeWeaponIndex) ? equippedWeapons[activeWeaponIndex] : null;
 
+        public int WeaponCount
+        {
+            get
+            {
+                if (equippedWeapons == null) return 0;
+                int count = 0;
+                for (int i = 0; i < equippedWeapons.Length; i++)
+                {
+                    if (equippedWeapons[i] != null) count++;
+                }
+                return count;
+            }
+        }
+
+        public bool TryStrip()
+        {
+            var weapon = ActiveWeapon;
+            if (weapon == null) return false;
+            string card = weapon is FirearmWeapon gun ? gun.CardId : "";
+            if (!StripYield.Can(WeaponCount, weapon.Type == WeaponType.Melee, true)) return false;
+            if (StripYield.Scrap(card) <= 0) return false;
+            var keep = new System.Collections.Generic.List<WeaponBase>();
+            if (equippedWeapons != null)
+            {
+                for (int i = 0; i < equippedWeapons.Length; i++)
+                {
+                    if (equippedWeapons[i] != null && equippedWeapons[i] != weapon) keep.Add(equippedWeapons[i]);
+                }
+            }
+            equippedWeapons = keep.ToArray();
+            Destroy(weapon.gameObject);
+            activeWeaponIndex = 0;
+            if (equippedWeapons.Length > 0) SelectWeapon(0);
+            else OnActiveWeaponChanged?.Invoke(null);
+            return true;
+        }
+
         public event Action<float, float> OnStaminaChanged; // current, max
         public event Action<WeaponBase> OnActiveWeaponChanged;
 

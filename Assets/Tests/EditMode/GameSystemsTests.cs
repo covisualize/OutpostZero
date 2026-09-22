@@ -3773,6 +3773,33 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void ASpareGunBreaksIntoScrapAtTheBench()
+        {
+            Assert.IsFalse(StripYield.Can(1, false, true));
+            Assert.IsFalse(StripYield.Can(2, true, true));
+            Assert.IsFalse(StripYield.Can(2, false, false));
+            Assert.IsTrue(StripYield.Can(2, false, true));
+            Assert.AreEqual(8, StripYield.Scrap("pistol_9mm"));
+            Assert.AreEqual(0, StripYield.Chemicals("pistol_9mm"));
+            Assert.AreEqual(12, StripYield.Scrap("shotgun_pump"));
+            Assert.AreEqual(1, StripYield.Chemicals("shotgun_pump"));
+            Assert.AreEqual(16, StripYield.Scrap("rifle_assault"));
+            Assert.AreEqual(1, StripYield.Chemicals("rifle_assault"));
+            Assert.AreEqual(10, StripYield.Scrap("smg"));
+            Assert.AreEqual(1, StripYield.Chemicals("smg"));
+            Assert.AreEqual(0, StripYield.Scrap("machete"));
+            Assert.AreEqual(0, StripYield.Scrap(""));
+            Assert.IsTrue(StripYield.RoomFor(0, 80, 8, 0));
+            Assert.IsTrue(StripYield.RoomFor(0, 80, 16, 1));
+            Assert.IsFalse(StripYield.RoomFor(80, 80, 8, 0));
+            Assert.IsFalse(StripYield.RoomFor(76, 80, 8, 1));
+            Assert.AreEqual("Desguazar arma", Loc.T("camp.strip", "es"));
+            Assert.AreEqual("Guarda un arma", Loc.T("camp.strip_none", "es"));
+            Assert.AreEqual("El almacén está lleno", Loc.T("camp.strip_full", "es"));
+            Assert.AreEqual("Piezas recuperadas", Loc.T("camp.strip_ok", "es"));
+        }
+
+        [Test]
         public void ADeepBuilderRaisesExtraAndAFourthShiftDoesNot()
         {
             Assert.AreEqual(0, BuildDepth.Raise(4));
