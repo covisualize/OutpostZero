@@ -267,6 +267,7 @@ namespace OutpostZero.UI
             float scale = SettingsService.Instance != null ? SettingsService.Instance.TextScale : 1f;
             root.style.fontSize = Mathf.RoundToInt(14 * scale);
             root.style.opacity = SettingsService.Instance != null ? SettingsService.Instance.HudOpacity : 1f;
+            int vision = SettingsService.Instance != null ? SettingsService.Instance.ColorblindMode : 0;
             var player = PlayerRegistry.Current;
             var hud = FindFirstObjectByType<SurvivalHUD>();
             var life = player != null ? player.GetComponent<HealthSystem>() : null;
@@ -283,7 +284,9 @@ namespace OutpostZero.UI
                 float actual = life.CurrentHealth / Mathf.Max(1f, life.MaxHealth);
                 ghostRatio = HealthGhost.Follow(ghostRatio, actual, 0.05f);
                 ghostFill.style.width = Length.Percent(ghostRatio * 100f);
+                ghostFill.style.backgroundColor = HudPalette.Ghost(vision);
                 healthFill.style.width = Length.Percent(actual * 100f);
+                healthFill.style.backgroundColor = HudPalette.Health(vision);
             }
             if (player != null) vitalText.AppendLine(Loc.T("hud.stamina") + " " + Mathf.CeilToInt(player.CurrentStamina));
             if (needs != null)
@@ -349,6 +352,7 @@ namespace OutpostZero.UI
                 {
                     var face = player.transform.forward;
                     string sector = StreetHeading.Sector(StreetHeading.Incoming(face.x, face.z, hit.x, hit.z));
+                    hurt.style.backgroundColor = HudPalette.Hurt(vision);
                     hurt.text = sector == "front" ? "Hit from the front"
                         : sector == "back" ? "Hit from behind"
                         : sector == "left" ? "Hit from the left"
@@ -372,7 +376,7 @@ namespace OutpostZero.UI
                 bool low = MagPulse.Low(gun.CurrentAmmo, gun.MaxMagazine, gun.IsReloading);
                 string reload = gun.IsReloading ? "  reload " + Mathf.RoundToInt(gun.ReloadFill * 100f) + "%" : low ? "  low" : "";
                 weapon.text = gun.WeaponName + "   " + gun.CurrentAmmo + " / " + gun.ReserveAmmo + reload;
-                weapon.style.color = low ? new Color(0.95f, 0.55f, 0.25f) : Color.white;
+                weapon.style.color = low ? HudPalette.Warn(vision) : Color.white;
                 weapon.style.opacity = MagPulse.Alpha(Time.unscaledTime, low);
             }
             else if (player != null && player.ActiveWeapon != null)
@@ -400,9 +404,8 @@ namespace OutpostZero.UI
             if (player != null) ZombieAI.CountAlerts(player.transform.position.x, player.transform.position.z, out bangs, out questions);
             threats.text = ThreatMark.Line(bangs, questions);
             threats.style.display = string.IsNullOrEmpty(threats.text) ? DisplayStyle.None : DisplayStyle.Flex;
-            threats.style.color = bangs > 0 ? new Color(0.95f, 0.35f, 0.28f) : new Color(0.95f, 0.8f, 0.35f);
+            threats.style.color = bangs > 0 ? HudPalette.Alarm(vision) : HudPalette.Ask(vision);
             noiseFill.style.width = Length.Percent(noise * 100f);
-            int vision = SettingsService.Instance != null ? SettingsService.Instance.ColorblindMode : 0;
             if (vision == 1) noiseFill.style.backgroundColor = Color.Lerp(new Color(0.2f, 0.45f, 0.95f), new Color(0.95f, 0.85f, 0.15f), noise);
             else if (vision == 2) noiseFill.style.backgroundColor = Color.Lerp(new Color(0.1f, 0.1f, 0.1f), Color.white, noise);
             else noiseFill.style.backgroundColor = Color.Lerp(new Color(0.2f, 0.7f, 0.3f), new Color(0.8f, 0.15f, 0.1f), noise);
@@ -685,7 +688,7 @@ namespace OutpostZero.UI
             parent.Add(SliderRow(Loc.T("set.bright"), settings.Brightness, 0.6f, 1.4f, settings.SetBrightness));
             parent.Add(Button(settings.Subtitles ? Loc.T("set.subs_on") : Loc.T("set.subs_off"), () => settings.SetSubtitles(!settings.Subtitles)));
             parent.Add(Button(settings.QuietFlash ? Loc.T("set.flash_off") : Loc.T("set.flash_on"), settings.ToggleQuietFlash));
-            parent.Add(Button(Loc.T("set.color") + " " + settings.ColorblindMode, settings.CycleColorblind));
+            parent.Add(Button(Loc.T("set.color") + " " + Loc.T(HudPalette.Name(settings.ColorblindMode)), settings.CycleColorblind));
             parent.Add(Button(settings.Language == "es" ? "Idioma: ES" : "Language: EN", () => settings.SetLanguage(settings.Language == "es" ? "en" : "es")));
             int tier = Mathf.Clamp(settings.Quality, 0, 3);
             parent.Add(Button(Loc.T("set.quality") + " " + Loc.T("set.tier" + tier), settings.CycleQuality));
@@ -961,7 +964,8 @@ namespace OutpostZero.UI
             fill.style.width = Length.Percent(ratio * 100f);
             fill.style.height = 8;
             bool heavy = PackOps.Heavy(inventory.CurrentWeight, inventory.MaxWeightCapacity);
-            fill.style.backgroundColor = heavy ? new Color(0.75f, 0.2f, 0.16f) : new Color(0.35f, 0.62f, 0.38f);
+            int vision = SettingsService.Instance != null ? SettingsService.Instance.ColorblindMode : 0;
+            fill.style.backgroundColor = heavy ? HudPalette.Health(vision) : HudPalette.Safe(vision);
             track.Add(fill);
             pack.Add(track);
             if (inventory.MedicalKits > 0)
@@ -1056,9 +1060,7 @@ namespace OutpostZero.UI
                 label.style.position = Position.Absolute;
                 label.style.left = panelPos.x;
                 label.style.top = panelPos.y;
-                label.style.color = popup.Crit
-                    ? (mode == 1 ? new Color(0.3f, 0.7f, 1f) : new Color(1f, 0.85f, 0.2f))
-                    : Color.white;
+                label.style.color = popup.Crit ? HudPalette.Crit(mode) : Color.white;
                 label.style.unityFontStyleAndWeight = FontStyle.Bold;
                 damageLayer.Add(label);
             }

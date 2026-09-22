@@ -1993,6 +1993,39 @@ namespace OutpostZero.Tests.EditMode
             Assert.AreEqual("[]", NoiseCue.Mark(2, 0.799f));
             Assert.AreEqual("*", NoiseCue.Mark(2, 0.8f));
             Assert.AreNotEqual(NoiseCue.Mark(1, 0.9f), NoiseCue.Mark(2, 0.9f));
+            Color health = HudPalette.Health(0);
+            Assert.AreEqual(0.75f, health.r, 0.001f);
+            Assert.AreEqual(0.2f, health.g, 0.001f);
+            Assert.AreEqual(0.16f, health.b, 0.001f);
+            Assert.AreEqual(health, HudPalette.Health(-1));
+            Assert.AreEqual(health, HudPalette.Health(3));
+            Color blue = HudPalette.Health(1);
+            Assert.Greater(blue.b, blue.r);
+            Color mono = HudPalette.Health(2);
+            Assert.AreEqual(mono.r, mono.g, 0.001f);
+            Assert.AreEqual(mono.g, mono.b, 0.001f);
+            Color safe = HudPalette.Safe(0);
+            Assert.AreEqual(0.35f, safe.r, 0.001f);
+            Assert.AreEqual(0.62f, safe.g, 0.001f);
+            Assert.AreEqual(0.38f, safe.b, 0.001f);
+            Assert.Greater(HudPalette.Safe(1).r, HudPalette.Safe(1).b);
+            Color warn = HudPalette.Warn(0);
+            Assert.AreEqual(0.95f, warn.r, 0.001f);
+            Assert.AreEqual(0.55f, warn.g, 0.001f);
+            Assert.AreEqual(0.25f, warn.b, 0.001f);
+            Color alarm = HudPalette.Alarm(0);
+            Assert.AreEqual(0.95f, alarm.r, 0.001f);
+            Assert.AreEqual(0.35f, alarm.g, 0.001f);
+            Color ask = HudPalette.Ask(0);
+            Assert.AreEqual(0.95f, ask.r, 0.001f);
+            Assert.AreEqual(0.8f, ask.g, 0.001f);
+            Assert.AreEqual("set.vision0", HudPalette.Name(0));
+            Assert.AreEqual("set.vision1", HudPalette.Name(1));
+            Assert.AreEqual("set.vision2", HudPalette.Name(2));
+            Assert.AreEqual("Blue-yellow", Loc.T("set.vision1"));
+            Assert.AreEqual("Azul-amarillo", Loc.T("set.vision1", "es"));
+            Assert.AreEqual("Apagado", Loc.T("set.vision0", "es"));
+            Assert.AreEqual("", NoiseCue.Mark(0, 1f));
         }
 
         [Test]
