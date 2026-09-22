@@ -419,6 +419,7 @@ namespace OutpostZero.Expedition
                 light.intensity = 1.4f;
                 light.color = new Color(1f, 0.86f, 0.62f);
                 lightObject.AddComponent<LightSource>().Configure(light.range);
+                lightObject.AddComponent<DuskBulb>().Arm(1.4f);
             }
         }
 

@@ -3546,6 +3546,26 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void StreetLampsFollowTheDarkAndNoonStaysOut()
+        {
+            Assert.AreEqual(0f, DayNightCycle.HourToNight(12f), 0.001f);
+            Assert.AreEqual(1f, DayNightCycle.HourToNight(23f), 0.001f);
+            Assert.AreEqual(0f, LampClock.Factor(0f), 0.001f);
+            Assert.AreEqual(0f, LampClock.Factor(-1f), 0.001f);
+            Assert.AreEqual(1f, LampClock.Factor(1f), 0.001f);
+            Assert.AreEqual(1f, LampClock.Factor(2f), 0.001f);
+            Assert.AreEqual(0.5f, LampClock.Factor(0.5f), 0.001f);
+            Assert.AreEqual(0f, LampClock.Glow(0f, 0.7f), 0.001f);
+            Assert.AreEqual(0.7f, LampClock.Glow(1f, 0.7f), 0.001f);
+            Assert.AreEqual(1.4f, LampClock.Glow(1f, 1.4f), 0.001f);
+            Assert.AreEqual(0.7f, LampClock.Glow(0.5f, 1.4f), 0.001f);
+            Assert.AreEqual(0f, LampClock.Resolve(0f, 12f), 0.001f);
+            Assert.AreEqual(1f, LampClock.Resolve(0f, 23f), 0.001f);
+            Assert.AreEqual(1f, LampClock.Resolve(1f, 12f), 0.001f);
+            Assert.Greater(LampClock.Resolve(0f, 18.5f), 0.4f);
+        }
+
+        [Test]
         public void AZombieWithoutARigStillAttacksAndFalls()
         {
             Assert.AreEqual(14f, PoseSheet.Lean(ZombieAI.ZombieState.Chase, 0f), 0.001f);

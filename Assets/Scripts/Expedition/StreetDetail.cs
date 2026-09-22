@@ -1,5 +1,6 @@
 using UnityEngine;
 using OutpostZero.Core;
+using OutpostZero.Graphics;
 
 namespace OutpostZero.Expedition
 {
@@ -62,6 +63,7 @@ namespace OutpostZero.Expedition
                     lamp.range = 4.5f;
                     lamp.intensity = 0.7f;
                     lamp.color = new Color(1f, 0.82f, 0.45f);
+                    body.AddComponent<DuskBulb>().Arm(0.7f);
                 }
             }
         }
