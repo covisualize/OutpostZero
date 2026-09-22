@@ -12,14 +12,14 @@ namespace OutpostZero.Tests.PlayMode
 {
     public class ScreenTourTests
     {
-        /// <summary>CI sets OUTPOST_SCREENSHOTS so the shots land in the uploaded artifacts folder.</summary>
+        /// <summary>Shots land in Artifacts/Screenshots under the project (or OUTPOST_SCREENSHOTS), which CI uploads.</summary>
         [UnityTest, Timeout(120000)]
         public IEnumerator TourSavesOneShotPerMarkAndAnIndex()
         {
             if (SystemInfo.graphicsDeviceType == GraphicsDeviceType.Null) Assert.Ignore("No graphics device (-nographics), so there is nothing to capture.");
 
             string folder = Environment.GetEnvironmentVariable("OUTPOST_SCREENSHOTS");
-            if (string.IsNullOrEmpty(folder)) folder = Path.Combine(Application.temporaryCachePath, "ScreenTour");
+            if (string.IsNullOrEmpty(folder)) folder = Path.Combine(Directory.GetCurrentDirectory(), "Artifacts", "Screenshots");
             if (Directory.Exists(folder)) Directory.Delete(folder, true);
 
             yield return SceneManager.LoadSceneAsync("PrototypeArena", LoadSceneMode.Single);

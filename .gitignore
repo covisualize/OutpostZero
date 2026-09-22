@@ -45,3 +45,6 @@ __pycache__/
 # Written by BuildScript for each player build
 /Assets/StreamingAssets/version.json
 /Assets/StreamingAssets/version.json.meta
+
+# Screenshot tour output
+/[Aa]rtifacts/

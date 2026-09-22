@@ -12,6 +12,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Release tool tests
+        run: python3 -m unittest discover -s Tools/Release -v
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.0.x
