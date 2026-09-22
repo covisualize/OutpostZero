@@ -40,11 +40,15 @@ namespace OutpostZero.Shell
         private readonly Dictionary<string, AudioClip> clips = new Dictionary<string, AudioClip>();
         private readonly List<AudioSource> pool = new List<AudioSource>();
         private AudioSource ambient;
+        private AudioSource percussion;
+        private AudioSource combat;
         private AudioSource weather;
         private string weatherId = "";
         private NoiseManager subscribedNoise;
         private float nextStep;
         private bool peaked;
+        private int streak;
+        private float streakAt;
 
         private void Awake()
         {
@@ -64,6 +68,27 @@ namespace OutpostZero.Shell
             weather.loop = true;
             weather.spatialBlend = 0f;
             weather.playOnAwake = false;
+            percussion = AddBed("stem_perc");
+            combat = AddBed("stem_combat");
+        }
+
+        private AudioSource AddBed(string id)
+        {
+            var bed = gameObject.AddComponent<AudioSource>();
+            bed.loop = true;
+            bed.spatialBlend = 0f;
+            bed.playOnAwake = false;
+            bed.clip = GetClip(id);
+            bed.volume = 0f;
+            bed.Play();
+            return bed;
+        }
+
+        public void Sting(string moment)
+        {
+            string id = MusicStem.Cue(moment);
+            if (id.Length == 0) return;
+            Play(id, 0.6f);
         }
 
         private void OnEnable()
@@ -94,11 +119,16 @@ namespace OutpostZero.Shell
             float tension = HordeDirector.Instance != null ? HordeDirector.Instance.Tension : 0f;
             var snapshot = CurrentSnapshot();
             Levels(out float music, out float sfx, out float ambience, out float ui);
-            float bed = 0.08f + tension / 500f;
+            var state = GameManager.Instance != null ? GameManager.Instance.CurrentState : GameState.ExpeditionActive;
+            MusicStem.Gains(MusicStem.Theme(state), tension, out float drone, out float perc, out float fight);
             // The listener already carries master, so each bus is scaled on its own.
-            ambient.volume = AudioMix.Gain("ambient", bed, 1f, music, sfx, ambience, ui, snapshot);
+            ambient.volume = AudioMix.Gain("ambient", drone, 1f, music, sfx, ambience, ui, snapshot);
             ambient.pitch = Mathf.Lerp(0.82f, 1.35f, tension / 100f);
+            if (percussion != null) percussion.volume = AudioMix.Gain("ambient", perc * 0.45f, 1f, music, sfx, ambience, ui, snapshot);
+            if (combat != null) combat.volume = AudioMix.Gain("ambient", fight * 0.5f, 1f, music, sfx, ambience, ui, snapshot);
             ApplyLowpass(ambient, snapshot);
+            if (percussion != null) ApplyLowpass(percussion, snapshot);
+            if (combat != null) ApplyLowpass(combat, snapshot);
             UpdateWeather(snapshot, music, sfx, ambience, ui);
             if (tension >= 75f && !peaked)
             {
@@ -217,6 +247,10 @@ namespace OutpostZero.Shell
         {
             Vector3 at = victim != null ? victim.transform.position : transform.position;
             PlayAt("kill", at, 0.5f);
+            float now = Time.time;
+            streak = MusicStem.Tally(streak, streakAt, now, MusicStem.Window);
+            streakAt = now;
+            if (MusicStem.Streak(streak)) Sting("kill");
         }
 
         private void OnNoise(Vector3 origin, float radius, NoiseType type)
@@ -245,11 +279,29 @@ namespace OutpostZero.Shell
             return id == "step" || id == "step_hard" || id == "step_metal" || id == "step_wood" || id == "step_water";
         }
 
+        private static float Tone(string id, float t, float noise)
+        {
+            if (id == "scream") return Mathf.Sin(t * 90f);
+            if (id == "pulse") return Mathf.Sin(t * 28f);
+            if (id == "rain") return noise;
+            if (id == "wind") return noise * Mathf.Sin(t * 6f);
+            if (StepTone(id)) return noise * Mathf.Sin(t * 18f);
+            if (id == "ui") return Mathf.Sin(t * 40f);
+            if (id == "stem_perc") return Mathf.Sin(t * 48f) > 0.65f ? noise : 0f;
+            if (id == "stem_combat") return Mathf.Sin(t * 16f);
+            if (id == "stinger_kill") return Mathf.Sin(t * 55f);
+            if (id == "stinger_death") return Mathf.Sin(t * 8f);
+            if (id == "stinger_extract") return Mathf.Sin(t * 32f);
+            if (id == "stinger_raid") return noise * Mathf.Sin(t * 12f);
+            if (id == "stinger_dawn") return Mathf.Sin(t * 22f);
+            return noise;
+        }
+
         private AudioClip GetClip(string id)
         {
             if (clips.TryGetValue(id, out var clip)) return clip;
             int rate = 22050;
-            bool loop = id == "ambient" || id == "rain" || id == "wind";
+            bool loop = id == "ambient" || id == "rain" || id == "wind" || id == "stem_perc" || id == "stem_combat";
             float seconds = loop ? 2f : id == "boom" ? 0.45f : 0.18f;
             int samples = Mathf.CeilToInt(rate * seconds);
             var data = new float[samples];
@@ -259,7 +311,7 @@ namespace OutpostZero.Shell
                 float t = i / (float)samples;
                 float noise = (float)(random.NextDouble() * 2.0 - 1.0);
                 float envelope = loop ? 0.25f : Mathf.Exp(-t * (id == "boom" ? 4f : 10f));
-                float tone = id == "scream" ? Mathf.Sin(t * 90f) : id == "pulse" ? Mathf.Sin(t * 28f) : id == "rain" ? noise : id == "wind" ? noise * Mathf.Sin(t * 6f) : StepTone(id) ? noise * Mathf.Sin(t * 18f) : id == "ui" ? Mathf.Sin(t * 40f) : noise;
+                float tone = Tone(id, t, noise);
                 data[i] = tone * envelope * (loop ? 0.2f : 0.6f);
             }
             clip = AudioClip.Create(id, samples, 1, rate, false);

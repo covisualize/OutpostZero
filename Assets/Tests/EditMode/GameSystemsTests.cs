@@ -2944,6 +2944,41 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void TheYardKeepsThreeBedsAndARaidIsAlreadyLoud()
+        {
+            Assert.AreEqual(MusicTheme.Camp, MusicStem.Theme(GameState.CampManagement));
+            Assert.AreEqual(MusicTheme.Camp, MusicStem.Theme(GameState.MainMenu));
+            Assert.AreEqual(MusicTheme.Street, MusicStem.Theme(GameState.ExpeditionActive));
+            Assert.AreEqual(MusicTheme.Raid, MusicStem.Theme(GameState.RaidActive));
+            MusicStem.Gains(MusicTheme.Street, 0f, out float drone, out float perc, out float fight);
+            Assert.AreEqual(0.35f, drone, 0.001f);
+            Assert.AreEqual(0f, perc, 0.001f);
+            Assert.AreEqual(0f, fight, 0.001f);
+            MusicStem.Gains(MusicTheme.Street, 50f, out drone, out perc, out fight);
+            Assert.AreEqual(0.5f, perc, 0.001f);
+            Assert.AreEqual(0f, fight, 0.001f);
+            MusicStem.Gains(MusicTheme.Street, 90f, out drone, out perc, out fight);
+            Assert.AreEqual(1f, perc, 0.001f);
+            Assert.AreEqual(1f, fight, 0.001f);
+            MusicStem.Gains(MusicTheme.Camp, 100f, out drone, out perc, out fight);
+            Assert.AreEqual(0.22f, drone, 0.001f);
+            Assert.AreEqual(0.25f, perc, 0.001f);
+            Assert.AreEqual(0f, fight, 0.001f);
+            MusicStem.Gains(MusicTheme.Raid, 0f, out drone, out perc, out fight);
+            Assert.AreEqual(0.55f, drone, 0.001f);
+            Assert.AreEqual(0f, perc, 0.001f);
+            Assert.AreEqual(0.45f, fight, 0.001f);
+            Assert.AreEqual(1, MusicStem.Tally(0, 0f, 10f, 8f));
+            Assert.AreEqual(2, MusicStem.Tally(1, 10f, 12f, 8f));
+            Assert.AreEqual(1, MusicStem.Tally(2, 1f, 12f, 8f));
+            Assert.IsFalse(MusicStem.Streak(2));
+            Assert.IsTrue(MusicStem.Streak(3));
+            Assert.AreEqual("stinger_raid", MusicStem.Cue("raid"));
+            Assert.AreEqual("stinger_dawn", MusicStem.Cue("dawn"));
+            Assert.AreEqual("", MusicStem.Cue("idle"));
+        }
+
+        [Test]
         public void DemolishingAModuleReturnsHalfTheScrap()
         {
             Assert.AreEqual(3, ScrapRefund.Half(6));

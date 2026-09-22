@@ -174,6 +174,7 @@ namespace OutpostZero.Core
             FactionTrade.Instance?.NoteExtracted();
             SetState(won ? GameState.Victory : GameState.ExpeditionResults);
             SaveSystem.Instance?.Save(false);
+            AudioManager.Instance?.Sting("extract");
             GameplayFeedback.Toast(won ? "The broadcast is already out" : "Extracted");
         }
 
@@ -191,6 +192,7 @@ namespace OutpostZero.Core
             var effects = PlayerRegistry.Current != null ? PlayerRegistry.Current.GetComponent<StatusEffectController>() : null;
             string cause = effects != null && effects.IsInfected ? "infection" : "killed";
             bool successor = SurvivorRoster.Instance == null || SurvivorRoster.Instance.MarkLeaderDead(corpse, cause);
+            AudioManager.Instance?.Sting("death");
             SetState(successor ? GameState.SuccessionScreen : GameState.GameOver);
             SaveSystem.Instance?.Save(false);
         }

@@ -104,6 +104,7 @@ namespace OutpostZero.Colony
             nextTrap = Time.time + TrapHit.Gap;
             nextGuard = Time.time + GuardVolley.Interval;
             GameManager.Instance.SetState(GameState.RaidActive);
+            AudioManager.Instance?.Sting("raid");
             int difficulty = WorldMapService.Instance != null ? WorldMapService.Instance.Difficulty : 2;
             fronts = RaidPlan.Fronts(day, difficulty);
             int spawn = RaidPlan.SpawnCount(day, towers) + (tower ? 4 : 0);

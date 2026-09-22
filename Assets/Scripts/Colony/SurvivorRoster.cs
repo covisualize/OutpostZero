@@ -440,6 +440,7 @@ namespace OutpostZero.Colony
             if (ColonyStorage.Instance != null) ColonyStorage.Instance.SetRaw(raw);
             Publish(notes);
             FactionTrade.Instance?.OnMorning(WorldClock.Instance != null ? WorldClock.Instance.Day : 1);
+            AudioManager.Instance?.Sting("dawn");
         }
 
         public void RewardReturn()
