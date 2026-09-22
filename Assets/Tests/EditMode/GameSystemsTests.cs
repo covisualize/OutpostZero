@@ -4159,6 +4159,12 @@ namespace OutpostZero.Tests.EditMode
             Assert.AreEqual(GaitSheet.Beat.Attack, GaitSheet.Pick(false, false, true, true, true, true, 2f));
             Assert.AreEqual(GaitSheet.Beat.Hit, GaitSheet.Pick(false, true, true, true, false, true, 2f));
             Assert.AreEqual(GaitSheet.Beat.Dead, GaitSheet.Pick(true, true, true, true, true, true, 2f));
+            Assert.AreEqual(GaitSheet.Beat.Aim, GaitSheet.Pick(false, false, false, false, false, true, 2f, true));
+            Assert.AreEqual(GaitSheet.Beat.Aim, GaitSheet.Pick(false, false, false, false, true, false, 1f, true));
+            Assert.AreEqual(GaitSheet.Beat.Reload, GaitSheet.Pick(false, false, false, true, false, false, 0f, true));
+            Assert.AreEqual(GaitSheet.Beat.Walk, GaitSheet.Pick(false, false, false, false, false, false, 1f, false));
+            Assert.AreEqual(8f, GaitSheet.Lean(GaitSheet.Beat.Aim, 0f), 0.001f);
+            Assert.AreEqual(0.02f, GaitSheet.Hop(GaitSheet.Beat.Aim, 1.5708f), 0.001f);
             Assert.AreEqual(0.72f, GaitSheet.Scale(true, false), 0.001f);
             Assert.AreEqual(1f, GaitSheet.Scale(true, true), 0.001f);
             Assert.AreEqual(1f, GaitSheet.Scale(false, false), 0.001f);

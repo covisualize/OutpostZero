@@ -13,6 +13,8 @@ namespace OutpostZero.Player
         public const float CrouchScale = 0.72f;
         public const float SprintLean = 12f;
         public const float CrouchLean = 6f;
+        public const float AimLean = 8f;
+        public const float AimHop = 0.02f;
         public const float AttackLean = 26f;
         public const float HitLean = -18f;
         public const float ReloadLean = 10f;
@@ -33,15 +35,22 @@ namespace OutpostZero.Player
             Attack,
             Hit,
             Reload,
+            Aim,
             Dead
         }
 
         public static Beat Pick(bool dead, bool hit, bool attack, bool reload, bool crouch, bool sprint, float speed)
         {
+            return Pick(dead, hit, attack, reload, crouch, sprint, speed, false);
+        }
+
+        public static Beat Pick(bool dead, bool hit, bool attack, bool reload, bool crouch, bool sprint, float speed, bool aiming)
+        {
             if (dead) return Beat.Dead;
             if (hit) return Beat.Hit;
             if (attack) return Beat.Attack;
             if (reload) return Beat.Reload;
+            if (aiming) return Beat.Aim;
             if (crouch && speed > 0.2f) return Beat.Crouch;
             if (crouch) return Beat.CrouchStill;
             if (sprint) return Beat.Sprint;
@@ -91,6 +100,7 @@ namespace OutpostZero.Player
             if (beat == Beat.Hit) return HitLean * Flail(age);
             if (beat == Beat.Attack) return AttackLean * Swing(age);
             if (beat == Beat.Reload) return ReloadLean * Dip(age);
+            if (beat == Beat.Aim) return AimLean;
             if (beat == Beat.Sprint) return SprintLean;
             if (beat == Beat.Crouch) return CrouchLean;
             return 0f;
@@ -102,6 +112,7 @@ namespace OutpostZero.Player
             if (beat == Beat.Sprint) return wave * SprintHop;
             if (beat == Beat.Walk) return wave * WalkHop;
             if (beat == Beat.Crouch) return wave * CrouchHop;
+            if (beat == Beat.Aim) return wave * AimHop;
             return 0f;
         }
 

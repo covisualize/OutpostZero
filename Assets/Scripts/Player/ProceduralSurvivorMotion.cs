@@ -137,7 +137,7 @@ namespace OutpostZero.Player
 
             bool hitting = hitLive && GaitSheet.Flail(hitAge) > 0f;
             bool attacking = attackLive && GaitSheet.Swing(attackAge) > 0f;
-            var beat = GaitSheet.Pick(dead, hitting, attacking, reloadLive, controller.IsCrouching, controller.IsSprinting, speed);
+            var beat = GaitSheet.Pick(dead, hitting, attacking, reloadLive, controller.IsCrouching, controller.IsSprinting, speed, controller.IsAimingDownSights);
             float age = beat == GaitSheet.Beat.Dead ? deathAge
                 : beat == GaitSheet.Beat.Hit ? hitAge
                 : beat == GaitSheet.Beat.Attack ? attackAge
