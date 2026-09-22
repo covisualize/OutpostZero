@@ -5534,6 +5534,23 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void ARoofTakesDirtAndRainDrawsARipple()
+        {
+            Assert.AreEqual(0f, StreetCoat.Cover(0.65f), 0.001f);
+            Assert.AreEqual(0f, StreetCoat.Cover(0f), 0.001f);
+            Assert.AreEqual(0f, StreetCoat.Cover(-1f), 0.001f);
+            Assert.AreEqual(0.175f, StreetCoat.Cover(0.825f), 0.001f);
+            Assert.AreEqual(0.35f, StreetCoat.Cover(1f), 0.001f);
+            Assert.AreEqual(0.35f, StreetCoat.Cover(2f), 0.001f);
+            Assert.AreEqual(0f, StreetCoat.Shimmer(0f, 1f), 0.001f);
+            Assert.AreEqual(0f, StreetCoat.Shimmer(0.65f, 0f), 0.001f);
+            Assert.AreEqual(0.052f, StreetCoat.Shimmer(0.65f, 1f), 0.001f);
+            Assert.AreEqual(0.08f, StreetCoat.Shimmer(1f, 1f), 0.001f);
+            Assert.AreEqual(0.08f, StreetCoat.Shimmer(2f, 2f), 0.001f);
+            Assert.AreEqual(0.65f, WeatherSurface.Wetness(WeatherKind.Rain), 0.001f);
+        }
+
+        [Test]
         public void AZombieWithoutARigStillAttacksAndFalls()
         {
             Assert.AreEqual(14f, PoseSheet.Lean(ZombieAI.ZombieState.Chase, 0f), 0.001f);

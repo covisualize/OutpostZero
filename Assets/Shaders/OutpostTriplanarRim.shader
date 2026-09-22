@@ -150,9 +150,15 @@ Shader "OutpostZero/TriplanarRim"
                 float3 color = albedo * (0.25 + ndotl) * lerp(0.85, 1.15, noise);
                 float grime = saturate(1.15 - input.positionWS.y * 0.18);
                 color *= lerp(1.0, 0.7, grime * 0.4);
+                float dirt = normal.y > 0.65 ? saturate((normal.y - 0.65) / 0.35) * 0.35 : 0.0;
+                color = lerp(color, float3(0.30, 0.27, 0.18), dirt);
                 float wet = max(_Wetness, _OutpostWet) * saturate(normal.y);
+                float wave = sin(input.positionWS.x * 5.5 + _Time.y * 2.4) * sin(input.positionWS.z * 4.5 - _Time.y * 1.6);
+                wave = wave * 0.5 + 0.5;
                 color = lerp(color, color * float3(0.55, 0.62, 0.72), wet * 0.6);
-                float3 reflectDir = reflect(-mainLight.direction, normal);
+                color += wave * wet * 0.08;
+                float3 wetNormal = normalize(normal + float3(wave - 0.5, 0.0, wave - 0.5) * wet * 0.35);
+                float3 reflectDir = reflect(-mainLight.direction, wetNormal);
                 float spec = pow(saturate(dot(reflectDir, view)), 28.0) * wet;
                 color += spec * mainLight.color.rgb * 0.4;
                 color = lerp(color, _RimColor.rgb, rim * _RimColor.a);
