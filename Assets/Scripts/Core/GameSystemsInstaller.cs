@@ -69,6 +69,7 @@ namespace OutpostZero.Core
                 Add<GameShellUI>(camera.gameObject);
                 Add<OutpostInterface>(camera.gameObject);
                 Add<ExpeditionCameraRig>(camera.gameObject);
+                Add<MenuBackdrop>(camera.gameObject);
             }
 
             ExtractionZone.Create(new Vector3(-5.5f, 0.5f, -10f));

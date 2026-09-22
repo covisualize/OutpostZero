@@ -14,6 +14,9 @@ namespace OutpostZero.Graphics
         private Light alarm;
         public float NightFactor { get; private set; }
 
+        /// <summary>Pins the grade to a fixed night factor (0..1) while set; negative follows the clock.</summary>
+        public float Hold { get; set; } = -1f;
+
         private void Awake()
         {
             if (Instance != null && Instance != this)
@@ -55,7 +58,7 @@ namespace OutpostZero.Graphics
             var tracker = ObjectiveTracker.Instance;
             if (tracker != null)
                 job = SkyGrade.JobNight(SkyGrade.Job(tracker.Kills, tracker.KillGoal, tracker.Scrap, tracker.ScrapGoal));
-            NightFactor = raid ? 1f : Mathf.Max(clock, job);
+            NightFactor = raid ? 1f : Hold >= 0f ? Mathf.Clamp01(Hold) : Mathf.Max(clock, job);
             sun.intensity = SkyGrade.Sun(NightFactor);
             sun.color = SkyGrade.SunTint(NightFactor);
             RenderSettings.ambientMode = AmbientMode.Trilight;

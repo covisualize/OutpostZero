@@ -78,6 +78,61 @@ namespace OutpostZero.Tests.EditMode
             Assert.AreEqual(BackAction.None, BackRoute.For(false, false, 0, false));
         }
 
+        private sealed class EntryProbe : ISceneEntry
+        {
+            public readonly List<string> Log = new List<string>();
+            public bool Throws;
+
+            public void OnEnter(FlowStep step, FlowStep from)
+            {
+                Log.Add("enter " + step + " from " + from);
+                if (Throws) throw new System.InvalidOperationException("probe");
+            }
+
+            public void OnExit(FlowStep step, FlowStep to) => Log.Add("exit " + step + " to " + to);
+        }
+
+        [Test]
+        public void SceneEntriesExitThenEnterAndSurviveAFailingHook()
+        {
+            SceneEntries.Clear();
+            var broken = new EntryProbe { Throws = true };
+            var probe = new EntryProbe();
+            SceneEntries.Register(broken);
+            SceneEntries.Register(probe);
+            SceneEntries.Register(probe);
+            Assert.AreEqual(2, SceneEntries.Count);
+
+            int failures = 0;
+            int reached = SceneEntries.Dispatch(FlowStep.MainMenu, FlowStep.Sanctuary, e => failures++);
+            Assert.AreEqual(1, reached);
+            Assert.AreEqual(1, failures);
+            CollectionAssert.AreEqual(new[] { "exit MainMenu to Sanctuary", "enter Sanctuary from MainMenu" }, probe.Log);
+
+            SceneEntries.Unregister(broken);
+            SceneEntries.Unregister(probe);
+            Assert.AreEqual(0, SceneEntries.Count);
+            SceneEntries.Clear();
+        }
+
+        [Test]
+        public void MenuDriftCirclesThePivotAtAFixedHeight()
+        {
+            var pivot = new Vector3(4f, 0f, -2f);
+            for (int i = 0; i < 12; i++)
+            {
+                float t = i * 17.5f;
+                var at = MenuDrift.Position(pivot, t);
+                var flat = new Vector2(at.x - pivot.x, at.z - pivot.z);
+                Assert.AreEqual(MenuDrift.Radius, flat.magnitude, 0.001f);
+                Assert.That(at.y, Is.InRange(MenuDrift.Height - MenuDrift.Bob - 0.001f, MenuDrift.Height + MenuDrift.Bob + 0.001f));
+                Assert.Less(MenuDrift.Look(pivot, t).y, at.y);
+            }
+            Assert.AreEqual(0f, MenuDrift.Angle(MenuDrift.Period), 0.0001f);
+            Assert.AreNotEqual(MenuDrift.Position(pivot, 0f), MenuDrift.Position(pivot, 10f));
+            Assert.That(MenuDrift.Dusk, Is.InRange(0.3f, 0.8f));
+        }
+
         [Test]
         public void ExpeditionEndRoutesTheFlow()
         {
