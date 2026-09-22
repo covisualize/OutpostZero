@@ -17,7 +17,8 @@ namespace OutpostZero.Colony
         Workbench,
         TradingPost,
         Farm,
-        Purifier
+        Purifier,
+        Turret
     }
 
     [Serializable]
@@ -305,6 +306,7 @@ namespace OutpostZero.Colony
                 case ModuleKind.TradingPost: return 20;
                 case ModuleKind.Farm: return 18;
                 case ModuleKind.Purifier: return 15;
+                case ModuleKind.Turret: return 22;
                 default: return 6;
             }
         }
@@ -322,6 +324,7 @@ namespace OutpostZero.Colony
                 case "TradingPost": return new Vector3(1.8f, 1.4f, 1.2f);
                 case "Farm": return new Vector3(2.2f, 0.25f, 2.2f);
                 case "Purifier": return new Vector3(0.7f, 1.3f, 0.7f);
+                case "Turret": return new Vector3(0.45f, 1.5f, 0.45f);
                 default: return new Vector3(1.8f * health, 1.1f * Mathf.Lerp(0.35f, 1f, health), 0.4f);
             }
         }
@@ -338,6 +341,7 @@ namespace OutpostZero.Colony
                 case "TradingPost": return new Color(0.55f, 0.32f, 0.22f);
                 case "Farm": return new Color(0.28f, 0.48f, 0.24f);
                 case "Purifier": return new Color(0.35f, 0.7f, 0.78f);
+                case "Turret": return new Color(0.22f, 0.24f, 0.28f);
                 default: return new Color(0.48f, 0.42f, 0.32f);
             }
         }

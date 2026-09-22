@@ -1956,6 +1956,24 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void ATurretFiresWhenTheGeneratorIsUpAndARoundIsReady()
+        {
+            Assert.IsFalse(TurretBeat.Ready(0.84f, true, 1, 4));
+            Assert.IsTrue(TurretBeat.Ready(0.85f, true, 1, 1));
+            Assert.IsFalse(TurretBeat.Ready(2f, false, 1, 5));
+            Assert.IsFalse(TurretBeat.Ready(2f, true, 0, 5));
+            Assert.IsFalse(TurretBeat.Ready(2f, true, 1, 0));
+            Assert.AreEqual(1, TurretBeat.Pick(new[] { 30f, 10f, 22f }, TurretBeat.Range));
+            Assert.AreEqual(0, TurretBeat.Pick(new[] { 22f }, TurretBeat.Range));
+            Assert.AreEqual(-1, TurretBeat.Pick(new[] { 22.1f }, TurretBeat.Range));
+            Assert.AreEqual(-1, TurretBeat.Pick(null, TurretBeat.Range));
+            Assert.AreEqual(2, TurretBeat.Prefer(new[] { false, false, true }, new[] { 0, 4, 2 }));
+            Assert.AreEqual(1, TurretBeat.Prefer(new[] { false, false }, new[] { 0, 3 }));
+            Assert.AreEqual(-1, TurretBeat.Prefer(null, new[] { 0, 0 }));
+            Assert.AreEqual(22, GridBuilder.Cost(ModuleKind.Turret));
+        }
+
+        [Test]
         public void AnEastGridKeepsAWalkFromTheSpawnToTheFarGate()
         {
             var ash = RoadGraph.Build(1701, "ash_market");

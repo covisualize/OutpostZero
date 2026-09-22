@@ -262,6 +262,15 @@ namespace OutpostZero.Combat
             OnAmmoChanged?.Invoke(currentAmmo, reserveAmmo);
         }
 
+        public bool TrySpendRound()
+        {
+            if (reserveAmmo > 0) reserveAmmo--;
+            else if (currentAmmo > 0) currentAmmo--;
+            else return false;
+            OnAmmoChanged?.Invoke(currentAmmo, reserveAmmo);
+            return true;
+        }
+
         private void PlaySound(AudioClip clip)
         {
             if (audioSource != null && clip != null)

@@ -1,6 +1,8 @@
 using UnityEngine;
 using OutpostZero.AI;
+using OutpostZero.Combat;
 using OutpostZero.Core;
+using OutpostZero.Player;
 using OutpostZero.Shell;
 
 namespace OutpostZero.Colony
@@ -20,6 +22,7 @@ namespace OutpostZero.Colony
         private int phase;
         private int raidDay = 1;
         private int raidTowers;
+        private float nextTurret;
 
         public bool Running => running;
         public float Remaining => running ? Mathf.Max(0f, endsAt - Time.time) : 0f;
@@ -63,6 +66,7 @@ namespace OutpostZero.Colony
             running = true;
             endsAt = Time.time + duration;
             nextStrike = Time.time + strikeInterval;
+            nextTurret = Time.time + TurretBeat.Interval;
             GameManager.Instance.SetState(GameState.RaidActive);
             int spawn = RaidPlan.SpawnCount(day, towers) + (tower ? 4 : 0);
             if (HordeDirector.Instance != null) HordeDirector.Instance.BeginRaid(spawn);
@@ -77,6 +81,7 @@ namespace OutpostZero.Colony
                 running = false;
                 return;
             }
+            TickTurret();
             float elapsed = duration - Remaining;
             int nextPhase = RaidPlan.PhaseAt(elapsed, duration);
             if (nextPhase != phase) ApplyWave(nextPhase, true);
@@ -131,6 +136,65 @@ namespace OutpostZero.Colony
             }
             broadcast = false;
             GameManager.Instance?.SetState(GameState.CampManagement);
+        }
+
+        private void TickTurret()
+        {
+            if (Time.time < nextTurret) return;
+            int guns = GridBuilder.Instance != null ? GridBuilder.Instance.CountKind("Turret") : 0;
+            bool powered = CampServices.Instance != null && CampServices.Instance.GeneratorOnline;
+            var player = PlayerRegistry.Current;
+            var carried = player != null ? player.GetComponentsInChildren<FirearmWeapon>(true) : System.Array.Empty<FirearmWeapon>();
+            var rifle = new bool[carried.Length];
+            var rounds = new int[carried.Length];
+            int total = 0;
+            for (int i = 0; i < carried.Length; i++)
+            {
+                if (carried[i] == null) continue;
+                rounds[i] = carried[i].CurrentAmmo + carried[i].ReserveAmmo;
+                rifle[i] = carried[i].Type == WeaponType.Rifle;
+                total += rounds[i];
+            }
+            if (!TurretBeat.Ready(TurretBeat.Interval, powered, guns, total)) return;
+
+            Vector3 origin = TurretOrigin();
+            var horde = Object.FindObjectsByType<ZombieAI>(FindObjectsSortMode.None);
+            var living = new System.Collections.Generic.List<ZombieAI>();
+            var distance = new System.Collections.Generic.List<float>();
+            for (int i = 0; i < horde.Length; i++)
+            {
+                var zombie = horde[i];
+                if (zombie == null || zombie.CurrentState == ZombieAI.ZombieState.Dead) continue;
+                float dx = zombie.transform.position.x - origin.x;
+                float dz = zombie.transform.position.z - origin.z;
+                living.Add(zombie);
+                distance.Add((float)System.Math.Sqrt(dx * dx + dz * dz));
+            }
+            int mark = TurretBeat.Pick(distance.ToArray(), TurretBeat.Range);
+            if (mark < 0) return;
+            int feed = TurretBeat.Prefer(rifle, rounds);
+            if (feed < 0 || !carried[feed].TrySpendRound()) return;
+
+            var target = living[mark];
+            var health = target.GetComponent<HealthSystem>();
+            if (health != null)
+                health.TakeDamage(TurretBeat.Damage, target.transform.position, (origin - target.transform.position).normalized, player != null ? player.gameObject : gameObject);
+            if (Sensory.NoiseManager.Instance != null)
+                Sensory.NoiseManager.Instance.EmitNoise(origin, 18f, 0.7f, NoiseType.GunshotLoud, player != null ? player.gameObject : gameObject);
+            nextTurret = Time.time + TurretBeat.Interval;
+        }
+
+        private static Vector3 TurretOrigin()
+        {
+            if (GridBuilder.Instance != null)
+            {
+                foreach (var module in GridBuilder.Instance.Placed)
+                {
+                    if (module.kind == "Turret" && module.integrity > 0)
+                        return new Vector3(module.x, 1.2f, module.z);
+                }
+            }
+            return new Vector3(-12f, 1.2f, -12f);
         }
 
         private void ApplyWave(int index, bool announce)
