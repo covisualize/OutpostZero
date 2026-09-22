@@ -52,6 +52,7 @@ namespace OutpostZero.Combat
             if (Time.time - spawnTime >= maxLifetime)
             {
                 OilPatch.Shot(origin, transform.position);
+                OutpostZero.AI.ZombieAI.WhiffNear(origin.x, origin.z, transform.position.x, transform.position.z, null);
                 Destroy(gameObject);
             }
         }
@@ -64,6 +65,8 @@ namespace OutpostZero.Combat
             DamageResolver.Resolve(hit, amount, shooter, true, weapon);
             CombatVfx.Tracer(transform.position, hit.point);
             OilPatch.Shot(origin, hit.point);
+            var struck = hit.collider != null ? hit.collider.GetComponentInParent<OutpostZero.AI.ZombieAI>() : null;
+            OutpostZero.AI.ZombieAI.WhiffNear(origin.x, origin.z, hit.point.x, hit.point.z, struck);
             Destroy(gameObject);
         }
     }

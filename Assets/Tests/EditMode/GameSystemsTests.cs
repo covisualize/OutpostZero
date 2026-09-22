@@ -5352,6 +5352,27 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void AMissedRoundStillCracksPastANearbyBody()
+        {
+            Assert.AreEqual(1.1f, WhiffClock.Reach, 0.001f);
+            Assert.AreEqual(0.45f, WhiffClock.Seconds, 0.001f);
+            Assert.AreEqual(0.72f, WhiffClock.Pace, 0.001f);
+            Assert.IsTrue(WhiffClock.Passes(0f, 0f, 10f, 0f, 5f, 1.1f, out float nearX, out float nearZ));
+            Assert.AreEqual(5f, nearX, 0.001f);
+            Assert.AreEqual(0f, nearZ, 0.001f);
+            Assert.IsFalse(WhiffClock.Passes(0f, 0f, 10f, 0f, 5f, 1.11f, out _, out _));
+            Assert.IsTrue(WhiffClock.Passes(0f, 0f, 10f, 0f, 5f, 0f, out _, out _));
+            Assert.IsFalse(WhiffClock.Passes(0f, 0f, 4f, 0f, 8f, 0f, out _, out _));
+            Assert.AreEqual(4.6f, WhiffClock.Speed(4.6f, false), 0.001f);
+            Assert.AreEqual(3.312f, WhiffClock.Speed(4.6f, true), 0.001f);
+            Assert.AreEqual(0f, WhiffClock.Speed(-1f, true), 0.001f);
+            Assert.AreEqual(0.25f, WhiffClock.Tick(0.45f, 0.2f), 0.001f);
+            Assert.AreEqual(0f, WhiffClock.Tick(0.1f, 0.2f), 0.001f);
+            Assert.AreEqual(0.6f, HitStun.Seconds(WeaponType.Shotgun), 0.001f);
+            Assert.AreEqual(0.25f, HitStun.Seconds(WeaponType.Pistol), 0.001f);
+        }
+
+        [Test]
         public void AZombieWithoutARigStillAttacksAndFalls()
         {
             Assert.AreEqual(14f, PoseSheet.Lean(ZombieAI.ZombieState.Chase, 0f), 0.001f);

@@ -86,6 +86,7 @@ namespace OutpostZero.AI
         private float lostSight;
         private float lastDrip;
         private float limpLeft;
+        private float whiffLeft;
         private float burnLeft;
         private Light emberLight;
         private SearchMemory.Sweep searchSweep;
@@ -267,6 +268,7 @@ namespace OutpostZero.AI
             lastDrip = 0f;
             searchSweep = new SearchMemory.Sweep();
             limpLeft = 0f;
+            whiffLeft = 0f;
             burnLeft = 0f;
             if (emberLight != null)
             {
@@ -289,6 +291,31 @@ namespace OutpostZero.AI
             if (currentState == ZombieState.Dead || healthSystem != null && healthSystem.IsDead) return;
             burnLeft = Ember.Catch(burnLeft);
             ShowEmber();
+        }
+
+        public void Whiff(float x, float z)
+        {
+            if (currentState == ZombieState.Dead || healthSystem != null && healthSystem.IsDead) return;
+            if (currentState == ZombieState.Chase || currentState == ZombieState.Attack || currentState == ZombieState.Stunned)
+            {
+                whiffLeft = WhiffClock.Seconds;
+                return;
+            }
+            lastKnownPosition = new Vector3(x, transform.position.y, z);
+            whiffLeft = WhiffClock.Seconds;
+            SetState(ZombieState.InvestigateNoise);
+        }
+
+        public static void WhiffNear(float x0, float z0, float x1, float z1, ZombieAI struck)
+        {
+            for (int i = 0; i < aliveCrowd.Count; i++)
+            {
+                var other = aliveCrowd[i];
+                if (other == null || other == struck) continue;
+                if (!WhiffClock.Passes(x0, z0, x1, z1, other.transform.position.x, other.transform.position.z, out float nearX, out float nearZ))
+                    continue;
+                other.Whiff(nearX, nearZ);
+            }
         }
 
         public static void IgniteNear(float x, float z)
@@ -397,6 +424,7 @@ namespace OutpostZero.AI
                 if (gameState != GameState.ExpeditionActive && gameState != GameState.RaidActive) return;
             }
             limpLeft = LimbCut.Tick(limpLeft, Time.deltaTime);
+            whiffLeft = WhiffClock.Tick(whiffLeft, Time.deltaTime);
             TickEmber();
             Drip();
 
@@ -455,8 +483,14 @@ namespace OutpostZero.AI
             if (agent == null || abilityClock.Phase == 2) return;
             float speed = GaitSpeed();
             if (speed <= 0f) return;
+            agent.speed = GaitPace(speed);
+        }
+
+        private float GaitPace(float speed)
+        {
             float paced = LimbCut.Speed(speed, limpLeft > 0f, specialAbility == ZombieSpecialAbility.Charge);
-            agent.speed = GasCloud.Speed(paced, GasField.Covers(transform.position.x, transform.position.z));
+            paced = GasCloud.Speed(paced, GasField.Covers(transform.position.x, transform.position.z));
+            return WhiffClock.Speed(paced, whiffLeft > 0f);
         }
 
         private float GaitSpeed()
@@ -616,8 +650,7 @@ namespace OutpostZero.AI
                     Vector3 step = spot - transform.position;
                     step.y = 0f;
                     if (step.sqrMagnitude > 0.01f)
-                        float paced = LimbCut.Speed(chaseSpeed, limpLeft > 0f, specialAbility == ZombieSpecialAbility.Charge);
-                        transform.position += step.normalized * GasCloud.Speed(paced, GasField.Covers(transform.position.x, transform.position.z)) * Time.deltaTime;
+                        transform.position += step.normalized * GaitPace(chaseSpeed) * Time.deltaTime;
                 }
                 return true;
             }

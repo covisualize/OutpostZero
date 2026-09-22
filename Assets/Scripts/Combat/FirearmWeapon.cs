@@ -201,16 +201,19 @@ namespace OutpostZero.Combat
             else
             {
                 Vector3 end = spawnPos + direction * range;
+                OutpostZero.AI.ZombieAI struck = null;
                 if (Physics.Raycast(spawnPos, direction, out RaycastHit hit, range, hitMask, QueryTriggerInteraction.Ignore))
                 {
                     end = hit.point;
                     CombatEvents.NoteDir(direction);
                     float amount = PelletDrop.Damage(ModifiedDamage, hit.distance, range, weaponType);
                     DamageResolver.Resolve(hit, amount, ownerGameObject, true, weaponType);
+                    struck = hit.collider != null ? hit.collider.GetComponentInParent<OutpostZero.AI.ZombieAI>() : null;
                 }
                 Vector3 eject = muzzlePoint != null ? muzzlePoint.right : transform.right;
                 CombatVfx.Shot(spawnPos, direction, end, eject, tracer, weaponType);
                 OilPatch.Shot(spawnPos, end);
+                OutpostZero.AI.ZombieAI.WhiffNear(spawnPos.x, spawnPos.z, end.x, end.z, struck);
             }
         }
 
