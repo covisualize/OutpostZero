@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using OutpostZero.Core;
 
 namespace OutpostZero.AI
 {
@@ -61,7 +62,7 @@ namespace OutpostZero.AI
             if (zombie == null)
             {
                 zombie = Instantiate(prefab);
-                var marker = zombie.GetComponent<PooledZombie>() ?? zombie.AddComponent<PooledZombie>();
+                var marker = Attach.Ensure<PooledZombie>(zombie);
                 marker.SourcePrefab = prefab;
             }
 

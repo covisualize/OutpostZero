@@ -57,7 +57,7 @@ namespace OutpostZero.AI
 
         private void Awake()
         {
-            pool = GetComponent<ZombiePool>() ?? gameObject.AddComponent<ZombiePool>();
+            pool = Attach.Ensure<ZombiePool>(gameObject);
         }
 
         private void Start()

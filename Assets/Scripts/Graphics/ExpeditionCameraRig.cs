@@ -17,7 +17,7 @@ namespace OutpostZero.Graphics
 
         private void Start()
         {
-            var brain = GetComponent<CinemachineBrain>() ?? gameObject.AddComponent<CinemachineBrain>();
+            var brain = Attach.Ensure<CinemachineBrain>(gameObject);
             brain.UpdateMethod = CinemachineBrain.UpdateMethods.LateUpdate;
 
             var legacy = GetComponent<TopDownCameraFollow>();

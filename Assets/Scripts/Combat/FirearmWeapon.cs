@@ -199,7 +199,7 @@ namespace OutpostZero.Combat
                 GameObject projObj = bulletPrefab != null
                     ? Instantiate(bulletPrefab, spawnPos, Quaternion.LookRotation(direction))
                     : CreateBullet(spawnPos, direction);
-                var bullet = projObj.GetComponent<BulletProjectile>() ?? projObj.AddComponent<BulletProjectile>();
+                var bullet = Attach.Ensure<BulletProjectile>(projObj);
                 bullet.Setup(direction, ModifiedDamage, ownerGameObject, hitMask, weaponType, range, volley);
                 Vector3 eject = muzzlePoint != null ? muzzlePoint.right : transform.right;
                 CombatVfx.Shot(spawnPos, direction, spawnPos + direction * Mathf.Min(range, 8f), eject, tracer, weaponType);

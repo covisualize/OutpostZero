@@ -102,7 +102,7 @@ namespace OutpostZero.UI
             panel.scaleMode = PanelScaleMode.ScaleWithScreenSize;
             panel.referenceResolution = new Vector2Int(1920, 1080);
             panel.sortingOrder = 20;
-            document = gameObject.GetComponent<UIDocument>() ?? gameObject.AddComponent<UIDocument>();
+            document = Attach.Ensure<UIDocument>(gameObject);
             document.panelSettings = panel;
             root = document.rootVisualElement;
             if (root == null) return;

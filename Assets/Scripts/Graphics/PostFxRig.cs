@@ -17,7 +17,7 @@ namespace OutpostZero.Graphics
 
         private void Start()
         {
-            volume = gameObject.GetComponent<Volume>() ?? gameObject.AddComponent<Volume>();
+            volume = Attach.Ensure<Volume>(gameObject);
             volume.isGlobal = true;
             volume.priority = 20f;
             var profile = ScriptableObject.CreateInstance<VolumeProfile>();

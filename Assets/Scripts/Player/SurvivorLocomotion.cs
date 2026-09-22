@@ -1,4 +1,5 @@
 using UnityEngine;
+using OutpostZero.Core;
 using OutpostZero.Combat;
 
 namespace OutpostZero.Player
@@ -30,7 +31,7 @@ namespace OutpostZero.Player
         private void Awake()
         {
             controller = GetComponent<PlayerController>();
-            animator = GetComponent<Animator>() ?? GetComponentInChildren<Animator>();
+            animator = Attach.Near<Animator>(this);
             if (animator != null && animator.runtimeAnimatorController == null)
             {
                 var controllerAsset = Resources.Load<RuntimeAnimatorController>("SurvivorLocomotion");
@@ -43,7 +44,7 @@ namespace OutpostZero.Player
             }
             visual = FindVisual();
             if (visual == null) return;
-            animationPlayer = visual.gameObject.GetComponent<Animation>() ?? visual.gameObject.AddComponent<Animation>();
+            animationPlayer = Attach.Ensure<Animation>(visual.gameObject);
             animationPlayer.playAutomatically = false;
             AddClip(Pose.Idle, 0.02f, 1.4f);
             AddClip(Pose.Walk, 0.06f, 0.45f);

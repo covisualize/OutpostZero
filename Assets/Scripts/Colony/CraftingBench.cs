@@ -139,7 +139,7 @@ namespace OutpostZero.Colony
                     Refund(due, bill);
                     return false;
                 }
-                var mod = weapon.GetComponent<WeaponMod>() ?? weapon.gameObject.AddComponent<WeaponMod>();
+                var mod = Attach.Ensure<WeaponMod>(weapon.gameObject);
                 mod.Apply(recipe.OutputId);
                 GameplayFeedback.Toast(CraftSay.Fitted(recipe.Id, recipe.Label, null));
                 return true;

@@ -328,7 +328,7 @@ namespace OutpostZero.EditorTools
         {
             if (instance == null) return;
             GameLayers.ApplyRecursively(instance, GameLayers.Loot);
-            var pickup = instance.GetComponent<LootPickup>() ?? instance.AddComponent<LootPickup>();
+            var pickup = Attach.Ensure<LootPickup>(instance);
             pickup.Configure(kind, amount);
         }
 
@@ -391,7 +391,7 @@ namespace OutpostZero.EditorTools
             light.intensity = 1.35f;
             light.shadows = LightShadows.Soft;
 
-            var lightData = light.GetComponent<UniversalAdditionalLightData>() ?? light.gameObject.AddComponent<UniversalAdditionalLightData>();
+            var lightData = Attach.Ensure<UniversalAdditionalLightData>(light.gameObject);
 
             RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
             RenderSettings.ambientLight = new Color(0.36f, 0.38f, 0.44f);
@@ -437,7 +437,7 @@ namespace OutpostZero.EditorTools
         private static void BakeNavMeshOnGround(GameObject ground)
         {
             ground.isStatic = true;
-            var surface = ground.GetComponent<NavMeshSurface>() ?? ground.AddComponent<NavMeshSurface>();
+            var surface = Attach.Ensure<NavMeshSurface>(ground);
             surface.collectObjects = CollectObjects.All;
             surface.useGeometry = NavMeshCollectGeometry.RenderMeshes;
             surface.BuildNavMesh();
@@ -632,9 +632,9 @@ namespace OutpostZero.EditorTools
             cam.clearFlags = CameraClearFlags.SolidColor;
             cam.backgroundColor = new Color(0.10f, 0.12f, 0.15f);
 
-            var camData = cam.GetComponent<UniversalAdditionalCameraData>() ?? cam.gameObject.AddComponent<UniversalAdditionalCameraData>();
+            var camData = Attach.Ensure<UniversalAdditionalCameraData>(cam.gameObject);
 
-            var follow = cam.GetComponent<TopDownCameraFollow>() ?? cam.gameObject.AddComponent<TopDownCameraFollow>();
+            var follow = Attach.Ensure<TopDownCameraFollow>(cam.gameObject);
             follow.SetFollowTarget(playerTarget);
         }
 
