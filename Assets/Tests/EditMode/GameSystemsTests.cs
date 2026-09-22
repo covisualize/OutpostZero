@@ -6144,6 +6144,23 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void ABladeOnAWallRingsFartherThanACleanSwing()
+        {
+            Assert.AreEqual(9f, BladeClang.Reach, 0.001f);
+            Assert.AreEqual(0.55f, BladeClang.Crouch, 0.001f);
+            Assert.AreEqual(9f, BladeClang.Radius(false), 0.001f);
+            Assert.AreEqual(4.95f, BladeClang.Radius(true), 0.001f);
+            Assert.AreEqual(2f, QuietSwing.Radius(2f, false, WeaponType.Melee), 0.001f);
+            Assert.AreEqual(0.9f, QuietSwing.Radius(2f, true, WeaponType.Melee), 0.001f);
+            Assert.AreEqual("clang", ContactCue.Impact(false, true));
+            Assert.AreEqual("chop", ContactCue.Impact(true, true));
+            Assert.AreEqual("", ContactCue.Impact(false, false));
+            Assert.AreEqual(8f, SwingCost.Melee, 0.001f);
+            Assert.AreEqual(2f, WeaponCard.Find("machete").Noise, 0.001f);
+            Assert.AreEqual(0.45f, QuietSwing.Crouch, 0.001f);
+        }
+
+        [Test]
         public void AZombieWithoutARigStillAttacksAndFalls()
         {
             Assert.AreEqual(14f, PoseSheet.Lean(ZombieAI.ZombieState.Chase, 0f), 0.001f);

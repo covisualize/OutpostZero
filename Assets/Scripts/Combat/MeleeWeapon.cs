@@ -58,10 +58,6 @@ namespace OutpostZero.Combat
             if (whoosh.Length > 0)
                 OutpostZero.Shell.AudioManager.Instance?.PlayAt(whoosh, transform.position, SwingCue.Volume);
 
-            // Emit faint noise (whiff / grunt)
-            var body = ownerGameObject != null ? ownerGameObject.GetComponent<OutpostZero.Player.PlayerController>() : null;
-            EmitWeaponNoise(QuietSwing.Scale(body != null && body.IsCrouching, weaponType));
-
             Vector3 origin = ownerTransform != null ? ownerTransform.position : transform.position;
             Vector3 forward = targetDirection.normalized;
 
@@ -103,6 +99,15 @@ namespace OutpostZero.Combat
             if (hitCount == 0 && wall)
             {
                 OutpostZero.Shell.AudioManager.Instance?.PlayAt("clang", origin, 0.42f, 0.85f);
+                var body = ownerGameObject != null ? ownerGameObject.GetComponent<OutpostZero.Player.PlayerController>() : null;
+                float radius = BladeClang.Radius(body != null && body.IsCrouching);
+                if (OutpostZero.Sensory.NoiseManager.Instance != null && radius > 0f)
+                    OutpostZero.Sensory.NoiseManager.Instance.EmitNoise(origin, radius, 0.9f, NoiseType.MeleeSwing, ownerGameObject);
+            }
+            else
+            {
+                var body = ownerGameObject != null ? ownerGameObject.GetComponent<OutpostZero.Player.PlayerController>() : null;
+                EmitWeaponNoise(QuietSwing.Scale(body != null && body.IsCrouching, weaponType));
             }
 
             if (hitCount > 0 && audioSource != null && hitFleshSound != null)
