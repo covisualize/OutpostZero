@@ -18,7 +18,8 @@ namespace OutpostZero.Colony
         TradingPost,
         Farm,
         Purifier,
-        Turret
+        Turret,
+        Spikes
     }
 
     [Serializable]
@@ -145,7 +146,7 @@ namespace OutpostZero.Colony
         {
             var view = GameObject.CreatePrimitive(PrimitiveType.Cube);
             view.name = "Module_" + module.kind;
-            view.transform.position = new Vector3(module.x, 0.6f, module.z);
+            view.transform.position = new Vector3(module.x, module.kind == "Spikes" ? 0.04f : 0.6f, module.z);
             view.transform.rotation = Quaternion.Euler(0f, module.rotation, 0f);
             view.transform.localScale = Scale(module.kind, module.integrity);
             var renderer = view.GetComponent<Renderer>();
@@ -153,9 +154,17 @@ namespace OutpostZero.Colony
             {
                 renderer.material.color = ColorFor(module.kind);
             }
-            var obstacle = view.AddComponent<NavMeshObstacle>();
-            obstacle.carving = true;
-            obstacle.shape = NavMeshObstacleShape.Box;
+            if (module.kind == "Spikes")
+            {
+                var pad = view.GetComponent<Collider>();
+                if (pad != null) Destroy(pad);
+            }
+            else
+            {
+                var obstacle = view.AddComponent<NavMeshObstacle>();
+                obstacle.carving = true;
+                obstacle.shape = NavMeshObstacleShape.Box;
+            }
             if (module.kind == "Barricade")
             {
                 view.layer = GameLayers.Environment;
@@ -256,6 +265,21 @@ namespace OutpostZero.Colony
             return true;
         }
 
+        public bool Chip(PlacedModule module, int amount)
+        {
+            if (module == null || !placed.Contains(module)) return false;
+            module.integrity = TrapHit.WearDown(module.integrity, amount);
+            if (module.integrity > 0)
+            {
+                RefreshViews();
+                return false;
+            }
+            placed.Remove(module);
+            RefreshViews();
+            GameplayFeedback.Toast("The spikes broke");
+            return true;
+        }
+
         public bool HasKind(string kind)
         {
             for (int i = 0; i < placed.Count; i++)
@@ -307,6 +331,7 @@ namespace OutpostZero.Colony
                 case ModuleKind.Farm: return 18;
                 case ModuleKind.Purifier: return 15;
                 case ModuleKind.Turret: return 22;
+                case ModuleKind.Spikes: return 8;
                 default: return 6;
             }
         }
@@ -325,6 +350,7 @@ namespace OutpostZero.Colony
                 case "Farm": return new Vector3(2.2f, 0.25f, 2.2f);
                 case "Purifier": return new Vector3(0.7f, 1.3f, 0.7f);
                 case "Turret": return new Vector3(0.45f, 1.5f, 0.45f);
+                case "Spikes": return new Vector3(1.6f, 0.08f, 1.6f);
                 default: return new Vector3(1.8f * health, 1.1f * Mathf.Lerp(0.35f, 1f, health), 0.4f);
             }
         }
@@ -342,6 +368,7 @@ namespace OutpostZero.Colony
                 case "Farm": return new Color(0.28f, 0.48f, 0.24f);
                 case "Purifier": return new Color(0.35f, 0.7f, 0.78f);
                 case "Turret": return new Color(0.22f, 0.24f, 0.28f);
+                case "Spikes": return new Color(0.35f, 0.36f, 0.38f);
                 default: return new Color(0.48f, 0.42f, 0.32f);
             }
         }

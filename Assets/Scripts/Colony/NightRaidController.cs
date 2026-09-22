@@ -23,6 +23,7 @@ namespace OutpostZero.Colony
         private int raidDay = 1;
         private int raidTowers;
         private float nextTurret;
+        private float nextTrap;
 
         public bool Running => running;
         public float Remaining => running ? Mathf.Max(0f, endsAt - Time.time) : 0f;
@@ -67,6 +68,7 @@ namespace OutpostZero.Colony
             endsAt = Time.time + duration;
             nextStrike = Time.time + strikeInterval;
             nextTurret = Time.time + TurretBeat.Interval;
+            nextTrap = Time.time + TrapHit.Gap;
             GameManager.Instance.SetState(GameState.RaidActive);
             int spawn = RaidPlan.SpawnCount(day, towers) + (tower ? 4 : 0);
             if (HordeDirector.Instance != null) HordeDirector.Instance.BeginRaid(spawn);
@@ -82,6 +84,7 @@ namespace OutpostZero.Colony
                 return;
             }
             TickTurret();
+            TickTraps();
             float elapsed = duration - Remaining;
             int nextPhase = RaidPlan.PhaseAt(elapsed, duration);
             if (nextPhase != phase) ApplyWave(nextPhase, true);
@@ -182,6 +185,44 @@ namespace OutpostZero.Colony
             if (Sensory.NoiseManager.Instance != null)
                 Sensory.NoiseManager.Instance.EmitNoise(origin, 18f, 0.7f, NoiseType.GunshotLoud, player != null ? player.gameObject : gameObject);
             nextTurret = Time.time + TurretBeat.Interval;
+        }
+
+        private void TickTraps()
+        {
+            if (Time.time < nextTrap || GridBuilder.Instance == null) return;
+            if (!TrapHit.Due(TrapHit.Gap)) return;
+            var spikes = new System.Collections.Generic.List<PlacedModule>();
+            foreach (var module in GridBuilder.Instance.Placed)
+            {
+                if (module.kind == "Spikes" && module.integrity > 0) spikes.Add(module);
+            }
+            if (spikes.Count == 0) return;
+            nextTrap = Time.time + TrapHit.Gap;
+            var horde = Object.FindObjectsByType<ZombieAI>(FindObjectsSortMode.None);
+            var living = new System.Collections.Generic.List<ZombieAI>();
+            for (int i = 0; i < horde.Length; i++)
+            {
+                if (horde[i] != null && horde[i].CurrentState != ZombieAI.ZombieState.Dead) living.Add(horde[i]);
+            }
+            if (living.Count == 0) return;
+            var distance = new float[living.Count];
+            for (int s = 0; s < spikes.Count; s++)
+            {
+                var spike = spikes[s];
+                for (int i = 0; i < living.Count; i++)
+                {
+                    float dx = living[i].transform.position.x - spike.x;
+                    float dz = living[i].transform.position.z - spike.z;
+                    distance[i] = (float)System.Math.Sqrt(dx * dx + dz * dz);
+                }
+                int mark = TrapHit.Victim(distance, TrapHit.Radius);
+                if (mark < 0) continue;
+                var target = living[mark];
+                var health = target.GetComponent<HealthSystem>();
+                if (health != null && !health.IsDead)
+                    health.TakeDamage(TrapHit.Damage, target.transform.position, new Vector3(target.transform.position.x - spike.x, 0f, target.transform.position.z - spike.z), gameObject);
+                GridBuilder.Instance.Chip(spike, TrapHit.Wear);
+            }
         }
 
         private static Vector3 TurretOrigin()

@@ -1974,6 +1974,21 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void SpikesCutTheNearestZombieAndThenWearDown()
+        {
+            Assert.IsFalse(TrapHit.Due(0.59f));
+            Assert.IsTrue(TrapHit.Due(0.6f));
+            Assert.IsFalse(TrapHit.Due(-1f));
+            Assert.AreEqual(2, TrapHit.Victim(new[] { 2f, 1.4f, 0.2f }, TrapHit.Radius));
+            Assert.AreEqual(-1, TrapHit.Victim(new[] { 1.41f }, TrapHit.Radius));
+            Assert.AreEqual(-1, TrapHit.Victim(null, TrapHit.Radius));
+            Assert.AreEqual(92, TrapHit.WearDown(100, TrapHit.Wear));
+            Assert.AreEqual(0, TrapHit.WearDown(8, TrapHit.Wear));
+            Assert.AreEqual(0, TrapHit.WearDown(3, TrapHit.Wear));
+            Assert.AreEqual(8, GridBuilder.Cost(ModuleKind.Spikes));
+        }
+
+        [Test]
         public void AnEastGridKeepsAWalkFromTheSpawnToTheFarGate()
         {
             var ash = RoadGraph.Build(1701, "ash_market");
