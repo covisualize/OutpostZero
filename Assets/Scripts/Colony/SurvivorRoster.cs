@@ -47,6 +47,29 @@ namespace OutpostZero.Colony
             }
         }
 
+        public void CopyLeaderNeeds(float hunger, float thirst)
+        {
+            var leader = Leader;
+            if (leader == null) return;
+            leader.hunger = Mathf.Clamp(hunger, 0f, 100f);
+            leader.thirst = Mathf.Clamp(thirst, 0f, 100f);
+            OnRosterChanged?.Invoke();
+        }
+
+        public bool ReadLeaderNeeds(out float hunger, out float thirst)
+        {
+            var leader = Leader;
+            if (leader == null)
+            {
+                hunger = 0f;
+                thirst = 0f;
+                return false;
+            }
+            hunger = leader.hunger;
+            thirst = leader.thirst;
+            return true;
+        }
+
         private void Awake()
         {
             if (Instance != null && Instance != this)

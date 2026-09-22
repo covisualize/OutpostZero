@@ -35,8 +35,11 @@ namespace OutpostZero.Combat
         public void TakeDamage(float amount, Vector3 hitPoint, Vector3 hitDirection, GameObject attacker)
         {
             if (isDead) return;
-            LastHitDirection = hitDirection;
-            LastHitTime = Time.time;
+            if (hitDirection.sqrMagnitude > 0.0001f)
+            {
+                LastHitDirection = hitDirection;
+                LastHitTime = Time.time;
+            }
 
             // Apply armor mitigation (formula: net damage = amount * (100 / (100 + armor)))
             float netDamage = amount * (100f / (100f + Mathf.Max(0f, armorRating)));

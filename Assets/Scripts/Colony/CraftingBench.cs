@@ -24,6 +24,8 @@ namespace OutpostZero.Colony
         {
             new Recipe { Id = "bandage", Label = "Bandage", ScrapCost = 3, OutputId = "bandage", OutputCount = 1 },
             new Recipe { Id = "medkit", Label = "Medkit", ScrapCost = 8, OutputId = "medkit", OutputCount = 1 },
+            new Recipe { Id = "antibiotics", Label = "Antibiotics", ScrapCost = 10, OutputId = "antibiotics", OutputCount = 1 },
+            new Recipe { Id = "painkillers", Label = "Painkillers", ScrapCost = 5, OutputId = "painkillers", OutputCount = 1 },
             new Recipe { Id = "ammo_9mm", Label = "9mm (12)", ScrapCost = 4, OutputId = "ammo_9mm", OutputCount = 1 },
             new Recipe { Id = "ammo_shells", Label = "Shells (6)", ScrapCost = 5, OutputId = "ammo_shells", OutputCount = 1 },
             new Recipe { Id = "ammo_rifle", Label = "Rifle mag", ScrapCost = 7, OutputId = "ammo_rifle", OutputCount = 1 },

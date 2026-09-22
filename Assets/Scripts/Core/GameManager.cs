@@ -117,6 +117,8 @@ namespace OutpostZero.Core
 
         public void EnterCamp()
         {
+            var needs = PlayerRegistry.Current != null ? PlayerRegistry.Current.GetComponent<SurvivalNeeds>() : null;
+            if (needs != null) SurvivorRoster.Instance?.CopyLeaderNeeds(needs.Hunger, needs.Thirst);
             SetState(GameState.CampManagement);
             SaveSystem.Instance?.Save(false);
         }
@@ -129,6 +131,11 @@ namespace OutpostZero.Core
                 return;
             }
             if (currentState == GameState.CampManagement) WorldMapService.Instance?.SpendTravel();
+            var needs = PlayerRegistry.Current != null ? PlayerRegistry.Current.GetComponent<SurvivalNeeds>() : null;
+            if (needs != null && SurvivorRoster.Instance != null && SurvivorRoster.Instance.ReadLeaderNeeds(out float hunger, out float thirst))
+            {
+                needs.Apply(hunger, thirst, needs.Fatigue);
+            }
             zombiesKilled = 0;
             scrapLooted = 0;
             expeditionTimer = 0f;
@@ -145,6 +152,7 @@ namespace OutpostZero.Core
             zombiesKilled++;
             lifetimeKills++;
             killTape.Note(KillTape.Name(archetypeId));
+            PlayerRegistry.Current?.GetComponent<StatusEffectController>()?.ApplyAdrenaline(Affliction.AdrenalineSeconds);
             OnZombiesKilledChanged?.Invoke(zombiesKilled);
             if (!string.IsNullOrEmpty(archetypeId)) CodexDirector.Instance?.Unlock("zombie." + archetypeId);
         }

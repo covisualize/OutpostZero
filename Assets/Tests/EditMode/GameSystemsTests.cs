@@ -1485,5 +1485,27 @@ namespace OutpostZero.Tests.EditMode
             tape.Note(KillTape.Name("walker"));
             Assert.AreEqual("Runner\nBrute\nWalker", tape.Text());
         }
+
+        [Test]
+        public void ABleedLastsAndAntibioticsStopTheFeverBeforeItKills()
+        {
+            Assert.AreEqual(90f, Affliction.BleedLoss(90f), 0.01f);
+            Assert.AreEqual(0, Affliction.Stage(0f));
+            Assert.AreEqual(1, Affliction.Stage(1f));
+            Assert.AreEqual(1, Affliction.Stage(89f));
+            Assert.AreEqual(2, Affliction.Stage(90f));
+            Assert.AreEqual(2, Affliction.Stage(179f));
+            Assert.AreEqual(3, Affliction.Stage(180f));
+            Assert.IsTrue(Affliction.AntibioticsWork(1));
+            Assert.IsTrue(Affliction.AntibioticsWork(2));
+            Assert.IsFalse(Affliction.AntibioticsWork(0));
+            Assert.IsFalse(Affliction.AntibioticsWork(3));
+            Assert.AreEqual(10f, Affliction.PainHeal(10f), 0.01f);
+            Assert.AreEqual(20f, Affliction.PainHeal(20f), 0.01f);
+            Assert.AreEqual("Infection II", Affliction.Label(2));
+            Assert.AreEqual(10, ItemCatalog.Find("bandage").Heal);
+            Assert.AreEqual(ItemUse.Cure, ItemCatalog.Find("antibiotics").Use);
+            Assert.AreEqual(ItemUse.Relief, ItemCatalog.Find("painkillers").Use);
+        }
     }
 }

@@ -235,7 +235,8 @@ namespace OutpostZero.UI
             {
                 if (effects.IsBleeding) vitalText.Append("  Bleeding");
                 if (effects.IsPoisoned) vitalText.Append("  Poison");
-                if (effects.IsInfected) vitalText.Append("  Infection");
+                if (effects.InfectionStage > 0) vitalText.Append("  " + Affliction.Label(effects.InfectionStage));
+                if (effects.SprintBonus > 1f) vitalText.Append("  Adrenaline");
             }
             var services = CampServices.Instance;
             if (services != null && services.Contacts > 0) vitalText.Append("  Watchtower " + services.Contacts);

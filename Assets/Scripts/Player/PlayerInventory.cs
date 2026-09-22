@@ -167,12 +167,32 @@ namespace OutpostZero.Player
             if (record == null) return false;
             if (record.Use == OutpostZero.Items.ItemUse.Ammo) return false;
             if (record.Id == "medkit") return UseMedkit();
+            if (record.Id == "antibiotics")
+            {
+                var fever = GetComponent<StatusEffectController>();
+                if (fever == null || !Affliction.AntibioticsWork(fever.InfectionStage))
+                {
+                    GameplayFeedback.Toast("Antibiotics won't help");
+                    return false;
+                }
+                if (!TryConsume(id)) return false;
+                fever.CureInfection();
+                GameplayFeedback.Toast("The fever breaks");
+                return true;
+            }
+            if (record.Id == "painkillers")
+            {
+                if (!TryConsume(id)) return false;
+                GetComponent<StatusEffectController>()?.ApplyPainkiller();
+                GameplayFeedback.Toast("Painkillers");
+                return true;
+            }
             if (!TryConsume(id)) return false;
+            if (record.Id == "bandage") GetComponent<StatusEffectController>()?.StopBleed();
             if (record.Heal > 0) GetComponent<Combat.HealthSystem>()?.Heal(record.Heal);
             var needs = GetComponent<SurvivalNeeds>();
             if (record.Hunger > 0f) needs?.Eat(record.Hunger);
             if (record.Thirst > 0f) needs?.Drink(record.Thirst);
-            if (record.Id == "bandage") GetComponent<StatusEffectController>()?.ClearInjury();
             GameplayFeedback.Toast("Used " + record.DisplayName);
             return true;
         }
@@ -315,16 +335,17 @@ namespace OutpostZero.Player
             if (medicalKits <= 0) return false;
 
             var health = GetComponent<Combat.HealthSystem>();
-            if (health != null && health.CurrentHealth < health.MaxHealth)
-            {
-                medicalKits--;
-                health.Heal(50f);
-                RecalculateWeight();
-                OnInventoryChanged?.Invoke();
-                return true;
-            }
+            var effects = GetComponent<StatusEffectController>();
+            bool wounded = effects != null && (effects.IsBleeding || effects.IsInfected);
+            if (health != null && health.CurrentHealth >= health.MaxHealth && !wounded) return false;
 
-            return false;
+            medicalKits--;
+            health?.Heal(50f);
+            effects?.StopBleed();
+            effects?.CureInfection();
+            RecalculateWeight();
+            OnInventoryChanged?.Invoke();
+            return true;
         }
 
         private void RecalculateWeight()

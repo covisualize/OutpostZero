@@ -307,7 +307,7 @@ namespace OutpostZero.Player
             // Speed evaluation
             float currentSpeed = walkSpeed;
             if (IsCrouching) currentSpeed = crouchSpeed;
-            else if (IsSprinting) currentSpeed = sprintSpeed;
+            else if (IsSprinting) currentSpeed = sprintSpeed * (effects != null ? effects.SprintBonus : 1f);
             if (inventory != null) currentSpeed *= Mathf.Lerp(1f, 0.72f, inventory.WeightRatio);
             if (effects != null) currentSpeed *= effects.SlowMultiplier;
 

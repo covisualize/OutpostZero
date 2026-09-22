@@ -12,7 +12,9 @@ namespace OutpostZero.Items
         Ammo,
         Lure,
         Molotov,
-        Material
+        Material,
+        Cure,
+        Relief
     }
 
     public sealed class ItemRecord
@@ -38,7 +40,9 @@ namespace OutpostZero.Items
         private static readonly List<ItemRecord> records = new List<ItemRecord>
         {
             new ItemRecord { Id = "medkit", DisplayName = "Medkit", Category = Core.ItemCategory.Medical, Weight = 0.5f, Heal = 50, Use = ItemUse.Heal },
-            new ItemRecord { Id = "bandage", DisplayName = "Bandage", Category = Core.ItemCategory.Medical, Weight = 0.1f, Heal = 20, Use = ItemUse.Heal },
+            new ItemRecord { Id = "bandage", DisplayName = "Bandage", Category = Core.ItemCategory.Medical, Weight = 0.1f, Heal = 10, Use = ItemUse.Heal },
+            new ItemRecord { Id = "antibiotics", DisplayName = "Antibiotics", Category = Core.ItemCategory.Medical, Weight = 0.15f, Use = ItemUse.Cure },
+            new ItemRecord { Id = "painkillers", DisplayName = "Painkillers", Category = Core.ItemCategory.Medical, Weight = 0.1f, Use = ItemUse.Relief },
             new ItemRecord { Id = "canned_food", DisplayName = "Canned Food", Category = Core.ItemCategory.FoodWater, Weight = 0.4f, Hunger = 35f, Use = ItemUse.Food },
             new ItemRecord { Id = "water", DisplayName = "Water Bottle", Category = Core.ItemCategory.FoodWater, Weight = 0.5f, Thirst = 40f, Use = ItemUse.Water },
             new ItemRecord { Id = "ammo_9mm", DisplayName = "9mm Rounds", Category = Core.ItemCategory.Ammunition, Weight = 0.02f, AmmoType = Core.WeaponType.Pistol, AmmoAmount = 12, Use = ItemUse.Ammo },
@@ -82,7 +86,8 @@ namespace OutpostZero.Items
                 return new[]
                 {
                     new Grant { ItemId = rng.NextDouble() > 0.45 ? "medkit" : "bandage", Count = 1 },
-                    new Grant { ItemId = "water", Count = 1 }
+                    new Grant { ItemId = "water", Count = 1 },
+                    new Grant { ItemId = "antibiotics", Count = rng.NextDouble() > 0.55 ? 1 : 0 }
                 };
             }
             if (tableId == "military")
