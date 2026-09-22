@@ -612,6 +612,7 @@ namespace OutpostZero.Player
                 {
                     CodexDirector.Hear("fire");
                     GetComponent<SurvivorLocomotion>()?.NotifyAttack();
+                    GetComponent<ProceduralSurvivorMotion>()?.Strike();
                 }
             }
         }

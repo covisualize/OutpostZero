@@ -3506,6 +3506,46 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void ALeaderWithoutARigStillFiresAndFalls()
+        {
+            Assert.AreEqual(GaitSheet.Beat.Idle, GaitSheet.Pick(false, false, false, false, false, false, 0f));
+            Assert.AreEqual(GaitSheet.Beat.Walk, GaitSheet.Pick(false, false, false, false, false, false, 1f));
+            Assert.AreEqual(GaitSheet.Beat.CrouchStill, GaitSheet.Pick(false, false, false, false, true, false, 0f));
+            Assert.AreEqual(GaitSheet.Beat.Crouch, GaitSheet.Pick(false, false, false, false, true, true, 1f));
+            Assert.AreEqual(GaitSheet.Beat.Sprint, GaitSheet.Pick(false, false, false, false, false, true, 2f));
+            Assert.AreEqual(GaitSheet.Beat.Attack, GaitSheet.Pick(false, false, true, true, true, true, 2f));
+            Assert.AreEqual(GaitSheet.Beat.Hit, GaitSheet.Pick(false, true, true, true, false, true, 2f));
+            Assert.AreEqual(GaitSheet.Beat.Dead, GaitSheet.Pick(true, true, true, true, true, true, 2f));
+            Assert.AreEqual(0.72f, GaitSheet.Scale(true, false), 0.001f);
+            Assert.AreEqual(1f, GaitSheet.Scale(true, true), 0.001f);
+            Assert.AreEqual(1f, GaitSheet.Scale(false, false), 0.001f);
+            Assert.AreEqual(0.04f, GaitSheet.Hop(GaitSheet.Beat.Walk, 1.5707963f), 0.001f);
+            Assert.AreEqual(0.07f, GaitSheet.Hop(GaitSheet.Beat.Sprint, 1.5707963f), 0.001f);
+            Assert.AreEqual(0f, GaitSheet.Hop(GaitSheet.Beat.Idle, 1.5707963f), 0.001f);
+            Assert.AreEqual(0f, GaitSheet.Lean(GaitSheet.Beat.Idle, 1f), 0.001f);
+            Assert.AreEqual(0f, GaitSheet.Lean(GaitSheet.Beat.CrouchStill, 1f), 0.001f);
+            Assert.AreEqual(12f, GaitSheet.Lean(GaitSheet.Beat.Sprint, 0f), 0.001f);
+            Assert.AreEqual(0f, GaitSheet.Swing(0f), 0.001f);
+            Assert.AreEqual(1f, GaitSheet.Swing(0.12f), 0.001f);
+            Assert.AreEqual(0f, GaitSheet.Swing(0.34f), 0.001f);
+            Assert.AreEqual(26f, GaitSheet.Lean(GaitSheet.Beat.Attack, 0.12f), 0.001f);
+            Assert.AreEqual(1f, GaitSheet.Flail(0.08f), 0.001f);
+            Assert.AreEqual(0f, GaitSheet.Flail(0.28f), 0.001f);
+            Assert.AreEqual(-18f, GaitSheet.Lean(GaitSheet.Beat.Hit, 0.08f), 0.001f);
+            Assert.AreEqual(1f, GaitSheet.Dip(0.4f), 0.001f);
+            Assert.AreEqual(0f, GaitSheet.Dip(0f), 0.001f);
+            Assert.AreEqual(10f, GaitSheet.Lean(GaitSheet.Beat.Reload, 0.4f), 0.001f);
+            Assert.AreEqual(-0.06f, GaitSheet.Sink(GaitSheet.Beat.Reload, 0.4f), 0.001f);
+            Assert.AreEqual(0f, GaitSheet.Fall(0f), 0.001f);
+            Assert.AreEqual(1f, GaitSheet.Fall(0.7f), 0.001f);
+            Assert.AreEqual(1f, GaitSheet.Fall(2f), 0.001f);
+            Assert.AreEqual(76f, GaitSheet.Lean(GaitSheet.Beat.Dead, 0.7f), 0.001f);
+            Assert.AreEqual(-0.45f, GaitSheet.Sink(GaitSheet.Beat.Dead, 0.7f), 0.001f);
+            Assert.AreEqual(0f, GaitSheet.Sink(GaitSheet.Beat.Walk, 1f), 0.001f);
+            Assert.AreEqual(14f, PoseSheet.Lean(ZombieAI.ZombieState.Chase, 0f), 0.001f);
+        }
+
+        [Test]
         public void AZombieWithoutARigStillAttacksAndFalls()
         {
             Assert.AreEqual(14f, PoseSheet.Lean(ZombieAI.ZombieState.Chase, 0f), 0.001f);
