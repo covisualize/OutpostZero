@@ -38,10 +38,11 @@ namespace OutpostZero.UI
             BuildOverlay();
             if (booted) yield break;
             booted = true;
-            if (openOnMenu) Travel(FlowStep.MainMenu, () => GameManager.Instance.SetState(GameState.MainMenu));
+            if (openOnMenu) Travel(FlowStep.MainMenu);
         }
 
-        public void Travel(FlowStep step, Action arrived)
+        /// <summary>With no arrival callback the entry hooks settle the step, so the game state follows the flow.</summary>
+        public void Travel(FlowStep step, Action arrived = null)
         {
             if (Busy) return;
             StartCoroutine(Run(step, arrived));
@@ -67,7 +68,7 @@ namespace OutpostZero.UI
             }
             var from = Current;
             Current = step;
-            SceneEntries.Dispatch(from, step, Debug.LogException);
+            SceneEntries.Dispatch(new FlowContext(from, step, arrived != null), Debug.LogException);
             yield return new WaitForSecondsRealtime(0.12f);
             card?.Hide();
             Busy = false;

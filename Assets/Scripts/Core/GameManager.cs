@@ -9,7 +9,7 @@ using OutpostZero.Shell;
 
 namespace OutpostZero.Core
 {
-    public class GameManager : MonoBehaviour
+    public class GameManager : MonoBehaviour, ISceneEntry
     {
         public static GameManager Instance { get; private set; }
 
@@ -61,11 +61,40 @@ namespace OutpostZero.Core
         private void OnEnable()
         {
             SceneManager.sceneLoaded += HandleSceneLoaded;
+            SceneEntries.Register(this);
         }
 
         private void OnDisable()
         {
             SceneManager.sceneLoaded -= HandleSceneLoaded;
+            SceneEntries.Unregister(this);
+        }
+
+        public void OnEnter(FlowContext context)
+        {
+            if (Instance != this) return;
+            Arrive(context);
+        }
+
+        public void OnExit(FlowContext context) { }
+
+        /// <summary>Puts the game state where the flow step expects it, unless the caller already did.</summary>
+        public void Arrive(FlowContext context)
+        {
+            if (context.Handled) return;
+            switch (FlowArrival.For(context, currentState))
+            {
+                case ArrivalAction.Menu:
+                    SetState(GameState.MainMenu);
+                    break;
+                case ArrivalAction.Camp:
+                    EnterCamp();
+                    break;
+                case ArrivalAction.Street:
+                    BeginExpedition();
+                    break;
+            }
+            Time.timeScale = FlowArrival.Frozen(currentState) ? 0f : 1f;
         }
 
         private void HandleSceneLoaded(Scene scene, LoadSceneMode mode)
@@ -95,13 +124,7 @@ namespace OutpostZero.Core
 
             currentState = newState;
             if (newState == GameState.Victory || newState == GameState.GameOver) RunArchive.NoteCurrent(newState == GameState.Victory);
-            bool frozen = newState == GameState.Paused
-                || newState == GameState.SuccessionScreen
-                || newState == GameState.GameOver
-                || newState == GameState.MainMenu
-                || newState == GameState.ExpeditionResults
-                || newState == GameState.Victory;
-            Time.timeScale = frozen ? 0f : 1f;
+            Time.timeScale = FlowArrival.Frozen(newState) ? 0f : 1f;
             OnGameStateChanged?.Invoke(currentState);
         }
 

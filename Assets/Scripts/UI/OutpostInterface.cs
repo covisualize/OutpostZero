@@ -561,10 +561,15 @@ namespace OutpostZero.UI
             parent.Add(Button(Loc.T("set.close"), Close));
         }
 
-        private static void Go(FlowStep step, System.Action arrived)
+        private static void Go(FlowStep step, System.Action arrived = null)
         {
-            if (SceneFlow.Instance != null) SceneFlow.Instance.Travel(step, arrived);
-            else arrived?.Invoke();
+            if (SceneFlow.Instance != null)
+            {
+                SceneFlow.Instance.Travel(step, arrived);
+                return;
+            }
+            if (arrived != null) arrived();
+            else GameManager.Instance?.Arrive(new FlowContext(step, step, false));
         }
 
         private static void DrawTrade(VisualElement parent, FactionTrade faction)
@@ -649,12 +654,12 @@ namespace OutpostZero.UI
                     menu.Add(Button(Loc.T("menu.save"), () => SaveSystem.Instance?.Save()));
                     menu.Add(Button(Loc.T("menu.codex"), () => { codexId = ""; Open(MenuScreen.Codex); }));
                     menu.Add(Button(Loc.T("menu.skip"), () => TutorialDirector.Instance?.Dismiss()));
-                    menu.Add(Button(Loc.T("menu.camp"), () => Go(FlowStep.Sanctuary, () => GameManager.Instance.EnterCamp())));
+                    menu.Add(Button(Loc.T("menu.camp"), () => Go(FlowStep.Sanctuary)));
                     menu.Add(Button(Loc.T("menu.restart"), () => Go(FlowStep.Boot, () => GameManager.Instance.ReturnToBoot())));
                     menu.Add(Button(Loc.T("menu.save_quit"), () =>
                     {
                         SaveSystem.Instance?.Save();
-                        Go(FlowStep.MainMenu, () => GameManager.Instance.SetState(GameState.MainMenu));
+                        Go(FlowStep.MainMenu);
                     }));
                     menu.Add(Button(Loc.T("menu.quit"), () =>
                     {
@@ -686,7 +691,7 @@ namespace OutpostZero.UI
                     menu.Add(Body(Loc.T("menu.broadcast")));
                     DrawHaul(menu);
                     DrawBoard(menu);
-                    menu.Add(Button(Loc.T("menu.enter"), () => Go(FlowStep.Sanctuary, () => GameManager.Instance.EnterCamp())));
+                    menu.Add(Button(Loc.T("menu.enter"), () => Go(FlowStep.Sanctuary)));
                     menu.Add(Button(Loc.T("menu.endless"), () => Go(FlowStep.Sanctuary, () =>
                     {
                         WorldMapService.Instance?.TryBeginEndless();
@@ -700,7 +705,7 @@ namespace OutpostZero.UI
                     menu.Add(Body(map != null && map.CampaignWon ? Loc.T("menu.air") : Loc.T("menu.supplies")));
                     DrawHaul(menu);
                     if (map != null && map.Current != null) menu.Add(Body(Loc.T("menu.next") + " " + Loc.District(map.Current.id)));
-                    menu.Add(Button(Loc.T("menu.enter"), () => Go(FlowStep.Sanctuary, () => GameManager.Instance.EnterCamp())));
+                    menu.Add(Button(Loc.T("menu.enter"), () => Go(FlowStep.Sanctuary)));
                     break;
                 case GameState.GameOver:
                     menu.Add(Title(Loc.T("gameover.title")));
@@ -742,7 +747,7 @@ namespace OutpostZero.UI
                     menu.Add(Button(Loc.T("menu.settings"), () => SettingsService.Instance?.TogglePanel()));
                     menu.Add(Button(Loc.T("menu.credits"), () => Open(MenuScreen.Credits)));
                     menu.Add(Button(Loc.T("menu.skip"), () => TutorialDirector.Instance?.Dismiss()));
-                    menu.Add(Button(Loc.T("menu.street"), () => Go(FlowStep.Expedition, () => GameManager.Instance.BeginExpedition())));
+                    menu.Add(Button(Loc.T("menu.street"), () => Go(FlowStep.Expedition)));
                     menu.Add(Button(Loc.T("menu.quit"), Quit));
                     break;
             }
@@ -1148,7 +1153,7 @@ namespace OutpostZero.UI
                 }
                 if (hidden > 0) camp.Add(Body(Loc.T("camp.fog") + "  " + hidden));
             }
-            camp.Add(Button(Loc.T("camp.leave"), () => Go(FlowStep.Expedition, () => GameManager.Instance.BeginExpedition())));
+            camp.Add(Button(Loc.T("camp.leave"), () => Go(FlowStep.Expedition)));
         }
 
         private void RebuildPack(bool open)

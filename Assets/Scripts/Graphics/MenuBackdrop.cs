@@ -60,9 +60,9 @@ namespace OutpostZero.Graphics
             Land();
         }
 
-        public void OnEnter(FlowStep step, FlowStep from)
+        public void OnEnter(FlowContext context)
         {
-            if (step != FlowStep.MainMenu || entered) return;
+            if (context.To != FlowStep.MainMenu || entered) return;
             entered = true;
             var player = PlayerRegistry.Current;
             pivot = player != null ? player.transform.position : Vector3.zero;
@@ -75,9 +75,9 @@ namespace OutpostZero.Graphics
             }
         }
 
-        public void OnExit(FlowStep step, FlowStep to)
+        public void OnExit(FlowContext context)
         {
-            if (step != FlowStep.MainMenu || to == FlowStep.MainMenu || !entered) return;
+            if (context.From != FlowStep.MainMenu || context.To == FlowStep.MainMenu || !entered) return;
             entered = false;
             if (DayNightCycle.Instance != null) DayNightCycle.Instance.Hold = -1f;
             if (WeatherController.Instance != null) WeatherController.Instance.SetFor(restoreWeather, 80f);

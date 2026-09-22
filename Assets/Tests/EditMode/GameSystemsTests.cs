@@ -129,13 +129,13 @@ namespace OutpostZero.Tests.EditMode
             public readonly List<string> Log = new List<string>();
             public bool Throws;
 
-            public void OnEnter(FlowStep step, FlowStep from)
+            public void OnEnter(FlowContext context)
             {
-                Log.Add("enter " + step + " from " + from);
+                Log.Add("enter " + context.To + " from " + context.From + (context.Handled ? " handled" : ""));
                 if (Throws) throw new System.InvalidOperationException("probe");
             }
 
-            public void OnExit(FlowStep step, FlowStep to) => Log.Add("exit " + step + " to " + to);
+            public void OnExit(FlowContext context) => Log.Add("exit " + context.From + " to " + context.To);
         }
 
         [Test]
@@ -150,7 +150,7 @@ namespace OutpostZero.Tests.EditMode
             Assert.AreEqual(2, SceneEntries.Count);
 
             int failures = 0;
-            int reached = SceneEntries.Dispatch(FlowStep.MainMenu, FlowStep.Sanctuary, e => failures++);
+            int reached = SceneEntries.Dispatch(new FlowContext(FlowStep.MainMenu, FlowStep.Sanctuary, false), e => failures++);
             Assert.AreEqual(1, reached);
             Assert.AreEqual(1, failures);
             CollectionAssert.AreEqual(new[] { "exit MainMenu to Sanctuary", "enter Sanctuary from MainMenu" }, probe.Log);
@@ -159,6 +159,31 @@ namespace OutpostZero.Tests.EditMode
             SceneEntries.Unregister(probe);
             Assert.AreEqual(0, SceneEntries.Count);
             SceneEntries.Clear();
+        }
+
+        [Test]
+        public void ABareHopSettlesTheStateAndAHandledOneIsLeftAlone()
+        {
+            FlowContext Bare(FlowStep from, FlowStep to) => new FlowContext(from, to, false);
+            Assert.AreEqual(ArrivalAction.Camp, FlowArrival.For(Bare(FlowStep.MainMenu, FlowStep.Sanctuary), GameState.MainMenu));
+            Assert.AreEqual(ArrivalAction.Camp, FlowArrival.For(Bare(FlowStep.Expedition, FlowStep.Sanctuary), GameState.Paused));
+            Assert.AreEqual(ArrivalAction.Camp, FlowArrival.For(Bare(FlowStep.Results, FlowStep.Sanctuary), GameState.ExpeditionResults));
+            Assert.AreEqual(ArrivalAction.None, FlowArrival.For(Bare(FlowStep.Sanctuary, FlowStep.Sanctuary), GameState.CampManagement));
+            Assert.AreEqual(ArrivalAction.None, FlowArrival.For(Bare(FlowStep.Sanctuary, FlowStep.Sanctuary), GameState.RaidActive));
+            Assert.AreEqual(ArrivalAction.Street, FlowArrival.For(Bare(FlowStep.Sanctuary, FlowStep.Expedition), GameState.CampManagement));
+            Assert.AreEqual(ArrivalAction.None, FlowArrival.For(Bare(FlowStep.Sanctuary, FlowStep.Expedition), GameState.ExpeditionActive));
+            Assert.AreEqual(ArrivalAction.Menu, FlowArrival.For(Bare(FlowStep.Expedition, FlowStep.MainMenu), GameState.Paused));
+            Assert.AreEqual(ArrivalAction.None, FlowArrival.For(Bare(FlowStep.Boot, FlowStep.MainMenu), GameState.MainMenu));
+            Assert.AreEqual(ArrivalAction.None, FlowArrival.For(Bare(FlowStep.Expedition, FlowStep.Results), GameState.ExpeditionResults));
+            Assert.AreEqual(ArrivalAction.None, FlowArrival.For(Bare(FlowStep.MainMenu, FlowStep.Boot), GameState.MainMenu));
+            Assert.AreEqual(ArrivalAction.None, FlowArrival.For(new FlowContext(FlowStep.MainMenu, FlowStep.Sanctuary, true), GameState.MainMenu));
+
+            Assert.IsTrue(FlowArrival.Frozen(GameState.MainMenu));
+            Assert.IsTrue(FlowArrival.Frozen(GameState.Paused));
+            Assert.IsTrue(FlowArrival.Frozen(GameState.Victory));
+            Assert.IsFalse(FlowArrival.Frozen(GameState.CampManagement));
+            Assert.IsFalse(FlowArrival.Frozen(GameState.ExpeditionActive));
+            Assert.IsFalse(FlowArrival.Frozen(GameState.RaidActive));
         }
 
         [Test]

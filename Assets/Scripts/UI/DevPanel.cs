@@ -73,9 +73,9 @@ namespace OutpostZero.UI
             panel.Add(Button(Loc.T("dev.spawn") + " " + DevCheats.SpawnCount, Spawn));
             panel.Add(Button(Loc.T("dev.kit"), GiveKit));
             panel.Add(Button(Loc.T("dev.skip") + " " + DevCheats.SkipHours + "h", () => WorldClock.Instance?.Advance(DevCheats.SkipHours)));
-            panel.Add(Button(Loc.T("dev.menu"), () => Jump(FlowStep.MainMenu, () => GameManager.Instance?.SetState(GameState.MainMenu))));
-            panel.Add(Button(Loc.T("dev.camp"), () => Jump(FlowStep.Sanctuary, () => GameManager.Instance?.EnterCamp())));
-            panel.Add(Button(Loc.T("dev.street"), () => Jump(FlowStep.Expedition, () => GameManager.Instance?.BeginExpedition())));
+            panel.Add(Button(Loc.T("dev.menu"), () => Jump(FlowStep.MainMenu)));
+            panel.Add(Button(Loc.T("dev.camp"), () => Jump(FlowStep.Sanctuary)));
+            panel.Add(Button(Loc.T("dev.street"), () => Jump(FlowStep.Expedition)));
             panel.Add(Button(Loc.T("dev.boot"), () => GameManager.Instance?.ReturnToBoot()));
             root.Add(panel);
             Refresh();
@@ -104,10 +104,15 @@ namespace OutpostZero.UI
             GameplayFeedback.Toast(Loc.T("dev.kit"));
         }
 
-        private static void Jump(FlowStep step, System.Action arrived)
+        private static void Jump(FlowStep step, System.Action arrived = null)
         {
-            if (SceneFlow.Instance != null) SceneFlow.Instance.Travel(step, arrived);
-            else arrived?.Invoke();
+            if (SceneFlow.Instance != null)
+            {
+                SceneFlow.Instance.Travel(step, arrived);
+                return;
+            }
+            if (arrived != null) arrived();
+            else GameManager.Instance?.Arrive(new FlowContext(step, step, false));
         }
 
         private static Button Button(string text, System.Action action)
