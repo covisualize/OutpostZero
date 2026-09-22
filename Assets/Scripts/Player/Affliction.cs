@@ -28,6 +28,26 @@ namespace OutpostZero.Player
             return stage == 1 || stage == 2;
         }
 
+        public static bool Fatal(float seconds)
+        {
+            return Stage(seconds) >= 3;
+        }
+
+        public static float Advance(float seconds, float dt)
+        {
+            if (seconds < 0.05f) return seconds < 0f ? 0f : seconds;
+            if (dt <= 0f) return seconds;
+            float next = seconds + dt;
+            float ceiling = StageTwo + 1f;
+            return next > ceiling ? ceiling : next;
+        }
+
+        public static float Bite(float seconds)
+        {
+            if (seconds < 0.05f) return 0.05f;
+            return Advance(seconds, 25f);
+        }
+
         public static float BleedLoss(float seconds)
         {
             if (seconds <= 0f) return 0f;

@@ -1565,6 +1565,15 @@ namespace OutpostZero.Tests.EditMode
             Assert.AreEqual(2, Affliction.Stage(90f));
             Assert.AreEqual(2, Affliction.Stage(179f));
             Assert.AreEqual(3, Affliction.Stage(180f));
+            Assert.IsFalse(Affliction.Fatal(179f));
+            Assert.IsTrue(Affliction.Fatal(180f));
+            Assert.AreEqual(0f, Affliction.Advance(0f, 1f), 0.001f);
+            Assert.AreEqual(91f, Affliction.Advance(90f, 1f), 0.001f);
+            Assert.AreEqual(181f, Affliction.Advance(179f, 5f), 0.001f);
+            Assert.AreEqual(181f, Affliction.Advance(181f, 4f), 0.001f);
+            Assert.AreEqual(0.05f, Affliction.Bite(0f), 0.001f);
+            Assert.AreEqual(25.05f, Affliction.Bite(0.05f), 0.001f);
+            Assert.AreEqual(181f, Affliction.Bite(170f), 0.001f);
             Assert.IsTrue(Affliction.AntibioticsWork(1));
             Assert.IsTrue(Affliction.AntibioticsWork(2));
             Assert.IsFalse(Affliction.AntibioticsWork(0));

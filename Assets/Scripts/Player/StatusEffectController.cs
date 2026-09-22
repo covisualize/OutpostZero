@@ -57,9 +57,7 @@ namespace OutpostZero.Player
 
         public void ApplyInfection(float amount)
         {
-            if (infection < 0.05f) infection = 0.05f;
-            else infection += 25f;
-            if (infection > Affliction.StageTwo) infection = Affliction.StageTwo;
+            infection = Affliction.Bite(infection);
             GameplayFeedback.Toast(Affliction.Label(InfectionStage));
         }
 
@@ -110,7 +108,7 @@ namespace OutpostZero.Player
             if (slowRemaining > 0f) slowRemaining -= dt;
             if (knockdownRemaining > 0f) knockdownRemaining -= dt;
             if (adrenaline > 0f) adrenaline -= dt;
-            if (infection > 0.01f && infection < Affliction.StageTwo) infection += dt;
+            if (infection > 0.01f) infection = Affliction.Advance(infection, dt);
             if (painRemaining > 0f && health != null && !health.IsDead)
             {
                 float step = dt < painRemaining ? dt : painRemaining;
@@ -123,7 +121,7 @@ namespace OutpostZero.Player
             tick = 1f;
             if (poisonRemaining > 0f) health.TakeDamage(4f, transform.position, Vector3.zero, gameObject);
             if (IsBleeding) health.TakeDamage(Affliction.BleedPerSecond, transform.position, Vector3.zero, gameObject);
-            if (infection >= Affliction.StageTwo) health.TakeDamage(health.CurrentHealth + 5f, transform.position, Vector3.zero, gameObject);
+            if (Affliction.Fatal(infection)) health.TakeDamage(health.CurrentHealth + 5f, transform.position, Vector3.zero, gameObject);
         }
     }
 }
