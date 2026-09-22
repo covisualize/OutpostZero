@@ -1525,5 +1525,24 @@ namespace OutpostZero.Tests.EditMode
             Assert.IsFalse(NeedsPressure.Tired(75f));
             Assert.IsTrue(NeedsPressure.Tired(76f));
         }
+
+        [Test]
+        public void APackBriefNamesWeightAndWhatTheItemDoes()
+        {
+            string medkit = ItemBrief.Text(ItemCatalog.Find("medkit"));
+            Assert.IsTrue(medkit.Contains("Medkit"));
+            Assert.IsTrue(medkit.Contains("0.50 kg"));
+            Assert.IsTrue(medkit.Contains("+50 health"));
+            Assert.IsTrue(medkit.Contains("Stops bleeding and breaks a fever."));
+            string pills = ItemBrief.Text(ItemCatalog.Find("antibiotics"));
+            Assert.IsTrue(pills.Contains("Clears infection"));
+            Assert.IsTrue(pills.Contains("Works before the fever turns lethal."));
+            string water = ItemBrief.Text(ItemCatalog.Find("water"));
+            Assert.IsTrue(water.Contains("0.50 kg"));
+            Assert.IsTrue(water.Contains("+40 thirst"));
+            Assert.AreEqual("0.08 kg", ItemBrief.Weight(0.08f));
+            Assert.AreEqual("", ItemBrief.Text(null));
+            Assert.AreEqual("", ItemBrief.Blurb("nope"));
+        }
     }
 }

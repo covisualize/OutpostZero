@@ -50,6 +50,7 @@ namespace OutpostZero.UI
         private bool slotsOpen;
         private bool codexOpen;
         private string codexId = "";
+        private string inspected = "";
 
         private void Update()
         {
@@ -366,7 +367,7 @@ namespace OutpostZero.UI
                 RebuildCamp(state == GameState.CampManagement);
             }
 
-            string nextPack = inventory ? PackSignature() : "";
+            string nextPack = inventory ? PackSignature() + "|" + inspected : "";
             if (nextPack != packKey)
             {
                 packKey = nextPack;
@@ -764,11 +765,21 @@ namespace OutpostZero.UI
                 medLabel.style.flexGrow = 1;
                 medRow.Add(medLabel);
                 medRow.Add(Button("Use", () => inventory.UseMedkit()));
+                medRow.Add(Button("Info", () => Inspect("medkit")));
                 string medMark = inventory.BeltMark("medkit");
                 medRow.Add(Button(string.IsNullOrEmpty(medMark) ? "Belt" : "Belt " + medMark, () => inventory.ToggleBelt("medkit")));
                 pack.Add(medRow);
             }
-            if (inventory.ScrapCount > 0) pack.Add(Body("Scrap x" + inventory.ScrapCount));
+            if (inventory.ScrapCount > 0)
+            {
+                var scrapRow = new VisualElement { style = { flexDirection = FlexDirection.Row } };
+                var scrapLabel = Body();
+                scrapLabel.text = "Scrap x" + inventory.ScrapCount;
+                scrapLabel.style.flexGrow = 1;
+                scrapRow.Add(scrapLabel);
+                scrapRow.Add(Button("Info", () => Inspect("scrap")));
+                pack.Add(scrapRow);
+            }
             var scroll = new ScrollView();
             scroll.style.height = 220;
             foreach (var item in inventory.Items)
@@ -780,6 +791,7 @@ namespace OutpostZero.UI
                 label.style.flexGrow = 1;
                 row.Add(label);
                 row.Add(Button("Use", () => inventory.TryUse(id)));
+                row.Add(Button("Info", () => Inspect(id)));
                 row.Add(Button("Drop", () => inventory.Drop(id, 1)));
                 row.Add(Button("Split", () => inventory.DropHalf(id)));
                 if (ItemBelt.Fits(id))
@@ -801,7 +813,19 @@ namespace OutpostZero.UI
                 }
                 pack.Add(Button("Take all", () => crate.TakeAll(inventory)));
             }
+            if (!string.IsNullOrEmpty(inspected))
+            {
+                var detail = Body();
+                detail.style.whiteSpace = WhiteSpace.PreWrap;
+                detail.text = ItemBrief.Text(ItemCatalog.Find(inspected));
+                pack.Add(detail);
+            }
             pack.Add(Button("Close", () => FindFirstObjectByType<GameShellUI>()?.CloseInventory()));
+        }
+
+        private void Inspect(string id)
+        {
+            inspected = inspected == id ? "" : id ?? "";
         }
 
         private void DrawPopups()
