@@ -33,6 +33,7 @@ namespace OutpostZero.Core
         public int ZombiesKilled => zombiesKilled;
         public int LifetimeKills => lifetimeKills;
         public int ScrapLooted => scrapLooted;
+        public string LastStreet { get; private set; } = "";
 
         public event Action<GameState> OnGameStateChanged;
         public event Action<int> OnZombiesKilledChanged;
@@ -169,6 +170,9 @@ namespace OutpostZero.Core
         {
             var inventory = PlayerRegistry.Current != null ? PlayerRegistry.Current.GetComponent<PlayerInventory>() : null;
             inventory?.DepositScrapToColony();
+            LastStreet = WorldMapService.Instance != null && WorldMapService.Instance.Current != null
+                ? WorldMapService.Instance.Current.displayName
+                : "";
             WorldMapService.Instance?.ClearCurrent();
             ObjectiveTracker.Instance?.MarkExtracted();
             bool won = WorldMapService.Instance != null && WorldMapService.Instance.CampaignWon && !WorldMapService.Instance.Endless;

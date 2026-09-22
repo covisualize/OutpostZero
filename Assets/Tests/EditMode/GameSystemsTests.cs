@@ -688,6 +688,17 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void TheExtractScreenNamesTheStreetAndTheHaul()
+        {
+            Assert.AreEqual("Ash Market  kills 8/8  scrap 15/15", ExtractSlip.Line("Ash Market", 8, 8, 15, 15, "kills", "scrap"));
+            Assert.AreEqual("Street  kills 0/1  scrap 0/1", ExtractSlip.Line("", -2, 0, -4, 0, "", ""));
+            Assert.AreEqual("Rail Yard  bajas 3/8  chatarra 4/15", ExtractSlip.Line("Rail Yard", 3, 8, 4, 15, "bajas", "chatarra"));
+            Assert.AreEqual("bajas", Loc.T("result.kills", "es"));
+            Assert.AreEqual("chatarra", Loc.T("result.scrap", "es"));
+            Assert.AreEqual("kills", Loc.T("result.kills", "en"));
+        }
+
+        [Test]
         public void MistSitsOnTheStreetWhenTheAirIsThick()
         {
             Assert.IsTrue(MistBank.Shows(WeatherKind.Fog, 0f));

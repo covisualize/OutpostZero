@@ -635,6 +635,7 @@ namespace OutpostZero.UI
                 case GameState.Victory:
                     menu.Add(Title(Loc.T("menu.holds")));
                     menu.Add(Body(Loc.T("menu.broadcast")));
+                    DrawHaul(menu);
                     DrawBoard(menu);
                     menu.Add(Button(Loc.T("menu.enter"), () => Go(FlowStep.Sanctuary, () => GameManager.Instance.EnterCamp())));
                     menu.Add(Button(Loc.T("menu.endless"), () => Go(FlowStep.Sanctuary, () =>
@@ -648,6 +649,7 @@ namespace OutpostZero.UI
                     menu.Add(Title(Loc.T("result.title")));
                     var map = WorldMapService.Instance;
                     menu.Add(Body(map != null && map.CampaignWon ? Loc.T("menu.air") : Loc.T("menu.supplies")));
+                    DrawHaul(menu);
                     if (map != null && map.Current != null) menu.Add(Body(Loc.T("menu.next") + " " + map.Current.displayName));
                     menu.Add(Button(Loc.T("menu.enter"), () => Go(FlowStep.Sanctuary, () => GameManager.Instance.EnterCamp())));
                     break;
@@ -691,6 +693,19 @@ namespace OutpostZero.UI
                     break;
             }
             menu.style.display = menu.childCount > 0 ? DisplayStyle.Flex : DisplayStyle.None;
+        }
+
+        private void DrawHaul(VisualElement menu)
+        {
+            var gm = GameManager.Instance;
+            var tracker = ObjectiveTracker.Instance;
+            string district = gm != null ? gm.LastStreet : "";
+            int kills = gm != null ? gm.ZombiesKilled : 0;
+            int scrap = gm != null ? gm.ScrapLooted : 0;
+            int killGoal = tracker != null ? tracker.KillGoal : 1;
+            int scrapGoal = tracker != null ? tracker.ScrapGoal : 1;
+            menu.Add(Body(ExtractSlip.Line(district, kills, killGoal, scrap, scrapGoal, Loc.T("result.kills"), Loc.T("result.scrap"))));
+            if (tracker != null && tracker.PoiLine().Length > 0) menu.Add(Body(tracker.PoiLine()));
         }
 
         private void DrawBoard(VisualElement menu)
