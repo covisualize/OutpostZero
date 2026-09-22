@@ -486,6 +486,13 @@ namespace OutpostZero.AI
 
             FollowDoor();
 
+            if (TargetDrop.Gone(currentTarget != null, currentTarget != null && currentTarget.gameObject.activeInHierarchy))
+            {
+                currentTarget = null;
+                if (currentState == ZombieState.Chase || currentState == ZombieState.Attack)
+                    SetState(ZombieState.Wander);
+            }
+
             switch (currentState)
             {
                 case ZombieState.Idle:
@@ -960,6 +967,12 @@ namespace OutpostZero.AI
 
         private void PerformBiteAttack()
         {
+            var escort = currentTarget.GetComponent<RescueFollower>();
+            if (escort != null)
+            {
+                escort.BiteFrom(Time.time);
+                return;
+            }
 
             var damageable = currentTarget.GetComponent<IDamageable>();
             if (damageable != null && !damageable.IsDead)

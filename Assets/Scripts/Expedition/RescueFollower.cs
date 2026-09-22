@@ -131,18 +131,7 @@ namespace OutpostZero.Expedition
             }
 
             if (FollowBite.Due(lastBite, Time.time, ZombieAI.Nearest(nextX, nextZ)))
-            {
-                lastBite = Time.time;
-                if (FollowFall.Drops(bites))
-                {
-                    Fall();
-                    return;
-                }
-                int before = bites;
-                bites = FollowBite.After(bites);
-                if (bites > before)
-                    GameplayFeedback.Toast(bites >= FollowBite.Cap ? FollowLimp.Line(personName, null) : FollowBite.Line(personName, null));
-            }
+                ApplyBite(Time.time);
 
             var gate = ExtractionZone.Current;
             if (gate == null) return;
@@ -151,6 +140,27 @@ namespace OutpostZero.Expedition
             bool playerThere = RescueBook.AtGate(lead.x, lead.z, spot.x, spot.z, 3.4f);
             if (!personThere || !playerThere) return;
             TryJoin();
+        }
+
+        public void BiteFrom(float now)
+        {
+            if (joined || !following) return;
+            if (!FollowBite.Due(lastBite, now, 0f)) return;
+            ApplyBite(now);
+        }
+
+        private void ApplyBite(float now)
+        {
+            lastBite = now;
+            if (FollowFall.Drops(bites))
+            {
+                Fall();
+                return;
+            }
+            int before = bites;
+            bites = FollowBite.After(bites);
+            if (bites > before)
+                GameplayFeedback.Toast(bites >= FollowBite.Cap ? FollowLimp.Line(personName, null) : FollowBite.Line(personName, null));
         }
 
         private void Fall()

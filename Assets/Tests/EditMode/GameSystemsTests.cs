@@ -6552,6 +6552,22 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void AFallenFollowerDropsTheChaseAndALandedBiteStillCounts()
+        {
+            Assert.IsTrue(TargetDrop.Gone(true, false));
+            Assert.IsFalse(TargetDrop.Gone(true, true));
+            Assert.IsFalse(TargetDrop.Gone(false, false));
+            Assert.IsFalse(TargetDrop.Gone(false, true));
+            Assert.IsTrue(FollowBite.Due(0f, 10f, 0f));
+            Assert.IsFalse(FollowBite.Due(10f, 10f, 0f));
+            Assert.IsTrue(FollowBite.Due(7f, 9.4f, 0f));
+            Assert.AreEqual(1.2f, FollowBite.Reach, 0.001f);
+            Assert.AreEqual(2.4f, FollowBite.Gap, 0.001f);
+            Assert.IsFalse(FollowPull.Chases(true, true, true, NoiseType.ZombieScream));
+            Assert.IsTrue(FollowFall.Drops(3));
+        }
+
+        [Test]
         public void AZombieWithoutARigStillAttacksAndFalls()
         {
             Assert.AreEqual(14f, PoseSheet.Lean(ZombieAI.ZombieState.Chase, 0f), 0.001f);
