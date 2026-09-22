@@ -71,14 +71,17 @@ namespace OutpostZero.Graphics
         {
             if (bloom == null) return;
             var budget = QualityProfile.For(tier);
+            bool raid = GameManager.Instance != null && GameManager.Instance.CurrentState == GameState.RaidActive;
             bloom.intensity.Override(budget.Bloom);
-            vignette.intensity.Override(tier <= 0 ? 0.16f : 0.28f);
-            grain.active = budget.Grain;
+            vignette.intensity.Override(RaidGrade.Vignette(raid, tier));
+            grain.active = raid || budget.Grain;
             depth.active = aiming && budget.DepthOfField;
             if (color != null)
             {
                 float bright = SettingsService.Instance != null ? SettingsService.Instance.Brightness : 1f;
-                color.postExposure.Override(Presentation.Exposure(bright));
+                color.postExposure.Override(RaidGrade.Exposure(bright, raid));
+                RaidGrade.Filter(raid, out float red, out float green, out float blue);
+                color.colorFilter.Override(new Color(red, green, blue));
             }
             if (blur != null) blur.active = SettingsService.Instance != null && SettingsService.Instance.MotionBlur;
         }

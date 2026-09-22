@@ -2805,6 +2805,28 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void ARaidPullsTheYardOffTheDaylightGrade()
+        {
+            Assert.AreEqual(Presentation.Exposure(1f), RaidGrade.Exposure(1f, false), 0.001f);
+            Assert.AreEqual(-0.2f, RaidGrade.Exposure(1f, true), 0.001f);
+            Assert.AreEqual(-0.45f, RaidGrade.Exposure(0.6f, true), 0.001f);
+            RaidGrade.Filter(false, out float dayR, out float dayG, out float dayB);
+            Assert.AreEqual(1f, dayR, 0.001f);
+            Assert.AreEqual(0.96f, dayG, 0.001f);
+            Assert.AreEqual(0.9f, dayB, 0.001f);
+            RaidGrade.Filter(true, out float red, out float green, out float blue);
+            Assert.AreEqual(0.72f, red, 0.001f);
+            Assert.AreEqual(0.58f, green, 0.001f);
+            Assert.AreEqual(0.78f, blue, 0.001f);
+            Assert.AreEqual(0.28f, RaidGrade.Vignette(false, 1), 0.001f);
+            Assert.AreEqual(0.16f, RaidGrade.Vignette(false, 0), 0.001f);
+            Assert.AreEqual(0.46f, RaidGrade.Vignette(true, 1), 0.001f);
+            Assert.AreEqual(1.4f, RaidGrade.Pulse(0f), 0.001f);
+            Assert.Greater(RaidGrade.Pulse(0.4f), 1.4f);
+            Assert.AreEqual("El patio se oscurece", Loc.T("camp.dark", "es"));
+        }
+
+        [Test]
         public void DemolishingAModuleReturnsHalfTheScrap()
         {
             Assert.AreEqual(3, ScrapRefund.Half(6));

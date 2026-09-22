@@ -117,6 +117,7 @@ namespace OutpostZero.Colony
             }
             string openLine = tower ? "Broadcast night — hold the tower" : "Night raid from the " + approach;
             if (fronts > 1) openLine += "  " + fronts + " " + Loc.T("camp.sides");
+            openLine += "  " + Loc.T("camp.dark");
             if (GridBuilder.Instance != null && GridBuilder.Instance.BarricadeCount() > 0)
                 openLine += "  " + Loc.T("camp.chew");
             if (GuardsOnTheLine() > 0) openLine += "  " + Loc.T("camp.line");
