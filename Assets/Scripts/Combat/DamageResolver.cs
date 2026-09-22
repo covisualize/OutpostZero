@@ -1,4 +1,5 @@
 using UnityEngine;
+using OutpostZero.Core;
 
 namespace OutpostZero.Combat
 {
@@ -7,7 +8,7 @@ namespace OutpostZero.Combat
         public const float HeadshotHeight = 1.45f;
         public const float HeadshotMultiplier = 2f;
 
-        public static void Resolve(RaycastHit hit, float damage, GameObject attacker, bool allowHeadshot)
+        public static void Resolve(RaycastHit hit, float damage, GameObject attacker, bool allowHeadshot, WeaponType weapon = WeaponType.Pistol)
         {
             var hazard = hit.collider.GetComponentInParent<DestructibleHazard>();
             if (hazard != null)
@@ -30,7 +31,7 @@ namespace OutpostZero.Combat
             }
 
             target.TakeDamage(amount, hit.point, hit.normal, attacker);
-            CombatEvents.RaiseHit(hit.point, hit.normal, body.gameObject);
+            CombatEvents.RaiseHit(hit.point, hit.normal, body.gameObject, weapon);
             if (HitFeedback.Instance != null)
             {
                 HitFeedback.Instance.AddNumber(hit.point, amount, crit);
@@ -41,7 +42,7 @@ namespace OutpostZero.Combat
             }
         }
 
-        public static void ResolveBody(Collider col, Vector3 point, Vector3 direction, float damage, GameObject attacker, bool allowHeadshot)
+        public static void ResolveBody(Collider col, Vector3 point, Vector3 direction, float damage, GameObject attacker, bool allowHeadshot, WeaponType weapon = WeaponType.Pistol)
         {
             if (col == null) return;
             var hazard = col.GetComponentInParent<DestructibleHazard>();
@@ -59,7 +60,7 @@ namespace OutpostZero.Combat
             bool crit = allowHeadshot && point.y - body.transform.position.y >= HeadshotHeight;
             float amount = crit ? damage * HeadshotMultiplier : damage;
             target.TakeDamage(amount, point, direction, attacker);
-            CombatEvents.RaiseHit(point, direction, body.gameObject);
+            CombatEvents.RaiseHit(point, direction, body.gameObject, weapon);
             if (HitFeedback.Instance != null)
             {
                 HitFeedback.Instance.AddNumber(point, amount, crit);

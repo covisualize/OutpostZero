@@ -1560,5 +1560,18 @@ namespace OutpostZero.Tests.EditMode
             Assert.Greater(ThrowArc.Flight(ThrowArc.Height, ThrowArc.Forward, ThrowArc.Lift, ThrowArc.Gravity), 15f);
             Assert.AreEqual(18f, ThrowArc.NoiseRadius(false), 0.01f);
         }
+
+        [Test]
+        public void AShotgunStaggersLongerAndABruteShrugsMostOfItOff()
+        {
+            Assert.AreEqual(0.25f, HitStun.Seconds(WeaponType.Pistol), 0.001f);
+            Assert.AreEqual(0.25f, HitStun.Seconds(WeaponType.Rifle), 0.001f);
+            Assert.AreEqual(0.6f, HitStun.Seconds(WeaponType.Shotgun), 0.001f);
+            Assert.AreEqual(0.4f, HitStun.Seconds(WeaponType.Melee), 0.001f);
+            Assert.AreEqual(0.18f, HitStun.Resist(0.6f, true), 0.001f);
+            Assert.AreEqual(0.075f, HitStun.Resist(0.25f, true), 0.001f);
+            Assert.AreEqual(0.4f, HitStun.Resist(0.4f, false), 0.001f);
+            Assert.AreEqual(0.05f, HitStun.Resist(0.01f, true), 0.001f);
+        }
     }
 }

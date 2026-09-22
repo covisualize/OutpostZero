@@ -89,7 +89,8 @@ namespace OutpostZero.Combat
             var zombie = target.GetComponentInParent<ZombieAI>();
             if (zombie != null)
             {
-                zombie.ApplyImpulse(normal.sqrMagnitude > 0.01f ? -normal : target.transform.forward, 1.4f, 0.25f);
+                float stun = CombatEvents.FromWeapon ? HitStun.Seconds(CombatEvents.LastWeapon) : 0.25f;
+                zombie.ApplyImpulse(normal.sqrMagnitude > 0.01f ? -normal : target.transform.forward, 1.4f, stun);
             }
         }
 

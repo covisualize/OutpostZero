@@ -180,7 +180,7 @@ namespace OutpostZero.Combat
                     ? Instantiate(bulletPrefab, spawnPos, Quaternion.LookRotation(direction))
                     : CreateBullet(spawnPos, direction);
                 var bullet = projObj.GetComponent<BulletProjectile>() ?? projObj.AddComponent<BulletProjectile>();
-                bullet.Setup(direction, ModifiedDamage, ownerGameObject, hitMask);
+                bullet.Setup(direction, ModifiedDamage, ownerGameObject, hitMask, weaponType);
                 Vector3 eject = muzzlePoint != null ? muzzlePoint.right : transform.right;
                 CombatVfx.Shot(spawnPos, direction, spawnPos + direction * Mathf.Min(range, 8f), eject);
             }
@@ -190,7 +190,7 @@ namespace OutpostZero.Combat
                 if (Physics.Raycast(spawnPos, direction, out RaycastHit hit, range, hitMask, QueryTriggerInteraction.Ignore))
                 {
                     end = hit.point;
-                    DamageResolver.Resolve(hit, ModifiedDamage, ownerGameObject, true);
+                    DamageResolver.Resolve(hit, ModifiedDamage, ownerGameObject, true, weaponType);
                 }
                 Vector3 eject = muzzlePoint != null ? muzzlePoint.right : transform.right;
                 CombatVfx.Shot(spawnPos, direction, end, eject);

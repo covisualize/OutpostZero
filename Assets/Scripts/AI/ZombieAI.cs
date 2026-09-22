@@ -163,14 +163,14 @@ namespace OutpostZero.AI
         public void ApplyImpulse(Vector3 direction, float force, float stun)
         {
             if (currentState == ZombieState.Dead || healthSystem != null && healthSystem.IsDead) return;
-            if (specialAbility == ZombieSpecialAbility.Charge) stun *= 0.3f;
+            stun = HitStun.Resist(stun, specialAbility == ZombieSpecialAbility.Charge);
             direction.y = 0f;
             if (direction.sqrMagnitude < 0.001f) direction = -transform.forward;
             if (agent != null && agent.enabled && agent.isOnNavMesh)
             {
                 agent.Warp(transform.position + direction.normalized * Mathf.Clamp(force, 0.25f, 2.2f));
             }
-            pendingStun = Mathf.Max(0.15f, stun);
+            pendingStun = stun;
             if (currentState == ZombieState.Stunned)
             {
                 stateTimer = pendingStun;

@@ -81,7 +81,7 @@ namespace OutpostZero.Combat
                     var hazard = col.GetComponentInParent<DestructibleHazard>();
                     if ((damageable != null && !damageable.IsDead) || hazard != null)
                     {
-                        DamageResolver.ResolveBody(col, col.bounds.center, dirToTarget, baseDamage * (GetComponent<WeaponMod>() != null ? GetComponent<WeaponMod>().damageMultiplier : 1f), ownerGameObject, false);
+                        DamageResolver.ResolveBody(col, col.bounds.center, dirToTarget, baseDamage * (GetComponent<WeaponMod>() != null ? GetComponent<WeaponMod>().damageMultiplier : 1f), ownerGameObject, false, WeaponType.Melee);
                         hitCount++;
 
                         var rb = col.GetComponentInParent<Rigidbody>();
