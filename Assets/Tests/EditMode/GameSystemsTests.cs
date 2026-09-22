@@ -729,6 +729,21 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void RainShortensAStepAndAPuddleShortensItAgain()
+        {
+            Assert.AreEqual(1f, WetStride.Scale(0f, false), 0.001f);
+            Assert.AreEqual(1f, WetStride.Scale(0.2f, true), 0.001f);
+            Assert.AreEqual(0.9f, WetStride.Scale(0.65f, false), 0.001f);
+            Assert.AreEqual(0.75f, WetStride.Scale(0.65f, true), 0.001f);
+            Assert.AreEqual(4.5f, WetStride.Pace(4.5f, 0f, false), 0.001f);
+            Assert.AreEqual(4.05f, WetStride.Pace(4.5f, 0.65f, false), 0.001f);
+            Assert.AreEqual(3.375f, WetStride.Pace(4.5f, 0.65f, true), 0.001f);
+            Assert.AreEqual(6.75f, WetStride.Pace(7.5f, 0.85f, false), 0.001f);
+            Assert.AreEqual(1.65f, WetStride.Pace(2.2f, 0.65f, true), 0.001f);
+            Assert.AreEqual(0f, WetStride.Pace(-1f, 0.85f, true), 0.001f);
+        }
+
+        [Test]
         public void MistSitsOnTheStreetWhenTheAirIsThick()
         {
             Assert.IsTrue(MistBank.Shows(WeatherKind.Fog, 0f));

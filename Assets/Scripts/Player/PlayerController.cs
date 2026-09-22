@@ -547,6 +547,11 @@ namespace OutpostZero.Player
             else if (IsSprinting) currentSpeed = sprintSpeed * (effects != null ? effects.SprintBonus : 1f);
             if (inventory != null) currentSpeed *= Mathf.Lerp(1f, 0.72f, inventory.WeightRatio);
             if (effects != null) currentSpeed *= effects.SlowMultiplier;
+            float groundWet = 0f;
+            var sky = OutpostZero.Graphics.WeatherController.Instance;
+            if (sky != null) groundWet = OutpostZero.Graphics.WeatherSurface.Wetness(sky.Kind);
+            bool inPuddle = OutpostZero.Graphics.PuddleStep.Inside(transform.position.x, transform.position.z, groundWet);
+            currentSpeed = OutpostZero.Graphics.WetStride.Pace(currentSpeed, groundWet, inPuddle);
 
             Vector3 moveVector = inputDirection * currentSpeed;
 
