@@ -58,7 +58,7 @@ namespace OutpostZero.UI
             var life = player.GetComponent<HealthSystem>();
             if (life != null)
             {
-                health.text = "HP " + Mathf.CeilToInt(life.CurrentHealth);
+                health.text = OutpostZero.Shell.Loc.T("hud.health") + " " + Mathf.CeilToInt(life.CurrentHealth);
                 healthFill.style.width = Length.Percent(100f * life.CurrentHealth / Mathf.Max(1f, life.MaxHealth));
             }
             if (player.ActiveWeapon is FirearmWeapon gun)

@@ -691,7 +691,7 @@ namespace OutpostZero.UI
         {
             var gm = GameManager.Instance;
             var tracker = ObjectiveTracker.Instance;
-            string district = gm != null ? gm.LastStreet : "";
+            string district = ExtractSlip.Place(gm != null ? gm.LastStreet : "", null);
             int kills = gm != null ? gm.ZombiesKilled : 0;
             int scrap = gm != null ? gm.ScrapLooted : 0;
             int killGoal = tracker != null ? tracker.KillGoal : 1;

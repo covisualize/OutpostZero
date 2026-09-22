@@ -173,7 +173,7 @@ namespace OutpostZero.Core
             var inventory = PlayerRegistry.Current != null ? PlayerRegistry.Current.GetComponent<PlayerInventory>() : null;
             inventory?.DepositScrapToColony();
             LastStreet = WorldMapService.Instance != null && WorldMapService.Instance.Current != null
-                ? WorldMapService.Instance.Current.displayName
+                ? WorldMapService.Instance.Current.id
                 : "";
             WorldMapService.Instance?.ClearCurrent();
             ObjectiveTracker.Instance?.MarkExtracted();

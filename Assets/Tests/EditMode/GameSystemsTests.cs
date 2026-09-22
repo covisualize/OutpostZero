@@ -4630,6 +4630,19 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void AnExtractLineNamesTheStreetInTheLanguage()
+        {
+            Assert.AreEqual("Street  kills 0/1  scrap 0/1", ExtractSlip.Line("", -2, 0, -4, 0, "", ""));
+            Assert.AreEqual("Ash Market", ExtractSlip.Place("ash_market", "en"));
+            Assert.AreEqual("Mercado de ceniza", ExtractSlip.Place("ash_market", "es"));
+            Assert.AreEqual("Street", ExtractSlip.Place("", "en"));
+            Assert.AreEqual("Calle", ExtractSlip.Place("", "es"));
+            Assert.AreEqual("Relay", ExtractSlip.Place("Relay", "en"));
+            Assert.AreEqual("Mercado de ceniza  bajas 3/8  chatarra 4/15", ExtractSlip.Line(ExtractSlip.Place("ash_market", "es"), 3, 8, 4, 15, "bajas", "chatarra"));
+            Assert.AreEqual("Ash Market  kills 8/8  scrap 15/15", ExtractSlip.Line(ExtractSlip.Place("ash_market", "en"), 8, 8, 15, 15, "kills", "scrap"));
+        }
+
+        [Test]
         public void StreetLampsFollowTheDarkAndNoonStaysOut()
         {
             Assert.AreEqual(0f, DayNightCycle.HourToNight(12f), 0.001f);
