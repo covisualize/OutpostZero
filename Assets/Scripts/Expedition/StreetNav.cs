@@ -7,11 +7,12 @@ namespace OutpostZero.Expedition
 {
     /// <summary>
     /// Rebuilds the walk mesh after a district is dressed, so lots and curbs
-    /// exist before the dead path across them. An existing surface updates in
-    /// the background. A missing one is baked once on the spot.
+    /// exist before the dead path across them. Finished boards carve that mesh.
+    /// An existing surface updates in the background. A missing one is baked once on the spot.
     /// </summary>
     public static class StreetNav
     {
+        public const bool HonorObstacles = true;
         public static void Schedule(MonoBehaviour host)
         {
             if (host == null || !host.isActiveAndEnabled) return;
@@ -30,7 +31,7 @@ namespace OutpostZero.Expedition
             surface.collectObjects = CollectObjects.All;
             surface.useGeometry = NavMeshCollectGeometry.RenderMeshes;
             surface.ignoreNavMeshAgent = true;
-            surface.ignoreNavMeshObstacle = true;
+            surface.ignoreNavMeshObstacle = !HonorObstacles;
 
             if (surface.navMeshData == null)
             {

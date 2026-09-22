@@ -189,6 +189,14 @@ namespace OutpostZero.Colony
             }
             if (Time.time < endsAt) return;
             running = false;
+            if (SurvivorRoster.Instance != null && CampEnd.Wiped(SurvivorRoster.Instance.LivingCount()))
+            {
+                GameplayFeedback.Toast(Loc.T("camp.wiped"));
+                GameManager.Instance?.SetState(GameState.GameOver);
+                SaveSystem.Instance?.Save(false);
+                broadcast = false;
+                return;
+            }
             int security = ColonyStorage.Instance != null ? ColonyStorage.Instance.Security : 0;
             bool held = security > 0 || (HordeDirector.Instance != null && HordeDirector.Instance.Tension < 80f);
             int dropped = YardDead.Dropped(pressure, held);

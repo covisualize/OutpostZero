@@ -244,7 +244,8 @@ namespace OutpostZero.Colony
             }
             if (person.leader)
             {
-                MarkLeaderDead(new Vector3(-6f, 0f, -8f), "raid");
+                bool remains = MarkLeaderDead(new Vector3(-6f, 0f, -8f), "raid");
+                if (!remains) EndCamp();
                 return;
             }
             person.alive = false;
@@ -268,6 +269,24 @@ namespace OutpostZero.Colony
             ColonyStorage.Instance?.AddBodies(1);
             GameplayFeedback.Toast(person.displayName + " " + Loc.T("camp.fell"));
             OnRosterChanged?.Invoke();
+            if (CampEnd.Wiped(LivingCount())) EndCamp();
+        }
+
+        public int LivingCount()
+        {
+            int count = 0;
+            for (int i = 0; i < survivors.Count; i++)
+            {
+                if (survivors[i].alive) count++;
+            }
+            return count;
+        }
+
+        private void EndCamp()
+        {
+            GameplayFeedback.Toast(Loc.T("camp.wiped"));
+            GameManager.Instance?.SetState(GameState.GameOver);
+            SaveSystem.Instance?.Save(false);
         }
 
         public void Assign(string id, string task)

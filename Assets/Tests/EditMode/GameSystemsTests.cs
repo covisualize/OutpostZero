@@ -2699,6 +2699,17 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void AnEmptyCampIsOverAndBoardsBlockTheWalk()
+        {
+            Assert.IsTrue(CampEnd.Wiped(0));
+            Assert.IsTrue(CampEnd.Wiped(-1));
+            Assert.IsFalse(CampEnd.Wiped(1));
+            Assert.IsFalse(CampEnd.Wiped(4));
+            Assert.IsTrue(StreetNav.HonorObstacles);
+            Assert.AreEqual("El campamento cayó", Loc.T("camp.wiped", "es"));
+        }
+
+        [Test]
         public void DemolishingAModuleReturnsHalfTheScrap()
         {
             Assert.AreEqual(3, ScrapRefund.Half(6));
