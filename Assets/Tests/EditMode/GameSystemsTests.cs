@@ -1341,5 +1341,29 @@ namespace OutpostZero.Tests.EditMode
             Assert.AreEqual(3, all[0].Count);
             Assert.AreEqual("", ContainerHold.Signature(null));
         }
+
+        [Test]
+        public void AHungryColonistLeavesThePostAndACollapseWillNotWork()
+        {
+            Assert.AreEqual("Rest", CampRoutine.Choose("Guard", 80f, 80f, 5f, 0));
+            Assert.AreEqual("I can't do this.", CampRoutine.Bark("Guard", 5f));
+            Assert.AreEqual("Cook", CampRoutine.Choose("Guard", 20f, 80f, 60f, 0));
+            Assert.AreEqual("Fire's lit.", CampRoutine.Bark("Cook", 60f));
+            Assert.AreEqual("Medic", CampRoutine.Choose("Scavenge", 80f, 80f, 60f, 2));
+            Assert.AreEqual("Hold still.", CampRoutine.Bark("Medic", 60f));
+            Assert.AreEqual("Rest", CampRoutine.Choose("Scavenge", 80f, 80f, 25f, 0));
+            Assert.AreEqual("Guard", CampRoutine.Choose("Guard", 80f, 80f, 25f, 0));
+            Assert.AreEqual("Watching the gate.", CampRoutine.Bark("Guard", 50f));
+            Assert.AreEqual("We'll hold.", CampRoutine.Bark("Rest", 80f));
+            Assert.AreEqual("Resting.", CampRoutine.Bark("Rest", 50f));
+
+            CampRoutine.Nudge(0, out float ax, out float az);
+            CampRoutine.Nudge(1, out float bx, out float bz);
+            Assert.AreNotEqual(ax, bx);
+            Assert.AreNotEqual(az, bz);
+            CampRoutine.Nudge(6, out float cx, out float cz);
+            Assert.AreEqual(ax, cx);
+            Assert.AreEqual(az, cz);
+        }
     }
 }

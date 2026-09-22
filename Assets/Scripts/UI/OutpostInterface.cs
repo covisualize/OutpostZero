@@ -531,12 +531,15 @@ namespace OutpostZero.UI
                 {
                     string flag = survivor.leader ? "*" : survivor.alive ? "" : "x";
                     string mood = ColonyDay.Mood(survivor.morale);
-                    camp.Add(Body(flag + " " + survivor.displayName + " (" + survivor.trait + ") " + survivor.task
+                    string doing = CampRoutine.Choose(survivor.task, survivor.hunger, survivor.thirst, survivor.morale, survivor.injury);
+                    string post = doing == survivor.task ? survivor.task : survivor.task + " → " + doing;
+                    camp.Add(Body(flag + " " + survivor.displayName + " (" + survivor.trait + ") " + post
                         + "  " + mood
                         + "  food " + Mathf.RoundToInt(survivor.hunger)
                         + " water " + Mathf.RoundToInt(survivor.thirst)
                         + "  " + survivor.bond
-                        + "  opinion " + survivor.opinion));
+                        + "  opinion " + survivor.opinion
+                        + "  \"" + CampRoutine.Bark(doing, survivor.morale) + "\""));
                     if (!survivor.alive) continue;
                     string id = survivor.id;
                     var row = new VisualElement();

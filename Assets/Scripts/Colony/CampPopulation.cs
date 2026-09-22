@@ -23,6 +23,7 @@ namespace OutpostZero.Colony
 
             var roster = SurvivorRoster.Instance;
             if (roster == null) return;
+            int index = 0;
             foreach (var survivor in roster.Survivors)
             {
                 if (survivor == null || !survivor.alive || survivor.leader)
@@ -32,7 +33,10 @@ namespace OutpostZero.Colony
                 }
                 var body = Ensure(survivor.id, survivor.displayName);
                 Tint(body, survivor.morale);
-                Vector3 goal = Station(survivor.task) + new Vector3(Mathf.Sin(survivor.id.GetHashCode()) * 0.6f, 0f, 0.4f);
+                string action = CampRoutine.Choose(survivor.task, survivor.hunger, survivor.thirst, survivor.morale, survivor.injury);
+                CampRoutine.Nudge(index, out float nudgeX, out float nudgeZ);
+                index++;
+                Vector3 goal = Station(action) + new Vector3(nudgeX, 0f, nudgeZ);
                 body.position = Vector3.MoveTowards(body.position, goal, 1.4f * Time.deltaTime);
                 Vector3 face = goal - body.position;
                 face.y = 0f;
