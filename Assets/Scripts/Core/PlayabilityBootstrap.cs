@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using OutpostZero.AI;
+using OutpostZero.Combat;
 using OutpostZero.Player;
 
 namespace OutpostZero.Core
@@ -19,6 +20,7 @@ namespace OutpostZero.Core
             {
                 AssignLayers(root, -1);
                 AttachKnownLoot(root);
+                AttachBoards(root);
             }
 
             var spawners = Object.FindObjectsByType<ZombieSpawner>(FindObjectsInactive.Include, FindObjectsSortMode.None);
@@ -77,6 +79,25 @@ namespace OutpostZero.Core
                 return GameLayers.Environment;
 
             return -1;
+        }
+
+        private static void AttachBoards(GameObject go)
+        {
+            if (IsWoodBoard(go.name) && go.GetComponent<StreetBoard>() == null)
+            {
+                go.AddComponent<StreetBoard>();
+            }
+
+            foreach (Transform child in go.transform)
+            {
+                AttachBoards(child.gameObject);
+            }
+        }
+
+        private static bool IsWoodBoard(string name)
+        {
+            if (string.IsNullOrEmpty(name) || name.Contains("Jersey")) return false;
+            return name.Contains("WoodWire") || name.Contains("Barricade_Wood") || name.Contains("Sandbag") || name.Contains("Wood_Gate");
         }
 
         private static void AttachKnownLoot(GameObject go)

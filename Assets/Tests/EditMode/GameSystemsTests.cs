@@ -1233,6 +1233,48 @@ namespace OutpostZero.Tests.EditMode
             Assert.AreEqual(0, held.Phase);
             var again = SpecialBeat.Advance(done, true, done.Ready, 0.1f);
             Assert.AreEqual(1, again.Phase);
+
+            var brute = SpecialBeat.Advance(new SpecialBeat.Clock(), true, 10f, 0.05f, true);
+            Assert.AreEqual(1, brute.Phase);
+            Assert.AreEqual(SpecialBeat.ChargeWindup, brute.Left, 0.001f);
+            Assert.AreEqual(1.5f, SpecialBeat.WallStun);
+            SpecialBeat.Commit(0f, 4f, out float headX, out float headZ);
+            Assert.AreEqual(0f, headX, 0.001f);
+            Assert.AreEqual(1f, headZ, 0.001f);
+            SpecialBeat.Commit(3f, 0f, out float sideX, out float sideZ);
+            Assert.AreEqual(1f, sideX, 0.001f);
+            Assert.AreEqual(0f, sideZ, 0.001f);
+        }
+
+        [Test]
+        public void LosingSightStartsASearchAndAChargeBreaksBoards()
+        {
+            Assert.IsFalse(SearchMemory.Forgotten(SearchMemory.Lose(0f, false, 0.7f)));
+            Assert.IsTrue(SearchMemory.Forgotten(SearchMemory.Lose(0.7f, false, 0.06f)));
+            Assert.AreEqual(0f, SearchMemory.Lose(0.5f, true, 1f));
+
+            var sweep = SearchMemory.Start();
+            Assert.AreEqual(0, sweep.Index);
+            Assert.Greater(sweep.Left, 2.6f);
+            Assert.Less(sweep.Left, 2.7f);
+            sweep = SearchMemory.Tick(sweep, false, 1f);
+            Assert.AreEqual(0, sweep.Index);
+            sweep = SearchMemory.Tick(sweep, true, 0f);
+            Assert.AreEqual(1, sweep.Index);
+            sweep = SearchMemory.Tick(sweep, true, 0f);
+            sweep = SearchMemory.Tick(sweep, true, 0f);
+            Assert.IsTrue(SearchMemory.Done(sweep));
+
+            for (int i = 0; i < SearchMemory.Points; i++)
+            {
+                SearchMemory.Offset(i, out float x, out float z);
+                Assert.LessOrEqual(x * x + z * z, SearchMemory.Radius * SearchMemory.Radius);
+            }
+
+            Assert.AreEqual(0f, BoardBreak.Apply(BoardBreak.Wood, BoardBreak.ChargeHit));
+            Assert.IsTrue(BoardBreak.GivesWay(BoardBreak.Apply(BoardBreak.Wood, BoardBreak.ChargeHit)));
+            Assert.AreEqual(20f, BoardBreak.Apply(BoardBreak.Wood, 20f));
+            Assert.IsFalse(BoardBreak.GivesWay(20f));
         }
     }
 }

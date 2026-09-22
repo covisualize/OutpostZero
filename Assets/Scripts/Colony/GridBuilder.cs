@@ -133,6 +133,11 @@ namespace OutpostZero.Colony
             var obstacle = view.AddComponent<NavMeshObstacle>();
             obstacle.carving = true;
             obstacle.shape = NavMeshObstacleShape.Box;
+            if (module.kind == "Barricade")
+            {
+                view.layer = GameLayers.Environment;
+                view.AddComponent<Combat.StreetBoard>().LinkToCamp();
+            }
             views.Add(view);
         }
 
@@ -171,6 +176,33 @@ namespace OutpostZero.Colony
         public bool StrikeBarricade(int amount)
         {
             return StrikeFrom("gate", amount);
+        }
+
+        public bool StrikeAt(float x, float z, float amount)
+        {
+            PlacedModule target = null;
+            float best = 6.25f;
+            foreach (var module in placed)
+            {
+                if (module.kind != "Barricade" || module.integrity <= 0) continue;
+                float dx = module.x - x;
+                float dz = module.z - z;
+                float distance = dx * dx + dz * dz;
+                if (distance > best) continue;
+                best = distance;
+                target = module;
+            }
+            if (target == null) return false;
+            target.integrity = Mathf.Max(0, target.integrity - Mathf.Max(1, Mathf.RoundToInt(amount)));
+            if (target.integrity > 0)
+            {
+                RefreshViews();
+                return false;
+            }
+            placed.Remove(target);
+            RefreshViews();
+            GameplayFeedback.Toast("A barricade gave way");
+            return true;
         }
 
         public bool StrikeFrom(string approach, int amount)

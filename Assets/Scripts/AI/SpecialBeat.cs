@@ -11,7 +11,9 @@ namespace OutpostZero.AI
         public const float ChargeNear = 3f;
         public const float ChargeFar = 8f;
         public const float Windup = 0.4f;
+        public const float ChargeWindup = 0.8f;
         public const float Dash = 0.45f;
+        public const float WallStun = 1.5f;
         public const float LungeSpeed = 8f;
         public const float ChargeSpeed = 6.5f;
         public const float Cooldown = 4.5f;
@@ -39,7 +41,20 @@ namespace OutpostZero.AI
             return clock.Phase == 2 && !clock.Struck && dist <= reach;
         }
 
-        public static Clock Advance(Clock clock, bool inReach, float now, float dt)
+        public static void Commit(float aimX, float aimZ, out float x, out float z)
+        {
+            float len = (float)System.Math.Sqrt(aimX * aimX + aimZ * aimZ);
+            if (len < 0.2f)
+            {
+                x = 0f;
+                z = 1f;
+                return;
+            }
+            x = aimX / len;
+            z = aimZ / len;
+        }
+
+        public static Clock Advance(Clock clock, bool inReach, float now, float dt, bool charge = false)
         {
             if (dt < 0f) dt = 0f;
             if (clock.Phase == 2)
@@ -68,7 +83,7 @@ namespace OutpostZero.AI
 
             if (!inReach || now < clock.Ready) return clock;
             clock.Phase = 1;
-            clock.Left = Windup;
+            clock.Left = charge ? ChargeWindup : Windup;
             return clock;
         }
     }

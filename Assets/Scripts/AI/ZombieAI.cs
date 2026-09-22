@@ -61,6 +61,10 @@ namespace OutpostZero.AI
         private float stateTimer = 0f;
         private float pendingStun = 0.8f;
         private SpecialBeat.Clock abilityClock;
+        private float lostSight;
+        private SearchMemory.Sweep searchSweep;
+        private float dashX;
+        private float dashZ = 1f;
         private Vector3 spawnOrigin;
         [SerializeField] private ZombieSpecialAbility specialAbility;
         private string archetypeId = "";
@@ -138,6 +142,10 @@ namespace OutpostZero.AI
             }
             currentState = ZombieState.Idle;
             abilityClock = new SpecialBeat.Clock();
+            lostSight = 0f;
+            searchSweep = new SearchMemory.Sweep();
+            dashX = 0f;
+            dashZ = 1f;
             SetState(ZombieState.Wander);
             CharacterVariety.Ensure(gameObject).Bind(string.IsNullOrEmpty(archetypeId) ? name : archetypeId, true);
         }
@@ -283,8 +291,8 @@ namespace OutpostZero.AI
                 case ZombieState.Searching:
                     agent.isStopped = false;
                     agent.speed = wanderSpeed;
-                    stateTimer = 5f;
-                    PickSearchDestination();
+                    searchSweep = SearchMemory.Start();
+                    GoToSearchPoint();
                     break;
 
                 case ZombieState.Dead:
@@ -314,13 +322,10 @@ namespace OutpostZero.AI
         private void UpdateInvestigate()
         {
             stateTimer -= Time.deltaTime;
-
-            if (!agent.pathPending && agent.remainingDistance <= agent.stoppingDistance + 0.3f)
+            bool arrived = !agent.pathPending && agent.remainingDistance <= agent.stoppingDistance + 0.3f;
+            if (arrived || stateTimer <= 0f)
             {
-                if (stateTimer <= 0f)
-                {
-                    SetState(ZombieState.Searching);
-                }
+                SetState(ZombieState.Searching);
             }
         }
 
@@ -340,29 +345,48 @@ namespace OutpostZero.AI
                 return;
             }
 
-            lastKnownPosition = currentTarget.position;
-            agent.SetDestination(currentTarget.position);
+            bool seen = StillSees(currentTarget);
+            lostSight = SearchMemory.Lose(lostSight, seen, Time.deltaTime);
+            if (SearchMemory.Forgotten(lostSight))
+            {
+                currentTarget = null;
+                lostSight = 0f;
+                SetState(ZombieState.InvestigateNoise);
+                return;
+            }
+            if (seen) lastKnownPosition = currentTarget.position;
 
             float distToTarget = Vector3.Distance(transform.position, currentTarget.position);
-            Vector3 flat = currentTarget.position - transform.position;
-            flat.y = 0f;
+            Vector3 aim = (seen ? currentTarget.position : lastKnownPosition) - transform.position;
+            aim.y = 0f;
             bool charging = specialAbility == ZombieSpecialAbility.Charge;
             bool lunging = specialAbility == ZombieSpecialAbility.Lunge;
+            int phaseBefore = abilityClock.Phase;
             if (charging || lunging)
             {
-                abilityClock = SpecialBeat.Advance(abilityClock, SpecialBeat.InReach(distToTarget, charging), Time.time, Time.deltaTime);
+                abilityClock = SpecialBeat.Advance(abilityClock, SpecialBeat.InReach(distToTarget, charging), Time.time, Time.deltaTime, charging);
+                if (phaseBefore != 2 && abilityClock.Phase == 2)
+                {
+                    SpecialBeat.Commit(aim.x, aim.z, out dashX, out dashZ);
+                }
                 if (abilityClock.Phase == 1)
                 {
                     agent.isStopped = true;
-                    if (flat.sqrMagnitude > 0.01f) transform.rotation = Quaternion.LookRotation(flat.normalized);
+                    if (aim.sqrMagnitude > 0.01f) transform.rotation = Quaternion.LookRotation(aim.normalized);
                 }
                 else if (abilityClock.Phase == 2)
                 {
                     agent.isStopped = false;
                     agent.speed = 0f;
-                    if (agent.isOnNavMesh && flat.sqrMagnitude > 0.01f)
+                    var dash = new Vector3(dashX, 0f, dashZ);
+                    if (agent.isOnNavMesh && dash.sqrMagnitude > 0.01f)
                     {
-                        agent.Move(flat.normalized * SpecialBeat.Speed(charging) * Time.deltaTime);
+                        agent.Move(dash * SpecialBeat.Speed(charging) * Time.deltaTime);
+                    }
+                    if (charging)
+                    {
+                        BraceCharge(dash);
+                        if (currentState != ZombieState.Chase) return;
                     }
                 }
                 else
@@ -379,6 +403,11 @@ namespace OutpostZero.AI
                     abilityClock.Ready = Time.time + SpecialBeat.Cooldown;
                     ConnectDash(charging);
                 }
+            }
+
+            if (abilityClock.Phase != 2)
+            {
+                agent.SetDestination(seen ? currentTarget.position : lastKnownPosition);
             }
 
             if (distToTarget <= attackRange && abilityClock.Phase != 1)
@@ -399,18 +428,61 @@ namespace OutpostZero.AI
 
         private void UpdateSearching()
         {
-            stateTimer -= Time.deltaTime;
-            if (stateTimer <= 0f) SetState(ZombieState.Wander);
+            bool arrived = agent != null && !agent.pathPending && agent.remainingDistance <= agent.stoppingDistance + 0.45f;
+            int before = searchSweep.Index;
+            searchSweep = SearchMemory.Tick(searchSweep, arrived, Time.deltaTime);
+            if (SearchMemory.Done(searchSweep))
+            {
+                SetState(ZombieState.Wander);
+                return;
+            }
+            if (searchSweep.Index != before) GoToSearchPoint();
         }
 
-        private void PickSearchDestination()
+        private void GoToSearchPoint()
         {
-            Vector3 offset = Random.insideUnitSphere * 4f;
-            offset.y = 0f;
-            if (NavMesh.SamplePosition(lastKnownPosition + offset, out NavMeshHit navHit, 4f, NavMesh.AllAreas))
+            SearchMemory.Offset(searchSweep.Index, out float ox, out float oz);
+            Vector3 spot = lastKnownPosition + new Vector3(ox, 0f, oz);
+            if (NavMesh.SamplePosition(spot, out NavMeshHit navHit, SearchMemory.Radius, NavMesh.AllAreas))
             {
                 agent.SetDestination(navHit.position);
+                return;
             }
+            agent.SetDestination(spot);
+        }
+
+        private bool StillSees(Transform target)
+        {
+            if (target == null) return false;
+            Vector3 eye = transform.position + Vector3.up * 1.5f;
+            Vector3 head = target.position + Vector3.up * 1.5f;
+            Vector3 toHead = head - eye;
+            float dist = toHead.magnitude;
+            if (dist > sightRange * 1.25f) return false;
+            if (dist < 0.05f) return true;
+            bool headBlocked = Physics.Raycast(eye, toHead.normalized, dist, visionMask);
+            Vector3 chest = target.position + Vector3.up * 1.0f;
+            Vector3 toChest = chest - eye;
+            bool chestBlocked = toChest.sqrMagnitude < 0.01f || Physics.Raycast(eye, toChest.normalized, toChest.magnitude, visionMask);
+            return !headBlocked || !chestBlocked;
+        }
+
+        private void BraceCharge(Vector3 dash)
+        {
+            if (dash.sqrMagnitude < 0.01f) return;
+            Vector3 origin = transform.position + Vector3.up * 0.9f;
+            float reach = SpecialBeat.Speed(true) * Time.deltaTime + 0.5f;
+            if (!Physics.Raycast(origin, dash.normalized, out RaycastHit wall, reach, GameLayers.EnvironmentMask)) return;
+            var board = wall.collider.GetComponentInParent<StreetBoard>();
+            if (board != null)
+            {
+                board.Strike(BoardBreak.ChargeHit);
+                if (board.Broken) return;
+            }
+            abilityClock.Phase = 0;
+            abilityClock.Left = 0f;
+            abilityClock.Ready = Time.time + SpecialBeat.Cooldown;
+            ApplyImpulse(-dash, 0.4f, SpecialBeat.WallStun);
         }
 
         private void UpdateAttack()
