@@ -789,6 +789,29 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void ASharedMealLiftsBothSidesOfTheBook()
+        {
+            Assert.IsFalse(GiftBond.Can("ada", "ada", true, true, 1));
+            Assert.IsFalse(GiftBond.Can("ada", "ellis", true, true, 0));
+            Assert.IsFalse(GiftBond.Can("ada", "ellis", false, true, 1));
+            Assert.IsFalse(GiftBond.Can("", "ellis", true, true, 1));
+            Assert.IsTrue(GiftBond.Can("ada", "ellis", true, true, 1));
+            Assert.AreEqual(1, GiftBond.Cost);
+            Assert.AreEqual(8, GiftBond.Lift);
+            Assert.AreEqual(26, GiftBond.Score(18));
+            Assert.AreEqual(100, GiftBond.Score(96));
+            Assert.AreEqual(100, GiftBond.Score(100));
+            Assert.AreEqual(-32, GiftBond.Score(-40));
+            Assert.AreEqual(-92, GiftBond.Score(-100));
+            Assert.AreEqual("ellis:8", GiftBond.Give("", "ellis"));
+            Assert.AreEqual("ellis:100", GiftBond.Give("ellis:96", "ellis"));
+            Assert.AreEqual("ellis:-32", GiftBond.Give("ellis:-40", "ellis"));
+            Assert.AreEqual("Regalar comida", Loc.T("camp.gift", "es"));
+            Assert.AreEqual("No hay comida para regalar", Loc.T("camp.gift_none", "es"));
+            Assert.AreEqual("Comida compartida", Loc.T("camp.gift_ok", "es"));
+        }
+
+        [Test]
         public void CharactersKeepDistinctEyesAndAGoreLine()
         {
             var walker = CharacterLook.Eye("walker");

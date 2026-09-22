@@ -51,6 +51,15 @@ namespace OutpostZero.Colony
 
         public int AddScrap(int amount) => Admit(ref scrap, amount, CampRoom.Scrap);
         public int AddFood(int amount) => Admit(ref food, amount, CampRoom.Food);
+
+        public int TakeFood(int amount)
+        {
+            if (amount <= 0 || food <= 0) return 0;
+            int taken = amount < food ? amount : food;
+            food -= taken;
+            OnStorageChanged?.Invoke();
+            return taken;
+        }
         public int AddWater(int amount) => Admit(ref water, amount, CampRoom.Water);
         public void AddSecurity(int amount) => Shift(ref security, amount);
         public int AddCloth(int amount) => Admit(ref cloth, amount, CampRoom.Cloth);

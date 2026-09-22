@@ -383,6 +383,36 @@ namespace OutpostZero.Colony
             OnRosterChanged?.Invoke();
         }
 
+        public bool OfferMeal(string toId)
+        {
+            Survivor from = null;
+            Survivor to = null;
+            for (int i = 0; i < survivors.Count; i++)
+            {
+                if (survivors[i].leader && survivors[i].alive) from = survivors[i];
+                if (survivors[i].id == toId) to = survivors[i];
+            }
+            var storage = ColonyStorage.Instance;
+            int meals = storage != null ? storage.Food : 0;
+            if (!GiftBond.Can(from != null ? from.id : "", to != null ? to.id : "", from != null && from.alive, to != null && to.alive, meals))
+            {
+                GameplayFeedback.Toast(Loc.T("camp.gift_none"));
+                return false;
+            }
+            if (storage.TakeFood(GiftBond.Cost) < GiftBond.Cost)
+            {
+                GameplayFeedback.Toast(Loc.T("camp.gift_none"));
+                return false;
+            }
+            from.kin = GiftBond.Give(from.kin, to.id);
+            to.kin = GiftBond.Give(to.kin, from.id);
+            from.opinion = GiftBond.Score(from.opinion);
+            to.opinion = GiftBond.Score(to.opinion);
+            OnRosterChanged?.Invoke();
+            GameplayFeedback.Toast(Loc.T("camp.gift_ok"));
+            return true;
+        }
+
         public void TickTasks()
         {
             var storage = ColonyStorage.Instance;
