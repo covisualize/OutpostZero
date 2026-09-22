@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.AI;
 using OutpostZero.Core;
 
 namespace OutpostZero.Graphics
@@ -40,6 +41,9 @@ namespace OutpostZero.Graphics
             wall.transform.position = new Vector3(x, Height * 0.5f, z);
             wall.transform.localScale = new Vector3(width, Height, depth);
             wall.layer = GameLayers.Environment;
+            var obstacle = wall.AddComponent<NavMeshObstacle>();
+            obstacle.carving = true;
+            obstacle.shape = NavMeshObstacleShape.Box;
             var renderer = wall.GetComponent<Renderer>();
             if (renderer != null) renderer.material.color = new Color(0.24f, 0.22f, 0.2f);
         }

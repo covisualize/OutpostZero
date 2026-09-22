@@ -1067,6 +1067,23 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void AFarScreamStaysOffTheSubtitleLine()
+        {
+            Assert.IsTrue(CaptionGate.Show(0f, 10f, false, NoiseType.ZombieScream, false));
+            Assert.IsFalse(CaptionGate.Show(11f, 10f, false, NoiseType.ZombieScream, false));
+            Assert.IsFalse(CaptionGate.Show(0f, 10f, true, NoiseType.ZombieScream, false));
+            Assert.IsTrue(CaptionGate.Show(0f, 10f, true, NoiseType.GunshotLoud, false));
+            Assert.IsFalse(CaptionGate.Show(9.5f, 10f, false, NoiseType.ZombieScream, false));
+            Assert.IsTrue(CaptionGate.Show(8f, 10f, false, NoiseType.ZombieScream, false));
+            Assert.IsTrue(CaptionGate.Show(9.45f, 10f, false, NoiseType.ZombieScream, false));
+            Assert.IsFalse(CaptionGate.Show(9.45f, 10f, false, NoiseType.ZombieScream, true));
+            Assert.IsTrue(CaptionGate.Show(0f, 40f, false, NoiseType.Thunder, false));
+            Assert.IsFalse(CaptionGate.Show(41f, 40f, false, NoiseType.Thunder, false));
+            Assert.IsFalse(CaptionGate.Show(0f, 0f, false, NoiseType.Thunder, false));
+            Assert.AreEqual(0f, HearGate.Perceived(0f, 40f, 1f, false, NoiseType.Thunder), 0.001f);
+        }
+
+        [Test]
         public void TheYardWallKeepsTheStreetOnThePlane()
         {
             Assert.AreEqual(33.4f, MapRim.Open, 0.001f);

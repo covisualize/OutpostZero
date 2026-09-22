@@ -90,7 +90,12 @@ namespace OutpostZero.UI
                 currentNoiseLevel = Mathf.Clamp(radius / 30f, 0f, 1f);
             }
             if (SettingsService.Instance != null && !SettingsService.Instance.Subtitles) return;
-            Vector3 from = player != null ? origin - player.transform.position : origin;
+            if (player == null) return;
+            float distance = Vector3.Distance(origin, player.transform.position);
+            bool wall = Physics.Linecast(origin + Vector3.up * 1.2f, player.transform.position + Vector3.up * 1.2f, GameLayers.EnvironmentMask);
+            bool rain = WeatherController.Instance != null && SkyBand.Rains(WeatherController.Instance.Kind);
+            if (!CaptionGate.Show(distance, radius, wall, type, rain)) return;
+            Vector3 from = origin - player.transform.position;
             string line = Presentation.Caption(type, from.x, from.z, SettingsService.Instance != null ? SettingsService.Instance.Language : "en");
             if (!string.IsNullOrEmpty(line)) ShowCaption(line);
         }
