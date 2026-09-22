@@ -3449,6 +3449,32 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void AZombieWithoutARigStillAttacksAndFalls()
+        {
+            Assert.AreEqual(14f, PoseSheet.Lean(ZombieAI.ZombieState.Chase, 0f), 0.001f);
+            Assert.AreEqual(0f, PoseSheet.Lean(ZombieAI.ZombieState.Idle, 1f), 0.001f);
+            Assert.AreEqual(0f, PoseSheet.Lean(ZombieAI.ZombieState.Wander, 1f), 0.001f);
+            Assert.AreEqual(-22f, PoseSheet.Lean(ZombieAI.ZombieState.Stunned, 0.4f), 0.001f);
+            Assert.AreEqual(0f, PoseSheet.Swing(0f), 0.001f);
+            Assert.AreEqual(1f, PoseSheet.Swing(0.2f), 0.001f);
+            Assert.AreEqual(0f, PoseSheet.Swing(0.45f), 0.001f);
+            Assert.AreEqual(38f, PoseSheet.Lean(ZombieAI.ZombieState.Attack, 0.2f), 0.001f);
+            Assert.AreEqual(0f, PoseSheet.Fall(0f), 0.001f);
+            Assert.AreEqual(1f, PoseSheet.Fall(0.6f), 0.001f);
+            Assert.AreEqual(1f, PoseSheet.Fall(2f), 0.001f);
+            Assert.AreEqual(88f, PoseSheet.Lean(ZombieAI.ZombieState.Dead, 0.6f), 0.001f);
+            Assert.AreEqual(0f, PoseSheet.Sink(ZombieAI.ZombieState.Chase, 1f), 0.001f);
+            Assert.AreEqual(-0.55f, PoseSheet.Sink(ZombieAI.ZombieState.Dead, 0.6f), 0.001f);
+            Assert.AreEqual(4.2f, PoseSheet.Speed(ZombieAI.ZombieState.Chase), 0.001f);
+            Assert.AreEqual(1.1f, PoseSheet.Speed(ZombieAI.ZombieState.Wander), 0.001f);
+            Assert.AreEqual(0f, PoseSheet.Speed(ZombieAI.ZombieState.Dead), 0.001f);
+            Assert.IsTrue(PoseSheet.Sprint(ZombieAI.ZombieState.Chase));
+            Assert.IsFalse(PoseSheet.Sprint(ZombieAI.ZombieState.Wander));
+            Assert.AreEqual(0.05f, PoseSheet.Hop(ZombieAI.ZombieState.Chase, 1.5707963f), 0.001f);
+            Assert.AreEqual(0f, PoseSheet.Hop(ZombieAI.ZombieState.Idle, 1.5707963f), 0.001f);
+        }
+
+        [Test]
         public void AHeadshotMistsAndABleedDrips()
         {
             Assert.IsTrue(WoundShow.MistDue(true, 1));

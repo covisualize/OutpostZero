@@ -12,6 +12,7 @@ namespace OutpostZero.AI
         private Transform visual;
         private Animator animator;
         private ZombieAI.ZombieState driven = (ZombieAI.ZombieState)(-1);
+        private float posed;
         private float bob;
 
         private void Awake()
@@ -39,15 +40,24 @@ namespace OutpostZero.AI
                         break;
                     }
                 }
+                if (visual == null)
+                {
+                    var renderer = GetComponentInChildren<Renderer>();
+                    if (renderer != null && renderer.transform != transform) visual = renderer.transform;
+                }
             }
             if (visual == null) return;
 
-            bool moving = brain.CurrentState == ZombieAI.ZombieState.Chase
-                || brain.CurrentState == ZombieAI.ZombieState.Wander
-                || brain.CurrentState == ZombieAI.ZombieState.Searching;
-            bob += (moving ? 6f : 1f) * Time.deltaTime;
-            float lean = brain.CurrentState == ZombieAI.ZombieState.Chase ? 14f : 0f;
-            float hop = moving ? Mathf.Sin(bob) * 0.05f : 0f;
+            var state = brain.CurrentState;
+            if (state != driven)
+            {
+                driven = state;
+                posed = Time.time;
+            }
+            float age = Time.time - posed;
+            bob += (PoseSheet.Moves(state) ? 6f : 1f) * Time.deltaTime;
+            float lean = PoseSheet.Lean(state, age);
+            float hop = PoseSheet.Hop(state, bob) + PoseSheet.Sink(state, age);
             visual.localRotation = Quaternion.Euler(lean, 0f, 0f);
             visual.localPosition = new Vector3(0f, hop, 0f);
         }
@@ -55,19 +65,8 @@ namespace OutpostZero.AI
         private void DriveRig()
         {
             var state = brain.CurrentState;
-            float speed = 0f;
-            bool sprint = false;
-            if (state == ZombieAI.ZombieState.Chase)
-            {
-                speed = 4.2f;
-                sprint = true;
-            }
-            else if (state == ZombieAI.ZombieState.Wander || state == ZombieAI.ZombieState.Searching || state == ZombieAI.ZombieState.InvestigateNoise)
-            {
-                speed = 1.1f;
-            }
-            animator.SetFloat("Speed", speed);
-            animator.SetBool("Sprint", sprint);
+            animator.SetFloat("Speed", PoseSheet.Speed(state));
+            animator.SetBool("Sprint", PoseSheet.Sprint(state));
             animator.SetBool("Crouch", false);
             if (state == driven) return;
             if (state == ZombieAI.ZombieState.Attack) animator.SetTrigger("Attack");
