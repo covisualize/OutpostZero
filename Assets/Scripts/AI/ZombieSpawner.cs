@@ -153,8 +153,17 @@ namespace OutpostZero.AI
                     if (camera != null)
                     {
                         Vector3 forward = camera.transform.forward;
+                        Vector3 right = camera.transform.right;
+                        Vector3 up = camera.transform.up;
                         Vector3 origin = camera.transform.position;
-                        if (SpawnRing.InFront(origin.x, origin.z, forward.x, forward.z, hit.position.x, hit.position.z)) continue;
+                        if (ViewVolume.Seen(
+                            origin.x, origin.y, origin.z,
+                            forward.x, forward.y, forward.z,
+                            right.x, right.y, right.z,
+                            up.x, up.y, up.z,
+                            camera.fieldOfView, camera.aspect, camera.nearClipPlane, camera.farClipPlane,
+                            hit.position.x, hit.position.y + 1f, hit.position.z,
+                            0.4f, 0.9f, 0.4f)) continue;
                     }
 
                     Quaternion rotation = Quaternion.Euler(0f, Random.Range(0f, 360f), 0f);

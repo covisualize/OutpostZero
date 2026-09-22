@@ -71,8 +71,7 @@ namespace OutpostZero.AI
             }
 
             TrySubscribe();
-            float drain = state == TensionState.Relax ? 4f : 1.2f;
-            tension = Mathf.Clamp(tension - drain * Time.deltaTime, 0f, 100f);
+            tension = PressureClock.Advance(tension, state, Time.deltaTime, 0f);
             TensionState next = Evaluate(tension);
             if (next != state)
             {

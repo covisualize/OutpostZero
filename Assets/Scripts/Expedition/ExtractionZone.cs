@@ -1,4 +1,5 @@
 using UnityEngine;
+using OutpostZero.AI;
 using OutpostZero.Core;
 
 namespace OutpostZero.Expedition
@@ -6,6 +7,18 @@ namespace OutpostZero.Expedition
     public class ExtractionZone : MonoBehaviour
     {
         [SerializeField] private float radius = 3.2f;
+        private bool inside;
+        private bool finished;
+        private float held;
+
+        public static ExtractionZone Current { get; private set; }
+        public float Hold => held;
+        public bool Holding => inside && held > 0.05f;
+
+        private void Awake()
+        {
+            Current = this;
+        }
 
         public static void MoveTo(Vector3 position)
         {
@@ -33,17 +46,52 @@ namespace OutpostZero.Expedition
 
         private void OnTriggerEnter(Collider other)
         {
-            if (!other.CompareTag("Player") && other.GetComponentInParent<Player.PlayerController>() == null) return;
+            if (!IsPlayer(other)) return;
+            inside = true;
             if (GameManager.Instance == null || GameManager.Instance.CurrentState != GameState.ExpeditionActive) return;
             var tracker = ObjectiveTracker.Instance;
-            if (tracker != null && !tracker.ReadyToExtract)
-            {
-                GameplayFeedback.Toast("Objectives unfinished");
-                return;
-            }
+            if (tracker != null && !tracker.ReadyToExtract) GameplayFeedback.Toast("Objectives unfinished");
+        }
+
+        private void OnTriggerExit(Collider other)
+        {
+            if (!IsPlayer(other)) return;
+            inside = false;
+            held = 0f;
+        }
+
+        private void Update()
+        {
+            if (finished) return;
+            bool live = GameManager.Instance != null && GameManager.Instance.CurrentState == GameState.ExpeditionActive;
+            var tracker = ObjectiveTracker.Instance;
+            bool ready = tracker != null && tracker.ReadyToExtract;
+            bool threatened = inside && live && ZombiesNear();
+            float next = ExtractWatch.Advance(held, Time.deltaTime, inside && live && ready, threatened);
+            if (threatened && held > 0.2f) GameplayFeedback.Toast("They're too close");
+            held = next;
+            if (!ExtractWatch.Ready(held) || GameManager.Instance == null) return;
+            finished = true;
+            held = 0f;
             tracker?.MarkExtracted();
             OutpostZero.Shell.CodexDirector.Hear("extract");
             GameManager.Instance.CompleteExpedition();
+        }
+
+        private static bool IsPlayer(Collider other)
+        {
+            return other.CompareTag("Player") || other.GetComponentInParent<Player.PlayerController>() != null;
+        }
+
+        private bool ZombiesNear()
+        {
+            var hits = Physics.OverlapSphere(transform.position, ExtractWatch.ThreatRadius, GameLayers.EnemyMask);
+            for (int i = 0; i < hits.Length; i++)
+            {
+                var zombie = hits[i].GetComponentInParent<ZombieAI>();
+                if (zombie == null || zombie.CurrentState != ZombieAI.ZombieState.Dead) return true;
+            }
+            return false;
         }
 
         private void OnDrawGizmos()

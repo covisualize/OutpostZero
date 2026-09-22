@@ -1056,5 +1056,35 @@ namespace OutpostZero.Tests.EditMode
                 }
             }
         }
+
+        [Test]
+        public void SpawnsStayOffScreenAndTheHordeEbbsBeforeItPeaksAgain()
+        {
+            Assert.IsTrue(ViewVolume.Seen(0f, 0f, 0f, 0f, 0f, 1f, 1f, 0f, 0f, 0f, 1f, 0f, 90f, 1f, 0.3f, 40f, 0f, 0f, 10f, 0.4f, 0.9f, 0.4f));
+            Assert.IsFalse(ViewVolume.Seen(0f, 0f, 0f, 0f, 0f, 1f, 1f, 0f, 0f, 0f, 1f, 0f, 90f, 1f, 0.3f, 40f, 0f, 0f, -8f, 0.4f, 0.9f, 0.4f));
+            Assert.IsFalse(ViewVolume.Seen(0f, 0f, 0f, 0f, 0f, 1f, 1f, 0f, 0f, 0f, 1f, 0f, 90f, 1f, 0.3f, 40f, 15f, 0f, 10f, 0.4f, 0.9f, 0.4f));
+            Assert.IsFalse(ViewVolume.Seen(0f, 0f, 0f, 0f, 0f, 1f, 1f, 0f, 0f, 0f, 1f, 0f, 90f, 1f, 0.3f, 40f, 0f, 0f, 50f, 0.4f, 0.9f, 0.4f));
+            Assert.IsFalse(ViewVolume.Seen(0f, 0f, 0f, 0f, 0f, 0f, 1f, 0f, 0f, 0f, 1f, 0f, 90f, 1f, 0.3f, 40f, 0f, 0f, 10f, 0.4f, 0.9f, 0.4f));
+
+            var survivor = PressureClock.Run(2, 20f, 8f, 2);
+            var nightmare = PressureClock.Run(3, 20f, 6f, 2);
+            Assert.Less(survivor.Min, 1f);
+            Assert.Greater(survivor.Max, 75f);
+            Assert.GreaterOrEqual(survivor.Calm, 1);
+            Assert.GreaterOrEqual(survivor.Peak, 1);
+            Assert.AreEqual(35, survivor.Spawns);
+            Assert.AreEqual(56, nightmare.Spawns);
+            Assert.Greater(nightmare.Spawns, survivor.Spawns);
+
+            Assert.AreEqual(1f, ExtractWatch.Advance(0f, 1f, true, false));
+            Assert.AreEqual(ExtractWatch.HoldSeconds, ExtractWatch.Advance(2f, 2f, true, false));
+            Assert.AreEqual(0f, ExtractWatch.Advance(2f, 1f, true, true));
+            Assert.AreEqual(0f, ExtractWatch.Advance(2f, 0.5f, false, false));
+            Assert.IsTrue(ExtractWatch.Ready(3f));
+            Assert.IsFalse(ExtractWatch.Ready(2.5f));
+            Assert.IsTrue(ExtractWatch.Threatened(0f, 0f, new[] { 20f }, new[] { 0f }));
+            Assert.IsFalse(ExtractWatch.Threatened(0f, 0f, new[] { 21f }, new[] { 0f }));
+            Assert.IsFalse(ExtractWatch.Threatened(0f, 0f, null, null));
+        }
     }
 }

@@ -199,6 +199,8 @@ namespace OutpostZero.UI
             if (interactor != null && !string.IsNullOrEmpty(interactor.Prompt)) objectiveText.Append("[E] " + interactor.Prompt);
             var raid = NightRaidController.Instance;
             if (raid != null && raid.Running) objectiveText.Append("   Raid " + Mathf.CeilToInt(raid.Remaining) + "s");
+            var gate = ExtractionZone.Current;
+            if (gate != null && gate.Holding) objectiveText.AppendLine("Hold to extract " + Mathf.CeilToInt(ExtractWatch.HoldSeconds - gate.Hold) + "s");
             objectives.text = objectiveText.ToString();
 
             if (player != null && player.ActiveWeapon is FirearmWeapon gun)
