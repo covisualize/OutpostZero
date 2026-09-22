@@ -123,6 +123,7 @@ namespace OutpostZero.Colony
 
             string fallenFirst = FirstName(fallenName);
             string fallenId = KinBoard.FallenId(people, fallenName);
+            if (FeverSpread.Try(people)) Once(events, "fever");
             for (int i = 0; i < people.Count; i++)
             {
                 var person = people[i];

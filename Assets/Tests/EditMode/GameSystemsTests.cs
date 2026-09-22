@@ -437,6 +437,33 @@ namespace OutpostZero.Tests.EditMode
             var healed = ColonyDay.Simulate(infected, ref food, ref water, true, false, "");
             Assert.AreEqual(0, infected[0].injury);
             Assert.Contains("recovery", healed);
+
+            Assert.IsFalse(FeverSpread.Source(1, "Guard", true));
+            Assert.IsTrue(FeverSpread.Source(2, "Guard", true));
+            Assert.IsFalse(FeverSpread.Source(3, "Quarantine", true));
+            Assert.IsFalse(FeverSpread.Source(2, "Medic", true));
+            Assert.IsFalse(FeverSpread.Catches(3, "Guard", true, "ellis", "jonas"));
+            Assert.IsFalse(FeverSpread.Catches(0, "Quarantine", true, "ellis", "jonas"));
+            Assert.AreEqual(1, FeverSpread.Apply(0));
+            Assert.AreEqual(3, FeverSpread.Apply(3));
+            var feverWard = new List<ColonistDay>
+            {
+                new ColonistDay { id = "jonas", task = "Guard", injury = 2, hunger = 78f, thirst = 78f, morale = 60f },
+                new ColonistDay { id = "ellis", task = "Scavenge", injury = 0, hunger = 78f, thirst = 78f, morale = 60f }
+            };
+            int wardFood = 4;
+            int wardWater = 4;
+            var fever = ColonyDay.Simulate(feverWard, ref wardFood, ref wardWater, false, false, "");
+            Assert.AreEqual(2, feverWard[0].injury);
+            Assert.AreEqual(1, feverWard[1].injury);
+            Assert.Contains("fever", fever);
+            var held = new List<ColonistDay>
+            {
+                new ColonistDay { id = "jonas", task = "Quarantine", injury = 3, hunger = 78f, thirst = 78f, morale = 60f },
+                new ColonistDay { id = "ellis", task = "Guard", injury = 0, hunger = 78f, thirst = 78f, morale = 60f }
+            };
+            Assert.IsFalse(FeverSpread.Try(held));
+            Assert.AreEqual(0, held[1].injury);
         }
 
         [Test]
