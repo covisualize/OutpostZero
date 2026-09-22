@@ -65,6 +65,7 @@ namespace OutpostZero.Colony
         {
             if (running || warning) return;
             float hold = TraitHook.Warning(TowerCount(), GuardCount(), TraitCount("Watchful"), TraitCount("Light Sleeper"));
+            hold = TraitHook.NightStretch(hold, TraitCount("Night Owl"));
             if (hold <= 0f)
             {
                 Open(false);

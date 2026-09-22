@@ -31,6 +31,12 @@ namespace OutpostZero.Colony
     {
         public static string Mood(float morale)
         {
+            return Mood(morale, null);
+        }
+
+        public static string Mood(float morale, string trait)
+        {
+            if (trait == "Optimist" && morale > 60f && morale <= 70f) return "Inspired";
             if (morale > 70f) return "Inspired";
             if (morale < 10f) return "Breakdown";
             if (morale < 30f) return "Depressed";
@@ -39,6 +45,12 @@ namespace OutpostZero.Colony
 
         public static float OutputScale(float morale)
         {
+            return OutputScale(morale, null);
+        }
+
+        public static float OutputScale(float morale, string trait)
+        {
+            if (trait == "Optimist" && morale > 60f && morale >= 10f) return 1.1f;
             if (morale > 70f) return 1.1f;
             if (morale < 10f) return 0f;
             if (morale < 30f) return 0.7f;
@@ -125,7 +137,7 @@ namespace OutpostZero.Colony
                 }
 
                 int opinionBefore = person.opinion;
-                if (SharesWork(people, person)) person.opinion += 2;
+                if (SharesWork(people, person) && person.trait != "Loner") person.opinion += 2;
                 if (person.trait == "Volatile") person.opinion -= MealTable.FeudShift(6, leaderPresent, leadSkill);
                 if (opinionBefore < 40 && person.opinion >= 40) Once(events, "friendship");
 

@@ -296,6 +296,10 @@ namespace OutpostZero.Shell
             { "trait.sharp", "Sharpshooter" },
             { "trait.brave", "Brave" },
             { "trait.coward", "Cowardly" },
+            { "trait.insomniac", "Insomniac" },
+            { "trait.optimist", "Optimist" },
+            { "trait.loner", "Loner" },
+            { "trait.owl", "Night Owl" },
             { "barrel.hiss", "The barrel is hissing" },
             { "ambush.warn", "The militia has the dead waiting" },
             { "past.nurse", "Nurse" },
@@ -669,6 +673,10 @@ namespace OutpostZero.Shell
             { "trait.sharp", "Tirador" },
             { "trait.brave", "Valiente" },
             { "trait.coward", "Cobarde" },
+            { "trait.insomniac", "Insomne" },
+            { "trait.optimist", "Optimista" },
+            { "trait.loner", "Solitario" },
+            { "trait.owl", "Noctámbulo" },
             { "barrel.hiss", "El barril silba" },
             { "ambush.warn", "La milicia tiene a los muertos esperando" },
             { "past.nurse", "Enfermera" },
@@ -816,6 +824,10 @@ namespace OutpostZero.Shell
                 : trait == "Sharpshooter" ? "trait.sharp"
                 : trait == "Brave" ? "trait.brave"
                 : trait == "Cowardly" ? "trait.coward"
+                : trait == "Insomniac" ? "trait.insomniac"
+                : trait == "Optimist" ? "trait.optimist"
+                : trait == "Loner" ? "trait.loner"
+                : trait == "Night Owl" ? "trait.owl"
                 : "";
             if (key.Length == 0) return trait ?? "";
             return Pick(key, trait);

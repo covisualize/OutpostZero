@@ -6,6 +6,8 @@ namespace OutpostZero.Colony
     /// A Glutton spends hunger faster. Every other trait keeps the old drop.
     /// A Cook adds four morale only when a meal was actually cooked. A Sharpshooter tightens the leader's shot to 0.8.
     /// A Brave watch costs no morale. A Cowardly watch costs six and adds no security.
+    /// An Insomniac rests three less, and never below one. An Optimist works inspired above 60.
+    /// A Night Owl stretches a warning that already exists by two seconds. No tower stays quiet.
     /// </summary>
     public static class TraitHook
     {
@@ -54,6 +56,25 @@ namespace OutpostZero.Colony
         {
             if (trait == "Glutton") return GluttonHunger;
             return PlainHunger;
+        }
+
+        public static int RestGain(string trait, int rest)
+        {
+            if (rest < 0) rest = 0;
+            if (trait != "Insomniac") return rest;
+            int cut = rest - 3;
+            return cut < 1 ? 1 : cut;
+        }
+
+        public const float Owl = 2f;
+
+        public static float NightStretch(float warning, int owls)
+        {
+            if (warning <= 0f) return 0f;
+            if (owls < 0) owls = 0;
+            float time = warning + owls * Owl;
+            if (time > RaidWarn.Cap) return RaidWarn.Cap;
+            return time;
         }
     }
 }

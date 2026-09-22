@@ -3098,6 +3098,56 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void AnInsomniacRestsLessAndANightOwlStretchesTheWarning()
+        {
+            Assert.AreEqual(8, TraitHook.RestGain(null, 8));
+            Assert.AreEqual(10, TraitHook.RestGain("Cook", 10));
+            Assert.AreEqual(5, TraitHook.RestGain("Insomniac", 8));
+            Assert.AreEqual(7, TraitHook.RestGain("Insomniac", 10));
+            Assert.AreEqual(2, TraitHook.RestGain("Insomniac", 5));
+            Assert.AreEqual(1, TraitHook.RestGain("Insomniac", 1));
+            Assert.AreEqual("Steady", ColonyDay.Mood(65f));
+            Assert.AreEqual("Inspired", ColonyDay.Mood(65f, "Optimist"));
+            Assert.AreEqual("Inspired", ColonyDay.Mood(80f, "Optimist"));
+            Assert.AreEqual("Breakdown", ColonyDay.Mood(5f, "Optimist"));
+            Assert.AreEqual(1f, ColonyDay.OutputScale(65f), 0.001f);
+            Assert.AreEqual(1.1f, ColonyDay.OutputScale(65f, "Optimist"), 0.001f);
+            Assert.AreEqual(0f, ColonyDay.OutputScale(5f, "Optimist"), 0.001f);
+            Assert.AreEqual(1.1f, ColonyDay.OutputScale(80f), 0.001f);
+            Assert.AreEqual(14f, TraitHook.NightStretch(14f, 0), 0.001f);
+            Assert.AreEqual(0f, TraitHook.NightStretch(0f, 2), 0.001f);
+            Assert.AreEqual(16f, TraitHook.NightStretch(14f, 1), 0.001f);
+            Assert.AreEqual(28f, TraitHook.NightStretch(28f, 3), 0.001f);
+            int food = 4;
+            int water = 4;
+            int raw = 0;
+            var pair = new[]
+            {
+                new ColonistDay { id = "ada", trait = "Loner", task = "Guard", morale = 50f, hunger = 78f, thirst = 78f, opinion = 18 },
+                new ColonistDay { id = "ben", task = "Guard", morale = 50f, hunger = 78f, thirst = 78f, opinion = 18 }
+            };
+            ColonyDay.Simulate(pair, ref food, ref water, true, false, "", 0, ref raw);
+            Assert.AreEqual(18, pair[0].opinion);
+            Assert.AreEqual(20, pair[1].opinion);
+            bool loner = false;
+            for (int seed = 1; seed <= 40; seed++)
+            {
+                var camp = SurvivorDraw.Open(seed);
+                for (int i = 0; i < camp.Length; i++)
+                {
+                    if (camp[i].Trait != "Loner") continue;
+                    Assert.AreEqual(2, camp[i].Scavenge);
+                    loner = true;
+                }
+            }
+            Assert.IsTrue(loner);
+            Assert.AreEqual("Insomne", Loc.T("trait.insomniac", "es"));
+            Assert.AreEqual("Optimista", Loc.T("trait.optimist", "es"));
+            Assert.AreEqual("Solitario", Loc.T("trait.loner", "es"));
+            Assert.AreEqual("Noctámbulo", Loc.T("trait.owl", "es"));
+        }
+
+        [Test]
         public void TheGeneratorHumsAndTheFireCrackles()
         {
             YardBed.Mix(false, false, false, out float hum, out float crackle, out float buzz);
