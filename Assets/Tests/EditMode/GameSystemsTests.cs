@@ -3171,6 +3171,20 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void PickingAPileIsASmallNoise()
+        {
+            Assert.AreEqual(3.5f, LootTake.Noise, 0.001f);
+            Assert.AreEqual("take_soft", LootTake.Sound(LootKind.Medkit));
+            Assert.AreEqual("take_box", LootTake.Sound(LootKind.Ammo9mm));
+            Assert.AreEqual("take_box", LootTake.Sound(LootKind.AmmoShotgun));
+            Assert.AreEqual("take_metal", LootTake.Sound(LootKind.Scrap));
+            Assert.AreEqual("Picked up Medkit +2", LootTake.Line(LootKind.Medkit, 2, "en"));
+            Assert.AreEqual("Recogido Botiquín +2", LootTake.Line(LootKind.Medkit, 2, "es"));
+            Assert.AreEqual("Recogido Chatarra +1", LootTake.Line(LootKind.Scrap, 0, "es"));
+            Assert.AreEqual("Recogido Cartuchos +6", LootTake.Line(LootKind.AmmoShotgun, 6, "es"));
+        }
+
+        [Test]
         public void GoreOffDropsBloodAndAShotgunSpraysTheWall()
         {
             Assert.AreEqual(0, GoreMark.Splats(0, false, true));
