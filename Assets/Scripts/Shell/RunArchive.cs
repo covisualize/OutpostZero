@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using UnityEngine;
 using OutpostZero.Colony;
+using OutpostZero.Combat;
 using OutpostZero.Core;
 
 namespace OutpostZero.Shell
@@ -54,7 +55,7 @@ namespace OutpostZero.Shell
             }
             catch (Exception)
             {
-                GameplayFeedback.Toast("The board could not be written");
+                GameplayFeedback.Toast(FightSay.Ledger(null));
             }
         }
 

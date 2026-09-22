@@ -1,5 +1,6 @@
 using UnityEngine;
 using OutpostZero.Colony;
+using OutpostZero.Combat;
 using OutpostZero.Core;
 using OutpostZero.Items;
 using OutpostZero.Player;
@@ -79,7 +80,7 @@ namespace OutpostZero.Expedition
             var roster = SurvivorRoster.Instance;
             if (roster == null || !roster.Adopt(personId, personName, Trait()))
             {
-                GameplayFeedback.Toast("The roster is full");
+                GameplayFeedback.Toast(FightSay.Roster(null));
                 joined = true;
                 following = false;
                 return;

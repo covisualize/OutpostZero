@@ -84,7 +84,7 @@ namespace OutpostZero.Player
                 if (!Eligible(zombie)) continue;
                 marked = zombie;
                 windup = 0f;
-                GameplayFeedback.Toast("Takedown");
+                GameplayFeedback.Toast(FightSay.Start(null));
                 return;
             }
         }
@@ -95,7 +95,7 @@ namespace OutpostZero.Player
             {
                 marked = null;
                 windup = -1f;
-                GameplayFeedback.Toast("Takedown slipped");
+                GameplayFeedback.Toast(FightSay.Slip(null));
                 return;
             }
             windup += Time.deltaTime;
@@ -107,7 +107,7 @@ namespace OutpostZero.Player
             CombatEvents.RaiseKill(marked.gameObject, gameObject);
             marked = null;
             windup = -1f;
-            GameplayFeedback.Toast("Down");
+            GameplayFeedback.Toast(FightSay.Down(null));
         }
 
         private bool Eligible(ZombieAI zombie)
@@ -248,7 +248,7 @@ namespace OutpostZero.Player
                 }
                 CombatVfx.Burst(blast, HazardKind.Explosive);
                 CombatEvents.RaiseHit(blast, Vector3.up, gameObject);
-                GameplayFeedback.Toast("Pipe bomb burst");
+                GameplayFeedback.Toast(FightSay.Burst(null));
                 Destroy(gameObject);
                 return;
             }
@@ -265,7 +265,7 @@ namespace OutpostZero.Player
                 if (body != null) body.isKinematic = true;
                 var solid = GetComponent<Collider>();
                 if (solid != null) solid.enabled = false;
-                GameplayFeedback.Toast("Flare lit");
+                GameplayFeedback.Toast(FightSay.Flare(null));
                 return;
             }
             Vector3 origin = transform.position;

@@ -37,7 +37,7 @@ namespace OutpostZero.Combat
             if (!Broken) return;
             var colliders = GetComponentsInChildren<Collider>();
             for (int i = 0; i < colliders.Length; i++) colliders[i].enabled = false;
-            GameplayFeedback.Toast("The boards gave way");
+            GameplayFeedback.Toast(FightSay.Boards(null));
         }
     }
 }

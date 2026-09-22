@@ -4421,6 +4421,45 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void ATakedownAndAGunOnTheGroundFollowTheLanguage()
+        {
+            Assert.AreEqual("Takedown", FightSay.Start("en"));
+            Assert.AreEqual("Derribo", FightSay.Start("es"));
+            Assert.AreEqual("Takedown slipped", FightSay.Slip("en"));
+            Assert.AreEqual("El derribo falló", FightSay.Slip("es"));
+            Assert.AreEqual("Down", FightSay.Down("en"));
+            Assert.AreEqual("Abajo", FightSay.Down("es"));
+            Assert.AreEqual("Pipe bomb burst", FightSay.Burst("en"));
+            Assert.AreEqual("La bomba de tubo estalló", FightSay.Burst("es"));
+            Assert.AreEqual("Flare lit", FightSay.Flare("en"));
+            Assert.AreEqual("Bengala encendida", FightSay.Flare("es"));
+            Assert.AreEqual("Already carrying that", FightSay.Held("en"));
+            Assert.AreEqual("Ya llevas eso", FightSay.Held("es"));
+            Assert.AreEqual("Took Tactical 9mm Pistol", FightSay.Took("pistol_9mm", "", "en"));
+            Assert.AreEqual("Tomaste Pistola táctica 9mm", FightSay.Took("pistol_9mm", "Tactical 9mm Pistol", "es"));
+            Assert.AreEqual("Took Remington 870 Shotgun", FightSay.Took("shotgun_pump", "", "en"));
+            Assert.AreEqual("Tomaste Escopeta Remington 870", FightSay.Took("shotgun_pump", "", "es"));
+            Assert.AreEqual("Took Assault Rifle", FightSay.Took("rifle_assault", "", "en"));
+            Assert.AreEqual("Tomaste Rifle de asalto", FightSay.Took("rifle_assault", "", "es"));
+            Assert.AreEqual("Took Compact SMG", FightSay.Took("smg", "", "en"));
+            Assert.AreEqual("Tomaste Subfusil compacto", FightSay.Took("smg", "", "es"));
+            Assert.AreEqual("Took Steel Machete", FightSay.Took("machete", "", "en"));
+            Assert.AreEqual("Tomaste Machete de acero", FightSay.Took("machete", "", "es"));
+            Assert.AreEqual("Took Relay Gun", FightSay.Took("relay", "Relay Gun", "en"));
+            Assert.AreEqual("Took relay", FightSay.Took("relay", "", "en"));
+            Assert.AreEqual("Swapped weapons", FightSay.Swap("en"));
+            Assert.AreEqual("Armas cambiadas", FightSay.Swap("es"));
+            Assert.AreEqual("The boards gave way", FightSay.Boards("en"));
+            Assert.AreEqual("Los tablones cedieron", FightSay.Boards("es"));
+            Assert.AreEqual("The roster is full", FightSay.Roster("en"));
+            Assert.AreEqual("La lista está llena", FightSay.Roster("es"));
+            Assert.AreEqual("The tower is not ready", FightSay.Tower("en"));
+            Assert.AreEqual("La torre no está lista", FightSay.Tower("es"));
+            Assert.AreEqual("The board could not be written", FightSay.Ledger("en"));
+            Assert.AreEqual("No se pudo escribir el tablero", FightSay.Ledger("es"));
+        }
+
+        [Test]
         public void StreetLampsFollowTheDarkAndNoonStaysOut()
         {
             Assert.AreEqual(0f, DayNightCycle.HourToNight(12f), 0.001f);

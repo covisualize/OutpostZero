@@ -86,7 +86,7 @@ namespace OutpostZero.Colony
             if (GameManager.Instance == null) return;
             if (tower && (WorldMapService.Instance == null || !WorldMapService.Instance.ReadyToBroadcast))
             {
-                GameplayFeedback.Toast("The tower is not ready");
+                GameplayFeedback.Toast(FightSay.Tower(null));
                 return;
             }
             int day = WorldClock.Instance != null ? WorldClock.Instance.Day : 1;
