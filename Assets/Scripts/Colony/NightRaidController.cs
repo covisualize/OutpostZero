@@ -286,15 +286,18 @@ namespace OutpostZero.Colony
                 distance.Add((float)System.Math.Sqrt(dx * dx + dz * dz));
             }
             int mark = GuardVolley.Pick(distance.ToArray());
-            if (mark < 0)
+            int stored = ColonyStorage.Instance != null ? ColonyStorage.Instance.Rounds : 0;
+            int spent = GuardVolley.Rounds(guards, stored);
+            if (mark < 0 || spent <= 0)
             {
                 nextGuard = Time.time + GuardVolley.Interval;
                 return;
             }
+            ColonyStorage.Instance?.TakeRounds(spent);
             var target = living[mark];
             var health = target.GetComponent<HealthSystem>();
             if (health != null && !health.IsDead)
-                health.TakeDamage(GuardVolley.Hit(guards), target.transform.position, (origin - target.transform.position).normalized, gameObject);
+                health.TakeDamage(GuardVolley.Fired(guards, stored), target.transform.position, (origin - target.transform.position).normalized, gameObject);
             nextGuard = Time.time + GuardVolley.Interval;
         }
 

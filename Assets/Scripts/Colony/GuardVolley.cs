@@ -27,6 +27,23 @@ namespace OutpostZero.Colony
             return Damage * Crew(guards);
         }
 
+        public static int Rounds(int guards, int stored)
+        {
+            int crew = Crew(guards);
+            if (stored < 0) stored = 0;
+            return stored < crew ? stored : crew;
+        }
+
+        public static float Fired(int guards, int stored)
+        {
+            return Damage * Rounds(guards, stored);
+        }
+
+        public static int Brought(bool scrounger)
+        {
+            return scrounger ? 4 : 2;
+        }
+
         public static int Pick(float[] distance)
         {
             if (distance == null) return -1;

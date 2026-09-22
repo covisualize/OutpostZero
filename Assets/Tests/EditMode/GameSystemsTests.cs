@@ -2470,6 +2470,29 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void GuardsSpendStoredRoundsWhenTheyFire()
+        {
+            Assert.AreEqual(2, GuardVolley.Rounds(2, 5));
+            Assert.AreEqual(3, GuardVolley.Rounds(4, 10));
+            Assert.AreEqual(1, GuardVolley.Rounds(3, 1));
+            Assert.AreEqual(0, GuardVolley.Rounds(2, 0));
+            Assert.AreEqual(0, GuardVolley.Rounds(0, 4));
+            Assert.AreEqual(0, GuardVolley.Rounds(2, -3));
+            Assert.AreEqual(8f, GuardVolley.Fired(3, 1), 0.001f);
+            Assert.AreEqual(16f, GuardVolley.Fired(2, 5), 0.001f);
+            Assert.AreEqual(0f, GuardVolley.Fired(2, 0), 0.001f);
+            Assert.AreEqual(2, GuardVolley.Brought(false));
+            Assert.AreEqual(4, GuardVolley.Brought(true));
+
+            var data = new SaveGameData { rounds = 6 };
+            Assert.IsTrue(SaveCodec.TryDeserialize(SaveCodec.Serialize(data), out var loaded, out var error), error);
+            Assert.AreEqual(6, loaded.rounds);
+            Assert.IsTrue(SaveCodec.TryDeserialize("{\"schemaVersion\":1}", out var legacy, out var legacyError), legacyError);
+            Assert.AreEqual(0, legacy.rounds);
+            Assert.AreEqual("Balas", Loc.T("camp.rounds", "es"));
+        }
+
+        [Test]
         public void DemolishingAModuleReturnsHalfTheScrap()
         {
             Assert.AreEqual(3, ScrapRefund.Half(6));

@@ -269,6 +269,7 @@ namespace OutpostZero.Colony
                             if (chemicals > 0) storage.AddChemicals(chemicals);
                             if (tape > 0) storage.AddTape(tape);
                             if (scrap > 0) storage.AddRaw(1);
+                            if (scrap > 0) storage.AddRounds(GuardVolley.Brought(survivor.trait == "Scrounger"));
                         }
                         break;
                     case "Cook":

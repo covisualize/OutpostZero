@@ -49,6 +49,7 @@ namespace OutpostZero.Shell
         public int tape;
         public int raw;
         public int bodies;
+        public int rounds;
         public string prints = "";
         public int kills;
         public int lifetimeKills;

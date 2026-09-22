@@ -175,6 +175,7 @@ namespace OutpostZero.Shell
                 data.tape = ColonyStorage.Instance.Tape;
                 data.raw = ColonyStorage.Instance.Raw;
                 data.bodies = ColonyStorage.Instance.Bodies;
+                data.rounds = ColonyStorage.Instance.Rounds;
                 data.prints = ColonyStorage.Instance.Prints;
             }
             if (GameManager.Instance != null)
@@ -282,6 +283,7 @@ namespace OutpostZero.Shell
             ColonyStorage.Instance?.SetSupplies(data.cloth, data.chemicals, data.tape);
             ColonyStorage.Instance?.SetRaw(data.raw);
             ColonyStorage.Instance?.SetBodies(data.bodies);
+            ColonyStorage.Instance?.SetRounds(data.rounds);
             ColonyStorage.Instance?.SetPrints(data.prints);
             FactionTrade.Instance?.Restore(data.factionStanding, data.factions, data.quests);
             SettingsService.Instance?.ApplySnapshot(data.shake, data.volume, data.textScale, data.subtitles, data.language);
