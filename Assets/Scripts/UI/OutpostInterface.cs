@@ -555,7 +555,8 @@ namespace OutpostZero.UI
             var map = WorldMapService.Instance;
             if (map != null)
             {
-                camp.Add(Body("Radio " + CampaignBoard.PartCount(map.Parts) + "/3  " + DifficultyProfile.Name(map.Difficulty)));
+                camp.Add(Body("Radio " + CampaignBoard.PartCount(map.Parts) + "/3  " + DifficultyProfile.Name(map.Difficulty) + "  seed " + map.WorldSeed));
+                camp.Add(Button("Reroll street", () => map.RerollSeed()));
                 if (map.CampaignWon) camp.Add(Body("The tower is on the air."));
                 else if (map.ReadyToBroadcast) camp.Add(Button("Broadcast night", () => NightRaidController.Instance?.BeginBroadcast()));
                 else camp.Add(Body("The tower needs three radio parts and a built generator."));
@@ -732,6 +733,7 @@ namespace OutpostZero.UI
                 builder.Append(WorldMapService.Instance.Parts);
                 builder.Append(WorldMapService.Instance.BroadcastWon);
                 builder.Append(WorldMapService.Instance.ClearedCount);
+                builder.Append(WorldMapService.Instance.WorldSeed);
             }
             if (FactionTrade.Instance != null) builder.Append(FactionTrade.Instance.Signature);
             return builder.ToString();

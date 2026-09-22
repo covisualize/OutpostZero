@@ -40,10 +40,12 @@ namespace OutpostZero.Shell
         private string parts = "";
         private int difficulty = 2;
         private bool broadcastWon;
+        private int worldSeed = DistrictGenerator.DefaultSeed;
 
         public string Parts => parts;
         public int Difficulty => difficulty;
         public bool BroadcastWon => broadcastWon;
+        public int WorldSeed => DistrictGenerator.Resolve(worldSeed);
         public bool GeneratorBuilt => GridBuilder.Instance != null && GridBuilder.Instance.HasKind("Generator");
         public bool ReadyToBroadcast => CampaignBoard.Ready(parts, GeneratorBuilt, broadcastWon);
         public bool CampaignWon => CampaignBoard.Won(parts, GeneratorBuilt, broadcastWon);
@@ -70,6 +72,11 @@ namespace OutpostZero.Shell
             currentIndex = 0;
             parts = "";
             broadcastWon = false;
+        }
+
+        public void RerollSeed()
+        {
+            worldSeed = DistrictGenerator.Resolve(worldSeed) + 17;
         }
 
         public void SelectIndex(int index)
@@ -117,7 +124,7 @@ namespace OutpostZero.Shell
             if (FactionTrade.Instance != null && FactionTrade.Instance.Ambush) tension += 12f;
             float interval = Mathf.Max(3f, rules.SpawnInterval * curve.Interval);
             string prefer = string.IsNullOrEmpty(rules.PreferredVariant) ? curve.Prefer : rules.PreferredVariant;
-            HordeDirector.Instance?.ApplyOpening(tension, interval, prefer, difficulty);
+            HordeDirector.Instance?.ApplyOpening(tension, interval, prefer, difficulty, CampaignBoard.Tier(districtId));
             WeatherController.Instance?.SetFor(rules.Weather, 180f);
             DistrictDressing.Instance?.Build(districtId);
             SurvivorRoster.Instance?.RaiseCorpses(districtId);
@@ -140,11 +147,12 @@ namespace OutpostZero.Shell
             broadcastWon = true;
         }
 
-        public void RestoreCampaign(string radio, int storedDifficulty, int broadcast)
+        public void RestoreCampaign(string radio, int storedDifficulty, int broadcast, int seed = 0)
         {
             parts = radio ?? "";
             difficulty = DifficultyProfile.Resolve(storedDifficulty);
             broadcastWon = broadcast != 0;
+            worldSeed = DistrictGenerator.Resolve(seed);
             if (!CurrentOpen()) SelectFirstOpen();
         }
 
@@ -165,6 +173,7 @@ namespace OutpostZero.Shell
         {
             Seed();
             difficulty = DifficultyProfile.Resolve(storedDifficulty);
+            worldSeed = DistrictGenerator.DefaultSeed;
             DistrictRules.SetActiveTable("");
         }
 

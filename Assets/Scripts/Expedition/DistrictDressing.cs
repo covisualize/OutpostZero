@@ -35,10 +35,10 @@ namespace OutpostZero.Expedition
             anchor.transform.SetParent(transform, false);
             root = anchor.transform;
             var pieces = DistrictLayout.For(districtId);
-            for (int i = 0; i < pieces.Length; i++)
-            {
-                Spawn(pieces[i]);
-            }
+            for (int i = 0; i < pieces.Length; i++) Spawn(pieces[i]);
+            int seed = WorldMapService.Instance != null ? WorldMapService.Instance.WorldSeed : DistrictGenerator.DefaultSeed;
+            var generated = DistrictGenerator.Scatter(seed, districtId);
+            for (int i = 0; i < generated.Length; i++) Spawn(generated[i]);
             KitStructure.Raise(districtId, root);
             RaiseCaravan();
             StreetDetail.RaiseStreet(districtId, root);

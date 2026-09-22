@@ -950,5 +950,58 @@ namespace OutpostZero.Tests.EditMode
             Assert.AreEqual("[Explosion, here]", Presentation.Caption(NoiseType.Explosion, 0f, 0f, "en"));
             Assert.AreEqual("", Presentation.Caption(NoiseType.WalkFootstep, 1f, 0f, "en"));
         }
+
+        [Test]
+        public void ASeedRebuildsTheSameStreetAndTheHordeKeepsTime()
+        {
+            Assert.AreEqual(DistrictGenerator.DefaultSeed, DistrictGenerator.Resolve(0));
+            var first = DistrictGenerator.Scatter(1701, "mall");
+            var again = DistrictGenerator.Scatter(1701, "mall");
+            Assert.GreaterOrEqual(first.Length, 6);
+            Assert.AreEqual(first.Length, again.Length);
+            Assert.AreEqual(first[0].X, again[0].X);
+            Assert.AreEqual(first[0].Z, again[0].Z);
+            Assert.AreEqual(first[0].Role, again[0].Role);
+            var other = DistrictGenerator.Scatter(99991, "mall");
+            Assert.IsTrue(first[0].X != other[0].X || first[0].Role != other[0].Role);
+
+            var ids = CampaignBoard.All();
+            for (int seed = 1; seed <= 100; seed++)
+            {
+                for (int d = 0; d < ids.Length; d++)
+                {
+                    var pieces = DistrictGenerator.Scatter(seed, ids[d].Id);
+                    Assert.IsTrue(DistrictGenerator.Spaced(pieces, 1.05f), ids[d].Id + " " + seed);
+                    for (int i = 0; i < pieces.Length; i++)
+                    {
+                        Assert.IsTrue(DistrictLayout.StaysOnTheStreet(pieces[i]), ids[d].Id);
+                        Assert.IsTrue(DistrictGenerator.LaneClear(pieces[i]), ids[d].Id);
+                    }
+                }
+            }
+
+            float cursor = HordeSchedule.Advance(400f, 0f, 1, out string kind);
+            Assert.AreEqual("alley", kind);
+            Assert.AreEqual(8, HordeSchedule.Count(kind));
+            Assert.AreEqual(45f, cursor);
+            cursor = HordeSchedule.Advance(400f, cursor, 1, out kind);
+            Assert.AreEqual("", kind);
+            Assert.AreEqual(90f, cursor);
+            cursor = HordeSchedule.Advance(400f, cursor, 1, out kind);
+            Assert.AreEqual("", kind);
+            Assert.AreEqual(300f, cursor);
+
+            cursor = HordeSchedule.Advance(400f, 45f, 3, out kind);
+            Assert.AreEqual("runners", kind);
+            Assert.AreEqual(4, HordeSchedule.Count(kind));
+            Assert.AreEqual("Runner", HordeSchedule.Prefer(kind));
+            cursor = HordeSchedule.Advance(400f, cursor, 3, out kind);
+            Assert.AreEqual("brute", kind);
+            Assert.AreEqual(1, HordeSchedule.Count(kind));
+            Assert.AreEqual("Brute", HordeSchedule.Prefer(kind));
+            Assert.AreEqual(300f, cursor);
+            Assert.AreEqual(45f, HordeSchedule.Advance(60f, 45f, 3, out kind));
+            Assert.AreEqual("", kind);
+        }
     }
 }

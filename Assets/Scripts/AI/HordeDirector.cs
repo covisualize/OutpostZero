@@ -30,6 +30,10 @@ namespace OutpostZero.AI
         private float nextAllowedReinforcement;
         private bool subscribedNoise;
         private int runDifficulty = 2;
+        private int tier = 1;
+        private float elapsed;
+        private float eventCursor;
+        private string openingPrefer = "";
 
         public float Tension => tension;
         public TensionState State => state;
@@ -76,6 +80,22 @@ namespace OutpostZero.AI
                 OnTensionStateChanged?.Invoke(state);
             }
 
+            if (GameManager.Instance != null && GameManager.Instance.CurrentState == GameState.ExpeditionActive)
+            {
+                elapsed += Time.deltaTime;
+                for (int n = 0; n < 3; n++)
+                {
+                    float advanced = HordeSchedule.Advance(elapsed, eventCursor, tier, out string kind);
+                    if (advanced == eventCursor) break;
+                    eventCursor = advanced;
+                    if (string.IsNullOrEmpty(kind) || spawner == null) continue;
+                    string prefer = HordeSchedule.Prefer(kind);
+                    if (!string.IsNullOrEmpty(prefer)) spawner.Prefer(prefer);
+                    spawner.SpawnZombies(HordeSchedule.Count(kind));
+                    spawner.Prefer(openingPrefer);
+                }
+            }
+
             if (spawner == null || Time.time < nextSpawn) return;
             nextSpawn = Time.time + spawnInterval;
             int batch = DifficultyProfile.Batch((int)state, runDifficulty);
@@ -103,9 +123,13 @@ namespace OutpostZero.AI
             return TensionState.Calm;
         }
 
-        public void ApplyOpening(float openingTension, float interval, string preferredVariant, int difficulty = 2)
+        public void ApplyOpening(float openingTension, float interval, string preferredVariant, int difficulty = 2, int threat = 1)
         {
             runDifficulty = DifficultyProfile.Resolve(difficulty);
+            tier = threat < 1 ? 1 : threat;
+            elapsed = 0f;
+            eventCursor = 0f;
+            openingPrefer = preferredVariant ?? "";
             tension = Mathf.Clamp(openingTension, 0f, 100f);
             spawnInterval = Mathf.Max(3f, interval);
             state = Evaluate(tension);

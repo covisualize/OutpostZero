@@ -179,6 +179,7 @@ namespace OutpostZero.Shell
                 data.radio = WorldMapService.Instance.Parts;
                 data.difficulty = WorldMapService.Instance.Difficulty;
                 data.broadcast = WorldMapService.Instance.BroadcastWon ? 1 : 0;
+                data.worldSeed = WorldMapService.Instance.WorldSeed;
             }
             if (FactionTrade.Instance != null)
             {
@@ -269,7 +270,7 @@ namespace OutpostZero.Shell
             CodexDirector.Instance?.Restore(data.codex);
             OutpostZero.Player.PlayerRegistry.Current?.RestoreMods(data.weaponMods);
             WorldMapService.Instance?.RestoreCleared(data.districtsCleared);
-            WorldMapService.Instance?.RestoreCampaign(data.radio, data.difficulty, data.broadcast);
+            WorldMapService.Instance?.RestoreCampaign(data.radio, data.difficulty, data.broadcast, data.worldSeed);
             if (data.districtIndex > data.districtsCleared) WorldMapService.Instance?.SelectIndex(data.districtIndex);
             if (data.nextDifficulty > 0) SettingsService.Instance?.SetNextDifficulty(data.nextDifficulty);
             SettingsService.Instance?.ApplyComfort(data.goreLevel, data.hitStop, data.damageNumbers, data.hudOpacity, data.brightness, data.motionBlur, data.windowMode);
