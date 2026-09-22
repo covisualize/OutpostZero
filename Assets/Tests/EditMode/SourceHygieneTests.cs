@@ -46,6 +46,15 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void ZombiesSpawnFromActorPrefabsNotParkedSceneObjects()
+        {
+            string text = File.ReadAllText(Path.Combine(Scripts, "Editor", "PrototypeSceneBuilder.cs"));
+            StringAssert.DoesNotContain("-100f", text, "zombie prototypes parked under the map");
+            StringAssert.Contains("PrefabUtility.SaveAsPrefabAsset(proto, ActorPath(name))", text);
+            Assert.AreEqual("Assets/Prefabs/Enemies/Zombie_Brute_Actor.prefab", PrototypeSceneBuilder.ActorPath("Zombie_Brute"));
+        }
+
+        [Test]
         public void SceneBuilderPlacesPrefabsNotModelFiles()
         {
             string builder = Path.Combine(Scripts, "Editor", "PrototypeSceneBuilder.cs");

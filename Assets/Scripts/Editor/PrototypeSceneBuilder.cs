@@ -592,9 +592,9 @@ namespace OutpostZero.EditorTools
         private static void SetupZombies(Transform playerTransform)
         {
             // 1. Prototype Walker
-            GameObject walker = CreateZombiePrototype("Zombie_Walker", DefaultDataGenerator.LoadZombie("Walker"));
-            GameObject runner = CreateZombiePrototype("Zombie_Runner", DefaultDataGenerator.LoadZombie("Runner"));
-            GameObject brute = CreateZombiePrototype("Zombie_Brute", DefaultDataGenerator.LoadZombie("Brute"));
+            GameObject walker = ZombieActor("Zombie_Walker", DefaultDataGenerator.LoadZombie("Walker"));
+            GameObject runner = ZombieActor("Zombie_Runner", DefaultDataGenerator.LoadZombie("Runner"));
+            GameObject brute = ZombieActor("Zombie_Brute", DefaultDataGenerator.LoadZombie("Brute"));
 
             GameObject spawnerObj = new GameObject("--- ZOMBIE HORDE SPAWNER ---");
             spawnerObj.AddComponent<ZombiePool>();
@@ -606,12 +606,28 @@ namespace OutpostZero.EditorTools
             Undo.RegisterCreatedObjectUndo(spawnerObj, "Create Zombie Spawner");
         }
 
+        public const string EnemyRoot = "Assets/Prefabs/Enemies";
+
+        public static string ActorPath(string name) => EnemyRoot + "/" + name + "_Actor.prefab";
+
+        /// <summary>
+        /// Saves the spawnable zombie (model, capsule, agent, health, AI tuned from its archetype) as a prefab
+        /// asset. The spawner and pool instantiate that asset, so nothing waits in the scene.
+        /// </summary>
+        private static GameObject ZombieActor(string name, ZombieArchetype archetype)
+        {
+            GameObject proto = CreateZombiePrototype(name, archetype);
+            Directory.CreateDirectory(EnemyRoot);
+            GameObject asset = PrefabUtility.SaveAsPrefabAsset(proto, ActorPath(name));
+            Object.DestroyImmediate(proto);
+            return asset;
+        }
+
         private static GameObject CreateZombiePrototype(string name, ZombieArchetype archetype)
         {
             GameObject proto = new GameObject(name);
             proto.tag = "Enemy";
             proto.layer = GameLayers.Enemy;
-            proto.transform.position = new Vector3(0, -100f, 0);
 
             string assetId = archetype != null && !string.IsNullOrEmpty(archetype.modelPath)
                 ? PrefabCatalog.Id(archetype.modelPath)
@@ -641,7 +657,6 @@ namespace OutpostZero.EditorTools
             GameLayers.ApplyRecursively(proto, GameLayers.Enemy);
 
             proto.SetActive(false);
-            Undo.RegisterCreatedObjectUndo(proto, $"Create {name}");
             return proto;
         }
     }

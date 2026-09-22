@@ -101,7 +101,7 @@ Play this in a player build, not the editor. Use Survivor difficulty and a fixed
 - [ ] PRO-48 **Play**: every character imports as Humanoid with no avatar errors, all clips play without tearing, and the Walker still shambles.
 - [ ] PRO-49 **Automated** (a kit assembles an enterable three-storey block) and **Play**: the storefront and warehouse interiors can be entered.
 - [ ] PRO-50 **Automated** (`ItemDatabaseTests`: every item has a definition, FBX, prefab and 64 px rendered icon, all linked; `ItemDatabase.Get("ammo_9mm")`) and **Play**: icons render in the pack and a dropped item lands as its model, not a cube.
-- [ ] PRO-51 **Automated** (the scene builder has no FBX paths, and every builder id has a prefab) and **Play**: reimporting an FBX regenerates its prefab, and zombies and loot spawn from prefabs.
+- [ ] PRO-51 **Automated** (the scene builder has no FBX paths, every builder id has a prefab, every prefab carries its SurfaceTag and layer, and zombies come from `Assets/Prefabs/Enemies/*_Actor.prefab`) and **Play**: reimporting an FBX regenerates its prefab and keeps hand edits, footsteps change between concrete, wood and metal, and after **Build Prototype Test Arena** the scene has no parked zombie prototypes.
 - [ ] PRO-52 **Play**: deleting a texture or renaming an FBX turns CI red with a clear message, and the suite runs in under 60 s. (Covered off-engine by `Artifacts/ArtifactSuiteTests`; confirm the same in the Unity job.)
 - [ ] PRO-53 **Play**: pushing a `v*` tag produces three zips that launch to the menu, and the version in the menu matches the tag.
 - [ ] PRO-54 **Play**: a new contributor can clone, regenerate assets, build the scene and run the tests from the docs alone.
