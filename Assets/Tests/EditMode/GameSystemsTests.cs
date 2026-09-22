@@ -2854,6 +2854,17 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void RaidDeadLeaveTheYardAndTheStreetHordeStays()
+        {
+            Assert.IsTrue(RaidRecall.Leaves(true, false));
+            Assert.IsFalse(RaidRecall.Leaves(true, true));
+            Assert.IsFalse(RaidRecall.Leaves(false, false));
+            Assert.AreEqual(2, RaidRecall.Count(new[] { true, false, true, true }, new[] { false, false, true, false }));
+            Assert.AreEqual(0, RaidRecall.Count(null, new[] { false }));
+            Assert.AreEqual("Los muertos retroceden", Loc.T("camp.quiet", "es"));
+        }
+
+        [Test]
         public void DemolishingAModuleReturnsHalfTheScrap()
         {
             Assert.AreEqual(3, ScrapRefund.Half(6));

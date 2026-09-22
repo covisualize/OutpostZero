@@ -225,6 +225,7 @@ namespace OutpostZero.Colony
             }
             if (Time.time < endsAt) return;
             running = false;
+            int fellBack = ZombieAI.RecallRaid();
             if (SurvivorRoster.Instance != null && CampEnd.Wiped(SurvivorRoster.Instance.LivingCount()))
             {
                 GameplayFeedback.Toast(Loc.T("camp.wiped"));
@@ -278,6 +279,7 @@ namespace OutpostZero.Colony
             bool damaged = GridBuilder.Instance != null && GridBuilder.Instance.MendCount() > 0;
             string morning = SurvivorRoster.Instance != null ? SurvivorRoster.Instance.PostRaid(bodiesLeft, damaged) : "";
             if (!string.IsNullOrEmpty(morning)) GameplayFeedback.Toast(Loc.T(morning));
+            if (fellBack > 0) GameplayFeedback.Toast(Loc.T("camp.quiet") + " " + fellBack);
             broadcast = false;
             GameManager.Instance?.SetState(GameState.CampManagement);
         }

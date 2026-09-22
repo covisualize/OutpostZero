@@ -152,7 +152,9 @@ namespace OutpostZero.AI
                 zombie.SetActive(true);
                 activeZombies.Add(zombie);
                 var ai = zombie.GetComponent<ZombieAI>();
-                if (ai != null && GridBuilder.Instance != null && GridBuilder.Instance.BoardFor(approach, i, out float boardX, out float boardZ))
+                if (ai == null) continue;
+                ai.MarkRaid();
+                if (GridBuilder.Instance != null && GridBuilder.Instance.BoardFor(approach, i, out float boardX, out float boardZ))
                     ai.PostAt(boardX, boardZ);
             }
         }

@@ -92,6 +92,8 @@ namespace OutpostZero.AI
         private float postX;
         private float postZ;
         private float nextBite;
+        private bool fromRaid;
+        private bool leaving;
         private static readonly List<ZombieAI> aliveCrowd = new List<ZombieAI>();
         private static readonly float[] crowdX = new float[48];
         private static readonly float[] crowdZ = new float[48];
@@ -125,6 +127,38 @@ namespace OutpostZero.AI
             postX = x;
             postZ = z;
             nextBite = 0f;
+        }
+
+        public void MarkRaid()
+        {
+            fromRaid = true;
+            leaving = false;
+        }
+
+        public static int RecallRaid()
+        {
+            int left = 0;
+            for (int i = 0; i < aliveCrowd.Count; i++)
+            {
+                var zombie = aliveCrowd[i];
+                if (zombie == null) continue;
+                bool dead = zombie.currentState == ZombieState.Dead || (zombie.healthSystem != null && zombie.healthSystem.IsDead);
+                if (!RaidRecall.Leaves(zombie.fromRaid, dead)) continue;
+                zombie.SendOff();
+                left++;
+            }
+            return left;
+        }
+
+        private void SendOff()
+        {
+            fromRaid = false;
+            leaving = true;
+            posted = false;
+            if (agent != null) agent.enabled = false;
+            var pool = ZombiePool.Instance;
+            if (pool != null) pool.Release(gameObject, 0.4f);
+            else Destroy(gameObject);
         }
 
         private void ClearPost()
@@ -221,6 +255,8 @@ namespace OutpostZero.AI
             }
             currentState = ZombieState.Idle;
             posted = false;
+            fromRaid = false;
+            leaving = false;
             abilityClock = new SpecialBeat.Clock();
             lostSight = 0f;
             searchSweep = new SearchMemory.Sweep();
@@ -280,6 +316,7 @@ namespace OutpostZero.AI
 
         private void Update()
         {
+            if (leaving) return;
             if (currentState == ZombieState.Dead || healthSystem.IsDead) return;
             if (GameManager.Instance != null)
             {
