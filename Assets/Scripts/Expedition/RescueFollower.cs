@@ -28,14 +28,34 @@ namespace OutpostZero.Expedition
 
         public string Name => personName;
         public bool Following => following;
-        public string Prompt => joined || following ? string.Empty : StreetAsk.Along(personName, null);
+        public string Prompt
+        {
+            get
+            {
+                if (joined) return string.Empty;
+                if (!following) return StreetAsk.Along(personName, null);
+                int kits = Kits(null);
+                return FollowEase.Helps(bites, kits) ? FollowEase.Prompt(null) : string.Empty;
+            }
+        }
 
         public static string Status()
         {
             var person = Current;
             if (person == null || person.joined) return "";
             if (!person.following) return StreetAsk.ToGate(person.personName, null);
-            return StreetAsk.With(person.personName, null);
+            string with = StreetAsk.With(person.personName, null);
+            if (person.bites <= 0) return with;
+            string hurt = WoundCard.Line(person.bites, null);
+            if (hurt.Length == 0) return with;
+            return with + "  " + hurt;
+        }
+
+        private static int Kits(PlayerInventory inventory)
+        {
+            if (inventory == null && PlayerRegistry.Current != null)
+                inventory = PlayerRegistry.Current.GetComponent<PlayerInventory>();
+            return inventory != null ? inventory.MedicalKits : 0;
         }
 
         public void Configure(string id, string displayName)
@@ -54,13 +74,25 @@ namespace OutpostZero.Expedition
             if (Current == this) Current = null;
         }
 
-        public bool CanInteract(PlayerInventory inventory) => !joined && !following;
+        public bool CanInteract(PlayerInventory inventory)
+        {
+            if (joined) return false;
+            if (!following) return true;
+            return FollowEase.Helps(bites, Kits(inventory));
+        }
 
         public void Interact(PlayerInventory inventory)
         {
             if (!CanInteract(inventory)) return;
-            following = true;
-            GameplayFeedback.Toast(StreetAsk.With(personName, null));
+            if (!following)
+            {
+                following = true;
+                GameplayFeedback.Toast(StreetAsk.With(personName, null));
+                return;
+            }
+            if (inventory == null || !inventory.TrySpendMedical(1)) return;
+            bites = FollowEase.After(bites);
+            GameplayFeedback.Toast(FollowEase.Line(null));
         }
 
         private void Update()

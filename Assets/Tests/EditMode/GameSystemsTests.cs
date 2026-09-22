@@ -6439,6 +6439,34 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void AMedkitEasesTheFollowerAndLeavesTheLeader()
+        {
+            Assert.IsTrue(FollowEase.Helps(1, 1));
+            Assert.IsTrue(FollowEase.Helps(3, 2));
+            Assert.IsFalse(FollowEase.Helps(1, 0));
+            Assert.IsFalse(FollowEase.Helps(0, 2));
+            Assert.IsFalse(FollowEase.Helps(-1, 1));
+            Assert.AreEqual(0, FollowEase.After(1));
+            Assert.AreEqual(1, FollowEase.After(2));
+            Assert.AreEqual(2, FollowEase.After(3));
+            Assert.AreEqual(0, FollowEase.After(0));
+            Assert.AreEqual(0, FollowEase.After(-2));
+            Assert.AreEqual(0, WoundEase.After(1));
+            Assert.AreEqual(2, WoundEase.After(3));
+            Assert.AreEqual("Ease the bite", FollowEase.Prompt("en"));
+            Assert.AreEqual("Alivia la mordedura", FollowEase.Prompt("es"));
+            Assert.AreEqual("The wound eases", FollowEase.Line("en"));
+            Assert.AreEqual("La herida cede", FollowEase.Line("es"));
+            Assert.AreEqual("The wound eases", WoundEase.Line("en"));
+            Assert.AreEqual("Bitten", WoundCard.Line(1, "en"));
+            Assert.AreEqual("Fever", WoundCard.Line(2, "en"));
+            Assert.AreEqual("Critical", WoundCard.Line(3, "en"));
+            Assert.AreEqual("", WoundCard.Line(0, "en"));
+            Assert.AreEqual("Mara is with you", StreetAsk.With("Mara", "en"));
+            Assert.AreEqual(50, FieldHand.Medkit(0));
+        }
+
+        [Test]
         public void AZombieWithoutARigStillAttacksAndFalls()
         {
             Assert.AreEqual(14f, PoseSheet.Lean(ZombieAI.ZombieState.Chase, 0f), 0.001f);
