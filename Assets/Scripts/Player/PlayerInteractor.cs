@@ -299,7 +299,7 @@ namespace OutpostZero.Player
                 patch.AddComponent<GroundFire>();
                 CombatEvents.RaiseHit(origin, Vector3.up, gameObject);
             }
-            GameplayFeedback.Toast(molotov ? "Molotov burst" : "Lure clattered");
+            GameplayFeedback.Toast(FightSay.Impact(molotov, null));
             Destroy(gameObject);
         }
     }
