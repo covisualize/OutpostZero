@@ -270,15 +270,18 @@ namespace OutpostZero.Player
             if (molotov)
             {
                 OutpostZero.Colony.GridBuilder.Instance?.IgniteNear(origin.x, origin.z, Time.time);
-                Collider[] hits = Physics.OverlapSphere(origin, 3.2f);
+                Collider[] hits = Physics.OverlapSphere(origin, FirePatch.BurstRadius);
                 foreach (var hit in hits)
                 {
                     var damageable = hit.GetComponentInParent<IDamageable>();
                     if (damageable != null && !damageable.IsDead)
                     {
-                        damageable.TakeDamage(28f, hit.bounds.center, (hit.transform.position - origin).normalized, gameObject);
+                        damageable.TakeDamage(FirePatch.Burst, hit.bounds.center, (hit.transform.position - origin).normalized, gameObject);
                     }
                 }
+                var patch = new GameObject("FirePatch");
+                patch.transform.position = origin;
+                patch.AddComponent<GroundFire>();
                 CombatEvents.RaiseHit(origin, Vector3.up, gameObject);
             }
             GameplayFeedback.Toast(molotov ? "Molotov burst" : "Lure clattered");
