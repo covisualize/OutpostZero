@@ -777,6 +777,7 @@ namespace OutpostZero.UI
                     string doing = CampRoutine.Choose(survivor.task, survivor.hunger, survivor.thirst, survivor.morale, survivor.injury);
                     string post = doing == survivor.task ? Loc.Task(survivor.task) : Loc.Task(survivor.task) + " → " + Loc.Task(doing);
                     string skills = Practice.Line(survivor.combat, survivor.medicine, survivor.engineering, survivor.cooking, survivor.scavenge, null);
+                    string leads = Heir.Line(survivor.leadership, null);
                     camp.Add(Body(flag + " " + survivor.displayName + " (" + Loc.Trait(survivor.trait) + ") " + post
                         + "  " + Loc.Mood(mood)
                         + "  " + Loc.T("camp.food") + " " + Mathf.RoundToInt(survivor.hunger)
@@ -784,6 +785,7 @@ namespace OutpostZero.UI
                         + "  " + survivor.bond
                         + "  " + Loc.T("camp.opinion") + " " + survivor.opinion
                         + (skills.Length > 0 ? "  " + skills : "")
+                        + (leads.Length > 0 ? "  " + leads : "")
                         + "  \"" + Loc.Bark(doing, survivor.morale) + "\""));
                     if (!survivor.alive) continue;
                     string id = survivor.id;
@@ -1135,6 +1137,7 @@ namespace OutpostZero.UI
                 {
                     builder.Append(survivor.id).Append(survivor.task).Append(survivor.alive).Append(survivor.leader);
                     builder.Append(Mathf.RoundToInt(survivor.morale)).Append(Mathf.RoundToInt(survivor.hunger)).Append(survivor.opinion).Append(survivor.injury);
+                    builder.Append(survivor.leadership).Append(survivor.combat).Append(survivor.medicine).Append(survivor.engineering).Append(survivor.cooking).Append(survivor.scavenge);
                 }
                 builder.Append(SurvivorRoster.Instance.DayNotes);
                 builder.Append(SurvivorRoster.Instance.PackMemorials());

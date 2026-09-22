@@ -281,7 +281,8 @@ namespace OutpostZero.Shell
                         needsTracked = true,
                         task = survivor.task,
                         bond = survivor.bond,
-                        practice = Practice.Pack(survivor.combat, survivor.medicine, survivor.engineering, survivor.cooking, survivor.scavenge)
+                        practice = Practice.Pack(survivor.combat, survivor.medicine, survivor.engineering, survivor.cooking, survivor.scavenge),
+                        leadership = survivor.leadership
                     });
                 }
                 data.survivors = list.ToArray();
@@ -355,7 +356,8 @@ namespace OutpostZero.Shell
                         medicine = ReadPractice(saved.practice, 1),
                         engineering = ReadPractice(saved.practice, 2),
                         cooking = ReadPractice(saved.practice, 3),
-                        scavenge = ReadPractice(saved.practice, 4)
+                        scavenge = ReadPractice(saved.practice, 4),
+                        leadership = saved.leadership < 0 ? 0 : saved.leadership
                     });
                 }
                 SurvivorRoster.Instance.Replace(list);

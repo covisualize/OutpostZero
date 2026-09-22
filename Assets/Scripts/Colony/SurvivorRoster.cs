@@ -25,6 +25,7 @@ namespace OutpostZero.Colony
         public int engineering;
         public int cooking;
         public int scavenge;
+        public int leadership;
         public string task = "Rest";
         public string bond = "";
     }
@@ -226,8 +227,8 @@ namespace OutpostZero.Colony
 
         public Survivor Promote(string id)
         {
-            Survivor next = string.IsNullOrEmpty(id) ? NextLiving() : Find(id);
-            if (next == null || !next.alive) next = NextLiving();
+            Survivor next = string.IsNullOrEmpty(id) ? ChooseHeir() : Find(id);
+            if (next == null || !next.alive) next = ChooseHeir();
             if (next == null) return null;
             for (int i = 0; i < survivors.Count; i++) survivors[i].leader = false;
             next.leader = true;
@@ -439,6 +440,8 @@ namespace OutpostZero.Colony
             Spend(food, water);
             if (ColonyStorage.Instance != null) ColonyStorage.Instance.SetRaw(raw);
             Publish(notes);
+            var held = Leader;
+            if (held != null) held.leadership = Practice.Gain(held.leadership);
             FactionTrade.Instance?.OnMorning(WorldClock.Instance != null ? WorldClock.Instance.Day : 1);
             AudioManager.Instance?.Sting("dawn");
         }
@@ -478,7 +481,8 @@ namespace OutpostZero.Colony
                     hunger = survivor.hunger,
                     thirst = survivor.thirst,
                     opinion = survivor.opinion,
-                    injury = survivor.injury
+                    injury = survivor.injury,
+                    leadership = survivor.leadership
                 });
             }
             return days;
@@ -559,6 +563,25 @@ namespace OutpostZero.Colony
         }
 
         public void ResetRoster() => Seed();
+
+        private Survivor ChooseHeir()
+        {
+            int count = survivors.Count;
+            var alive = new bool[count];
+            var injury = new int[count];
+            var leadership = new int[count];
+            var morale = new float[count];
+            for (int i = 0; i < count; i++)
+            {
+                alive[i] = survivors[i].alive;
+                injury[i] = survivors[i].injury;
+                leadership[i] = survivors[i].leadership;
+                morale[i] = survivors[i].morale;
+            }
+            int index = Heir.Pick(alive, injury, leadership, morale);
+            if (index < 0 || index >= count) return NextLiving();
+            return survivors[index];
+        }
 
         private Survivor NextLiving()
         {

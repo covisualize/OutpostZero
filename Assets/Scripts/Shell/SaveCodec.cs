@@ -19,6 +19,7 @@ namespace OutpostZero.Shell
         public string task;
         public string bond;
         public string practice = "";
+        public int leadership;
     }
 
     [Serializable]

@@ -37,10 +37,18 @@ namespace OutpostZero.Colony
 
         public static int FeudShift(int drop, bool leaderPresent)
         {
+            return FeudShift(drop, leaderPresent, 0);
+        }
+
+        public static int FeudShift(int drop, bool leaderPresent, int leadership)
+        {
             if (drop < 0) drop = 0;
             if (!leaderPresent) return drop;
             int eased = drop / 2;
-            return eased < 1 && drop > 0 ? 1 : eased;
+            if (eased < 1 && drop > 0) eased = 1;
+            if (Practice.Bonus(leadership) <= 0) return eased;
+            int cut = eased - 1;
+            return cut < 0 ? 0 : cut;
         }
 
         public static bool Argument(bool volatilePresent, int living, bool leaderPresent)

@@ -19,6 +19,7 @@ namespace OutpostZero.Colony
         public float thirst = 78f;
         public int opinion = 18;
         public int injury;
+        public int leadership;
     }
 
     /// <summary>
@@ -66,12 +67,17 @@ namespace OutpostZero.Colony
             bool volatilePresent = false;
             int living = 0;
             bool leaderPresent = false;
+            int leadSkill = 0;
             for (int i = 0; i < people.Count; i++)
             {
                 var person = people[i];
                 if (person == null || !person.alive) continue;
                 living++;
-                if (person.leader) leaderPresent = true;
+                if (person.leader)
+                {
+                    leaderPresent = true;
+                    leadSkill = person.leadership;
+                }
                 if (person.task == "Cook") anyCook = true;
                 if (person.task == "Medic") medic = true;
                 if (person.trait == "Volatile") volatilePresent = true;
@@ -120,7 +126,7 @@ namespace OutpostZero.Colony
 
                 int opinionBefore = person.opinion;
                 if (SharesWork(people, person)) person.opinion += 2;
-                if (person.trait == "Volatile") person.opinion -= MealTable.FeudShift(6, leaderPresent);
+                if (person.trait == "Volatile") person.opinion -= MealTable.FeudShift(6, leaderPresent, leadSkill);
                 if (opinionBefore < 40 && person.opinion >= 40) Once(events, "friendship");
 
                 if (person.injury > 0 && (cot || medic))

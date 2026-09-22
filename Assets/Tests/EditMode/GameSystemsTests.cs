@@ -2979,6 +2979,29 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void TheNextLeaderIsTheSteadiestHealthyHand()
+        {
+            Assert.AreEqual(6, MealTable.FeudShift(6, false, 8));
+            Assert.AreEqual(3, MealTable.FeudShift(6, true, 0));
+            Assert.AreEqual(3, MealTable.FeudShift(6, true, 3));
+            Assert.AreEqual(2, MealTable.FeudShift(6, true, 4));
+            Assert.AreEqual(3, MealTable.FeudShift(6, true));
+            var alive = new[] { true, true, true, false };
+            var injury = new[] { 2, 0, 0, 0 };
+            var leadership = new[] { 6, 1, 4, 8 };
+            var morale = new[] { 90f, 50f, 50f, 100f };
+            Assert.AreEqual(2, Heir.Pick(alive, injury, leadership, morale));
+            morale[2] = 40f;
+            Assert.AreEqual(1, Heir.Pick(alive, injury, leadership, morale));
+            injury[1] = 1;
+            injury[2] = 1;
+            Assert.AreEqual(0, Heir.Pick(alive, injury, leadership, morale));
+            Assert.AreEqual(-1, Heir.Pick(new[] { false }, new[] { 0 }, new[] { 4 }, new[] { 50f }));
+            Assert.AreEqual("Lidera 4", Heir.Line(4, "es"));
+            Assert.AreEqual("", Heir.Line(0, "es"));
+        }
+
+        [Test]
         public void DemolishingAModuleReturnsHalfTheScrap()
         {
             Assert.AreEqual(3, ScrapRefund.Half(6));
