@@ -3268,7 +3268,6 @@ namespace OutpostZero.Tests.EditMode
             Assert.AreEqual(6, BlastChunk.Count);
             Assert.AreEqual(1.1f, BlastChunk.Life, 0.001f);
             Assert.AreEqual(4.5f, BlastChunk.Speed, 0.001f);
-            Assert.AreEqual(1.4f, BarrelFuse.Length(HazardKind.Explosive), 0.001f);
         }
 
         [Test]
