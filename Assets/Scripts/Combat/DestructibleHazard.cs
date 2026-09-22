@@ -115,7 +115,11 @@ namespace OutpostZero.Combat
             Chain(origin);
             if (kind == HazardKind.Toxic) GasField.Open(transform.position);
             if (kind == HazardKind.Oil) OilPatch.Leave(transform.position);
-            if (kind == HazardKind.Explosive) OilPatch.Blast(transform.position);
+            if (kind == HazardKind.Explosive)
+            {
+                OilPatch.Blast(transform.position);
+                PowderFire.Open(transform.position);
+            }
             Destroy(gameObject);
         }
 

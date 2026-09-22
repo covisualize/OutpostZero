@@ -5296,6 +5296,29 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void APowderBarrelLeavesAFireOnTheStreet()
+        {
+            Assert.AreEqual(10f, PowderBed.Life, 0.001f);
+            Assert.AreEqual(1f, PowderBed.Gap, 0.001f);
+            Assert.AreEqual(3.2f, PowderBed.Radius, 0.001f);
+            Assert.AreEqual(8f, PowderBed.Damage, 0.001f);
+            Assert.IsTrue(PowderBed.Hot(0f));
+            Assert.IsTrue(PowderBed.Hot(9.9f));
+            Assert.IsFalse(PowderBed.Hot(10f));
+            Assert.IsFalse(PowderBed.Hot(-0.1f));
+            Assert.IsTrue(PowderBed.Inside(3.2f));
+            Assert.IsFalse(PowderBed.Inside(3.21f));
+            Assert.IsFalse(PowderBed.Inside(-1f));
+            Assert.IsTrue(PowderBed.TickDue(-1f, 0f));
+            Assert.IsFalse(PowderBed.TickDue(0f, 0.9f));
+            Assert.IsTrue(PowderBed.TickDue(0f, 1f));
+            Assert.IsFalse(PowderBed.TickDue(9.1f, 10f));
+            Assert.AreEqual(28f, FirePatch.Burst, 0.001f);
+            Assert.AreEqual(4f, FirePatch.Life, 0.001f);
+            Assert.AreEqual(6f, FirePatch.Damage, 0.001f);
+        }
+
+        [Test]
         public void AZombieWithoutARigStillAttacksAndFalls()
         {
             Assert.AreEqual(14f, PoseSheet.Lean(ZombieAI.ZombieState.Chase, 0f), 0.001f);
