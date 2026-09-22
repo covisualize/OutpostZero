@@ -21,6 +21,8 @@ namespace OutpostZero.EditorTools
     public static class PrototypeSceneBuilder
     {
         private const string ScenePath = "Assets/Scenes/PrototypeArena.unity";
+        private const string BootPath = "Assets/Scenes/Boot.unity";
+        private static readonly string[] PlayerScenes = { BootPath, ScenePath };
         private const string SettingsDir = "Assets/Settings";
         private const string MaterialsDir = "Assets/Materials";
         private const string ModelsDir = "Assets/Models";
@@ -116,6 +118,7 @@ namespace OutpostZero.EditorTools
 
             EditorBuildSettings.scenes = new EditorBuildSettingsScene[]
             {
+                new EditorBuildSettingsScene(BootPath, true),
                 new EditorBuildSettingsScene(ScenePath, true)
             };
 
@@ -131,7 +134,7 @@ namespace OutpostZero.EditorTools
                 string location = Path.Combine("Builds", "Linux", "OutpostZero.x86_64");
                 var report = BuildPipeline.BuildPlayer(new BuildPlayerOptions
                 {
-                    scenes = new[] { ScenePath },
+                    scenes = PlayerScenes,
                     locationPathName = location,
                     target = BuildTarget.StandaloneLinux64,
                     options = BuildOptions.None
@@ -175,7 +178,7 @@ namespace OutpostZero.EditorTools
 
             BuildPlayerOptions buildOptions = new BuildPlayerOptions
             {
-                scenes = new[] { ScenePath },
+                scenes = PlayerScenes,
                 locationPathName = exePath,
                 target = BuildTarget.StandaloneWindows64,
                 options = BuildOptions.None

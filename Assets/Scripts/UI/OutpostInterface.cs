@@ -604,7 +604,7 @@ namespace OutpostZero.UI
                     menu.Add(Button(Loc.T("menu.camp"), () => Go(FlowStep.Sanctuary, () => GameManager.Instance.EnterCamp())));
                     menu.Add(Button(Loc.T("menu.settings"), () => SettingsService.Instance?.TogglePanel()));
                     menu.Add(Button(Loc.T("menu.main"), () => Go(FlowStep.MainMenu, () => GameManager.Instance.SetState(GameState.MainMenu))));
-                    menu.Add(Button(Loc.T("menu.restart"), () => Go(FlowStep.Boot, () => GameManager.Instance.RestartCurrentScene())));
+                    menu.Add(Button(Loc.T("menu.restart"), () => Go(FlowStep.Boot, () => GameManager.Instance.ReturnToBoot())));
                     break;
                 case GameState.SuccessionScreen:
                     menu.Add(Title(Loc.T("menu.leader")));

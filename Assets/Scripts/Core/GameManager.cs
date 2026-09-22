@@ -24,6 +24,7 @@ namespace OutpostZero.Core
         [SerializeField] private int scrapLooted = 0;
 
         private GameState resumeState = GameState.ExpeditionActive;
+        private bool rebooting;
         private Scene gameplayScene;
         private KillTape killTape;
 
@@ -68,9 +69,13 @@ namespace OutpostZero.Core
         {
             if (!scene.IsValid() || scene.name == "DontDestroyOnLoad") return;
             if (Instance != this) return;
+            if (scene.name == BootPlan.BootScene) return;
             gameplayScene = scene;
             PlayabilityBootstrap.Apply(scene);
             GameSystemsInstaller.Install(scene);
+            if (!rebooting) return;
+            rebooting = false;
+            SetState(GameState.MainMenu);
         }
 
         private void Update()
@@ -294,7 +299,7 @@ namespace OutpostZero.Core
             lifetimeKills = kills < 0 ? 0 : kills;
         }
 
-        public void RestartCurrentScene()
+        public void ReturnToBoot()
         {
             Time.timeScale = 1f;
             ObjectiveTracker.Instance?.ResetProgress();
@@ -310,7 +315,11 @@ namespace OutpostZero.Core
             expeditionTimer = 0f;
             killTape = default;
             currentState = GameState.ExpeditionActive;
-            SceneManager.LoadScene(gameplayScene.buildIndex >= 0 ? gameplayScene.buildIndex : SceneManager.GetActiveScene().buildIndex);
+            rebooting = true;
+            if (Application.CanStreamedLevelBeLoaded(BootPlan.BootScene))
+                SceneManager.LoadScene(BootPlan.BootScene);
+            else
+                SceneManager.LoadScene(gameplayScene.buildIndex >= 0 ? gameplayScene.buildIndex : SceneManager.GetActiveScene().buildIndex);
         }
     }
 }
