@@ -72,6 +72,16 @@ namespace OutpostZero.Player
             }
         }
 
+        public static bool FirePressed
+        {
+            get
+            {
+                var pad = Gamepad.current;
+                if (pad != null && (pad.rightTrigger.wasPressedThisFrame || pad.rightShoulder.wasPressedThisFrame)) return true;
+                return Mouse.current != null ? Mouse.current.leftButton.wasPressedThisFrame : Input.GetMouseButtonDown(0);
+            }
+        }
+
         public static bool AimHeld
         {
             get

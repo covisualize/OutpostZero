@@ -121,6 +121,70 @@ namespace OutpostZero.Player
             groundAimMask = GameLayers.EnvironmentMask | 1;
         }
 
+        public bool TakeFromGround(string weaponId, int magazine, int reserve, out string leftId, out int leftMag, out int leftReserve)
+        {
+            leftId = "";
+            leftMag = 0;
+            leftReserve = 0;
+            var spec = WeaponCard.Find(weaponId);
+            if (string.IsNullOrEmpty(spec.Id)) return false;
+
+            int index = IndexOfType(spec.Type);
+            if (index >= 0 && equippedWeapons[index] is FirearmWeapon carried)
+            {
+                leftId = carried.CardId;
+                leftMag = carried.CurrentAmmo;
+                leftReserve = carried.ReserveAmmo;
+                carried.LoadCard(spec, magazine, reserve);
+                SelectWeapon(index);
+                return true;
+            }
+            if (index >= 0) return false;
+
+            var created = SpawnWeapon(spec, magazine, reserve);
+            if (created == null) return false;
+            AddWeapon(created);
+            SelectWeapon(equippedWeapons.Length - 1);
+            return true;
+        }
+
+        private int IndexOfType(WeaponType type)
+        {
+            if (equippedWeapons == null) return -1;
+            for (int i = 0; i < equippedWeapons.Length; i++)
+            {
+                if (equippedWeapons[i] != null && equippedWeapons[i].Type == type) return i;
+            }
+            return -1;
+        }
+
+        private WeaponBase SpawnWeapon(WeaponCard.Spec spec, int magazine, int reserve)
+        {
+            Transform socket = transform.Find("Weapon_Socket");
+            if (socket == null) socket = transform;
+            var weaponObject = new GameObject(spec.Id);
+            weaponObject.transform.SetParent(socket, false);
+            if (spec.Melee)
+            {
+                var definition = ScriptableObject.CreateInstance<WeaponDefinition>();
+                definition.id = spec.Id;
+                definition.displayName = spec.Name;
+                definition.weaponType = spec.Type;
+                definition.baseDamage = spec.Damage;
+                definition.attackRate = spec.Rate;
+                definition.range = spec.Range;
+                definition.noiseRadius = spec.Noise;
+                definition.noiseType = spec.NoiseKind;
+                definition.isMelee = true;
+                var melee = weaponObject.AddComponent<MeleeWeapon>();
+                melee.Configure(definition);
+                return melee;
+            }
+            var gun = weaponObject.AddComponent<FirearmWeapon>();
+            gun.LoadCard(spec, magazine, reserve);
+            return gun;
+        }
+
         public void AddWeapon(WeaponBase weapon)
         {
             if (weapon == null) return;
@@ -383,8 +447,11 @@ namespace OutpostZero.Player
         {
             if (ActiveWeapon == null) return;
 
-            // Attack (Left Mouse Button)
-            if (ExpeditionInput.FireHeld && GameManager.Instance != null && GameManager.Instance.CurrentState != GameState.CampManagement)
+            bool automatic = ActiveWeapon is FirearmWeapon gun && gun.Automatic;
+            bool fire = ActiveWeapon is FirearmWeapon
+                ? TriggerGate.ShouldFire(automatic, ExpeditionInput.FireHeld, ExpeditionInput.FirePressed)
+                : ExpeditionInput.FireHeld;
+            if (fire && GameManager.Instance != null && GameManager.Instance.CurrentState != GameState.CampManagement)
             {
                 if (ActiveWeapon.TryAttack(transform.forward))
                 {

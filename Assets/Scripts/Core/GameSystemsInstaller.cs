@@ -87,6 +87,7 @@ namespace OutpostZero.Core
             Add<SurvivorLocomotion>(player.gameObject);
             CharacterVariety.Ensure(player.gameObject).Bind("survivor", true);
             EnsureRifle(player);
+            ApplyFireModes(player);
         }
 
         private static void EnsureRifle(PlayerController player)
@@ -117,9 +118,20 @@ namespace OutpostZero.Core
             definition.noiseRadius = 34f;
             definition.noiseIntensity = 1f;
             definition.noiseType = NoiseType.GunshotLoud;
+            definition.automatic = true;
+            definition.useProjectile = true;
             definition.modelPath = ModelPaths.AssaultRifle;
             rifle.Configure(definition);
             player.AddWeapon(rifle);
+        }
+
+        private static void ApplyFireModes(PlayerController player)
+        {
+            var guns = player.GetComponentsInChildren<FirearmWeapon>(true);
+            for (int i = 0; i < guns.Length; i++)
+            {
+                guns[i].SetFireMode(WeaponCard.FiresAutomatic(guns[i].Type, false), WeaponCard.FiresProjectile(guns[i].Type, false));
+            }
         }
 
         private static void Walk(GameObject go)

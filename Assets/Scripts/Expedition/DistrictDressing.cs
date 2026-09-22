@@ -44,6 +44,7 @@ namespace OutpostZero.Expedition
             ObjectiveTracker.Instance?.ExpectPoi(blocks.PoiRole);
             ExtractionZone.MoveTo(new Vector3(blocks.ExtractX, 0.5f, blocks.ExtractZ));
             RaiseRescue(districtId, blocks);
+            RaiseArmory(districtId);
             KitStructure.Raise(districtId, root);
             RaiseCaravan();
             StreetDetail.RaiseStreet(districtId, root);
@@ -105,6 +106,18 @@ namespace OutpostZero.Expedition
             person.layer = GameLayers.Interactable;
             Paint(person.GetComponent<Renderer>(), new Color(0.72f, 0.48f, 0.28f));
             person.AddComponent<RescueFollower>().Configure(offer.Id, offer.Name);
+        }
+
+        private void RaiseArmory(string districtId)
+        {
+            if (districtId != "police_station") return;
+            var gun = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            gun.name = "GroundRifle";
+            gun.transform.SetParent(root, false);
+            gun.transform.position = new Vector3(-4f, 0.25f, 0f);
+            gun.transform.localScale = new Vector3(0.7f, 0.12f, 0.18f);
+            gun.layer = GameLayers.Interactable;
+            gun.AddComponent<GroundWeapon>().Configure("rifle_assault", 12, 30);
         }
 
         private static Color BlockTint(string footprint)

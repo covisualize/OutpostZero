@@ -28,6 +28,8 @@ namespace OutpostZero.Core
         public NoiseType noiseType = NoiseType.GunshotQuiet;
         public float staminaCost = 0f;
         public bool isMelee;
+        public bool automatic;
+        public bool useProjectile;
         public string modelPath;
     }
 }

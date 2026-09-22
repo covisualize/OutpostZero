@@ -50,6 +50,7 @@ namespace OutpostZero.EditorTools
                 weapon.reloadDuration = 2.4f;
                 weapon.noiseRadius = 38f;
                 weapon.noiseType = NoiseType.GunshotLoud;
+                weapon.useProjectile = true;
                 weapon.modelPath = ModelPaths.Shotgun;
             });
 
@@ -83,6 +84,8 @@ namespace OutpostZero.EditorTools
                 weapon.reloadDuration = 2.1f;
                 weapon.noiseRadius = 34f;
                 weapon.noiseType = NoiseType.GunshotLoud;
+                weapon.automatic = true;
+                weapon.useProjectile = true;
                 weapon.modelPath = ModelPaths.AssaultRifle;
             });
 

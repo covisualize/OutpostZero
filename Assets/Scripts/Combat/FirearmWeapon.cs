@@ -47,6 +47,13 @@ namespace OutpostZero.Combat
         public event Action OnReloadCompleted;
 
         private float heat;
+        private bool automatic;
+        private bool useProjectile;
+        private string cardId = "";
+
+        public bool Automatic => automatic;
+        public bool Projectile => useProjectile;
+        public string CardId => string.IsNullOrEmpty(cardId) ? WeaponCard.IdFor(weaponType) : cardId;
 
         private void Reset()
         {
@@ -75,6 +82,36 @@ namespace OutpostZero.Combat
             spreadAngle = definition.spreadAngle;
             projectilesPerShot = Mathf.Max(1, definition.projectilesPerShot);
             hitMask = GameLayers.WeaponHitMask;
+            automatic = WeaponCard.FiresAutomatic(weaponType, definition.automatic);
+            useProjectile = WeaponCard.FiresProjectile(weaponType, definition.useProjectile);
+            if (!string.IsNullOrEmpty(definition.id)) cardId = definition.id;
+        }
+
+        public void SetFireMode(bool fullAuto, bool projectile)
+        {
+            automatic = fullAuto;
+            useProjectile = projectile;
+        }
+
+        public void LoadCard(WeaponCard.Spec spec, int magazine, int spare)
+        {
+            cardId = spec.Id;
+            weaponName = spec.Name;
+            weaponType = spec.Type;
+            baseDamage = spec.Damage;
+            attackRate = Mathf.Max(0.1f, spec.Rate);
+            range = spec.Range;
+            spreadAngle = spec.Spread;
+            projectilesPerShot = Mathf.Max(1, spec.Pellets);
+            maxMagazine = Mathf.Max(1, spec.Magazine);
+            reloadDuration = spec.Reload;
+            noiseRadius = spec.Noise;
+            noiseType = spec.NoiseKind;
+            automatic = spec.Automatic;
+            useProjectile = spec.Projectile;
+            currentAmmo = Mathf.Clamp(magazine, 0, MagazineCapacity);
+            reserveAmmo = Mathf.Max(0, spare);
+            OnAmmoChanged?.Invoke(currentAmmo, reserveAmmo);
         }
 
         private void Start()
@@ -89,7 +126,7 @@ namespace OutpostZero.Combat
 
         private void Update()
         {
-            if (heat > 0f) heat = Mathf.Max(0f, heat - 28f * Time.deltaTime);
+            heat = RecoilBloom.Cool(heat, Time.deltaTime);
         }
 
         public override bool CanAttack()
@@ -121,8 +158,8 @@ namespace OutpostZero.Combat
             EmitWeaponNoise();
 
             // Fire projectiles
-            heat = Mathf.Min(100f, heat + 7f);
-            float spread = spreadAngle * SpreadMultiplier * (1f + heat / 80f);
+            heat = RecoilBloom.AfterShot(heat);
+            float spread = RecoilBloom.Spread(spreadAngle, SpreadMultiplier, heat);
             for (int i = 0; i < projectilesPerShot; i++)
             {
                 Vector3 shootDir = ApplySpread(targetDirection, spread);
@@ -137,14 +174,13 @@ namespace OutpostZero.Combat
         {
             Vector3 spawnPos = muzzlePoint != null ? muzzlePoint.position : transform.position;
 
-            if (bulletPrefab != null)
+            if (useProjectile || bulletPrefab != null)
             {
-                GameObject projObj = Instantiate(bulletPrefab, spawnPos, Quaternion.LookRotation(direction));
-                var bullet = projObj.GetComponent<BulletProjectile>();
-                if (bullet != null)
-                {
-                    bullet.Setup(direction, ModifiedDamage, ownerGameObject, hitMask);
-                }
+                GameObject projObj = bulletPrefab != null
+                    ? Instantiate(bulletPrefab, spawnPos, Quaternion.LookRotation(direction))
+                    : CreateBullet(spawnPos, direction);
+                var bullet = projObj.GetComponent<BulletProjectile>() ?? projObj.AddComponent<BulletProjectile>();
+                bullet.Setup(direction, ModifiedDamage, ownerGameObject, hitMask);
                 Vector3 eject = muzzlePoint != null ? muzzlePoint.right : transform.right;
                 CombatVfx.Shot(spawnPos, direction, spawnPos + direction * Mathf.Min(range, 8f), eject);
             }
@@ -159,6 +195,22 @@ namespace OutpostZero.Combat
                 Vector3 eject = muzzlePoint != null ? muzzlePoint.right : transform.right;
                 CombatVfx.Shot(spawnPos, direction, end, eject);
             }
+        }
+
+        private static GameObject CreateBullet(Vector3 spawnPos, Vector3 direction)
+        {
+            var bullet = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            bullet.name = "Bullet";
+            bullet.transform.position = spawnPos;
+            bullet.transform.rotation = Quaternion.LookRotation(direction.sqrMagnitude > 0.001f ? direction : Vector3.forward);
+            bullet.transform.localScale = Vector3.one * 0.06f;
+            bullet.layer = GameLayers.Projectile;
+            var collider = bullet.GetComponent<Collider>();
+            if (collider != null) Destroy(collider);
+            var renderer = bullet.GetComponent<Renderer>();
+            if (renderer != null) renderer.enabled = false;
+            bullet.AddComponent<BulletProjectile>();
+            return bullet;
         }
 
         private Vector3 ApplySpread(Vector3 forward, float angle)

@@ -1276,5 +1276,43 @@ namespace OutpostZero.Tests.EditMode
             Assert.AreEqual(20f, BoardBreak.Apply(BoardBreak.Wood, 20f));
             Assert.IsFalse(BoardBreak.GivesWay(20f));
         }
+
+        [Test]
+        public void ARifleHoldsTheTriggerAndAPistolDoesNot()
+        {
+            Assert.IsTrue(TriggerGate.ShouldFire(true, true, false));
+            Assert.IsFalse(TriggerGate.ShouldFire(true, false, false));
+            Assert.IsTrue(TriggerGate.ShouldFire(false, true, true));
+            Assert.IsFalse(TriggerGate.ShouldFire(false, true, false));
+
+            Assert.IsTrue(WeaponCard.FiresAutomatic(WeaponType.Rifle, false));
+            Assert.IsTrue(WeaponCard.FiresAutomatic(WeaponType.Pistol, true));
+            Assert.IsFalse(WeaponCard.FiresAutomatic(WeaponType.Pistol, false));
+            Assert.IsFalse(WeaponCard.FiresAutomatic(WeaponType.Shotgun, false));
+            Assert.IsTrue(WeaponCard.FiresProjectile(WeaponType.Shotgun, false));
+            Assert.IsTrue(WeaponCard.FiresProjectile(WeaponType.Rifle, false));
+            Assert.IsFalse(WeaponCard.FiresProjectile(WeaponType.Pistol, false));
+
+            float heat = 0f;
+            for (int i = 0; i < 10; i++) heat = RecoilBloom.AfterShot(heat);
+            Assert.AreEqual(70f, heat, 0.001f);
+            Assert.AreEqual(5.625f, RecoilBloom.Spread(3f, 1f, heat), 0.001f);
+            Assert.AreEqual(3f, RecoilBloom.Spread(3f, 1f, 0f), 0.001f);
+            Assert.AreEqual(0f, RecoilBloom.Cool(28f, 1f), 0.001f);
+            Assert.AreEqual(100f, RecoilBloom.AfterShot(98f), 0.001f);
+
+            var rifle = WeaponCard.Find("rifle_assault");
+            Assert.AreEqual(26f, rifle.Damage, 0.001f);
+            Assert.AreEqual(30, rifle.Magazine);
+            Assert.IsTrue(rifle.Automatic);
+            Assert.IsTrue(rifle.Projectile);
+            Assert.AreEqual(7, WeaponCard.Find("shotgun_pump").Pellets);
+            Assert.IsFalse(WeaponCard.Find("shotgun_pump").Automatic);
+            Assert.IsTrue(string.IsNullOrEmpty(WeaponCard.Find("nope").Id));
+
+            Assert.AreEqual(NoiseType.GunshotQuiet, WeaponMod.Report(NoiseType.GunshotLoud, true));
+            Assert.AreEqual(NoiseType.GunshotLoud, WeaponMod.Report(NoiseType.GunshotLoud, false));
+            Assert.AreEqual(NoiseType.Explosion, WeaponMod.Report(NoiseType.Explosion, true));
+        }
     }
 }

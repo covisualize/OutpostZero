@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using OutpostZero.Core;
 
 namespace OutpostZero.Combat
 {
@@ -13,6 +14,15 @@ namespace OutpostZero.Combat
         private bool suppressor;
         private bool optic;
         private bool extendedMag;
+
+        public bool HasSuppressor => suppressor;
+
+        public static NoiseType Report(NoiseType kind, bool suppressed)
+        {
+            if (!suppressed) return kind;
+            if (kind == NoiseType.GunshotLoud || kind == NoiseType.GunshotQuiet) return NoiseType.GunshotQuiet;
+            return kind;
+        }
 
         public void ApplySuppressor() => Apply("suppressor");
 
