@@ -28,7 +28,8 @@ namespace OutpostZero.Core
         BleedDrip,
         DoorSwing,
         ShellClink,
-        RationBite
+        RationBite,
+        Cough
     }
 
     public enum WeaponType

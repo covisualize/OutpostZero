@@ -43,6 +43,7 @@ namespace OutpostZero.Shell
             if (id == "drip") return 6f;
             if (id == "creak") return 12f;
             if (id == "bite") return 6f;
+            if (id == "cough") return 10f;
             if (id == "whoosh") return 14f;
             return 18f;
         }

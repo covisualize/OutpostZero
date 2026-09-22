@@ -5807,6 +5807,34 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void AshMakesYouCoughAndAClearYardStaysQuiet()
+        {
+            Assert.AreEqual(7f, AshCough.Gap, 0.001f);
+            Assert.AreEqual(11f, AshCough.CrouchGap, 0.001f);
+            Assert.AreEqual(8f, AshCough.Radius, 0.001f);
+            Assert.IsFalse(AshCough.Due(false, false, 0f, 20f));
+            Assert.IsTrue(AshCough.Due(true, false, 0f, 1f));
+            Assert.IsFalse(AshCough.Due(true, false, 10f, 16.9f));
+            Assert.IsTrue(AshCough.Due(true, false, 10f, 17f));
+            Assert.IsFalse(AshCough.Due(true, true, 10f, 20.9f));
+            Assert.IsTrue(AshCough.Due(true, true, 10f, 21f));
+            Assert.IsFalse(AshCough.Due(true, false, 10f, 9f));
+            Assert.AreEqual(8f, AshCough.Carry(false), 0.001f);
+            Assert.AreEqual(4f, AshCough.Carry(true), 0.001f);
+            Assert.AreEqual(0.82f, AshVeil.Cut, 0.001f);
+            Assert.IsTrue(AshFall.Falls("ash_market"));
+            Assert.IsFalse(AshFall.Falls("rail_yard"));
+            Assert.AreEqual("[Cough, east]", Presentation.Caption(NoiseType.Cough, 1f, 0f, "en"));
+            Assert.AreEqual("[Tos, este]", Presentation.Caption(NoiseType.Cough, 1f, 0f, "es"));
+            Assert.AreEqual("", Presentation.Caption(NoiseType.WalkFootstep, 1f, 0f, "en"));
+            Assert.AreEqual(0f, HearGate.Perceived(8f, 40f, 1f, false, NoiseType.Thunder), 0.001f);
+            Assert.Greater(HearGate.Perceived(2f, 8f, 0.7f, false, NoiseType.Cough), 0.05f);
+            Assert.IsFalse(StormCover.Masks(10f, 11f, NoiseType.Cough));
+            Assert.IsTrue(ClipBook.Has("cough"));
+            Assert.AreEqual(10f, AudioSpace.MaxDistance("cough"), 0.001f);
+        }
+
+        [Test]
         public void AZombieWithoutARigStillAttacksAndFalls()
         {
             Assert.AreEqual(14f, PoseSheet.Lean(ZombieAI.ZombieState.Chase, 0f), 0.001f);

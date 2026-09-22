@@ -321,6 +321,8 @@ namespace OutpostZero.Player
             if (shine) railLight.intensity = RailLamp.Peak * LampCell.Beam(lampCell);
         }
 
+        private float lastCough;
+
         private void Update()
         {
             if (GameManager.Instance != null)
@@ -350,6 +352,20 @@ namespace OutpostZero.Player
             HandleMovement();
             HandleStamina();
             HandleWeapons();
+            Cough();
+        }
+
+        private void Cough()
+        {
+            if (GameManager.Instance == null || GameManager.Instance.CurrentState != GameState.ExpeditionActive) return;
+            var sky = OutpostZero.Graphics.WeatherController.Instance;
+            bool ash = sky != null && OutpostZero.Graphics.AshFall.Falls(sky.District);
+            if (!OutpostZero.Graphics.AshCough.Due(ash, IsCrouching, lastCough, Time.time)) return;
+            lastCough = Time.time;
+            float radius = OutpostZero.Graphics.AshCough.Carry(IsCrouching);
+            AudioManager.Instance?.PlayAt("cough", transform.position, IsCrouching ? 0.15f : 0.4f);
+            if (NoiseManager.Instance != null)
+                NoiseManager.Instance.EmitNoise(transform.position, radius, 0.7f, NoiseType.Cough, gameObject);
         }
 
         private void HandleInput()
