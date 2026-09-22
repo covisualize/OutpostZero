@@ -6069,6 +6069,35 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void AStormWearsTheYardAndAClearDayLeavesIt()
+        {
+            Assert.AreEqual(6, StormWear.StormHit);
+            Assert.AreEqual(2, StormWear.RainHit);
+            Assert.AreEqual(94, StormWear.After(100, 0, "Farm", WeatherKind.Storm));
+            Assert.AreEqual(98, StormWear.After(100, 0, "Barricade", WeatherKind.Rain));
+            Assert.AreEqual(100, StormWear.After(100, 0, "Farm", WeatherKind.Clear));
+            Assert.AreEqual(100, StormWear.After(100, 0, "Farm", WeatherKind.Fog));
+            Assert.AreEqual(100, StormWear.After(100, 0, "Cot", WeatherKind.Storm));
+            Assert.AreEqual(100, StormWear.After(100, 0, "Workbench", WeatherKind.Storm));
+            Assert.AreEqual(100, StormWear.After(100, 0, "Campfire", WeatherKind.Storm));
+            Assert.AreEqual(100, StormWear.After(100, 1, "Farm", WeatherKind.Storm));
+            Assert.AreEqual(0, StormWear.After(4, 0, "Generator", WeatherKind.Storm));
+            Assert.AreEqual(0, StormWear.After(0, 0, "Farm", WeatherKind.Storm));
+            Assert.AreEqual(94, StormWear.After(100, 0, "Purifier", WeatherKind.Storm));
+            Assert.AreEqual(94, StormWear.After(100, 0, "Lamp", WeatherKind.Storm));
+            Assert.IsTrue(StormWear.Outdoor("Watchtower"));
+            Assert.IsFalse(StormWear.Outdoor("Crate"));
+            Assert.AreEqual("The storm wore the yard", StormWear.Line(WeatherKind.Storm, "en"));
+            Assert.AreEqual("La tormenta gastó el patio", StormWear.Line(WeatherKind.Storm, "es"));
+            Assert.AreEqual("The rain wore the yard", StormWear.Line(WeatherKind.Rain, "en"));
+            Assert.AreEqual("La lluvia gastó el patio", StormWear.Line(WeatherKind.Rain, "es"));
+            Assert.AreEqual("", StormWear.Line(WeatherKind.Clear, "en"));
+            Assert.IsTrue(BuildSite.Ready(0, 94));
+            Assert.IsFalse(BuildSite.Ready(0, 0));
+            Assert.AreEqual(0.8f, StormBurn.Pull, 0.001f);
+        }
+
+        [Test]
         public void AZombieWithoutARigStillAttacksAndFalls()
         {
             Assert.AreEqual(14f, PoseSheet.Lean(ZombieAI.ZombieState.Chase, 0f), 0.001f);

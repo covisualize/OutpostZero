@@ -156,6 +156,14 @@ namespace OutpostZero.Colony
                 caught += RainCatch.Extra(placed[i].kind, placed[i].integrity, placed[i].site, sky);
             water += caught;
             for (int i = 0; i < placed.Count; i++) placed[i].age = plots[i].Age;
+            int worn = 0;
+            for (int i = 0; i < placed.Count; i++)
+            {
+                int next = StormWear.After(placed[i].integrity, placed[i].site, placed[i].kind, sky);
+                if (next < placed[i].integrity) worn++;
+                placed[i].integrity = next;
+            }
+            if (worn > 0) GameplayFeedback.Toast(StormWear.Line(sky, null));
             if (ColonyStorage.Instance == null) return;
             if (food > 0) ColonyStorage.Instance.AddFood(food);
             if (water > 0) ColonyStorage.Instance.AddWater(water);
