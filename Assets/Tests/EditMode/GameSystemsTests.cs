@@ -4195,6 +4195,27 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void SaveSlotsAndKeyRowsSpeakSpanish()
+        {
+            Assert.AreEqual("SAVES", MenuLine.Title("en"));
+            Assert.AreEqual("PARTIDAS", MenuLine.Title("es"));
+            Assert.AreEqual("Slot 1  day 4  Mara", MenuLine.Slot(1, 4, "Mara", true, "en"));
+            Assert.AreEqual("Ranura 1  día 4  Mara", MenuLine.Slot(1, 4, "Mara", true, "es"));
+            Assert.AreEqual("Slot 2  empty", MenuLine.Slot(2, 0, "", false, "en"));
+            Assert.AreEqual("Ranura 2  vacía", MenuLine.Slot(2, 9, "Mara", false, "es"));
+            Assert.AreEqual("Autosave  day 7  Ellis", MenuLine.Auto(7, "Ellis", "en"));
+            Assert.AreEqual("Autoguardado  día 7  Ellis", MenuLine.Auto(7, "Ellis", "es"));
+            Assert.AreEqual("Press a key for Reload", MenuLine.KeyWait("Reload", "en"));
+            Assert.AreEqual("Pulsa una tecla para Recargar", MenuLine.KeyWait("Reload", "es"));
+            Assert.AreEqual("Reload: R", MenuLine.KeyBound("Reload", "R", "en"));
+            Assert.AreEqual("Recargar: R", MenuLine.KeyBound("Reload", "R", "es"));
+            Assert.AreEqual("Press a button for Interact", MenuLine.PadWait("Interact", "en"));
+            Assert.AreEqual("Pulsa un botón para Interactuar", MenuLine.PadWait("Interact", "es"));
+            Assert.AreEqual("Pad Dodge: South", MenuLine.PadBound("Dodge", "South", "en"));
+            Assert.AreEqual("Mando Esquivar: South", MenuLine.PadBound("Dodge", "South", "es"));
+        }
+
+        [Test]
         public void StreetLampsFollowTheDarkAndNoonStaysOut()
         {
             Assert.AreEqual(0f, DayNightCycle.HourToNight(12f), 0.001f);

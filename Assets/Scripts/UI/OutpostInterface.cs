@@ -751,7 +751,9 @@ namespace OutpostZero.UI
             {
                 var action = (ControlBindings.Action)i;
                 int index = i;
-                string caption = listening == index ? "Press a key for " + action : action + ": " + ControlBindings.Label(action);
+                string caption = listening == index
+                    ? MenuLine.KeyWait(action.ToString(), null)
+                    : MenuLine.KeyBound(action.ToString(), ControlBindings.Label(action), null);
                 parent.Add(Button(caption, () =>
                 {
                     listening = index;
@@ -770,7 +772,9 @@ namespace OutpostZero.UI
             {
                 var action = (PadBindings.Action)i;
                 int index = i;
-                string caption = padListen == index ? "Press a button for " + action : "Pad " + action + ": " + PadBindings.Label(action);
+                string caption = padListen == index
+                    ? MenuLine.PadWait(action.ToString(), null)
+                    : MenuLine.PadBound(action.ToString(), PadBindings.Label(action), null);
                 parent.Add(Button(caption, () =>
                 {
                     padListen = index;
@@ -1173,7 +1177,7 @@ namespace OutpostZero.UI
 
         private void DrawSlots(VisualElement menu)
         {
-            menu.Add(Title("SAVES"));
+            menu.Add(Title(MenuLine.Title(null)));
             var cards = SaveSystem.Instance != null ? SaveSystem.Instance.Cards() : System.Array.Empty<SaveSlots.Card>();
             for (int i = 0; i < SaveSlots.ManualCount; i++)
             {
@@ -1183,9 +1187,7 @@ namespace OutpostZero.UI
                     if (cards[c].Slot == i) card = cards[c];
                 }
                 int index = i;
-                string label = card.Occupied
-                    ? "Slot " + (i + 1) + "  day " + card.Day + "  " + card.Leader
-                    : "Slot " + (i + 1) + "  empty";
+                string label = MenuLine.Slot(i + 1, card.Day, card.Leader, card.Occupied, null);
                 menu.Add(Button(label, () =>
                 {
                     slotsOpen = false;
@@ -1211,7 +1213,7 @@ namespace OutpostZero.UI
             }
             if (auto.Occupied)
             {
-                menu.Add(Button("Autosave  day " + auto.Day + "  " + auto.Leader, () =>
+                menu.Add(Button(MenuLine.Auto(auto.Day, auto.Leader, null), () =>
                 {
                     slotsOpen = false;
                     Go(FlowStep.Sanctuary, () =>
