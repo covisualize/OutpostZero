@@ -80,6 +80,7 @@ namespace OutpostZero.Player
             currentStamina = maxStamina;
 
             healthSystem.OnDeath += HandlePlayerDeath;
+            healthSystem.OnDamaged += HandleHurt;
             GameLayers.ApplyRecursively(gameObject, GameLayers.Player);
         }
 
@@ -629,6 +630,12 @@ namespace OutpostZero.Player
             if (equippedWeapons == null || equippedWeapons.Length <= 1) return;
             int nextIndex = (activeWeaponIndex + direction + equippedWeapons.Length) % equippedWeapons.Length;
             SelectWeapon(nextIndex);
+        }
+
+        private void HandleHurt(float amount, Vector3 point)
+        {
+            if (!Combat.ContactCue.Pain(true, healthSystem.CurrentHealth)) return;
+            Shell.AudioManager.Instance?.Play("pained", 0.4f, 0.92f);
         }
 
         private void HandlePlayerDeath(Vector3 hitPoint, Vector3 hitDir, GameObject killer)

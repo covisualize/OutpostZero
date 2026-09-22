@@ -16,7 +16,7 @@ namespace OutpostZero.Shell
     {
         public static float SpatialBlend(string id)
         {
-            if (id == "ambient" || id == "pulse" || id == "ui" || id == "rain" || id == "wind" || id == "heart" || id == "breath") return 0f;
+            if (id == "ambient" || id == "pulse" || id == "ui" || id == "rain" || id == "wind" || id == "heart" || id == "breath" || id == "pained") return 0f;
             if (id != null && id.StartsWith("step")) return 0.35f;
             return 1f;
         }
@@ -365,7 +365,13 @@ namespace OutpostZero.Shell
             if (tail > 0.001f) PlayAt("gun_far", muzzle, tail, SoundTail.Pitch(distance));
         }
 
-        private void OnHit(Vector3 point, Vector3 normal, GameObject target) => PlayAt("hit", point, 0.45f);
+        private void OnHit(Vector3 point, Vector3 normal, GameObject target)
+        {
+            bool melee = CombatEvents.FromWeapon && CombatEvents.LastWeapon == WeaponType.Melee;
+            bool barrel = target != null && target.GetComponentInParent<DestructibleHazard>() != null;
+            string id = melee ? (barrel ? "clang" : "chop") : "hit";
+            PlayAt(id, point, melee ? 0.5f : 0.45f);
+        }
 
         private void OnKill(GameObject victim, GameObject killer)
         {
@@ -460,6 +466,9 @@ namespace OutpostZero.Shell
             if (id == "crackle") return noise;
             if (id == "buzz") return Mathf.Sin(t * 55f) * 0.35f;
             if (id == "hiss") return noise * Mathf.Sin(t * 28f);
+            if (id == "chop") return noise * Mathf.Sin(t * 12f);
+            if (id == "clang") return Mathf.Sin(t * 70f);
+            if (id == "pained") return Mathf.Sin(t * 16f);
             return noise;
         }
 

@@ -3155,6 +3155,22 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void ASwingChopsFleshAndClangsAWall()
+        {
+            Assert.AreEqual("chop", ContactCue.Impact(true, true));
+            Assert.AreEqual("chop", ContactCue.Impact(true, false));
+            Assert.AreEqual("clang", ContactCue.Impact(false, true));
+            Assert.AreEqual("", ContactCue.Impact(false, false));
+            Assert.IsTrue(ContactCue.Wall(GameLayers.Environment));
+            Assert.IsFalse(ContactCue.Wall(GameLayers.Enemy));
+            Assert.IsTrue(ContactCue.Pain(true, 40f));
+            Assert.IsFalse(ContactCue.Pain(true, 0f));
+            Assert.IsFalse(ContactCue.Pain(false, 40f));
+            Assert.AreEqual(0f, AudioSpace.SpatialBlend("pained"), 0.001f);
+            Assert.AreEqual(1f, AudioSpace.SpatialBlend("clang"), 0.001f);
+        }
+
+        [Test]
         public void GoreOffDropsBloodAndAShotgunSpraysTheWall()
         {
             Assert.AreEqual(0, GoreMark.Splats(0, false, true));

@@ -64,6 +64,7 @@ namespace OutpostZero.Combat
             // Detect targets in front arc
             Collider[] colliders = Physics.OverlapSphere(origin, range, hitMask);
             int hitCount = 0;
+            bool wall = false;
 
             foreach (var col in colliders)
             {
@@ -90,7 +91,13 @@ namespace OutpostZero.Combat
                             rb.AddForce(dirToTarget * knockbackForce, ForceMode.Impulse);
                         }
                     }
+                    else if (ContactCue.Wall(col.gameObject.layer)) wall = true;
                 }
+            }
+
+            if (hitCount == 0 && wall)
+            {
+                OutpostZero.Shell.AudioManager.Instance?.PlayAt("clang", origin, 0.42f, 0.85f);
             }
 
             if (hitCount > 0 && audioSource != null && hitFleshSound != null)
