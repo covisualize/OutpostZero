@@ -34,6 +34,36 @@ namespace OutpostZero.Graphics
         }
     }
 
+    /// <summary>
+    /// Rain leaves four puddles on the avenue. Fog and a dry street leave them hidden.
+    /// </summary>
+    public static class RainPuddle
+    {
+        public const int Count = 4;
+        public const float Y = 0.03f;
+
+        public struct Spot
+        {
+            public float X;
+            public float Z;
+            public float W;
+            public float D;
+        }
+
+        public static bool Shows(float wetness)
+        {
+            return wetness >= 0.65f;
+        }
+
+        public static Spot At(int index)
+        {
+            if (index == 1) return new Spot { X = -2.4f, Z = 9f, W = 1.6f, D = 1.05f };
+            if (index == 2) return new Spot { X = 3.1f, Z = 14f, W = 1.2f, D = 0.85f };
+            if (index == 3) return new Spot { X = -1.2f, Z = 17f, W = 1.8f, D = 1.1f };
+            return new Spot { X = 2.2f, Z = 6f, W = 1.4f, D = 0.9f };
+        }
+    }
+
     public class WeatherController : MonoBehaviour
     {
         public static WeatherController Instance { get; private set; }
@@ -44,6 +74,7 @@ namespace OutpostZero.Graphics
         private ParticleSystem rain;
         private ParticleSystem debris;
         private ParticleSystem ash;
+        private GameObject puddles;
         private string district = "";
         private WeatherKind applied = (WeatherKind)(-1);
         private float nextShift;
@@ -120,6 +151,8 @@ namespace OutpostZero.Graphics
             RenderSettings.fogColor = GroundMist.Tint(kind, night);
             RenderSettings.fogDensity = density;
             Shader.SetGlobalFloat("_WindStrength", GroundMist.Wind(kind));
+            Shader.SetGlobalFloat("_OutpostWet", WeatherSurface.Wetness(kind));
+            HoldPuddles(WeatherSurface.Wetness(kind));
             multiplier = WeatherSurface.Sight(kind);
             if (SkyBand.Rains(kind)) EnsureRain();
             if (rain != null)
@@ -168,6 +201,29 @@ namespace OutpostZero.Graphics
                 var main = debris.main;
                 main.maxParticles = debrisCap;
             }
+        }
+
+        private void HoldPuddles(float wetness)
+        {
+            if (puddles == null)
+            {
+                puddles = new GameObject("RainPuddles");
+                puddles.transform.SetParent(transform, false);
+                for (int i = 0; i < RainPuddle.Count; i++)
+                {
+                    var spot = RainPuddle.At(i);
+                    var body = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                    body.name = "Puddle";
+                    body.transform.SetParent(puddles.transform, false);
+                    body.transform.position = new Vector3(spot.X, RainPuddle.Y, spot.Z);
+                    body.transform.localScale = new Vector3(spot.W, 0.02f, spot.D);
+                    var collider = body.GetComponent<Collider>();
+                    if (collider != null) Destroy(collider);
+                    var renderer = body.GetComponent<Renderer>();
+                    if (renderer != null) renderer.material.color = new Color(0.1f, 0.12f, 0.14f);
+                }
+            }
+            puddles.SetActive(RainPuddle.Shows(wetness));
         }
 
         private void EnsureRain()

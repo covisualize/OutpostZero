@@ -544,6 +544,16 @@ namespace OutpostZero.Tests.EditMode
         public void RainWetsTheGroundAndShotsSitInTheWorld()
         {
             Assert.AreEqual(0.65f, WeatherSurface.Wetness(WeatherKind.Rain));
+            Assert.IsTrue(RainPuddle.Shows(WeatherSurface.Wetness(WeatherKind.Rain)));
+            Assert.IsTrue(RainPuddle.Shows(WeatherSurface.Wetness(WeatherKind.Storm)));
+            Assert.IsFalse(RainPuddle.Shows(WeatherSurface.Wetness(WeatherKind.Fog)));
+            Assert.IsFalse(RainPuddle.Shows(WeatherSurface.Wetness(WeatherKind.Clear)));
+            Assert.AreEqual(4, RainPuddle.Count);
+            for (int i = 0; i < RainPuddle.Count; i++)
+            {
+                var spot = RainPuddle.At(i);
+                Assert.IsTrue(DressingPlan.OnTheStreet(spot.X, spot.Z));
+            }
             Assert.AreEqual(0.2f, WeatherSurface.Wetness(WeatherKind.Fog));
             Assert.AreEqual(0f, WeatherSurface.Wetness(WeatherKind.Clear));
             Assert.AreEqual(0.62f, WeatherSurface.Sight(WeatherKind.Fog));

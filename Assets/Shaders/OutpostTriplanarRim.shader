@@ -70,6 +70,7 @@ Shader "OutpostZero/TriplanarRim"
             SAMPLER(sampler_OcclusionMap);
             TEXTURE2D(_MaskMap);
             SAMPLER(sampler_MaskMap);
+            float _OutpostWet;
 
             float Hash(float3 p)
             {
@@ -139,7 +140,7 @@ Shader "OutpostZero/TriplanarRim"
                 float3 color = albedo * (0.25 + ndotl) * lerp(0.85, 1.15, noise);
                 float grime = saturate(1.15 - input.positionWS.y * 0.18);
                 color *= lerp(1.0, 0.7, grime * 0.4);
-                float wet = _Wetness * saturate(normal.y);
+                float wet = max(_Wetness, _OutpostWet) * saturate(normal.y);
                 color = lerp(color, color * float3(0.55, 0.62, 0.72), wet * 0.6);
                 float3 reflectDir = reflect(-mainLight.direction, normal);
                 float spec = pow(saturate(dot(reflectDir, view)), 28.0) * wet;
