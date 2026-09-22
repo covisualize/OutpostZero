@@ -952,7 +952,7 @@ namespace OutpostZero.UI
                 foreach (var module in GridBuilder.Instance.Placed)
                 {
                     if (!MendBoard.Needs(module.site, module.integrity)) continue;
-                    camp.Add(Body(Loc.T("camp.mend") + " " + module.kind + " " + module.integrity));
+                    camp.Add(Body(Loc.T("camp.mend_module") + " " + module.kind + " " + module.integrity));
                 }
             }
             camp.Add(build);

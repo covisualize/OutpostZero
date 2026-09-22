@@ -2989,7 +2989,7 @@ namespace OutpostZero.Tests.EditMode
             Assert.AreEqual(1, MendBoard.Pick(new[] { 1, 0 }, new[] { 20, 90 }));
             Assert.AreEqual(-1, MendBoard.Pick(new[] { 0 }, new[] { 100 }));
             Assert.AreEqual(-1, MendBoard.Pick(null, new[] { 40 }));
-            Assert.AreEqual("Reparar", Loc.T("camp.mend", "es"));
+            Assert.AreEqual("Reparar", Loc.T("camp.mend_module", "es"));
         }
 
         [Test]
