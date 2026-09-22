@@ -17,14 +17,6 @@ namespace OutpostZero.Player
 
         private void Update()
         {
-            float value = 0.5f;
-            if (controller != null)
-            {
-                if (controller.IsCrouching) value = 0.22f;
-                else if (controller.IsSprinting) value = 0.85f;
-                if (controller.FlashlightOn) value += 0.28f;
-            }
-
             float nearest = 0f;
             for (int i = 0; i < LightSource.All.Count; i++)
             {
@@ -37,17 +29,11 @@ namespace OutpostZero.Player
                 }
             }
 
-            var night = DayNightCycle.Instance;
-            if (night != null && night.NightFactor > 0.45f)
-            {
-                value = Mathf.Lerp(value, value * 0.45f + nearest * 0.7f, night.NightFactor);
-            }
-            else
-            {
-                value += nearest * 0.15f;
-            }
-
-            exposure = Mathf.Clamp01(value);
+            float night = DayNightCycle.Instance != null ? DayNightCycle.Instance.NightFactor : 0f;
+            bool crouch = controller != null && controller.IsCrouching;
+            bool sprint = controller != null && controller.IsSprinting;
+            bool flashlight = controller != null && controller.FlashlightOn;
+            exposure = SpotRange.Exposure(crouch, sprint, flashlight, night, nearest);
         }
     }
 }

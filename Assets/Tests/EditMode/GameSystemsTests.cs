@@ -1544,5 +1544,21 @@ namespace OutpostZero.Tests.EditMode
             Assert.AreEqual("", ItemBrief.Text(null));
             Assert.AreEqual("", ItemBrief.Blurb("nope"));
         }
+
+        [Test]
+        public void ADarkCrouchHidesFiveMetersUntilTheFlashlightOrABottle()
+        {
+            float dark = SpotRange.Exposure(true, false, false, 1f, 0f);
+            Assert.IsFalse(SpotRange.Notices(5f, 16f, dark, true, 1f, 1f, 0f, 110f));
+            Assert.Less(SpotRange.Meters(16f, dark, true, 1f, 1f), 5f);
+            float lit = SpotRange.Exposure(true, false, true, 1f, 0f);
+            Assert.AreEqual(1f, lit, 0.001f);
+            Assert.IsTrue(SpotRange.Notices(5f, 16f, lit, true, 1f, 1f, 0f, 110f));
+            Assert.IsTrue(SpotRange.Beam(5f, 10f, true));
+            Assert.IsFalse(SpotRange.Beam(5f, 10f, false));
+            Assert.IsFalse(SpotRange.Beam(13f, 0f, true));
+            Assert.Greater(ThrowArc.Flight(ThrowArc.Height, ThrowArc.Forward, ThrowArc.Lift, ThrowArc.Gravity), 15f);
+            Assert.AreEqual(18f, ThrowArc.NoiseRadius(false), 0.01f);
+        }
     }
 }

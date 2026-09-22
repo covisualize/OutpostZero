@@ -116,7 +116,7 @@ namespace OutpostZero.Player
             lure.transform.localScale = Vector3.one * 0.25f;
             var body = lure.AddComponent<Rigidbody>();
             body.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
-            body.AddForce((transform.forward + Vector3.up * 0.45f) * 8f, ForceMode.VelocityChange);
+            body.AddForce(transform.forward * ThrowArc.Forward + Vector3.up * ThrowArc.Lift, ForceMode.VelocityChange);
             var thrown = lure.AddComponent<ThrownHazard>();
             thrown.Configure(molotov);
         }
@@ -146,7 +146,7 @@ namespace OutpostZero.Player
             Vector3 origin = transform.position;
             if (Sensory.NoiseManager.Instance != null)
             {
-                Sensory.NoiseManager.Instance.EmitNoise(origin, molotov ? 18f : 16f, 1f, molotov ? NoiseType.Explosion : NoiseType.ObjectBroken, gameObject);
+                Sensory.NoiseManager.Instance.EmitNoise(origin, ThrowArc.NoiseRadius(molotov), 1f, molotov ? NoiseType.Explosion : NoiseType.ObjectBroken, gameObject);
             }
             if (molotov)
             {

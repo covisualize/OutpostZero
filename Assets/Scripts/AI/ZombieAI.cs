@@ -591,26 +591,26 @@ namespace OutpostZero.AI
 
             // Player crouching reduces effective detection distance
             var visibility = player.GetComponent<PlayerVisibility>();
-            float exposure = visibility != null ? visibility.Exposure : 0.65f;
-            float effectiveSightRange = sightRange * Mathf.Lerp(0.35f, 1.2f, exposure);
-            if (player.IsCrouching) effectiveSightRange *= 0.75f;
-            effectiveSightRange *= WeatherController.SightMultiplier;
-            effectiveSightRange *= OutpostZero.Expedition.CoverPost.ScaleFor(player.transform.position, transform.position, player.IsCrouching);
-
-            if (dist <= effectiveSightRange)
+            float exposure = visibility != null
+                ? visibility.Exposure
+                : SpotRange.Exposure(player.IsCrouching, player.IsSprinting, player.FlashlightOn, 0f, 0f);
+            float cover = OutpostZero.Expedition.CoverPost.ScaleFor(player.transform.position, transform.position, player.IsCrouching);
+            float angle = Vector3.Angle(transform.forward, dirToTarget.normalized);
+            Vector3 fromPlayer = transform.position - player.transform.position;
+            fromPlayer.y = 0f;
+            float beamAngle = Vector3.Angle(player.transform.forward, fromPlayer.sqrMagnitude > 0.001f ? fromPlayer.normalized : player.transform.forward);
+            bool inBeam = SpotRange.Beam(dist, beamAngle, player.FlashlightOn);
+            bool inCone = SpotRange.Notices(dist, sightRange, exposure, player.IsCrouching, WeatherController.SightMultiplier, cover, angle, sightAngle);
+            if (inCone || inBeam)
             {
-                float angle = Vector3.Angle(transform.forward, dirToTarget.normalized);
-                if (angle <= sightAngle * 0.5f)
+                Vector3 chest = player.transform.position + Vector3.up * 1.0f;
+                bool headBlocked = Physics.Raycast(eyePos, dirToTarget.normalized, dist, visionMask);
+                Vector3 toChest = chest - eyePos;
+                bool chestBlocked = Physics.Raycast(eyePos, toChest.normalized, toChest.magnitude, visionMask);
+                if (!headBlocked || !chestBlocked)
                 {
-                    Vector3 chest = player.transform.position + Vector3.up * 1.0f;
-                    bool headBlocked = Physics.Raycast(eyePos, dirToTarget.normalized, dist, visionMask);
-                    Vector3 toChest = chest - eyePos;
-                    bool chestBlocked = Physics.Raycast(eyePos, toChest.normalized, toChest.magnitude, visionMask);
-                    if (!headBlocked || !chestBlocked)
-                    {
-                        currentTarget = player.transform;
-                        SetState(ZombieState.Chase);
-                    }
+                    currentTarget = player.transform;
+                    SetState(ZombieState.Chase);
                 }
             }
         }
