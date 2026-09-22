@@ -1365,5 +1365,33 @@ namespace OutpostZero.Tests.EditMode
             Assert.AreEqual(ax, cx);
             Assert.AreEqual(az, cz);
         }
+
+        [Test]
+        public void AHordePushesApartInsteadOfStandingInOneSpot()
+        {
+            CrowdSpace.Push(0f, 0f, new[] { 0.5f }, new[] { 0f }, 1, out float awayX, out float awayZ);
+            Assert.Less(awayX, -0.6f);
+            Assert.Greater(awayX, -0.7f);
+            Assert.AreEqual(0f, awayZ, 0.001f);
+
+            CrowdSpace.Push(0f, 0f, new[] { 3f }, new[] { 0f }, 1, out float farX, out float farZ);
+            Assert.AreEqual(0f, farX, 0.001f);
+            Assert.AreEqual(0f, farZ, 0.001f);
+
+            CrowdSpace.Push(0f, 0f, new[] { 0f }, new[] { 0f }, 1, out float sameX, out float sameZ);
+            Assert.AreEqual(0f, sameX, 0.001f);
+            Assert.AreEqual(0f, sameZ, 0.001f);
+
+            var packedX = new float[20];
+            var packedZ = new float[20];
+            for (int i = 0; i < packedX.Length; i++) packedX[i] = 0.2f;
+            CrowdSpace.Push(0f, 0f, packedX, packedZ, packedX.Length, out float clampX, out float clampZ);
+            float clamp = (float)System.Math.Sqrt(clampX * clampX + clampZ * clampZ);
+            Assert.AreEqual(CrowdSpace.MaxPush, clamp, 0.001f);
+
+            Assert.AreEqual(1, CrowdSpace.Neighbors(0f, 0f, new[] { 0.5f, 3f }, new[] { 0f, 0f }, 2));
+            Assert.AreEqual(30, CrowdSpace.Priority(0));
+            Assert.AreEqual(99, CrowdSpace.Priority(10));
+        }
     }
 }

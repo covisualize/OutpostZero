@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 using OutpostZero.Core;
@@ -66,6 +67,9 @@ namespace OutpostZero.AI
         private float dashX;
         private float dashZ = 1f;
         private Vector3 spawnOrigin;
+        private static readonly List<ZombieAI> aliveCrowd = new List<ZombieAI>();
+        private static readonly float[] crowdX = new float[48];
+        private static readonly float[] crowdZ = new float[48];
         [SerializeField] private ZombieSpecialAbility specialAbility;
         private string archetypeId = "";
         private int sightToken;
@@ -176,6 +180,7 @@ namespace OutpostZero.AI
 
         private void OnEnable()
         {
+            if (!aliveCrowd.Contains(this)) aliveCrowd.Add(this);
             if (NoiseManager.Instance != null)
             {
                 NoiseManager.Instance.RegisterListener(this);
@@ -190,6 +195,7 @@ namespace OutpostZero.AI
 
         private void OnDisable()
         {
+            aliveCrowd.Remove(this);
             if (NoiseManager.Instance != null)
             {
                 NoiseManager.Instance.UnregisterListener(this);
@@ -241,6 +247,27 @@ namespace OutpostZero.AI
                     UpdateSearching();
                     break;
             }
+
+            Separate();
+        }
+
+        private void Separate()
+        {
+            if (agent == null || !agent.isOnNavMesh) return;
+            if (abilityClock.Phase == 2 || currentState == ZombieState.Attack) return;
+            int count = 0;
+            for (int i = 0; i < aliveCrowd.Count && count < crowdX.Length; i++)
+            {
+                var other = aliveCrowd[i];
+                if (other == null || other == this || other.currentState == ZombieState.Dead) continue;
+                crowdX[count] = other.transform.position.x;
+                crowdZ[count] = other.transform.position.z;
+                count++;
+            }
+            agent.avoidancePriority = CrowdSpace.Priority(CrowdSpace.Neighbors(transform.position.x, transform.position.z, crowdX, crowdZ, count));
+            CrowdSpace.Push(transform.position.x, transform.position.z, crowdX, crowdZ, count, out float pushX, out float pushZ);
+            if (pushX * pushX + pushZ * pushZ < 0.0001f) return;
+            agent.Move(new Vector3(pushX, 0f, pushZ) * CrowdSpace.Slide * Time.deltaTime);
         }
 
         private void SetState(ZombieState newState)
