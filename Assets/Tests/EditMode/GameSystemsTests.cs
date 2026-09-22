@@ -4315,6 +4315,30 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void ABeltAndADropFollowTheLanguage()
+        {
+            Assert.AreEqual("Belt is full", PackSay.Full("en"));
+            Assert.AreEqual("El cinturón está lleno", PackSay.Full("es"));
+            Assert.AreEqual("Cleared belt", PackSay.Clear("en"));
+            Assert.AreEqual("Cinturón vacío", PackSay.Clear("es"));
+            Assert.AreEqual("Belt 5", PackSay.Slot(5, "en"));
+            Assert.AreEqual("Belt 5", PackSay.Slot(0, "en"));
+            Assert.AreEqual("Cinturón 8", PackSay.Slot(8, "es"));
+            Assert.AreEqual("Cinturón 8", PackSay.Slot(12, "es"));
+            Assert.AreEqual("Dropped Bandage", PackSay.Dropped("bandage", "", "en"));
+            Assert.AreEqual("Soltado Vendaje", PackSay.Dropped("bandage", "Bandage", "es"));
+            Assert.AreEqual("Dropped Spare", PackSay.Dropped("spare_widget", "Spare", "en"));
+            Assert.AreEqual("Dropped spare_widget", PackSay.Dropped("spare_widget", "", "en"));
+            Assert.AreEqual("Pack is full", PackSay.Pack("en"));
+            Assert.AreEqual("La mochila está llena", PackSay.Pack("es"));
+            Assert.AreEqual("Poisoned", PackSay.Poison("en"));
+            Assert.AreEqual("Envenenado", PackSay.Poison("es"));
+            Assert.AreEqual("Crafted Painkillers", PackSay.Made("painkillers", "Painkillers", "en"));
+            Assert.AreEqual("Fabricado Analgésicos", PackSay.Made("painkillers", "Painkillers", "es"));
+            Assert.AreEqual("Crafted Spare", PackSay.Made("spare_widget", "Spare", "en"));
+        }
+
+        [Test]
         public void StreetLampsFollowTheDarkAndNoonStaysOut()
         {
             Assert.AreEqual(0f, DayNightCycle.HourToNight(12f), 0.001f);

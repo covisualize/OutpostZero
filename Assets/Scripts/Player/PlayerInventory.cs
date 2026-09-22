@@ -60,10 +60,10 @@ namespace OutpostZero.Player
             int slot = ItemBelt.Toggle(belt, id);
             if (slot < 0)
             {
-                if (slot == -2) GameplayFeedback.Toast("Belt is full");
+                if (slot == -2) GameplayFeedback.Toast(PackSay.Full(null));
                 return false;
             }
-            GameplayFeedback.Toast(occupied ? "Cleared belt" : "Belt " + (slot + 5));
+            GameplayFeedback.Toast(occupied ? PackSay.Clear(null) : PackSay.Slot(slot + 5, null));
             OnInventoryChanged?.Invoke();
             return true;
         }
@@ -406,7 +406,7 @@ namespace OutpostZero.Player
             drop.transform.localScale = new Vector3(0.28f, 0.18f, 0.28f);
             drop.layer = GameLayers.Interactable;
             drop.AddComponent<WorldItem>().Configure(id, count);
-            GameplayFeedback.Toast("Dropped " + (string.IsNullOrEmpty(name) ? id : name));
+            GameplayFeedback.Toast(PackSay.Dropped(id, name, null));
         }
 
         public bool TryConsume(string id, int count)

@@ -163,11 +163,11 @@ namespace OutpostZero.Colony
             else if (!inventory.TryAddItem(record.Id, record.DisplayName, record.Category, recipe.OutputCount, record.Weight))
             {
                 Refund(due, bill);
-                GameplayFeedback.Toast("Pack is full");
+                GameplayFeedback.Toast(PackSay.Pack(null));
                 return false;
             }
 
-            GameplayFeedback.Toast(stock > 0 ? Loc.T("camp.press") + " " + stock : "Crafted " + recipe.Label);
+            GameplayFeedback.Toast(stock > 0 ? Loc.T("camp.press") + " " + stock : PackSay.Made(recipe.Id, recipe.Label, null));
             return true;
         }
 

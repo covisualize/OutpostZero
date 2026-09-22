@@ -1,4 +1,5 @@
 using UnityEngine;
+using OutpostZero.Colony;
 using OutpostZero.Combat;
 using OutpostZero.Core;
 
@@ -43,7 +44,7 @@ namespace OutpostZero.Player
         public void ApplyPoison(float seconds)
         {
             poisonRemaining = Mathf.Max(poisonRemaining, seconds);
-            GameplayFeedback.Toast("Poisoned");
+            GameplayFeedback.Toast(PackSay.Poison(null));
         }
 
         public void ApplyBleed(float seconds)
