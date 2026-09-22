@@ -56,6 +56,32 @@ namespace OutpostZero.Colony
             return faction + " " + Word("stall.refuse", language);
         }
 
+        public static string Wait(string language) => Word("stall.wait", language);
+        public static string Shake(string language) => Word("stall.shake", language);
+        public static string Full(string language) => Word("stall.pack", language);
+        public static string NoBandage(string language) => Word("stall.nobandage", language);
+        public static string Blueprint(string language) => Word("stall.blueprint", language);
+        public static string Nest(string language) => Word("stall.nest", language);
+        public static string Through(string language) => Word("stall.through", language);
+
+        public static string Bartered(int scrap, string language)
+        {
+            if (scrap < 0) scrap = 0;
+            return Word("stall.bartered", language) + " " + scrap + " " + Word("stall.barterscrap", language);
+        }
+
+        public static string Deal(string id, int stock, string language)
+        {
+            string line = Name(id, language) + " " + Word("stall.sealed", language);
+            if (stock > 0) line += "  " + Word("camp.rounds", language) + " +" + stock;
+            return line;
+        }
+
+        public static string Arrival(string id, string language)
+        {
+            return Name(id, language) + " " + Word("stall.gate", language);
+        }
+
         private static string Word(string key, string language)
         {
             if (string.IsNullOrEmpty(language)) return Loc.T(key);

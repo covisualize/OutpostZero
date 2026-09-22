@@ -40,7 +40,7 @@ namespace OutpostZero.Colony
         {
             if (!open && string.IsNullOrEmpty(ActiveId))
             {
-                GameplayFeedback.Toast("No caravan until the next visit");
+                GameplayFeedback.Toast(StallVoice.Wait(null));
                 return;
             }
             open = !open;
@@ -60,18 +60,18 @@ namespace OutpostZero.Colony
             string faction = ActiveId;
             if (string.IsNullOrEmpty(faction))
             {
-                GameplayFeedback.Toast("No caravan until the next visit");
+                GameplayFeedback.Toast(StallVoice.Wait(null));
                 return false;
             }
             if (CaravanBook.Refuses(faction, StandingOf(faction)))
             {
-                GameplayFeedback.Toast(CaravanBook.Display(faction) + " will not trade");
+                GameplayFeedback.Toast(StallVoice.Refuse(StallVoice.Name(faction, null), null));
                 return false;
             }
             int price = Price(itemId);
             if (ColonyStorage.Instance == null || !ColonyStorage.Instance.TrySpendScrap(price))
             {
-                GameplayFeedback.Toast("The merchant shakes their head");
+                GameplayFeedback.Toast(StallVoice.Shake(null));
                 return false;
             }
             var record = ItemCatalog.Find(itemId);
@@ -91,11 +91,11 @@ namespace OutpostZero.Colony
             else if (!inventory.TryAddItem(record.Id, record.DisplayName, record.Category, 1, record.Weight))
             {
                 ColonyStorage.Instance.RestoreScrap(price);
-                GameplayFeedback.Toast("The pack is full");
+                GameplayFeedback.Toast(StallVoice.Full(null));
                 return false;
             }
             CaravanBook.Shift(standing, faction, 2);
-            GameplayFeedback.Toast(CaravanBook.Display(faction) + " deal sealed" + (stock > 0 ? "  " + Loc.T("camp.rounds") + " +" + stock : ""));
+            GameplayFeedback.Toast(StallVoice.Deal(faction, stock, null));
             return true;
         }
 
@@ -105,7 +105,7 @@ namespace OutpostZero.Colony
             var inventory = PlayerRegistry.Current != null ? PlayerRegistry.Current.GetComponent<PlayerInventory>() : null;
             if (string.IsNullOrEmpty(faction) || inventory == null || !inventory.TryConsume("bandage", 1))
             {
-                GameplayFeedback.Toast("No bandage to barter");
+                GameplayFeedback.Toast(StallVoice.NoBandage(null));
                 return false;
             }
             int payout = Mathf.Max(1, Price("bandage") / 2);
@@ -118,7 +118,7 @@ namespace OutpostZero.Colony
                 return false;
             }
             CaravanBook.Shift(standing, faction, 1);
-            GameplayFeedback.Toast("Bartered a bandage for " + stored + " scrap");
+            GameplayFeedback.Toast(StallVoice.Bartered(stored, null));
             return true;
         }
 
@@ -128,13 +128,13 @@ namespace OutpostZero.Colony
             var inventory = PlayerRegistry.Current != null ? PlayerRegistry.Current.GetComponent<PlayerInventory>() : null;
             if (inventory == null || !inventory.TrySpendMedical(4))
             {
-                GameplayFeedback.Toast("The Clinic wants 4 medkits");
+                GameplayFeedback.Toast(StallVoice.Quest("clinic", false, null));
                 return false;
             }
             quests = CaravanBook.MarkQuest(quests, "clinic");
             CaravanBook.Shift(standing, "clinic", 15);
             ColonyStorage.Instance?.LearnPrint("dressing");
-            GameplayFeedback.Toast("Clinic blueprint: field dressings");
+            GameplayFeedback.Toast(StallVoice.Blueprint(null));
             return true;
         }
 
@@ -143,7 +143,7 @@ namespace OutpostZero.Colony
             if (CaravanBook.QuestDone(quests, "farmers")) return;
             quests = CaravanBook.MarkQuest(quests, "farmers");
             CaravanBook.Shift(standing, "farmers", 10);
-            GameplayFeedback.Toast("Free Farmers remember the cleared nest");
+            GameplayFeedback.Toast(StallVoice.Nest(null));
         }
 
         public void NoteExtracted()
@@ -151,7 +151,7 @@ namespace OutpostZero.Colony
             if (!CaravanBook.Visits(Day) || CaravanBook.QuestDone(quests, "caravan")) return;
             quests = CaravanBook.MarkQuest(quests, "caravan");
             CaravanBook.Shift(standing, "caravan", 10);
-            GameplayFeedback.Toast("The Caravan made it through");
+            GameplayFeedback.Toast(StallVoice.Through(null));
         }
 
         public void OnMorning(int day)
@@ -161,7 +161,7 @@ namespace OutpostZero.Colony
             if (!string.IsNullOrEmpty(visitor))
             {
                 CaravanBook.Gift(standing, visitor);
-                GameplayFeedback.Toast(CaravanBook.Display(visitor) + " is at the gate");
+                GameplayFeedback.Toast(StallVoice.Arrival(visitor, null));
             }
         }
 

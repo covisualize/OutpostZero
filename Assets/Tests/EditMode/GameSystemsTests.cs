@@ -4460,6 +4460,39 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void AStallToastFollowsTheLanguage()
+        {
+            Assert.AreEqual("No caravan until the next visit", StallVoice.Wait("en"));
+            Assert.AreEqual("No hay caravana hasta la próxima visita", StallVoice.Wait("es"));
+            Assert.AreEqual("Iron Militia will not trade", StallVoice.Refuse(StallVoice.Name("militia", "en"), "en"));
+            Assert.AreEqual("Milicia de Hierro no comercia", StallVoice.Refuse(StallVoice.Name("militia", "es"), "es"));
+            Assert.AreEqual("The merchant shakes their head", StallVoice.Shake("en"));
+            Assert.AreEqual("El mercader niega con la cabeza", StallVoice.Shake("es"));
+            Assert.AreEqual("The pack is full", StallVoice.Full("en"));
+            Assert.AreEqual("La mochila está llena", StallVoice.Full("es"));
+            Assert.AreEqual("Iron Militia deal sealed", StallVoice.Deal("militia", 0, "en"));
+            Assert.AreEqual("Iron Militia deal sealed  Rounds +4", StallVoice.Deal("militia", 4, "en"));
+            Assert.AreEqual("Milicia de Hierro trato cerrado", StallVoice.Deal("militia", -2, "es"));
+            Assert.AreEqual("La Caravana trato cerrado  Balas +6", StallVoice.Deal("caravan", 6, "es"));
+            Assert.AreEqual("No bandage to barter", StallVoice.NoBandage("en"));
+            Assert.AreEqual("No hay vendaje para trocar", StallVoice.NoBandage("es"));
+            Assert.AreEqual("Bartered a bandage for 3 scrap", StallVoice.Bartered(3, "en"));
+            Assert.AreEqual("Bartered a bandage for 0 scrap", StallVoice.Bartered(-1, "en"));
+            Assert.AreEqual("Cambiaste un vendaje por 3 chatarra", StallVoice.Bartered(3, "es"));
+            Assert.AreEqual("The Clinic wants 4 medkits", StallVoice.Quest("clinic", false, "en"));
+            Assert.AreEqual("La Clínica pide 4 botiquines", StallVoice.Quest("clinic", false, "es"));
+            Assert.AreEqual("Clinic blueprint: field dressings", StallVoice.Blueprint("en"));
+            Assert.AreEqual("Plano de la Clínica: vendajes de campaña", StallVoice.Blueprint("es"));
+            Assert.AreEqual("Free Farmers remember the cleared nest", StallVoice.Nest("en"));
+            Assert.AreEqual("Los Granjeros Libres recuerdan el nido limpio", StallVoice.Nest("es"));
+            Assert.AreEqual("The Caravan made it through", StallVoice.Through("en"));
+            Assert.AreEqual("La Caravana logró pasar", StallVoice.Through("es"));
+            Assert.AreEqual("The Caravan is at the gate", StallVoice.Arrival("caravan", "en"));
+            Assert.AreEqual("La Caravana está en la puerta", StallVoice.Arrival("caravan", "es"));
+            Assert.AreEqual(CaravanBook.Display("clinic"), StallVoice.Name("clinic", "en"));
+        }
+
+        [Test]
         public void StreetLampsFollowTheDarkAndNoonStaysOut()
         {
             Assert.AreEqual(0f, DayNightCycle.HourToNight(12f), 0.001f);
