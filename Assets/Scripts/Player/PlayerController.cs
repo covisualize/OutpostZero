@@ -60,6 +60,9 @@ namespace OutpostZero.Player
         public bool WheelOpen { get; private set; }
         public int WheelSlot { get; private set; } = -1;
         private float wheelHold;
+        private float lastDodge = -100f;
+        private float dodgeUntil;
+        private Vector3 dodgeDir;
         public float CurrentStamina => currentStamina;
         public float MaxStamina => maxStamina;
         public WeaponBase ActiveWeapon => (equippedWeapons != null && equippedWeapons.Length > activeWeaponIndex) ? equippedWeapons[activeWeaponIndex] : null;
@@ -227,6 +230,7 @@ namespace OutpostZero.Player
             if (healthSystem.IsDead) return;
 
             HandleInput();
+            healthSystem.Shielded = DodgeClock.Untouchable(Time.time - lastDodge);
             HandleAiming();
             HandleMovement();
             HandleStamina();
@@ -258,7 +262,7 @@ namespace OutpostZero.Player
                 if (firearm.IsReloading) CodexDirector.Hear("reload");
             }
 
-            IsAimingDownSights = ExpeditionInput.AimHeld && !WheelOpen;
+            IsAimingDownSights = ExpeditionInput.AimHeld && !WheelOpen && Time.time >= dodgeUntil;
             if (IsAimingDownSights) CodexDirector.Hear("aim");
 
             if (!TrackWheel())
@@ -277,6 +281,7 @@ namespace OutpostZero.Player
                 }
             }
 
+            TryDodge();
             if (WheelOpen) return;
 
             float scroll = ExpeditionInput.Scroll;
@@ -349,6 +354,27 @@ namespace OutpostZero.Player
             return builder.ToString();
         }
 
+        private void TryDodge()
+        {
+            if (Time.time < dodgeUntil || !ExpeditionInput.DodgePressed) return;
+            var effects = GetComponent<StatusEffectController>();
+            if (effects != null && effects.IsKnockedDown) return;
+            if (!DodgeClock.Ready(currentStamina, Time.time - lastDodge)) return;
+
+            Vector2 move = ExpeditionInput.Move;
+            DodgeClock.Direction(move.x, move.y, transform.forward.x, transform.forward.z, out float dx, out float dz);
+            dodgeDir = new Vector3(dx, 0f, dz);
+            lastDodge = Time.time;
+            dodgeUntil = Time.time + DodgeClock.Duration;
+            currentStamina = Mathf.Max(0f, currentStamina - DodgeClock.Cost);
+            lastStaminaDrainTime = Time.time;
+            IsAimingDownSights = false;
+            IsSprinting = false;
+            var needs = GetComponent<SurvivalNeeds>();
+            float cap = needs != null ? needs.StaminaCap(maxStamina) : maxStamina;
+            OnStaminaChanged?.Invoke(currentStamina, cap);
+        }
+
         private void HandleMovement()
         {
             var effects = GetComponent<StatusEffectController>();
@@ -356,6 +382,15 @@ namespace OutpostZero.Player
             {
                 IsSprinting = false;
                 characterController.Move(Vector3.down * Time.deltaTime);
+                return;
+            }
+
+            if (Time.time < dodgeUntil)
+            {
+                IsSprinting = false;
+                Vector3 dash = dodgeDir * DodgeClock.Speed;
+                dash.y = characterController.isGrounded ? -0.5f : -9.81f;
+                characterController.Move(dash * Time.deltaTime);
                 return;
             }
 
@@ -535,7 +570,7 @@ namespace OutpostZero.Player
 
         private void HandleWeapons()
         {
-            if (WheelOpen || ActiveWeapon == null) return;
+            if (WheelOpen || Time.time < dodgeUntil || ActiveWeapon == null) return;
 
             bool automatic = ActiveWeapon is FirearmWeapon gun && gun.Automatic;
             bool fire = ActiveWeapon is FirearmWeapon

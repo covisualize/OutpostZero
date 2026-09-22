@@ -1662,14 +1662,22 @@ namespace OutpostZero.Tests.EditMode
                 Assert.AreEqual("RightTrigger", PadBindings.Label(PadBindings.Action.Fire));
                 Assert.AreEqual("LeftShoulder", PadBindings.Label(PadBindings.Action.Wheel));
                 Assert.AreEqual("LeftTrigger", PadBindings.Label(PadBindings.Action.Aim));
+                Assert.AreEqual("RightShoulder", PadBindings.Label(PadBindings.Action.Dodge));
                 Assert.IsFalse(PadBindings.TryRebindNamed(PadBindings.Action.Interact, "North"));
+                Assert.IsFalse(PadBindings.TryRebindNamed(PadBindings.Action.Interact, "RightShoulder"));
+                string opened = PadBindings.Pack();
+                int cut = opened.LastIndexOf(',');
+                PadBindings.Unpack(opened.Substring(0, cut + 1));
+                Assert.AreEqual("None", PadBindings.Label(PadBindings.Action.Dodge));
                 Assert.IsTrue(PadBindings.TryRebindNamed(PadBindings.Action.Interact, "RightShoulder"));
                 string packed = PadBindings.Pack();
                 PadBindings.ResetDefaults();
                 Assert.AreEqual("South", PadBindings.Label(PadBindings.Action.Interact));
+                Assert.AreEqual("RightShoulder", PadBindings.Label(PadBindings.Action.Dodge));
                 PadBindings.Unpack(packed);
                 Assert.AreEqual("RightShoulder", PadBindings.Label(PadBindings.Action.Interact));
                 Assert.AreEqual("North", PadBindings.Label(PadBindings.Action.Medkit));
+                Assert.AreEqual("None", PadBindings.Label(PadBindings.Action.Dodge));
             }
             finally
             {
@@ -1761,6 +1769,42 @@ namespace OutpostZero.Tests.EditMode
             Assert.IsTrue(DoorMap.IsInside(insideX));
             Assert.AreEqual("Step inside", DoorMap.Prompt(false));
             Assert.AreEqual("Step outside", DoorMap.Prompt(true));
+        }
+
+        [Test]
+        public void ADodgeSpendsStaminaAndIgnoresTheOpeningOfTheRoll()
+        {
+            Assert.IsTrue(DodgeClock.Ready(22f, 0.85f));
+            Assert.IsFalse(DodgeClock.Ready(21.9f, 1f));
+            Assert.IsFalse(DodgeClock.Ready(22f, 0.84f));
+            DodgeClock.Direction(0f, 0f, 0f, 1f, out float faceX, out float faceZ);
+            Assert.AreEqual(0f, faceX, 0.001f);
+            Assert.AreEqual(1f, faceZ, 0.001f);
+            DodgeClock.Direction(1f, 0f, 0f, 1f, out float moveX, out float moveZ);
+            Assert.AreEqual(1f, moveX, 0.001f);
+            Assert.AreEqual(0f, moveZ, 0.001f);
+            DodgeClock.Direction(0f, 0f, 0f, 0f, out float fallX, out float fallZ);
+            Assert.AreEqual(0f, fallX, 0.001f);
+            Assert.AreEqual(1f, fallZ, 0.001f);
+            Assert.IsTrue(DodgeClock.Untouchable(0f));
+            Assert.IsTrue(DodgeClock.Untouchable(0.21f));
+            Assert.IsFalse(DodgeClock.Untouchable(0.22f));
+            Assert.IsFalse(DodgeClock.Untouchable(-1f));
+
+            PadBindings.ResetDefaults();
+            try
+            {
+                Assert.AreEqual("RightShoulder", PadBindings.Label(PadBindings.Action.Dodge));
+                string[] parts = PadBindings.Pack().Split(',');
+                Assert.AreEqual(17, parts.Length);
+                PadBindings.Unpack(string.Join(",", parts, 0, 16));
+                Assert.AreEqual("RightShoulder", PadBindings.Label(PadBindings.Action.Dodge));
+                Assert.AreEqual("South", PadBindings.Label(PadBindings.Action.Interact));
+            }
+            finally
+            {
+                PadBindings.ResetDefaults();
+            }
         }
     }
 }

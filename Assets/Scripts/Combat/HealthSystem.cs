@@ -17,6 +17,7 @@ namespace OutpostZero.Combat
         public float CurrentHealth => currentHealth;
         public float MaxHealth => maxHealth;
         public bool IsDead => isDead;
+        public bool Shielded;
         public Vector3 LastHitDirection { get; private set; }
         public float LastHitTime { get; private set; }
 
@@ -34,7 +35,7 @@ namespace OutpostZero.Combat
 
         public void TakeDamage(float amount, Vector3 hitPoint, Vector3 hitDirection, GameObject attacker)
         {
-            if (isDead) return;
+            if (isDead || Shielded) return;
             if (hitDirection.sqrMagnitude > 0.0001f)
             {
                 LastHitDirection = hitDirection;

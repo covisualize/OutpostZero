@@ -25,7 +25,8 @@ namespace OutpostZero.Player
             Fire,
             Aim,
             NextWeapon,
-            PrevWeapon
+            PrevWeapon,
+            Dodge
         }
 
         public static readonly string[] Buttons =
@@ -65,7 +66,8 @@ namespace OutpostZero.Player
             "RightTrigger",
             "LeftTrigger",
             "DpadRight",
-            "DpadLeft"
+            "DpadLeft",
+            "RightShoulder"
         };
 
         private static readonly string[] current = (string[])defaults.Clone();
