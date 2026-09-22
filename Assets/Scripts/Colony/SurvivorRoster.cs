@@ -437,6 +437,7 @@ namespace OutpostZero.Colony
                         {
                             survivor.combat = Practice.Gain(survivor.combat);
                             watch += Practice.Bonus(survivor.combat);
+                            watch += GuardDepth.Post(survivor.combat);
                             survivor.morale = Mathf.Max(0f, survivor.morale - TraitHook.WatchCost(survivor.trait, survivor.aside, survivor.mark));
                         }
                         watch = TraitHook.WatchPay(survivor.trait, survivor.aside, survivor.mark, watch);
@@ -450,7 +451,7 @@ namespace OutpostZero.Colony
                         survivor.medicine = Practice.Gain(survivor.medicine);
                         survivor.morale = Mathf.Min(100f, survivor.morale + 2f);
                         var leader = PlayerRegistry.Current;
-                        leader?.GetComponent<Combat.HealthSystem>()?.Heal(12f + Practice.Bonus(survivor.medicine) * 6f);
+                        leader?.GetComponent<Combat.HealthSystem>()?.Heal(12f + Practice.Bonus(survivor.medicine) * 6f + MedDepth.Mend(survivor.medicine));
                         leader?.GetComponent<StatusEffectController>()?.ClearInjury();
                         for (int i = 0; i < survivors.Count; i++)
                         {

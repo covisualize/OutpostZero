@@ -3750,6 +3750,31 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void ADeepMedicMendsHarderAndADeepGuardHoldsMore()
+        {
+            Assert.AreEqual(1, Practice.Bonus(4));
+            Assert.AreEqual(1, Practice.Bonus(8));
+            Assert.AreEqual(0, MedDepth.Mend(4));
+            Assert.AreEqual(0, MedDepth.Mend(0));
+            Assert.AreEqual(0, MedDepth.Mend(-1));
+            Assert.AreEqual(6, MedDepth.Mend(5));
+            Assert.AreEqual(24, MedDepth.Mend(8));
+            Assert.AreEqual(24, MedDepth.Mend(12));
+            Assert.AreEqual(18f, 12f + Practice.Bonus(4) * 6f + MedDepth.Mend(4), 0.001f);
+            Assert.AreEqual(42f, 12f + Practice.Bonus(8) * 6f + MedDepth.Mend(8), 0.001f);
+            Assert.AreEqual(0, GuardDepth.Post(4));
+            Assert.AreEqual(0, GuardDepth.Post(0));
+            Assert.AreEqual(1, GuardDepth.Post(5));
+            Assert.AreEqual(4, GuardDepth.Post(8));
+            Assert.AreEqual(4, GuardDepth.Post(12));
+            Assert.AreEqual(0, TraitHook.WatchCost("Brave"));
+            Assert.AreEqual(2, TraitHook.WatchPay("Brave", 2));
+            Assert.AreEqual(2, TraitHook.WatchPay("Brave", 1 + Practice.Bonus(4) + GuardDepth.Post(4)));
+            Assert.AreEqual(6, TraitHook.WatchPay("Brave", 1 + Practice.Bonus(8) + GuardDepth.Post(8)));
+            Assert.AreEqual(0, TraitHook.WatchPay("Cowardly", 1 + Practice.Bonus(8) + GuardDepth.Post(8)));
+        }
+
+        [Test]
         public void AZombieWithoutARigStillAttacksAndFalls()
         {
             Assert.AreEqual(14f, PoseSheet.Lean(ZombieAI.ZombieState.Chase, 0f), 0.001f);
