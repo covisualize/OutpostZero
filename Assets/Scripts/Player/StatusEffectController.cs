@@ -81,6 +81,11 @@ namespace OutpostZero.Player
             return true;
         }
 
+        public void DropInfection()
+        {
+            infection = 0f;
+        }
+
         public void ApplyPainkiller()
         {
             painRemaining = Affliction.PainSpan;

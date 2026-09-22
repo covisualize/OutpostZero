@@ -264,6 +264,15 @@ namespace OutpostZero.Colony
             return true;
         }
 
+        public bool BringFever(int stage)
+        {
+            var leader = Leader;
+            if (leader == null || !HomeSick.Rises(leader.injury, stage)) return false;
+            leader.injury = HomeSick.Carry(leader.injury, stage);
+            OnRosterChanged?.Invoke();
+            return true;
+        }
+
         public void Recover(int index)
         {
             if (index < 0 || index >= corpses.Count) return;

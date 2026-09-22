@@ -5835,6 +5835,47 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void AStreetBiteComesHomeOnTheLeadersInjury()
+        {
+            Assert.AreEqual(0, HomeSick.Carry(0, 0));
+            Assert.AreEqual(1, HomeSick.Carry(0, 1));
+            Assert.AreEqual(2, HomeSick.Carry(0, 2));
+            Assert.AreEqual(2, HomeSick.Carry(1, 2));
+            Assert.AreEqual(3, HomeSick.Carry(3, 1));
+            Assert.AreEqual(2, HomeSick.Carry(2, 0));
+            Assert.AreEqual(2, HomeSick.Carry(-1, 2));
+            Assert.AreEqual(3, HomeSick.Carry(0, 3));
+            Assert.AreEqual(3, HomeSick.Carry(0, 9));
+            Assert.AreEqual(3, HomeSick.Carry(5, 1));
+            Assert.IsTrue(HomeSick.Rises(0, 1));
+            Assert.IsTrue(HomeSick.Rises(0, 2));
+            Assert.IsTrue(HomeSick.Rises(2, 3));
+            Assert.IsTrue(HomeSick.Rises(-1, 2));
+            Assert.IsFalse(HomeSick.Rises(2, 1));
+            Assert.IsFalse(HomeSick.Rises(2, 0));
+            Assert.IsFalse(HomeSick.Rises(3, 1));
+            Assert.IsFalse(HomeSick.Rises(5, 1));
+            Assert.AreEqual("The bite came home", HomeSick.Line(1, "en"));
+            Assert.AreEqual("La mordedura llegó a casa", HomeSick.Line(1, "es"));
+            Assert.AreEqual("The fever came home", HomeSick.Line(2, "en"));
+            Assert.AreEqual("La fiebre llegó a casa", HomeSick.Line(2, "es"));
+            Assert.AreEqual("La fiebre llegó a casa", HomeSick.Line(3, "es"));
+            Assert.AreEqual("", HomeSick.Line(0, "en"));
+            Assert.AreEqual(2, FeverSpread.Sick);
+            Assert.AreEqual(3, FeverSpread.Cap);
+            Assert.AreEqual(2, SuccessionLedger.MercyInjury);
+            Assert.AreEqual(1, Affliction.Stage(1f));
+            Assert.AreEqual(1, Affliction.Stage(89f));
+            Assert.AreEqual(2, Affliction.Stage(90f));
+            Assert.AreEqual(2, Affliction.Stage(179f));
+            Assert.AreEqual(3, Affliction.Stage(180f));
+            Assert.IsTrue(Affliction.AntibioticsWork(1));
+            Assert.IsTrue(Affliction.AntibioticsWork(2));
+            Assert.IsFalse(Affliction.AntibioticsWork(3));
+            Assert.IsFalse(Affliction.AntibioticsWork(0));
+        }
+
+        [Test]
         public void AZombieWithoutARigStillAttacksAndFalls()
         {
             Assert.AreEqual(14f, PoseSheet.Lean(ZombieAI.ZombieState.Chase, 0f), 0.001f);

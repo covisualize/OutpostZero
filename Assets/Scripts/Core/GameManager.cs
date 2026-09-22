@@ -179,6 +179,7 @@ namespace OutpostZero.Core
             ObjectiveTracker.Instance?.MarkExtracted();
             bool won = WorldMapService.Instance != null && WorldMapService.Instance.CampaignWon && !WorldMapService.Instance.Endless;
             SurvivorRoster.Instance?.RewardReturn();
+            BringHomeBite();
             FactionTrade.Instance?.NoteExtracted();
             SetState(won ? GameState.Victory : GameState.ExpeditionResults);
             SaveSystem.Instance?.Save(false);
@@ -191,6 +192,7 @@ namespace OutpostZero.Core
             bool merciful = SettingsService.Instance != null && SettingsService.Instance.Merciful;
             if (merciful && SurvivorRoster.Instance != null && SurvivorRoster.Instance.WoundLeader())
             {
+                BringHomeBite();
                 BringToCamp(false);
                 GameplayFeedback.Toast(GateLine.Drag(null));
                 SaveSystem.Instance?.Save(false);
@@ -211,6 +213,19 @@ namespace OutpostZero.Core
             BringToCamp(true);
             GameplayFeedback.Toast(next != null ? StreetAsk.Takes(next.displayName, null) : StreetAsk.Back(null));
             SaveSystem.Instance?.Save(false);
+        }
+
+        private static void BringHomeBite()
+        {
+            var player = PlayerRegistry.Current;
+            var effects = player != null ? player.GetComponent<StatusEffectController>() : null;
+            int stage = effects != null ? effects.InfectionStage : 0;
+            if (stage <= 0 || effects == null) return;
+            var roster = SurvivorRoster.Instance;
+            if (roster == null || roster.Leader == null) return;
+            bool rose = roster.BringFever(stage);
+            effects.DropInfection();
+            if (rose) GameplayFeedback.Toast(HomeSick.Line(stage, null));
         }
 
         private void BringToCamp(bool clearInjury)
