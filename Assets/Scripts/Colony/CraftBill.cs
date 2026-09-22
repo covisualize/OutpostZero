@@ -39,6 +39,11 @@ namespace OutpostZero.Colony
             else if (id == "suppressor") cost = Make(12, 0, 0, 0, Workbench, "");
             else if (id == "optic") cost = Make(9, 0, 0, 0, Workbench, "");
             else if (id == "extended_mag") cost = Make(8, 0, 0, 0, Workbench, "");
+            else if (id == "dressing") cost = Make(2, 2, 0, 0, Any, "");
+            else if (id == "flare") cost = Make(4, 0, 1, 0, Workbench, "");
+            else if (id == "repair_kit") cost = Make(6, 0, 1, 1, Workbench, "");
+            else if (id == "barricade_kit") cost = Make(8, 0, 0, 2, Workbench, "");
+            else if (id == "radio_spare") cost = Make(12, 0, 2, 1, Workbench, "");
             else return false;
             return true;
         }

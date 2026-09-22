@@ -58,7 +58,11 @@ namespace OutpostZero.Items
             new ItemRecord { Id = "noise_lure", DisplayName = "Noise Lure", Category = Core.ItemCategory.KeyItem, Weight = 0.2f, Use = ItemUse.Lure },
             new ItemRecord { Id = "molotov", DisplayName = "Molotov", Category = Core.ItemCategory.Fuel, Weight = 0.6f, Use = ItemUse.Molotov },
             new ItemRecord { Id = "flare", DisplayName = "Flare", Category = Core.ItemCategory.KeyItem, Weight = 0.3f, Use = ItemUse.Flare },
-            new ItemRecord { Id = "pipe_bomb", DisplayName = "Pipe Bomb", Category = Core.ItemCategory.Fuel, Weight = 0.8f, Use = ItemUse.Bomb }
+            new ItemRecord { Id = "pipe_bomb", DisplayName = "Pipe Bomb", Category = Core.ItemCategory.Fuel, Weight = 0.8f, Use = ItemUse.Bomb },
+            new ItemRecord { Id = "print_flare", DisplayName = "Flare Blueprint", Category = Core.ItemCategory.KeyItem, Weight = 0.05f },
+            new ItemRecord { Id = "print_repair", DisplayName = "Repair Blueprint", Category = Core.ItemCategory.KeyItem, Weight = 0.05f },
+            new ItemRecord { Id = "print_wall", DisplayName = "Wall Blueprint", Category = Core.ItemCategory.KeyItem, Weight = 0.05f },
+            new ItemRecord { Id = "print_radio", DisplayName = "Radio Blueprint", Category = Core.ItemCategory.KeyItem, Weight = 0.05f }
         };
 
         public static IReadOnlyList<ItemRecord> All => records;
@@ -103,7 +107,8 @@ namespace OutpostZero.Items
                 return new[]
                 {
                     new Grant { ItemId = rng.NextDouble() > 0.4 ? "ammo_rifle" : "ammo_9mm", Count = 1 },
-                    new Grant { ItemId = "bandage", Count = rng.NextDouble() > 0.5 ? 1 : 0 }
+                    new Grant { ItemId = "bandage", Count = rng.NextDouble() > 0.5 ? 1 : 0 },
+                    new Grant { ItemId = "print_flare", Count = rng.NextDouble() > 0.62 ? 1 : 0 }
                 };
             }
 

@@ -17,6 +17,7 @@ namespace OutpostZero.Colony
         [SerializeField] private int tape;
         [SerializeField] private int raw;
         [SerializeField] private int bodies;
+        [SerializeField] private string prints = "";
 
         public int Scrap => scrap;
         public int Food => food;
@@ -27,6 +28,7 @@ namespace OutpostZero.Colony
         public int Tape => tape;
         public int Raw => raw;
         public int Bodies => bodies;
+        public string Prints => prints ?? "";
         public int Used => CampRoom.Bulk(scrap, food, water, cloth, chemicals, tape, raw);
         public int Room => CampRoom.Room(GridBuilder.Instance != null ? GridBuilder.Instance.CountKind("Crate") : 0);
         public event Action OnStorageChanged;
@@ -112,6 +114,20 @@ namespace OutpostZero.Colony
             OnStorageChanged?.Invoke();
         }
 
+        public void LearnPrint(string id)
+        {
+            string next = CraftGate.Learn(prints, id);
+            if (next == (prints ?? "")) return;
+            prints = next;
+            OnStorageChanged?.Invoke();
+        }
+
+        public void SetPrints(string packed)
+        {
+            prints = packed ?? "";
+            OnStorageChanged?.Invoke();
+        }
+
         public bool TrySpendScrap(int amount)
         {
             if (scrap < amount) return false;
@@ -139,6 +155,7 @@ namespace OutpostZero.Colony
             tape = 0;
             raw = 0;
             bodies = 0;
+            prints = "";
             OnStorageChanged?.Invoke();
         }
 

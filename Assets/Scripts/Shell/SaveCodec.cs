@@ -31,6 +31,8 @@ namespace OutpostZero.Shell
         public int age;
         public int site;
         public int hours;
+        public int tier;
+        public int job;
     }
 
     [Serializable]
@@ -47,6 +49,7 @@ namespace OutpostZero.Shell
         public int tape;
         public int raw;
         public int bodies;
+        public string prints = "";
         public int kills;
         public int lifetimeKills;
         public int districtsCleared;

@@ -854,11 +854,24 @@ namespace OutpostZero.UI
             camp.Add(build);
             camp.Add(Body(Loc.T("camp.craft")));
             bool bench = GridBuilder.Instance != null && GridBuilder.Instance.HasKind("Workbench");
+            int benchTier = GridBuilder.Instance != null ? GridBuilder.Instance.BenchTier() : 1;
+            string prints = storage != null ? storage.Prints : "";
+            if (prints.Length > 0)
+            {
+                var plans = Loc.T("camp.plans");
+                var known = CraftGate.Ids(prints);
+                for (int i = 0; i < known.Length; i++) plans += "  " + Loc.T("print." + known[i]);
+                camp.Add(Body(plans));
+            }
+            if (bench && benchTier >= 2) camp.Add(Body(Loc.T("camp.bench_t2")));
+            else if (bench && GridBuilder.Instance.BenchOrdered()) camp.Add(Body(Loc.T("camp.bench_raise") + " " + GridBuilder.Instance.BenchWork() + "/" + CraftGate.Hours));
+            else if (bench) camp.Add(Button(Loc.T("camp.bench_raise") + "  " + CraftGate.UpgradeScrap, () => GridBuilder.Instance.OrderBench()));
             foreach (var recipe in CraftingBench.Recipes)
             {
                 string id = recipe.Id;
+                if (!CraftGate.Open(id, benchTier, prints)) continue;
                 if (!CraftBill.TryOf(id, out var bill)) continue;
-                int due = CraftingBench.Priced(bill.Scrap, bench);
+                int due = CraftingBench.Priced(bill.Scrap, bench, benchTier);
                 camp.Add(Button(CraftBill.Line(Loc.Recipe(id, recipe.Label), due, bill.Cloth, bill.Chemicals, bill.Tape), () => CraftingBench.Instance?.Craft(id)));
             }
             var map = WorldMapService.Instance;

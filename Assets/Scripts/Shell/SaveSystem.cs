@@ -175,6 +175,7 @@ namespace OutpostZero.Shell
                 data.tape = ColonyStorage.Instance.Tape;
                 data.raw = ColonyStorage.Instance.Raw;
                 data.bodies = ColonyStorage.Instance.Bodies;
+                data.prints = ColonyStorage.Instance.Prints;
             }
             if (GameManager.Instance != null)
             {
@@ -265,7 +266,7 @@ namespace OutpostZero.Shell
                 var modules = new List<ModuleSave>();
                 foreach (var module in GridBuilder.Instance.Placed)
                 {
-                    modules.Add(new ModuleSave { kind = module.kind, x = module.x, z = module.z, rotation = module.rotation, integrity = module.integrity <= 0 ? 100 : module.integrity, age = module.age, site = module.site, hours = module.hours });
+                    modules.Add(new ModuleSave { kind = module.kind, x = module.x, z = module.z, rotation = module.rotation, integrity = module.integrity <= 0 ? 100 : module.integrity, age = module.age, site = module.site, hours = module.hours, tier = module.tier, job = module.job });
                 }
                 data.modules = modules.ToArray();
             }
@@ -281,6 +282,7 @@ namespace OutpostZero.Shell
             ColonyStorage.Instance?.SetSupplies(data.cloth, data.chemicals, data.tape);
             ColonyStorage.Instance?.SetRaw(data.raw);
             ColonyStorage.Instance?.SetBodies(data.bodies);
+            ColonyStorage.Instance?.SetPrints(data.prints);
             FactionTrade.Instance?.Restore(data.factionStanding, data.factions, data.quests);
             SettingsService.Instance?.ApplySnapshot(data.shake, data.volume, data.textScale, data.subtitles, data.language);
             SettingsService.Instance?.ApplyPresentation(data.sfxVolume, data.musicVolume, data.quality, data.vsync, data.fieldOfView, data.bindings, data.ambienceVolume, data.uiVolume);
@@ -325,7 +327,7 @@ namespace OutpostZero.Shell
                 {
                     foreach (var module in data.modules)
                     {
-                        modules.Add(new PlacedModule { kind = module.kind, x = module.x, z = module.z, rotation = module.rotation, integrity = module.integrity <= 0 ? 100 : module.integrity, age = module.age, site = module.site, hours = module.hours });
+                        modules.Add(new PlacedModule { kind = module.kind, x = module.x, z = module.z, rotation = module.rotation, integrity = module.integrity <= 0 ? 100 : module.integrity, age = module.age, site = module.site, hours = module.hours, tier = module.tier, job = module.job });
                     }
                 }
                 GridBuilder.Instance.Restore(modules.ToArray());

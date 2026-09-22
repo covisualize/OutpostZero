@@ -154,6 +154,13 @@ namespace OutpostZero.Shell
             string before = parts;
             parts = CampaignBoard.AddPart(parts, CampaignBoard.PartFor(district.id));
             if (parts != before) GameplayFeedback.Toast("Radio part recovered");
+            string print = CraftGate.Sheet(district.id);
+            if (!string.IsNullOrEmpty(print) && ColonyStorage.Instance != null)
+            {
+                string known = ColonyStorage.Instance.Prints;
+                ColonyStorage.Instance.LearnPrint(print);
+                if (ColonyStorage.Instance.Prints != known) GameplayFeedback.Toast(Loc.T("camp.print") + ": " + Loc.T("print." + print));
+            }
             if (!CurrentOpen()) SelectFirstOpen();
             FactionTrade.Instance?.NoteDistrictCleared();
         }
@@ -161,6 +168,11 @@ namespace OutpostZero.Shell
         public void NoteBroadcast()
         {
             broadcastWon = true;
+        }
+
+        public void GrantSpare()
+        {
+            parts = CampaignBoard.AddPart(parts, "spare");
         }
 
         public void RestoreCampaign(string radio, int storedDifficulty, int broadcast, int seed = 0, int endlessFlag = 0)

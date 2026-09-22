@@ -2156,6 +2156,84 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void ARaisedBenchOpensThePrintedRecipes()
+        {
+            Assert.AreEqual("", CraftGate.PrintOf("bandage"));
+            Assert.AreEqual("dressing", CraftGate.PrintOf("dressing"));
+            Assert.AreEqual(1, CraftGate.TierOf("dressing"));
+            Assert.AreEqual(2, CraftGate.TierOf("flare"));
+            Assert.AreEqual(2, CraftGate.TierOf("radio_spare"));
+            Assert.IsTrue(CraftGate.Open("bandage", 0, ""));
+            Assert.IsFalse(CraftGate.Open("dressing", 1, ""));
+            Assert.IsTrue(CraftGate.Open("dressing", 1, "dressing"));
+            Assert.IsFalse(CraftGate.Open("flare", 1, "flare"));
+            Assert.IsTrue(CraftGate.Open("flare", 2, "flare"));
+            Assert.AreEqual("tier", CraftGate.Deny("repair_kit", 1, "repair"));
+            Assert.AreEqual("print", CraftGate.Deny("repair_kit", 2, ""));
+            Assert.AreEqual("dressing,flare", CraftGate.Learn("flare", "dressing"));
+            Assert.AreEqual("dressing,flare", CraftGate.Learn("dressing,flare", "flare"));
+            Assert.AreEqual("repair", CraftGate.Sheet("rail_yard"));
+            Assert.AreEqual("wall", CraftGate.Sheet("police_station"));
+            Assert.AreEqual("flare", CraftGate.Sheet("mall"));
+            Assert.AreEqual("radio", CraftGate.Sheet("downtown_core"));
+            Assert.AreEqual("", CraftGate.Sheet("ash_market"));
+            Assert.IsFalse(CraftGate.Ordered(0));
+            Assert.IsTrue(CraftGate.Ordered(1));
+            Assert.IsTrue(CraftGate.Ordered(3));
+            Assert.IsFalse(CraftGate.Ordered(4));
+            Assert.AreEqual(0, CraftGate.Worked(1));
+            Assert.AreEqual(2, CraftGate.Worked(3));
+            CraftGate.Advance(1, 0, out int idle, out bool idleDone);
+            Assert.AreEqual(1, idle);
+            Assert.IsFalse(idleDone);
+            CraftGate.Advance(1, 2, out int mid, out bool midDone);
+            Assert.AreEqual(3, mid);
+            Assert.IsFalse(midDone);
+            CraftGate.Advance(3, 1, out int raised, out bool raisedDone);
+            Assert.AreEqual(4, raised);
+            Assert.IsTrue(raisedDone);
+            CraftGate.Advance(0, 2, out int quiet, out bool quietDone);
+            Assert.AreEqual(0, quiet);
+            Assert.IsFalse(quietDone);
+            Assert.AreEqual(90, CraftGate.MendGenerator(40));
+            Assert.AreEqual(100, CraftGate.MendGenerator(80));
+            Assert.AreEqual(0, CraftGate.MendGenerator(0));
+            Assert.AreEqual(70, CraftGate.BraceWall(30));
+            Assert.AreEqual(100, CraftGate.BraceWall(90));
+            Assert.AreEqual(1, CraftGate.PickWorn(new[] { 100, 40, 70 }));
+            Assert.AreEqual(-1, CraftGate.PickWorn(new[] { 100, 0 }));
+            Assert.AreEqual(-1, CraftGate.PickWorn(null));
+            Assert.AreEqual(16, CraftGate.UpgradeScrap);
+            Assert.AreEqual(2, CraftGate.UpgradeCloth);
+            Assert.AreEqual(2, CraftGate.UpgradeTape);
+            Assert.AreEqual(3, CraftGate.Hours);
+            Assert.AreEqual(14, CraftingBench.Priced(16, true, 2));
+            Assert.AreEqual(15, CraftingBench.Priced(16, true, 1));
+            Assert.AreEqual(1, CraftingBench.Priced(2, true, 2));
+            Assert.IsTrue(CraftBill.TryOf("dressing", out var dressing));
+            Assert.AreEqual(2, dressing.Cloth);
+            int dressings = 0;
+            foreach (var recipe in CraftingBench.Recipes)
+            {
+                if (recipe.Id == "dressing") dressings = recipe.OutputCount;
+            }
+            Assert.AreEqual(3, dressings);
+            Assert.IsFalse(CampaignBoard.PartsComplete("downtown,hospital"));
+            Assert.IsTrue(CampaignBoard.PartsComplete(CampaignBoard.AddPart("downtown,hospital", "spare")));
+            Assert.IsTrue(CampaignBoard.PartsComplete("downtown,hospital,police"));
+            var data = new SaveGameData { prints = "dressing,flare" };
+            Assert.IsTrue(SaveCodec.TryDeserialize(SaveCodec.Serialize(data), out var loaded, out var error), error);
+            Assert.AreEqual("dressing,flare", loaded.prints);
+            Assert.IsTrue(SaveCodec.TryDeserialize("{\"schemaVersion\":1}", out var legacy, out var legacyError), legacyError);
+            Assert.AreEqual("", legacy.prints ?? "");
+            Assert.AreEqual(0, legacy.modules == null || legacy.modules.Length == 0 ? 0 : legacy.modules[0].job);
+            Assert.AreEqual("Subir el banco", Loc.T("camp.bench_raise", "es"));
+            Assert.AreEqual("Hace falta un banco de nivel 2", Loc.T("gate.tier", "es"));
+            Assert.AreEqual("Plano de bengala", Loc.Item("print_flare", "es"));
+            Assert.AreEqual("Bengala", Loc.T("recipe.flare", "es"));
+        }
+
+        [Test]
         public void AFarmFeedsTheCampAfterThreeMornings()
         {
             var plots = new[]

@@ -6,6 +6,7 @@ using OutpostZero.AI;
 using OutpostZero.Combat;
 using OutpostZero.Core;
 using OutpostZero.Graphics;
+using OutpostZero.Shell;
 
 namespace OutpostZero.Colony
 {
@@ -39,6 +40,8 @@ namespace OutpostZero.Colony
         public int age;
         public int site;
         public int hours;
+        public int tier;
+        public int job;
         public float lit = -1f;
     }
 
@@ -503,6 +506,107 @@ namespace OutpostZero.Colony
                 if (health != null && !health.IsDead)
                     health.TakeDamage(OilBurn.Damage, target.transform.position, new Vector3(target.transform.position.x - oil.x, 0f, target.transform.position.z - oil.z), gameObject);
             }
+        }
+
+        public int BenchTier()
+        {
+            for (int i = 0; i < placed.Count; i++)
+            {
+                var module = placed[i];
+                if (module.kind != "Workbench" || !BuildSite.Ready(module.site, module.integrity)) continue;
+                if (module.tier >= 2 || module.job >= CraftGate.Done) return 2;
+            }
+            return 1;
+        }
+
+        public bool BenchOrdered()
+        {
+            for (int i = 0; i < placed.Count; i++)
+            {
+                var module = placed[i];
+                if (module.kind != "Workbench" || !BuildSite.Ready(module.site, module.integrity)) continue;
+                if (CraftGate.Ordered(module.job)) return true;
+            }
+            return false;
+        }
+
+        public int BenchWork()
+        {
+            for (int i = 0; i < placed.Count; i++)
+            {
+                var module = placed[i];
+                if (module.kind != "Workbench" || !BuildSite.Ready(module.site, module.integrity)) continue;
+                if (CraftGate.Ordered(module.job) || module.job >= CraftGate.Done) return CraftGate.Worked(module.job);
+            }
+            return 0;
+        }
+
+        public bool OrderBench()
+        {
+            if (BenchTier() >= 2 || BenchOrdered()) return false;
+            PlacedModule bench = null;
+            for (int i = 0; i < placed.Count; i++)
+            {
+                var module = placed[i];
+                if (module.kind != "Workbench" || !BuildSite.Ready(module.site, module.integrity)) continue;
+                if (module.job != 0 || module.tier >= 2) continue;
+                bench = module;
+                break;
+            }
+            if (bench == null) return false;
+            var storage = ColonyStorage.Instance;
+            if (storage == null || !storage.TrySpendBill(CraftGate.UpgradeScrap, CraftGate.UpgradeCloth, 0, CraftGate.UpgradeTape))
+            {
+                GameplayFeedback.Toast("Not enough camp supplies");
+                return false;
+            }
+            bench.job = 1;
+            GameplayFeedback.Toast(Loc.T("camp.bench_raise"));
+            return true;
+        }
+
+        public bool Lift(int pace)
+        {
+            for (int i = 0; i < placed.Count; i++)
+            {
+                var module = placed[i];
+                if (module.kind != "Workbench" || !BuildSite.Ready(module.site, module.integrity)) continue;
+                if (!CraftGate.Ordered(module.job)) continue;
+                CraftGate.Advance(module.job, pace, out int next, out bool done);
+                if (next == module.job) return false;
+                module.job = next;
+                if (done) module.tier = 2;
+                RefreshViews();
+                GameplayFeedback.Toast(done ? Loc.T("camp.bench_t2") : Loc.T("camp.bench_raise"));
+                return true;
+            }
+            return false;
+        }
+
+        public bool RepairGenerator()
+        {
+            return Wear("Generator", true);
+        }
+
+        public bool BraceWall()
+        {
+            return Wear("Barricade", false);
+        }
+
+        private bool Wear(string kind, bool generator)
+        {
+            var scores = new int[placed.Count];
+            for (int i = 0; i < placed.Count; i++)
+            {
+                var module = placed[i];
+                if (module.kind != kind || !BuildSite.Ready(module.site, module.integrity)) scores[i] = 100;
+                else scores[i] = module.integrity;
+            }
+            int mark = CraftGate.PickWorn(scores);
+            if (mark < 0) return false;
+            placed[mark].integrity = generator ? CraftGate.MendGenerator(placed[mark].integrity) : CraftGate.BraceWall(placed[mark].integrity);
+            RefreshViews();
+            return true;
         }
 
         public bool HasKind(string kind)

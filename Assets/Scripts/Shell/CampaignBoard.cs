@@ -100,7 +100,12 @@ namespace OutpostZero.Shell
 
         public static bool PartsComplete(string packed)
         {
-            return HasPart(packed, "hospital") && HasPart(packed, "police") && HasPart(packed, "downtown");
+            int district = 0;
+            if (HasPart(packed, "hospital")) district++;
+            if (HasPart(packed, "police")) district++;
+            if (HasPart(packed, "downtown")) district++;
+            if (district >= 3) return true;
+            return district == 2 && HasPart(packed, "spare");
         }
 
         public static bool Ready(string parts, bool generator, bool broadcastWon)

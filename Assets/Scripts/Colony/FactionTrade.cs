@@ -126,6 +126,7 @@ namespace OutpostZero.Colony
             }
             quests = CaravanBook.MarkQuest(quests, "clinic");
             CaravanBook.Shift(standing, "clinic", 15);
+            ColonyStorage.Instance?.LearnPrint("dressing");
             GameplayFeedback.Toast("Clinic blueprint: field dressings");
             return true;
         }

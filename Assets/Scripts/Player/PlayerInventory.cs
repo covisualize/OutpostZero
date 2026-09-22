@@ -212,6 +212,7 @@ namespace OutpostZero.Player
             if (DepositMaterial(storage, "chemicals")) moved = true;
             if (DepositMaterial(storage, "tape")) moved = true;
             if (DepositRaw(storage)) moved = true;
+            if (DepositPrints(storage)) moved = true;
             if (!moved) return;
             RecalculateWeight();
             OnInventoryChanged?.Invoke();
@@ -230,6 +231,21 @@ namespace OutpostZero.Player
             existing.Quantity -= moved;
             if (existing.Quantity <= 0) items.Remove(existing);
             return true;
+        }
+
+        private bool DepositPrints(OutpostZero.Colony.ColonyStorage storage)
+        {
+            bool moved = false;
+            for (int i = items.Count - 1; i >= 0; i--)
+            {
+                var existing = items[i];
+                if (existing == null || existing.Quantity <= 0 || string.IsNullOrEmpty(existing.ItemId)) continue;
+                if (!existing.ItemId.StartsWith("print_")) continue;
+                storage.LearnPrint(existing.ItemId.Substring(6));
+                items.RemoveAt(i);
+                moved = true;
+            }
+            return moved;
         }
 
         private bool DepositRaw(OutpostZero.Colony.ColonyStorage storage)

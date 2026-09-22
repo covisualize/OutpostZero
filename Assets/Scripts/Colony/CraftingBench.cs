@@ -4,6 +4,7 @@ using OutpostZero.Combat;
 using OutpostZero.Core;
 using OutpostZero.Items;
 using OutpostZero.Player;
+using OutpostZero.Shell;
 
 namespace OutpostZero.Colony
 {
@@ -34,7 +35,12 @@ namespace OutpostZero.Colony
             new Recipe { Id = "pipe_bomb", Label = "Pipe Bomb", ScrapCost = 8, OutputId = "pipe_bomb", OutputCount = 1 },
             new Recipe { Id = "suppressor", Label = "Suppressor", ScrapCost = 12, OutputId = "suppressor", OutputCount = 1 },
             new Recipe { Id = "optic", Label = "Optic", ScrapCost = 9, OutputId = "optic", OutputCount = 1 },
-            new Recipe { Id = "extended_mag", Label = "Extended mag", ScrapCost = 8, OutputId = "extended_mag", OutputCount = 1 }
+            new Recipe { Id = "extended_mag", Label = "Extended mag", ScrapCost = 8, OutputId = "extended_mag", OutputCount = 1 },
+            new Recipe { Id = "dressing", Label = "Field dressings", ScrapCost = 2, OutputId = "bandage", OutputCount = 3 },
+            new Recipe { Id = "flare", Label = "Flare", ScrapCost = 4, OutputId = "flare", OutputCount = 1 },
+            new Recipe { Id = "repair_kit", Label = "Generator repair", ScrapCost = 6, OutputId = "repair_kit", OutputCount = 1 },
+            new Recipe { Id = "barricade_kit", Label = "Reinforced wall", ScrapCost = 8, OutputId = "barricade_kit", OutputCount = 1 },
+            new Recipe { Id = "radio_spare", Label = "Radio spare", ScrapCost = 12, OutputId = "radio_spare", OutputCount = 1 }
         };
 
         private void Awake()
@@ -60,7 +66,19 @@ namespace OutpostZero.Colony
 
             bool workbench = GridBuilder.Instance != null && GridBuilder.Instance.HasKind("Workbench");
             bool cot = GridBuilder.Instance != null && GridBuilder.Instance.HasKind("Cot");
-            int due = Priced(bill.Scrap, workbench);
+            int tier = GridBuilder.Instance != null ? GridBuilder.Instance.BenchTier() : 1;
+            string deny = CraftGate.Deny(recipeId, tier, storage.Prints);
+            if (deny == "tier")
+            {
+                GameplayFeedback.Toast(Loc.T("gate.tier"));
+                return false;
+            }
+            if (deny == "print")
+            {
+                GameplayFeedback.Toast(Loc.T("gate.print"));
+                return false;
+            }
+            int due = Priced(bill.Scrap, workbench, tier);
             string block = CraftBill.Block(bill.Station, bill.Skill, CraftBill.StationReady(bill.Station, workbench, cot), SkillReady(bill.Skill));
             if (!string.IsNullOrEmpty(block))
             {
@@ -71,6 +89,42 @@ namespace OutpostZero.Colony
             {
                 GameplayFeedback.Toast("Not enough camp supplies");
                 return false;
+            }
+
+            if (recipe.Id == "repair_kit")
+            {
+                if (GridBuilder.Instance == null || !GridBuilder.Instance.RepairGenerator())
+                {
+                    Refund(due, bill);
+                    GameplayFeedback.Toast(Loc.T("gate.gen"));
+                    return false;
+                }
+                GameplayFeedback.Toast(recipe.Label + " fitted");
+                return true;
+            }
+            if (recipe.Id == "barricade_kit")
+            {
+                if (GridBuilder.Instance == null || !GridBuilder.Instance.BraceWall())
+                {
+                    Refund(due, bill);
+                    GameplayFeedback.Toast(Loc.T("gate.wall"));
+                    return false;
+                }
+                GameplayFeedback.Toast(recipe.Label + " fitted");
+                return true;
+            }
+            if (recipe.Id == "radio_spare")
+            {
+                var map = WorldMapService.Instance;
+                if (map == null || CampaignBoard.PartsComplete(map.Parts))
+                {
+                    Refund(due, bill);
+                    GameplayFeedback.Toast(Loc.T("camp.radio_full"));
+                    return false;
+                }
+                map.GrantSpare();
+                GameplayFeedback.Toast(recipe.Label + " fitted");
+                return true;
             }
 
             if (recipe.OutputId == "suppressor" || recipe.OutputId == "optic" || recipe.OutputId == "extended_mag")
@@ -134,5 +188,12 @@ namespace OutpostZero.Colony
         }
 
         public static int Priced(int scrap, bool workbench) => CraftBill.ScrapDue(scrap, workbench);
+
+        public static int Priced(int scrap, bool workbench, int tier)
+        {
+            int due = CraftBill.ScrapDue(scrap, workbench);
+            if (tier >= 2 && due > 1) due -= 1;
+            return due;
+        }
     }
 }
