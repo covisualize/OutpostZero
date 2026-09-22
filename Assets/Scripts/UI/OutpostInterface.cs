@@ -626,8 +626,22 @@ namespace OutpostZero.UI
             pack.Add(Title("PACK"));
             if (inventory == null) return;
             pack.Add(Body("Weight " + inventory.CurrentWeight.ToString("0.0") + " / " + inventory.MaxWeightCapacity.ToString("0.0")));
+            var track = new VisualElement();
+            track.style.height = 8;
+            track.style.marginBottom = 8;
+            track.style.backgroundColor = new Color(0.15f, 0.15f, 0.15f);
+            var fill = new VisualElement();
+            float ratio = Mathf.Clamp01(inventory.WeightRatio);
+            fill.style.width = Length.Percent(ratio * 100f);
+            fill.style.height = 8;
+            bool heavy = PackOps.Heavy(inventory.CurrentWeight, inventory.MaxWeightCapacity);
+            fill.style.backgroundColor = heavy ? new Color(0.75f, 0.2f, 0.16f) : new Color(0.35f, 0.62f, 0.38f);
+            track.Add(fill);
+            pack.Add(track);
+            if (inventory.MedicalKits > 0) pack.Add(Body("Medkit x" + inventory.MedicalKits));
+            if (inventory.ScrapCount > 0) pack.Add(Body("Scrap x" + inventory.ScrapCount));
             var scroll = new ScrollView();
-            scroll.style.height = 280;
+            scroll.style.height = 220;
             foreach (var item in inventory.Items)
             {
                 string id = item.ItemId;
@@ -637,9 +651,17 @@ namespace OutpostZero.UI
                 label.style.flexGrow = 1;
                 row.Add(label);
                 row.Add(Button("Use", () => inventory.TryUse(id)));
+                row.Add(Button("Drop", () => inventory.Drop(id, 1)));
+                row.Add(Button("Split", () => inventory.DropHalf(id)));
                 scroll.Add(row);
             }
             pack.Add(scroll);
+            var crate = LootContainer.Open;
+            if (crate != null && !string.IsNullOrEmpty(crate.Contents))
+            {
+                pack.Add(Body("Container  " + crate.Contents.Replace("|", "  ")));
+                pack.Add(Button("Take all", () => crate.TakeAll(inventory)));
+            }
             pack.Add(Button("Close", () => FindFirstObjectByType<GameShellUI>()?.CloseInventory()));
         }
 
@@ -780,6 +802,9 @@ namespace OutpostZero.UI
             var builder = new StringBuilder();
             foreach (var item in inventory.Items) builder.Append(item.ItemId).Append(item.Quantity);
             builder.Append(inventory.MedicalKits);
+            builder.Append(inventory.ScrapCount);
+            builder.Append(Mathf.RoundToInt(inventory.CurrentWeight * 10f));
+            if (LootContainer.Open != null) builder.Append(LootContainer.Open.Contents);
             return builder.ToString();
         }
 

@@ -1,4 +1,5 @@
 using UnityEngine;
+using OutpostZero.Items;
 using OutpostZero.Player;
 using OutpostZero.Shell;
 
@@ -26,6 +27,7 @@ namespace OutpostZero.UI
 
         private void Update()
         {
+            if (PackView.ConsumeOpen()) inventoryOpen = true;
             if (ExpeditionInput.InventoryPressed)
             {
                 inventoryOpen = !inventoryOpen;

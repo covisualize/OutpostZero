@@ -1314,5 +1314,32 @@ namespace OutpostZero.Tests.EditMode
             Assert.AreEqual(NoiseType.GunshotLoud, WeaponMod.Report(NoiseType.GunshotLoud, false));
             Assert.AreEqual(NoiseType.Explosion, WeaponMod.Report(NoiseType.Explosion, true));
         }
+
+        [Test]
+        public void ThePackSplitsAStackAndACrateKeepsWhatYouLeave()
+        {
+            Assert.AreEqual(3f, PackOps.Weight(1f, 10, 2), 0.001f);
+            Assert.IsFalse(PackOps.Heavy(31f, 35f));
+            Assert.IsTrue(PackOps.Heavy(32f, 35f));
+            Assert.IsTrue(PackOps.Fits(34f, 35f, 1f));
+            Assert.IsFalse(PackOps.Fits(34f, 35f, 2f));
+            Assert.AreEqual(0, PackOps.SplitOff(1));
+            Assert.AreEqual(2, PackOps.SplitOff(5));
+            Assert.AreEqual(2, PackOps.SplitOff(4));
+
+            var crate = new[]
+            {
+                new ContainerHold.Stack { Id = "bandage", Count = 4 },
+                new ContainerHold.Stack { Id = "water", Count = 1 }
+            };
+            crate = ContainerHold.Take(crate, "bandage", 1, out int moved);
+            Assert.AreEqual(1, moved);
+            Assert.AreEqual("bandage*3|water*1", ContainerHold.Signature(crate));
+            var empty = ContainerHold.TakeAll(crate, out var all);
+            Assert.AreEqual(0, empty.Length);
+            Assert.AreEqual(2, all.Length);
+            Assert.AreEqual(3, all[0].Count);
+            Assert.AreEqual("", ContainerHold.Signature(null));
+        }
     }
 }

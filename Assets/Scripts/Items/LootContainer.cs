@@ -8,8 +8,13 @@ namespace OutpostZero.Items
     {
         [SerializeField] private string tableId = "crate";
         [SerializeField] private bool looted;
+        private bool rolled;
+        private ContainerHold.Stack[] stacks = new ContainerHold.Stack[0];
 
-        public string Prompt => looted ? string.Empty : "Search container";
+        public static LootContainer Open { get; private set; }
+
+        public string Contents => ContainerHold.Signature(stacks);
+        public string Prompt => looted ? string.Empty : rolled ? "Take from container" : "Search container";
 
         public void Configure(string table)
         {
@@ -21,30 +26,95 @@ namespace OutpostZero.Items
         public void Interact(PlayerInventory inventory)
         {
             if (!CanInteract(inventory)) return;
-            looted = true;
-            var grants = LootTables.Roll(tableId, GetInstanceID());
-            int given = 0;
-            foreach (var grant in grants)
+            if (!rolled) Roll();
+            Open = this;
+            PackView.AskOpen();
+            GameplayFeedback.Toast(stacks.Length > 0 ? "Container open" : "Empty");
+            if (stacks.Length == 0) Finish();
+        }
+
+        public bool Take(string id, PlayerInventory inventory)
+        {
+            if (inventory == null || looted) return false;
+            stacks = ContainerHold.Take(stacks, id, int.MaxValue, out int moved);
+            if (moved <= 0) return false;
+            if (!Give(inventory, id, moved))
             {
-                if (grant.Count <= 0) continue;
-                var record = ItemCatalog.Find(grant.ItemId);
-                if (record == null) continue;
-                if (record.Use == ItemUse.Ammo)
-                {
-                    inventory.GrantAmmoPublic(record.AmmoType, record.AmmoAmount * grant.Count);
-                }
-                else if (record.Id == "scrap")
-                {
-                    inventory.AddScrap(grant.Count);
-                }
-                else if (!inventory.TryAddItem(record.Id, record.DisplayName, record.Category, grant.Count, record.Weight))
-                {
-                    GameplayFeedback.Toast("Left some loot behind");
-                    continue;
-                }
-                given++;
+                stacks = PutBack(stacks, id, moved);
+                GameplayFeedback.Toast("Pack is too heavy");
+                return false;
             }
-            GameplayFeedback.Toast(given > 0 ? "Container searched" : "Empty");
+            if (stacks.Length == 0) Finish();
+            return true;
+        }
+
+        public int TakeAll(PlayerInventory inventory)
+        {
+            if (inventory == null || looted) return 0;
+            stacks = ContainerHold.TakeAll(stacks, out var moved);
+            int given = 0;
+            var left = new ContainerHold.Stack[moved.Length];
+            int remain = 0;
+            for (int i = 0; i < moved.Length; i++)
+            {
+                if (Give(inventory, moved[i].Id, moved[i].Count)) given++;
+                else left[remain++] = moved[i];
+            }
+            if (remain > 0)
+            {
+                var kept = new ContainerHold.Stack[remain];
+                for (int i = 0; i < remain; i++) kept[i] = left[i];
+                stacks = kept;
+                GameplayFeedback.Toast("Left some loot behind");
+            }
+            if (stacks.Length == 0) Finish();
+            return given;
+        }
+
+        private void Roll()
+        {
+            rolled = true;
+            var grants = LootTables.Roll(tableId, GetInstanceID());
+            int count = 0;
+            for (int i = 0; i < grants.Length; i++)
+            {
+                if (grants[i].Count > 0 && ItemCatalog.Find(grants[i].ItemId) != null) count++;
+            }
+            stacks = new ContainerHold.Stack[count];
+            int write = 0;
+            for (int i = 0; i < grants.Length; i++)
+            {
+                if (grants[i].Count <= 0) continue;
+                if (ItemCatalog.Find(grants[i].ItemId) == null) continue;
+                stacks[write++] = new ContainerHold.Stack { Id = grants[i].ItemId, Count = grants[i].Count };
+            }
+        }
+
+        private static bool Give(PlayerInventory inventory, string id, int count)
+        {
+            var record = ItemCatalog.Find(id);
+            if (record == null || count <= 0) return false;
+            if (record.Use == ItemUse.Ammo) return inventory.GrantAmmoPublic(record.AmmoType, record.AmmoAmount * count);
+            if (record.Id == "scrap")
+            {
+                inventory.AddScrap(count);
+                return true;
+            }
+            return inventory.TryAddItem(record.Id, record.DisplayName, record.Category, count, record.Weight);
+        }
+
+        private static ContainerHold.Stack[] PutBack(ContainerHold.Stack[] stacks, string id, int count)
+        {
+            var next = new ContainerHold.Stack[stacks.Length + 1];
+            for (int i = 0; i < stacks.Length; i++) next[i] = stacks[i];
+            next[stacks.Length] = new ContainerHold.Stack { Id = id, Count = count };
+            return next;
+        }
+
+        private void Finish()
+        {
+            looted = true;
+            if (Open == this) Open = null;
         }
     }
 }

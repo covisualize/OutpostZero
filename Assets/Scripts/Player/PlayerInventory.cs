@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using OutpostZero.Core;
+using OutpostZero.Items;
 
 namespace OutpostZero.Player
 {
@@ -209,12 +210,45 @@ namespace OutpostZero.Player
         public void AddScrap(int amount)
         {
             scrapCount += amount;
+            if (scrapCount < 0) scrapCount = 0;
             if (amount > 0) OutpostZero.Shell.CodexDirector.Hear("loot");
             if (GameManager.Instance != null)
             {
                 GameManager.Instance.AddScrap(amount);
             }
+            RecalculateWeight();
             OnInventoryChanged?.Invoke();
+        }
+
+        public bool Drop(string id, int count)
+        {
+            if (count <= 0 || string.IsNullOrEmpty(id)) return false;
+            var existing = items.Find(item => item.ItemId == id);
+            if (existing == null) return false;
+            int drop = count < existing.Quantity ? count : existing.Quantity;
+            if (!TryConsume(id, drop)) return false;
+            SpawnDrop(id, existing.ItemName, drop);
+            return true;
+        }
+
+        public bool DropHalf(string id)
+        {
+            var existing = items.Find(item => item.ItemId == id);
+            if (existing == null) return false;
+            int half = PackOps.SplitOff(existing.Quantity);
+            if (half <= 0) return false;
+            return Drop(id, half);
+        }
+
+        private void SpawnDrop(string id, string name, int count)
+        {
+            var drop = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            drop.name = "Dropped_" + id;
+            drop.transform.position = transform.position + transform.forward * 0.8f + Vector3.up * 0.25f;
+            drop.transform.localScale = new Vector3(0.28f, 0.18f, 0.28f);
+            drop.layer = GameLayers.Interactable;
+            drop.AddComponent<WorldItem>().Configure(id, count);
+            GameplayFeedback.Toast("Dropped " + (string.IsNullOrEmpty(name) ? id : name));
         }
 
         public bool TryConsume(string id, int count)
@@ -233,6 +267,7 @@ namespace OutpostZero.Player
         {
             if (count <= 0 || medicalKits < count) return false;
             medicalKits -= count;
+            RecalculateWeight();
             OnInventoryChanged?.Invoke();
             return true;
         }
@@ -246,6 +281,7 @@ namespace OutpostZero.Player
             {
                 medicalKits--;
                 health.Heal(50f);
+                RecalculateWeight();
                 OnInventoryChanged?.Invoke();
                 return true;
             }
@@ -260,8 +296,7 @@ namespace OutpostZero.Player
             {
                 w += item.TotalWeight;
             }
-            w += (scrapCount * 0.1f);
-            w += (medicalKits * 0.5f);
+            w = PackOps.Weight(w, scrapCount, medicalKits);
             currentWeight = w;
         }
     }
