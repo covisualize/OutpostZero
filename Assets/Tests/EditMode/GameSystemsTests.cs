@@ -2594,6 +2594,35 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void ABruteBreachKillsADefenderAlreadyAtThreeWounds()
+        {
+            Assert.IsFalse(RaidBreach.Brute(0));
+            Assert.IsFalse(RaidBreach.Brute(1));
+            Assert.IsTrue(RaidBreach.Brute(2));
+            Assert.IsTrue(RaidBreach.Brute(4));
+            Assert.IsFalse(RaidBreach.Brute(-1));
+            Assert.AreEqual(6, RaidBreach.Blow(6, false));
+            Assert.AreEqual(1, RaidBreach.Blow(0, false));
+            Assert.AreEqual(1, RaidBreach.Blow(-4, false));
+            Assert.AreEqual(12, RaidBreach.Blow(6, true));
+            Assert.AreEqual(2, RaidBreach.Blow(0, true));
+            Assert.AreEqual(40, RaidBreach.Blow(30, true));
+
+            Assert.AreEqual(1, RaidBreach.Wound(0, true, out bool fallen));
+            Assert.IsFalse(fallen);
+            Assert.AreEqual(3, RaidBreach.Wound(2, true, out fallen));
+            Assert.IsFalse(fallen);
+            Assert.AreEqual(3, RaidBreach.Wound(3, true, out fallen));
+            Assert.IsTrue(fallen);
+            Assert.AreEqual(1, RaidBreach.Wound(1, false, out fallen));
+            Assert.IsFalse(fallen);
+            Assert.AreEqual(3, RaidPlan.Hurt(3));
+            Assert.AreEqual("cayó", Loc.T("camp.fell", "es"));
+            Assert.AreEqual("está herido", Loc.T("camp.hit", "es"));
+            Assert.AreEqual("Un bruto está en las tablas", Loc.T("camp.brute", "es"));
+        }
+
+        [Test]
         public void DemolishingAModuleReturnsHalfTheScrap()
         {
             Assert.AreEqual(3, ScrapRefund.Half(6));

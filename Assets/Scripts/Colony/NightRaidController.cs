@@ -27,6 +27,7 @@ namespace OutpostZero.Colony
         private float nextTrap;
         private float nextGuard;
         private int calledDay = -1;
+        private bool breached;
 
         public bool Running => running;
         public bool Warning => warning;
@@ -173,10 +174,17 @@ namespace OutpostZero.Colony
                 }
                 int cover = GridBuilder.Instance != null ? GridBuilder.Instance.CoverCount(approach) : 0;
                 int hit = RaidPlan.Strike(pressure, guards, cover);
-                if (GridBuilder.Instance != null && GridBuilder.Instance.BarricadeCount() > 0)
+                int blow = RaidBreach.Blow(hit, RaidBreach.Brute(phase));
+                bool walls = GridBuilder.Instance != null && GridBuilder.Instance.BarricadeCount() > 0;
+                if (walls)
                 {
-                    if (GridBuilder.Instance.StrikeFrom(approach, hit))
+                    if (GridBuilder.Instance.StrikeFrom(approach, blow))
                         SurvivorRoster.Instance?.WoundFromRaid(raidDay + phase);
+                }
+                else if (RaidBreach.Brute(phase) && !breached)
+                {
+                    breached = true;
+                    SurvivorRoster.Instance?.WoundFromRaid(raidDay + phase);
                 }
             }
             if (Time.time < endsAt) return;
@@ -416,8 +424,10 @@ namespace OutpostZero.Colony
             pressure = FloodBeam.ApproachPressure(pressure, lamps);
             strikeInterval = FloodBeam.ApproachGap(strikeInterval, lamps);
             phase = index;
+            breached = false;
             if (!announce) return;
             string line = "They come from the " + approach;
+            if (RaidBreach.Brute(index)) line += "  " + Loc.T("camp.brute");
             if (lamps > 0) line += "  " + Loc.T("camp.lamps");
             GameplayFeedback.Toast(line);
             int extra = RaidPlan.Reinforcements(index);

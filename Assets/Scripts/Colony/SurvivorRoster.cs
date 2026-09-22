@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using OutpostZero.Core;
 using OutpostZero.Player;
+using OutpostZero.Shell;
 
 namespace OutpostZero.Colony
 {
@@ -234,8 +235,38 @@ namespace OutpostZero.Colony
             int index = RaidPlan.Pick(alive, guard, salt);
             if (index < 0) return;
             var person = survivors[index];
-            person.injury = RaidPlan.Hurt(person.injury);
-            GameplayFeedback.Toast(person.displayName + " is hit");
+            person.injury = RaidBreach.Wound(person.injury, true, out bool fallen);
+            if (!fallen)
+            {
+                GameplayFeedback.Toast(person.displayName + " " + Loc.T("camp.hit"));
+                OnRosterChanged?.Invoke();
+                return;
+            }
+            if (person.leader)
+            {
+                MarkLeaderDead(new Vector3(-6f, 0f, -8f), "raid");
+                return;
+            }
+            person.alive = false;
+            person.task = "Fallen";
+            var days = Snapshot();
+            SuccessionLedger.Grieve(days, person.displayName);
+            for (int i = 0; i < days.Count && i < survivors.Count; i++) survivors[i].morale = days[i].morale;
+            string district = WorldMapService.Instance != null && WorldMapService.Instance.Current != null
+                ? WorldMapService.Instance.Current.id
+                : "ash_market";
+            int day = WorldClock.Instance != null ? WorldClock.Instance.Day : 1;
+            int kills = GameManager.Instance != null ? GameManager.Instance.ZombiesKilled : 0;
+            memorials.Add(new SuccessionLedger.Memorial
+            {
+                name = person.displayName,
+                day = day,
+                kills = kills,
+                cause = "raid",
+                district = district
+            });
+            ColonyStorage.Instance?.AddBodies(1);
+            GameplayFeedback.Toast(person.displayName + " " + Loc.T("camp.fell"));
             OnRosterChanged?.Invoke();
         }
 
