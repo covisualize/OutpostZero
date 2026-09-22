@@ -16,7 +16,7 @@ namespace OutpostZero.Shell
     {
         public static float SpatialBlend(string id)
         {
-            if (id == "ambient" || id == "pulse" || id == "ui" || id == "rain" || id == "wind" || id == "heart" || id == "breath" || id == "pained") return 0f;
+            if (id == "ambient" || id == "pulse" || id == "ui" || id == "rain" || id == "wind" || id == "ash" || id == "heart" || id == "breath" || id == "pained") return 0f;
             if (id != null && id.StartsWith("step")) return 0.35f;
             return 1f;
         }
@@ -241,7 +241,8 @@ namespace OutpostZero.Shell
         private void UpdateWeather(MixSnapshot snapshot, float music, float sfx, float ambience, float ui)
         {
             var kind = WeatherController.Instance != null ? WeatherController.Instance.Kind : WeatherKind.Clear;
-            string id = kind == WeatherKind.Rain ? "rain" : kind == WeatherKind.Fog ? "wind" : "";
+            string district = WeatherController.Instance != null ? WeatherController.Instance.District : "";
+            string id = AshFall.Bed(kind, district);
             if (id != weatherId)
             {
                 weatherId = id;
@@ -526,6 +527,7 @@ namespace OutpostZero.Shell
             if (id == "pulse") return Mathf.Sin(t * 28f);
             if (id == "rain") return noise;
             if (id == "wind") return noise * Mathf.Sin(t * 6f);
+            if (id == "ash") return noise * Mathf.Sin(t * 2.2f);
             if (StepTone(id)) return noise * Mathf.Sin(t * 18f);
             if (id == "ui") return Mathf.Sin(t * 40f);
             if (id == "stem_perc") return Mathf.Sin(t * 48f) > 0.65f ? noise : 0f;
@@ -579,7 +581,7 @@ namespace OutpostZero.Shell
         {
             if (clips.TryGetValue(id, out var clip)) return clip;
             int rate = 22050;
-            bool loop = id == "ambient" || id == "rain" || id == "wind" || id == "stem_perc" || id == "stem_combat" || id == "hum" || id == "crackle" || id == "buzz" || id == "flies";
+            bool loop = id == "ambient" || id == "rain" || id == "wind" || id == "ash" || id == "stem_perc" || id == "stem_combat" || id == "hum" || id == "crackle" || id == "buzz" || id == "flies";
             float seconds = loop ? 2f : id == "boom_far" || id == "thunder" ? 0.7f : id == "roar" || id == "stomp" ? 0.5f : id == "boom" ? 0.45f : id == "gun_far" ? 0.42f : id == "breath" || id == "groan" ? 0.5f : id == "shriek" ? 0.28f : id == "heart" || id == "hiss" ? 0.22f : id == "dry" || id == "take_soft" || id == "take_box" || id == "take_metal" || id == "clink" || id == "clack" || id == "spit" ? 0.08f : id == "burn" || id == "cloud" ? 0.5f : 0.18f;
             int samples = Mathf.CeilToInt(rate * seconds);
             var data = new float[samples];

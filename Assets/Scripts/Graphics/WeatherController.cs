@@ -37,12 +37,21 @@ namespace OutpostZero.Graphics
         [SerializeField] private float multiplier = 1f;
         private ParticleSystem rain;
         private ParticleSystem debris;
+        private ParticleSystem ash;
+        private string district = "";
         private WeatherKind applied = (WeatherKind)(-1);
         private float nextShift;
         private float lastBolt;
         private bool thunderSent;
 
         public WeatherKind Kind => kind;
+        public string District => district ?? "";
+
+        public void SetDistrict(string id)
+        {
+            district = id ?? "";
+            Apply();
+        }
 
         private void Awake()
         {
@@ -94,16 +103,23 @@ namespace OutpostZero.Graphics
 
         private void Apply()
         {
-            bool fog = kind != WeatherKind.Clear;
-            RenderSettings.fog = fog;
+            float night = DayNightCycle.Instance != null ? DayNightCycle.Instance.NightFactor : 0f;
+            float eye = 1.7f;
+            var cam = Camera.main;
+            if (cam != null) eye = cam.transform.position.y;
+            float density = GroundMist.Density(kind, night, eye);
+            RenderSettings.fog = density > 0.001f;
             RenderSettings.fogMode = FogMode.ExponentialSquared;
-            RenderSettings.fogColor = kind == WeatherKind.Rain ? new Color(0.35f, 0.38f, 0.42f) : new Color(0.55f, 0.58f, 0.62f);
-            RenderSettings.fogDensity = kind == WeatherKind.Fog ? 0.045f : kind == WeatherKind.Rain ? 0.02f : 0f;
+            RenderSettings.fogColor = GroundMist.Tint(kind, night);
+            RenderSettings.fogDensity = density;
+            Shader.SetGlobalFloat("_WindStrength", GroundMist.Wind(kind));
             multiplier = WeatherSurface.Sight(kind);
             if (kind == WeatherKind.Rain) EnsureRain();
             if (rain != null) rain.gameObject.SetActive(kind == WeatherKind.Rain);
             if (kind != WeatherKind.Clear) EnsureDebris();
             if (debris != null) debris.gameObject.SetActive(kind != WeatherKind.Clear);
+            if (AshFall.Falls(district)) EnsureAsh();
+            if (ash != null) ash.gameObject.SetActive(AshFall.Falls(district));
             if (applied != kind)
             {
                 applied = kind;
@@ -185,6 +201,28 @@ namespace OutpostZero.Graphics
             velocity.space = ParticleSystemSimulationSpace.World;
             velocity.x = new ParticleSystem.MinMaxCurve(2.4f);
             go.transform.position = new Vector3(0f, 3f, 0f);
+        }
+
+        private void EnsureAsh()
+        {
+            if (ash != null) return;
+            var go = new GameObject("AshFall");
+            go.transform.SetParent(transform);
+            ash = go.AddComponent<ParticleSystem>();
+            var main = ash.main;
+            main.startLifetime = AshFall.Life;
+            main.startSpeed = AshFall.Drift;
+            main.startSize = 0.06f;
+            main.startColor = new Color(0.45f, 0.4f, 0.36f, 0.7f);
+            main.maxParticles = AshFall.Flakes * 2;
+            main.simulationSpace = ParticleSystemSimulationSpace.World;
+            main.gravityModifier = 0.08f;
+            var emission = ash.emission;
+            emission.rateOverTime = AshFall.Flakes;
+            var shape = ash.shape;
+            shape.shapeType = ParticleSystemShapeType.Box;
+            shape.scale = new Vector3(28f, 6f, 28f);
+            go.transform.position = new Vector3(0f, 8f, 0f);
         }
     }
 }

@@ -554,6 +554,46 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void FogHidesTheEdgeAndAshFallsOnTheMarket()
+        {
+            Assert.AreEqual(0.006f, GroundMist.Air(0f), 0.0001f);
+            Assert.AreEqual(0.014f, GroundMist.Air(1f), 0.0001f);
+            Assert.AreEqual(0.01f, GroundMist.Air(0.5f), 0.0001f);
+            Assert.AreEqual(0.006f, GroundMist.Air(-1f), 0.0001f);
+            Assert.AreEqual(0.014f, GroundMist.Air(2f), 0.0001f);
+            Assert.AreEqual(0f, GroundMist.Pool(2.4f), 0.0001f);
+            Assert.AreEqual(0.01f, GroundMist.Pool(0f), 0.0001f);
+            Assert.AreEqual(0.005f, GroundMist.Pool(1.2f), 0.0001f);
+            Assert.AreEqual(0f, GroundMist.Pool(8f), 0.0001f);
+            Assert.AreEqual(0.028f, GroundMist.Density(WeatherKind.Fog, 0f, 2.4f), 0.0001f);
+            Assert.IsTrue(GroundMist.Hides(GroundMist.Density(WeatherKind.Fog, 0f, 2.4f), GroundMist.Edge));
+            Assert.IsFalse(GroundMist.Hides(GroundMist.Density(WeatherKind.Clear, 0f, 2.4f), GroundMist.Edge));
+            Assert.AreEqual(0.65f, GroundMist.Wind(WeatherKind.Rain), 0.001f);
+            Assert.AreEqual(0.08f, GroundMist.Wind(WeatherKind.Clear), 0.001f);
+            Color day = GroundMist.Tint(WeatherKind.Clear, 0f);
+            Assert.AreEqual(0.55f, day.r, 0.001f);
+            Assert.AreEqual(0.62f, day.g, 0.001f);
+            Color dark = GroundMist.Tint(WeatherKind.Fog, 1f);
+            Assert.AreEqual(0.05f, dark.r, 0.001f);
+            Assert.AreEqual(0.12f, dark.b, 0.001f);
+            Assert.AreEqual(0.62f, WeatherSurface.Sight(WeatherKind.Fog), 0.001f);
+            Assert.AreEqual(0.8f, WeatherSurface.Sight(WeatherKind.Rain), 0.001f);
+            Assert.AreEqual(0.65f, WeatherSurface.Wetness(WeatherKind.Rain), 0.001f);
+            Assert.IsTrue(AshFall.Falls("ash_market"));
+            Assert.IsFalse(AshFall.Falls("rail_yard"));
+            Assert.IsFalse(AshFall.Falls(null));
+            Assert.IsFalse(AshFall.Falls(""));
+            Assert.AreEqual(WeatherKind.Clear, DistrictRules.For("ash_market").Weather);
+            Assert.AreEqual("rain", AshFall.Bed(WeatherKind.Rain, "ash_market"));
+            Assert.AreEqual("wind", AshFall.Bed(WeatherKind.Fog, "ash_market"));
+            Assert.AreEqual("ash", AshFall.Bed(WeatherKind.Clear, "ash_market"));
+            Assert.AreEqual("", AshFall.Bed(WeatherKind.Clear, "rail_yard"));
+            Assert.AreEqual(MixBus.Ambience, AudioMix.BusOf("ash"));
+            Assert.AreEqual(0f, AudioSpace.SpatialBlend("ash"), 0.001f);
+            Assert.AreEqual(36, AshFall.Flakes);
+        }
+
+        [Test]
         public void CaravansVisitOnACalendarAndPricesFollowStanding()
         {
             Assert.IsTrue(CaravanBook.Visits(3));

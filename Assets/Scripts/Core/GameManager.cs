@@ -3,6 +3,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using OutpostZero.Colony;
 using OutpostZero.Expedition;
+using OutpostZero.Graphics;
 using OutpostZero.Player;
 using OutpostZero.Shell;
 
@@ -120,6 +121,7 @@ namespace OutpostZero.Core
             var needs = PlayerRegistry.Current != null ? PlayerRegistry.Current.GetComponent<SurvivalNeeds>() : null;
             if (needs != null) SurvivorRoster.Instance?.CopyLeaderNeeds(needs.Hunger, needs.Thirst);
             SetState(GameState.CampManagement);
+            WeatherController.Instance?.SetDistrict("");
             SaveSystem.Instance?.Save(false);
         }
 
