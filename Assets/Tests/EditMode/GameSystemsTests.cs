@@ -812,6 +812,40 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void AnAimingRailThrowsAShortBeamAndLiftsExposure()
+        {
+            Assert.IsFalse(RailLamp.Lit(false, true, true));
+            Assert.IsFalse(RailLamp.Lit(true, false, true));
+            Assert.IsFalse(RailLamp.Lit(true, true, false));
+            Assert.IsTrue(RailLamp.Lit(true, true, true));
+            Assert.AreEqual(0.57f, RailLamp.Exposure(0.22f, true, false), 0.001f);
+            Assert.AreEqual(0.85f, RailLamp.Exposure(0.8f, true, false), 0.001f);
+            Assert.AreEqual(1f, RailLamp.Exposure(1f, true, true), 0.001f);
+            float dark = SpotRange.Exposure(true, false, false, 1f, 0f);
+            Assert.AreEqual(dark, RailLamp.Exposure(dark, false, false), 0.001f);
+            Assert.AreEqual(1f, SpotRange.Exposure(true, false, true, 1f, 0f), 0.001f);
+            Assert.IsTrue(RailLamp.Beam(8f, 12f, true));
+            Assert.IsFalse(RailLamp.Beam(8.01f, 0f, true));
+            Assert.IsFalse(RailLamp.Beam(5f, 12.1f, true));
+            Assert.IsFalse(RailLamp.Beam(5f, 0f, false));
+            Assert.IsTrue(SpotRange.Beam(5f, 10f, true));
+            Assert.IsFalse(SpotRange.Beam(5f, 10f, false));
+            var rail = WeaponMod.ProfileFor("rail");
+            Assert.AreEqual(1f, rail.noise, 0.001f);
+            Assert.AreEqual(1f, rail.spread, 0.001f);
+            Assert.AreEqual(0, rail.magazineBonus);
+            Assert.AreEqual(0.4f, WeaponMod.Combine(WeaponMod.PackFlags(true, true, false)).noise, 0.001f);
+            Assert.AreEqual("rail", WeaponMod.PackFlags(false, false, false, true));
+            Assert.IsTrue(WeaponMod.RailOn("suppressor+rail"));
+            Assert.IsFalse(WeaponMod.RailOn("suppressor"));
+            Assert.AreEqual(0.4f, WeaponMod.Combine("suppressor+rail").noise, 0.001f);
+            Assert.IsTrue(CraftBill.TryOf("rail", out var bill));
+            Assert.AreEqual(5, bill.Scrap);
+            Assert.AreEqual(CraftBill.Workbench, bill.Station);
+            Assert.AreEqual("Riel de linterna", Loc.T("recipe.rail", "es"));
+        }
+
+        [Test]
         public void CharactersKeepDistinctEyesAndAGoreLine()
         {
             var walker = CharacterLook.Eye("walker");

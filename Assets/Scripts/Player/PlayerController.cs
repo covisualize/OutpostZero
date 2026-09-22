@@ -46,6 +46,7 @@ namespace OutpostZero.Player
         [SerializeField] private Light flashlight;
         [SerializeField] private bool flashlightOn = false;
         [SerializeField] private float lampCell = LampCell.Full;
+        private Light railLight;
 
         // Components
         private CharacterController characterController;
@@ -59,6 +60,17 @@ namespace OutpostZero.Player
         public bool IsAimingDownSights { get; private set; }
         private bool sprintLatch;
         public bool FlashlightOn => flashlightOn;
+        public bool ActiveHasRail
+        {
+            get
+            {
+                var weapon = ActiveWeapon;
+                if (weapon == null) return false;
+                var mod = weapon.GetComponent<WeaponMod>();
+                return mod != null && mod.HasRail;
+            }
+        }
+        public bool RailLit => RailLamp.Lit(IsAimingDownSights, ActiveHasRail, LampCell.Live(lampCell));
         public float LampCellCharge => lampCell;
         public float LampSpent => LampCell.Spent(lampCell);
         public bool WheelOpen { get; private set; }
@@ -216,12 +228,14 @@ namespace OutpostZero.Player
             }
 
             ApplyLamp();
+            ApplyRail();
         }
 
         public void AddLamp(float amount)
         {
             lampCell = LampCell.Fill(lampCell, amount);
             ApplyLamp();
+            ApplyRail();
         }
 
         public void RestoreLamp(float spent)
@@ -229,6 +243,7 @@ namespace OutpostZero.Player
             lampCell = LampCell.FromSpent(spent);
             if (!LampCell.Live(lampCell)) flashlightOn = false;
             ApplyLamp();
+            ApplyRail();
         }
 
         private void ApplyLamp()
@@ -237,6 +252,25 @@ namespace OutpostZero.Player
             bool shine = flashlightOn && LampCell.Live(lampCell);
             flashlight.enabled = shine;
             if (shine) flashlight.intensity = LampCell.Intensity(lampCell);
+        }
+
+        private void ApplyRail()
+        {
+            if (railLight == null)
+            {
+                var holder = new GameObject("Rail_Lamp");
+                holder.transform.SetParent(transform, false);
+                holder.transform.localPosition = new Vector3(0.18f, 1.35f, 0.55f);
+                railLight = holder.AddComponent<Light>();
+                railLight.type = LightType.Spot;
+                railLight.spotAngle = RailLamp.Cone;
+                railLight.range = RailLamp.Reach;
+                railLight.color = new Color(0.92f, 0.96f, 1f);
+                railLight.shadows = LightShadows.None;
+            }
+            bool shine = RailLit;
+            railLight.enabled = shine;
+            if (shine) railLight.intensity = RailLamp.Peak * LampCell.Beam(lampCell);
         }
 
         private void Update()
@@ -253,13 +287,16 @@ namespace OutpostZero.Player
             if (healthSystem.IsDead) return;
 
             HandleInput();
-            lampCell = LampCell.Tick(lampCell, flashlightOn, Time.deltaTime);
-            if (flashlightOn && !LampCell.Live(lampCell))
+            bool railSpend = RailLamp.Lit(IsAimingDownSights, ActiveHasRail, LampCell.Live(lampCell));
+            bool spending = flashlightOn || railSpend;
+            lampCell = LampCell.Tick(lampCell, spending, Time.deltaTime);
+            if (spending && !LampCell.Live(lampCell))
             {
                 flashlightOn = false;
                 AudioManager.Instance?.Play("clack");
             }
             ApplyLamp();
+            ApplyRail();
             healthSystem.Shielded = DodgeClock.Untouchable(Time.time - lastDodge);
             HandleAiming();
             HandleMovement();

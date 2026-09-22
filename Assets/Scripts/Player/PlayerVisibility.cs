@@ -33,7 +33,9 @@ namespace OutpostZero.Player
             bool crouch = controller != null && controller.IsCrouching;
             bool sprint = controller != null && controller.IsSprinting;
             bool flashlight = controller != null && controller.FlashlightOn;
-            exposure = SpotRange.Exposure(crouch, sprint, flashlight, night, nearest);
+            float bare = SpotRange.Exposure(crouch, sprint, flashlight, night, nearest);
+            bool railLit = controller != null && controller.RailLit;
+            exposure = RailLamp.Exposure(bare, railLit, flashlight);
         }
     }
 }

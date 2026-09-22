@@ -35,6 +35,7 @@ namespace OutpostZero.Colony
             new Recipe { Id = "molotov", Label = "Molotov", ScrapCost = 6, OutputId = "molotov", OutputCount = 1 },
             new Recipe { Id = "pipe_bomb", Label = "Pipe Bomb", ScrapCost = 8, OutputId = "pipe_bomb", OutputCount = 1 },
             new Recipe { Id = "suppressor", Label = "Suppressor", ScrapCost = 12, OutputId = "suppressor", OutputCount = 1 },
+            new Recipe { Id = "rail", Label = "Flashlight rail", ScrapCost = 5, OutputId = "rail", OutputCount = 1 },
             new Recipe { Id = "optic", Label = "Optic", ScrapCost = 9, OutputId = "optic", OutputCount = 1 },
             new Recipe { Id = "extended_mag", Label = "Extended mag", ScrapCost = 8, OutputId = "extended_mag", OutputCount = 1 },
             new Recipe { Id = "dressing", Label = "Field dressings", ScrapCost = 2, OutputId = "bandage", OutputCount = 3 },
@@ -129,7 +130,7 @@ namespace OutpostZero.Colony
                 return true;
             }
 
-            if (recipe.OutputId == "suppressor" || recipe.OutputId == "optic" || recipe.OutputId == "extended_mag")
+            if (recipe.OutputId == "suppressor" || recipe.OutputId == "optic" || recipe.OutputId == "extended_mag" || recipe.OutputId == "rail")
             {
                 var player = PlayerRegistry.Current;
                 var weapon = player != null ? player.ActiveWeapon : null;

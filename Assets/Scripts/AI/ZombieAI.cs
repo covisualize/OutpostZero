@@ -776,15 +776,19 @@ namespace OutpostZero.AI
 
             // Player crouching reduces effective detection distance
             var visibility = player.GetComponent<PlayerVisibility>();
-            float exposure = visibility != null
+            float bare = visibility != null
                 ? visibility.Exposure
                 : SpotRange.Exposure(player.IsCrouching, player.IsSprinting, player.FlashlightOn, 0f, 0f);
+            float exposure = visibility != null
+                ? bare
+                : RailLamp.Exposure(bare, player.RailLit, player.FlashlightOn);
             float cover = OutpostZero.Expedition.CoverPost.ScaleFor(player.transform.position, transform.position, player.IsCrouching);
             float angle = Vector3.Angle(transform.forward, dirToTarget.normalized);
             Vector3 fromPlayer = transform.position - player.transform.position;
             fromPlayer.y = 0f;
             float beamAngle = Vector3.Angle(player.transform.forward, fromPlayer.sqrMagnitude > 0.001f ? fromPlayer.normalized : player.transform.forward);
-            bool inBeam = SpotRange.Beam(dist, beamAngle, player.FlashlightOn);
+            bool inBeam = SpotRange.Beam(dist, beamAngle, player.FlashlightOn)
+                || RailLamp.Beam(dist, beamAngle, player.RailLit);
             bool inCone = SpotRange.Notices(dist, sightRange, exposure, player.IsCrouching, WeatherController.SightMultiplier, cover, angle, sightAngle);
             if (inCone || inBeam)
             {

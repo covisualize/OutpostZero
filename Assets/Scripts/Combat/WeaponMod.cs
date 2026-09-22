@@ -14,8 +14,10 @@ namespace OutpostZero.Combat
         private bool suppressor;
         private bool optic;
         private bool extendedMag;
+        private bool rail;
 
         public bool HasSuppressor => suppressor;
+        public bool HasRail => rail;
 
         public static NoiseType Report(NoiseType kind, bool suppressed)
         {
@@ -31,24 +33,38 @@ namespace OutpostZero.Combat
             if (id == "suppressor") suppressor = true;
             else if (id == "optic") optic = true;
             else if (id == "extended_mag") extendedMag = true;
+            else if (id == "rail") rail = true;
             Recalculate();
         }
 
-        public string Pack() => PackFlags(suppressor, optic, extendedMag);
+        public string Pack() => PackFlags(suppressor, optic, extendedMag, rail);
 
         public void Restore(string slot)
         {
             ReadFlags(slot, out suppressor, out optic, out extendedMag);
+            rail = RailOn(slot);
             Recalculate();
         }
 
-        public static string PackFlags(bool hasSuppressor, bool hasOptic, bool hasExtendedMag)
+        public static string PackFlags(bool hasSuppressor, bool hasOptic, bool hasExtendedMag, bool hasRail = false)
         {
             string packed = "";
             if (hasSuppressor) packed = Append(packed, "suppressor");
             if (hasOptic) packed = Append(packed, "optic");
             if (hasExtendedMag) packed = Append(packed, "extended_mag");
+            if (hasRail) packed = Append(packed, "rail");
             return packed;
+        }
+
+        public static bool RailOn(string slot)
+        {
+            if (string.IsNullOrEmpty(slot)) return false;
+            string[] parts = slot.Split('+');
+            for (int i = 0; i < parts.Length; i++)
+            {
+                if (parts[i] == "rail") return true;
+            }
+            return false;
         }
 
         public static void ReadFlags(string slot, out bool hasSuppressor, out bool hasOptic, out bool hasExtendedMag)
@@ -111,6 +127,7 @@ namespace OutpostZero.Combat
                 case "suppressor": return new Profile("suppressor", 0.9f, 0.4f, 0.85f, 0);
                 case "optic": return new Profile("optic", 1f, 1f, 0.55f, 0);
                 case "extended_mag": return new Profile("extended_mag", 1f, 1f, 1f, 10);
+                case "rail": return new Profile("rail", 1f, 1f, 1f, 0);
                 default: return new Profile("none", 1f, 1f, 1f, 0);
             }
         }
