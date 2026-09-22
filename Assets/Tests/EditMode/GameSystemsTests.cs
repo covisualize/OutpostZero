@@ -1107,5 +1107,34 @@ namespace OutpostZero.Tests.EditMode
             Assert.AreEqual(1f, EndlessShift.IntervalScale(0), 0.001f);
             Assert.Less(EndlessShift.IntervalScale(6), 0.6f);
         }
+
+        [Test]
+        public void AimPullAndTheFrameCapKeepTheOldDefaults()
+        {
+            float light = PlayOptions.Yaw(0f, 1f, 1f, 4f, 1, 1f);
+            float strong = PlayOptions.Yaw(0f, 1f, 1f, 4f, 2, 1f);
+            Assert.Greater(light, 3f);
+            Assert.Less(light, 5f);
+            Assert.Greater(strong, light);
+            Assert.AreEqual(0f, PlayOptions.Yaw(0f, 1f, 0f, -4f, 2, 1f));
+            Assert.AreEqual(0f, PlayOptions.Yaw(0f, 1f, 1f, 4f, 0, 1f));
+            Assert.AreEqual(-1.5f, PlayOptions.StickY(1.5f, true));
+            Assert.AreEqual(1.5f, PlayOptions.StickY(1.5f, false));
+
+            Assert.IsTrue(PlayOptions.Stance(true, false, false, 0));
+            Assert.IsFalse(PlayOptions.Stance(false, false, true, 0));
+            Assert.IsTrue(PlayOptions.Stance(true, true, false, 1));
+            Assert.IsTrue(PlayOptions.Stance(true, false, true, 1));
+            Assert.IsFalse(PlayOptions.Stance(true, true, true, 1));
+
+            Assert.AreEqual(-1, PlayOptions.FrameTarget(0, true));
+            Assert.AreEqual(60, PlayOptions.FrameTarget(0, false));
+            Assert.AreEqual(30, PlayOptions.FrameTarget(1, true));
+            Assert.AreEqual(-1, PlayOptions.FrameTarget(4, false));
+            Assert.AreEqual(0, PlayOptions.NextFrame(4));
+            Assert.AreEqual("Auto", PlayOptions.FrameName(0));
+            Assert.AreEqual("120 fps", PlayOptions.FrameName(3));
+            Assert.AreEqual("Uncapped", PlayOptions.FrameName(4));
+        }
     }
 }

@@ -220,6 +220,11 @@ namespace OutpostZero.Shell
                 data.brightness = SettingsService.Instance.Brightness;
                 data.motionBlur = SettingsService.Instance.MotionBlur ? 1 : 0;
                 data.windowMode = SettingsService.Instance.WindowMode;
+                data.aimAssist = SettingsService.Instance.AimAssist;
+                data.invertLook = SettingsService.Instance.InvertLook ? 1 : 0;
+                data.crouchMode = SettingsService.Instance.CrouchMode;
+                data.sprintMode = SettingsService.Instance.SprintMode;
+                data.frameCap = SettingsService.Instance.FrameCap;
             }
             if (SurvivorRoster.Instance != null)
             {
@@ -275,6 +280,7 @@ namespace OutpostZero.Shell
             if (data.districtIndex > data.districtsCleared) WorldMapService.Instance?.SelectIndex(data.districtIndex);
             if (data.nextDifficulty > 0) SettingsService.Instance?.SetNextDifficulty(data.nextDifficulty);
             SettingsService.Instance?.ApplyComfort(data.goreLevel, data.hitStop, data.damageNumbers, data.hudOpacity, data.brightness, data.motionBlur, data.windowMode);
+            SettingsService.Instance?.ApplyPlay(data.aimAssist, data.invertLook, data.crouchMode, data.sprintMode, data.frameCap);
             if (data.survivors != null && data.survivors.Length > 0 && SurvivorRoster.Instance != null)
             {
                 var list = new List<Survivor>();

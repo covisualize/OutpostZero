@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using OutpostZero.AI;
 using OutpostZero.Core;
 using OutpostZero.Sensory;
 using OutpostZero.Combat;
@@ -52,6 +53,7 @@ namespace OutpostZero.Player
         public bool IsSprinting { get; private set; }
         public bool IsCrouching { get; private set; }
         public bool IsAimingDownSights { get; private set; }
+        private bool sprintLatch;
         public bool FlashlightOn => flashlightOn;
         public float CurrentStamina => currentStamina;
         public float MaxStamina => maxStamina;
@@ -219,10 +221,13 @@ namespace OutpostZero.Player
             bool isMoving = inputDirection.sqrMagnitude > 0.01f;
             if (isMoving) CodexDirector.Hear("move");
 
-            IsCrouching = ExpeditionInput.CrouchHeld;
+            int crouchMode = SettingsService.Instance != null ? SettingsService.Instance.CrouchMode : 0;
+            int sprintMode = SettingsService.Instance != null ? SettingsService.Instance.SprintMode : 0;
+            IsCrouching = PlayOptions.Stance(ExpeditionInput.CrouchHeld, ExpeditionInput.CrouchPressed, IsCrouching, crouchMode);
+            sprintLatch = PlayOptions.Stance(ExpeditionInput.SprintHeld, ExpeditionInput.SprintPressed, sprintLatch, sprintMode);
             if (IsCrouching) CodexDirector.Hear("crouch");
             if (IsSprinting) CodexDirector.Hear("sprint");
-            bool wantsToSprint = ExpeditionInput.SprintHeld && !IsCrouching && currentStamina > 5f;
+            bool wantsToSprint = sprintLatch && !IsCrouching && currentStamina > 5f;
 
             IsSprinting = isMoving && wantsToSprint;
 
@@ -283,18 +288,27 @@ namespace OutpostZero.Player
 
         private void HandleAiming()
         {
+            bool invert = SettingsService.Instance != null && SettingsService.Instance.InvertLook;
             Vector2 aimStick = ExpeditionInput.AimStick;
+            aimStick.y = PlayOptions.StickY(aimStick.y, invert);
             if (aimStick.sqrMagnitude > 0.04f)
             {
                 Vector3 stickDir = new Vector3(aimStick.x, 0f, aimStick.y);
                 transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(stickDir), rotationSpeed * Time.deltaTime);
+                NudgeAim();
                 return;
             }
 
             if (mainCamera == null) mainCamera = Camera.main;
-            if (mainCamera == null) return;
+            if (mainCamera == null)
+            {
+                NudgeAim();
+                return;
+            }
 
-            Ray ray = mainCamera.ScreenPointToRay(ExpeditionInput.Pointer);
+            Vector2 pointer = ExpeditionInput.Pointer;
+            if (invert && Screen.height > 1) pointer.y = Screen.height - pointer.y;
+            Ray ray = mainCamera.ScreenPointToRay(pointer);
             Plane groundPlane = new Plane(Vector3.up, new Vector3(0f, transform.position.y, 0f));
 
             if (groundPlane.Raycast(ray, out float enter))
@@ -309,6 +323,39 @@ namespace OutpostZero.Player
                     transform.rotation = Quaternion.Slerp(transform.rotation, targetRot, rotationSpeed * Time.deltaTime);
                 }
             }
+            NudgeAim();
+        }
+
+        private void NudgeAim()
+        {
+            int strength = SettingsService.Instance != null ? SettingsService.Instance.AimAssist : 0;
+            if (strength <= 0) return;
+            Transform threat = NearestThreat();
+            if (threat == null) return;
+            Vector3 to = threat.position - transform.position;
+            float yaw = PlayOptions.Yaw(transform.forward.x, transform.forward.z, to.x, to.z, strength, Time.deltaTime);
+            if (yaw > 0.01f || yaw < -0.01f) transform.Rotate(0f, yaw, 0f, Space.World);
+        }
+
+        private Transform NearestThreat()
+        {
+            var hits = Physics.OverlapSphere(transform.position, 18f, GameLayers.EnemyMask);
+            Transform best = null;
+            float bestDist = 18f * 18f;
+            for (int i = 0; i < hits.Length; i++)
+            {
+                var zombie = hits[i].GetComponentInParent<ZombieAI>();
+                if (zombie == null || zombie.CurrentState == ZombieAI.ZombieState.Dead) continue;
+                float dx = zombie.transform.position.x - transform.position.x;
+                float dz = zombie.transform.position.z - transform.position.z;
+                float dist = dx * dx + dz * dz;
+                if (dist < bestDist)
+                {
+                    bestDist = dist;
+                    best = zombie.transform;
+                }
+            }
+            return best;
         }
 
         private void HandleStamina()

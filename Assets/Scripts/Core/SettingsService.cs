@@ -34,6 +34,11 @@ namespace OutpostZero.Core
         [SerializeField] private float brightness = 1f;
         [SerializeField] private int motionBlur;
         [SerializeField] private int windowMode;
+        [SerializeField] private int aimAssist;
+        [SerializeField] private int invertLook;
+        [SerializeField] private int crouchMode;
+        [SerializeField] private int sprintMode;
+        [SerializeField] private int frameCap;
 
         public float ScreenShake => screenShake;
         public float MasterVolume => masterVolume;
@@ -57,7 +62,12 @@ namespace OutpostZero.Core
         public float Brightness => Presentation.Brightness(brightness);
         public bool MotionBlur => Presentation.MotionBlur(motionBlur);
         public int WindowMode => windowMode;
-        public string DiscreteKey => (subtitles ? "1" : "0") + colorblindMode + quality + vsync + (merciful ? "1" : "0") + NextDifficulty + goreLevel + hitStop + damageNumbers + motionBlur + windowMode;
+        public int AimAssist => aimAssist <= 0 ? 0 : aimAssist >= 2 ? 2 : 1;
+        public bool InvertLook => invertLook == 1;
+        public int CrouchMode => crouchMode == 1 ? 1 : 0;
+        public int SprintMode => sprintMode == 1 ? 1 : 0;
+        public int FrameCap => frameCap < 0 || frameCap > 4 ? 0 : frameCap;
+        public string DiscreteKey => (subtitles ? "1" : "0") + colorblindMode + quality + vsync + (merciful ? "1" : "0") + NextDifficulty + goreLevel + hitStop + damageNumbers + motionBlur + windowMode + AimAssist + (InvertLook ? 1 : 0) + CrouchMode + SprintMode + FrameCap;
         public bool ShowSettings { get; private set; }
 
         public event Action OnChanged;
@@ -231,6 +241,48 @@ namespace OutpostZero.Core
             OnChanged?.Invoke();
         }
 
+        public void CycleAim()
+        {
+            aimAssist = AimAssist >= 2 ? 0 : AimAssist + 1;
+            OnChanged?.Invoke();
+        }
+
+        public void ToggleInvert()
+        {
+            invertLook = InvertLook ? 0 : 1;
+            OnChanged?.Invoke();
+        }
+
+        public void ToggleCrouchMode()
+        {
+            crouchMode = CrouchMode == 1 ? 0 : 1;
+            OnChanged?.Invoke();
+        }
+
+        public void ToggleSprintMode()
+        {
+            sprintMode = SprintMode == 1 ? 0 : 1;
+            OnChanged?.Invoke();
+        }
+
+        public void CycleFrameCap()
+        {
+            frameCap = PlayOptions.NextFrame(FrameCap);
+            ApplyDisplay();
+            OnChanged?.Invoke();
+        }
+
+        public void ApplyPlay(int assist, int invert, int crouch, int sprint, int cap)
+        {
+            aimAssist = assist <= 0 ? 0 : assist >= 2 ? 2 : 1;
+            invertLook = invert == 1 ? 1 : 0;
+            crouchMode = crouch == 1 ? 1 : 0;
+            sprintMode = sprint == 1 ? 1 : 0;
+            frameCap = cap < 0 || cap > 4 ? 0 : cap;
+            ApplyDisplay();
+            OnChanged?.Invoke();
+        }
+
         public void ToggleVSync()
         {
             vsync = vsync == 0 ? 1 : 0;
@@ -275,7 +327,7 @@ namespace OutpostZero.Core
         {
             var tier = QualityProfile.For(quality);
             QualitySettings.vSyncCount = vsync;
-            Application.targetFrameRate = vsync == 0 ? 60 : -1;
+            Application.targetFrameRate = PlayOptions.FrameTarget(FrameCap, vsync != 0);
             QualitySettings.shadowDistance = tier.ShadowDistance;
             QualitySettings.antiAliasing = tier.Msaa;
             if (GraphicsSettings.currentRenderPipeline is UniversalRenderPipelineAsset pipeline)

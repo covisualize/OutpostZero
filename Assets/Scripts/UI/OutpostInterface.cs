@@ -458,6 +458,11 @@ namespace OutpostZero.UI
             string[] tiers = { "Low", "Medium", "High", "Ultra" };
             parent.Add(Button("Quality: " + tiers[Mathf.Clamp(settings.Quality, 0, 3)], settings.CycleQuality));
             parent.Add(Button(settings.VSync ? "VSync on" : "VSync off", settings.ToggleVSync));
+            parent.Add(Button("Frame cap: " + PlayOptions.FrameName(settings.FrameCap), settings.CycleFrameCap));
+            parent.Add(Button(settings.AimAssist == 0 ? "Aim assist off" : settings.AimAssist == 2 ? "Aim assist strong" : "Aim assist light", settings.CycleAim));
+            parent.Add(Button(settings.InvertLook ? "Invert look" : "Look: normal", settings.ToggleInvert));
+            parent.Add(Button(settings.CrouchMode == 1 ? "Crouch: toggle" : "Crouch: hold", settings.ToggleCrouchMode));
+            parent.Add(Button(settings.SprintMode == 1 ? "Sprint: toggle" : "Sprint: hold", settings.ToggleSprintMode));
             parent.Add(Button(settings.Merciful ? "Death: merciful" : "Death: permadeath", settings.ToggleMerciful));
             parent.Add(Button("Next run: " + DifficultyProfile.Name(settings.NextDifficulty), settings.CycleDifficulty));
             parent.Add(Button("Gore: " + Presentation.GoreName(settings.Gore == 0 ? 3 : settings.Gore), settings.CycleGore));

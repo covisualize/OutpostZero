@@ -55,6 +55,11 @@ namespace OutpostZero.Shell
         public int windowMode;
         public int worldSeed;
         public int endless;
+        public int aimAssist;
+        public int invertLook;
+        public int crouchMode;
+        public int sprintMode;
+        public int frameCap;
         public int slot;
         public string seal = "";
         public float sfxVolume = 1f;
