@@ -23,7 +23,8 @@ namespace OutpostZero.Core
         GunshotLoud,       // Rifle / Shotgun
         Explosion,
         ObjectBroken,
-        ZombieScream
+        ZombieScream,
+        Thunder
     }
 
     public enum WeaponType

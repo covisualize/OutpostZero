@@ -23,7 +23,7 @@ namespace OutpostZero.Shell
 
         public static float MaxDistance(string id)
         {
-            if (id == "boom" || id == "boom_far") return 48f;
+            if (id == "boom" || id == "boom_far" || id == "thunder") return 48f;
             if (id == "scream") return 36f;
             if (id == "shriek" || id == "roar" || id == "stomp") return 40f;
             if (id == "gun" || id == "shotgun" || id == "gun_far") return 32f;
@@ -529,6 +529,7 @@ namespace OutpostZero.Shell
             if (id == "stinger_dawn") return Mathf.Sin(t * 22f);
             if (id == "gun_far") return Mathf.Sin(t * 9f);
             if (id == "boom_far") return noise * Mathf.Sin(t * 4f);
+            if (id == "thunder") return noise * Mathf.Sin(t * 3f);
             if (id == "heart") return Mathf.Sin(t * 7f);
             if (id == "breath") return noise * Mathf.Sin(t * 3f);
             if (id == "dry") return Mathf.Sin(t * 90f);
@@ -570,7 +571,7 @@ namespace OutpostZero.Shell
             if (clips.TryGetValue(id, out var clip)) return clip;
             int rate = 22050;
             bool loop = id == "ambient" || id == "rain" || id == "wind" || id == "stem_perc" || id == "stem_combat" || id == "hum" || id == "crackle" || id == "buzz" || id == "flies";
-            float seconds = loop ? 2f : id == "boom_far" ? 0.7f : id == "roar" || id == "stomp" ? 0.5f : id == "boom" ? 0.45f : id == "gun_far" ? 0.42f : id == "breath" || id == "groan" ? 0.5f : id == "shriek" ? 0.28f : id == "heart" || id == "hiss" ? 0.22f : id == "dry" || id == "take_soft" || id == "take_box" || id == "take_metal" || id == "clink" || id == "clack" || id == "spit" ? 0.08f : id == "burn" || id == "cloud" ? 0.5f : 0.18f;
+            float seconds = loop ? 2f : id == "boom_far" || id == "thunder" ? 0.7f : id == "roar" || id == "stomp" ? 0.5f : id == "boom" ? 0.45f : id == "gun_far" ? 0.42f : id == "breath" || id == "groan" ? 0.5f : id == "shriek" ? 0.28f : id == "heart" || id == "hiss" ? 0.22f : id == "dry" || id == "take_soft" || id == "take_box" || id == "take_metal" || id == "clink" || id == "clack" || id == "spit" ? 0.08f : id == "burn" || id == "cloud" ? 0.5f : 0.18f;
             int samples = Mathf.CeilToInt(rate * seconds);
             var data = new float[samples];
             var random = new System.Random(id.GetHashCode());

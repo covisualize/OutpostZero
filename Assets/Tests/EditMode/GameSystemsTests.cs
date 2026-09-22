@@ -3571,6 +3571,30 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void ThunderCoversAGunshotAndStillNamesItself()
+        {
+            Assert.IsFalse(StormCover.ThunderDue(0f, 20f, false));
+            Assert.IsFalse(StormCover.ThunderDue(10f, 10.59f, false));
+            Assert.IsTrue(StormCover.ThunderDue(10f, 10.6f, false));
+            Assert.IsFalse(StormCover.ThunderDue(10f, 10.6f, true));
+            Assert.IsFalse(StormCover.Masks(0f, 10f, NoiseType.GunshotLoud));
+            Assert.IsFalse(StormCover.Masks(10f, 10.5f, NoiseType.GunshotLoud));
+            Assert.IsTrue(StormCover.Masks(10f, 10.6f, NoiseType.GunshotLoud));
+            Assert.IsTrue(StormCover.Masks(10f, 11.9f, NoiseType.GunshotQuiet));
+            Assert.IsFalse(StormCover.Masks(10f, 12f, NoiseType.GunshotLoud));
+            Assert.IsFalse(StormCover.Masks(10f, 10.6f, NoiseType.Explosion));
+            Assert.IsFalse(StormCover.Masks(10f, 10.6f, NoiseType.WalkFootstep));
+            Assert.AreEqual(0f, HearGate.Perceived(0f, 40f, 1f, false, NoiseType.Thunder), 0.001f);
+            Assert.AreEqual(0.09f, HearGate.Perceived(8f, 10f, 1f, true, NoiseType.GunshotLoud), 0.001f);
+            Assert.AreEqual(0.8f, WeatherSurface.Sight(WeatherKind.Rain), 0.001f);
+            Assert.AreEqual("[Thunder, east]", Presentation.Caption(NoiseType.Thunder, 4f, 0f, "en"));
+            Assert.AreEqual("[Trueno, este]", Presentation.Caption(NoiseType.Thunder, 4f, 0f, "es"));
+            Assert.AreEqual(48f, AudioSpace.MaxDistance("thunder"), 0.001f);
+            Assert.AreEqual(0.7f, StormCover.Volume, 0.001f);
+            Assert.AreEqual(40f, StormCover.Radius, 0.001f);
+        }
+
+        [Test]
         public void AFarShotCarriesALowerTail()
         {
             Assert.AreEqual(0f, SoundTail.Gun(11.9f), 0.001f);

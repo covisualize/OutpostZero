@@ -63,6 +63,7 @@ namespace OutpostZero.Sensory
                     true,
                     noiseType == NoiseType.GunshotLoud));
             }
+            if (StormCover.Masks(StormCover.Bolt, Time.time, noiseType)) return;
             OnNoiseEmitted?.Invoke(origin, radius, noiseType);
 
             if (showDebugGizmos)

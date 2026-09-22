@@ -12,6 +12,7 @@ namespace OutpostZero.Sensory
 
         public static float Perceived(float distance, float radius, float intensity, bool wall, NoiseType type)
         {
+            if (type == NoiseType.Thunder) return 0f;
             if (radius <= 0.01f) return 0f;
             if (intensity < 0f) intensity = 0f;
             if (distance < 0f) distance = 0f;

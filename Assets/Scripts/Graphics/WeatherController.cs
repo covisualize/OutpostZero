@@ -40,6 +40,7 @@ namespace OutpostZero.Graphics
         private WeatherKind applied = (WeatherKind)(-1);
         private float nextShift;
         private float lastBolt;
+        private bool thunderSent;
 
         public WeatherKind Kind => kind;
 
@@ -63,7 +64,19 @@ namespace OutpostZero.Graphics
             }
             Apply();
             if (FlashCap.Due(kind == WeatherKind.Rain, lastBolt, Time.time) && CombatVfx.Bolt(transform.position + Vector3.up * 18f))
+            {
                 lastBolt = Time.time;
+                thunderSent = false;
+                Sensory.StormCover.Strike(lastBolt);
+            }
+            if (Sensory.StormCover.ThunderDue(lastBolt, Time.time, thunderSent))
+            {
+                thunderSent = true;
+                Vector3 at = transform.position;
+                Shell.AudioManager.Instance?.PlayAt("thunder", at, Sensory.StormCover.Volume);
+                if (Sensory.NoiseManager.Instance != null)
+                    Sensory.NoiseManager.Instance.EmitNoise(at, Sensory.StormCover.Radius, 1f, NoiseType.Thunder);
+            }
         }
 
         public void Set(WeatherKind weather)
