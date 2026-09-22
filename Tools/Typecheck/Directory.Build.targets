@@ -1,0 +1,9 @@
+<Project>
+  <PropertyGroup>
+    <DefineConstants>$(UnityDefines);$(ExtraDefines)</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="$(UnityData)/Managed/UnityEngine/UnityEngine*.dll" Private="$(CopyUnity)" />
+    <Reference Include="$(UnityData)/Managed/UnityEngine/UnityEditor*.dll" Private="$(CopyUnity)" Condition="'$(EditorRefs)' == 'true'" />
+  </ItemGroup>
+</Project>

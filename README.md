@@ -68,6 +68,7 @@ GitHub Actions workflows:
 
 - `.github/workflows/unity-ci.yml` — EditMode tests, PlayMode smoke test, headless scene build, Linux player. Windows player builds run on version tags.
 - `.github/workflows/blender-assets.yml` — path tests plus a Blender 4.2 headless asset build.
+- `.github/workflows/typecheck.yml` — no license needed. Compiles the runtime, editor, and test assemblies against the Unity 6 managed DLLs and the real Input System and AI Navigation sources, then runs the EditMode tests on .NET. Tests that reach native engine calls (`JsonUtility`, `AssetDatabase`) are listed but do not fail the job. Run it locally with `Tools/Typecheck/run.sh` (needs the .NET 8 SDK; the first run downloads the Unity editor archive to extract its managed DLLs).
 
 Repository secrets required for the Unity jobs:
 

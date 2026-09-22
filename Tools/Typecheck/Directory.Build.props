@@ -1,0 +1,19 @@
+<Project>
+  <PropertyGroup>
+    <RepoRoot>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)../..'))</RepoRoot>
+    <UnityData Condition="'$(UnityData)' == ''">$(RepoRoot)/.typecheck/unity/Editor/Data</UnityData>
+    <PkgRoot Condition="'$(PkgRoot)' == ''">$(RepoRoot)/.typecheck/pkgs</PkgRoot>
+    <Out>$(RepoRoot)/.typecheck/bin</Out>
+    <BaseIntermediateOutputPath>$(RepoRoot)/.typecheck/obj/$(MSBuildProjectName)/</BaseIntermediateOutputPath>
+    <OutputPath>$(Out)/$(MSBuildProjectName)/</OutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <CopyUnity Condition="'$(CopyUnity)' == ''">false</CopyUnity>
+    <LangVersion>9.0</LangVersion>
+    <Nullable>disable</Nullable>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <NoWarn>$(NoWarn);CS0618;CS0414;CS0169;CS0649;CS0067;CS1998;CS0108;CS0114;CS0162;CS0168;CS0219;CS8632;CS1701;CS1702;MSB3277</NoWarn>
+    <UnityDefines>UNITY_6000_0_OR_NEWER;UNITY_2023_3_OR_NEWER;UNITY_2023_2_OR_NEWER;UNITY_2023_1_OR_NEWER;UNITY_2022_3_OR_NEWER;UNITY_2022_2_OR_NEWER;UNITY_2022_1_OR_NEWER;UNITY_2021_3_OR_NEWER;UNITY_2021_2_OR_NEWER;UNITY_2021_1_OR_NEWER;UNITY_2020_3_OR_NEWER;UNITY_2020_2_OR_NEWER;UNITY_2020_1_OR_NEWER;UNITY_2019_4_OR_NEWER;UNITY_2019_3_OR_NEWER;UNITY_2019_2_OR_NEWER;UNITY_2019_1_OR_NEWER;UNITY_2018_4_OR_NEWER;UNITY_2018_3_OR_NEWER;UNITY_STANDALONE_LINUX;UNITY_STANDALONE;ENABLE_INPUT_SYSTEM;ENABLE_MONO;NET_STANDARD_2_1;NET_STANDARD</UnityDefines>
+  </PropertyGroup>
+</Project>

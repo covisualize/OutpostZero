@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><TargetFramework>netstandard2.1</TargetFramework><AssemblyName>Unity.InputSystem</AssemblyName><Src>$(PkgRoot)/com.unity.inputsystem/package/InputSystem</Src></PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(Src)/**/*.cs" Exclude="$(Src)/Plugins/UI/**;$(Src)/Plugins/OnScreen/**;$(Src)/Plugins/InputForUI/**;$(Src)/Editor/**" />
+    <Compile Include="$(Src)/Plugins/UI/UISupport.cs" />
+  </ItemGroup>
+</Project>

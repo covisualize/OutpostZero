@@ -37,3 +37,7 @@ screen_verify.png
 __pycache__/
 *.py[cod]
 *$py.class
+
+# License-free type-check harness
+!Tools/Typecheck/**/*.csproj
+/.typecheck/
