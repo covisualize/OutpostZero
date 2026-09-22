@@ -12,6 +12,8 @@ namespace OutpostZero.Graphics
         private Vignette vignette;
         private FilmGrain grain;
         private DepthOfField depth;
+        private ColorAdjustments color;
+        private MotionBlur blur;
 
         private void Start()
         {
@@ -35,7 +37,7 @@ namespace OutpostZero.Graphics
             tone.active = true;
             tone.mode.Override(TonemappingMode.ACES);
 
-            var color = profile.Add<ColorAdjustments>();
+            color = profile.Add<ColorAdjustments>();
             color.active = true;
             color.postExposure.Override(0.15f);
             color.contrast.Override(12f);
@@ -45,6 +47,10 @@ namespace OutpostZero.Graphics
             grain.active = false;
             grain.intensity.Override(0.18f);
             grain.type.Override(FilmGrainLookup.Medium1);
+
+            blur = profile.Add<MotionBlur>();
+            blur.active = false;
+            blur.intensity.Override(0.35f);
 
             depth = profile.Add<DepthOfField>();
             depth.active = false;
@@ -69,6 +75,12 @@ namespace OutpostZero.Graphics
             vignette.intensity.Override(tier <= 0 ? 0.16f : 0.28f);
             grain.active = budget.Grain;
             depth.active = aiming && budget.DepthOfField;
+            if (color != null)
+            {
+                float bright = SettingsService.Instance != null ? SettingsService.Instance.Brightness : 1f;
+                color.postExposure.Override(Presentation.Exposure(bright));
+            }
+            if (blur != null) blur.active = SettingsService.Instance != null && SettingsService.Instance.MotionBlur;
         }
     }
 }

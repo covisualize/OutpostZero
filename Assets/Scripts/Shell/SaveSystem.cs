@@ -211,6 +211,13 @@ namespace OutpostZero.Shell
                 data.subtitles = SettingsService.Instance.Subtitles;
                 data.mercy = SettingsService.Instance.Merciful ? 1 : 0;
                 data.nextDifficulty = SettingsService.Instance.NextDifficulty;
+                data.goreLevel = SettingsService.Instance.Gore == 0 ? 3 : SettingsService.Instance.Gore;
+                data.hitStop = SettingsService.Instance.HitStop ? 1 : 2;
+                data.damageNumbers = SettingsService.Instance.DamageNumbers ? 1 : 2;
+                data.hudOpacity = SettingsService.Instance.HudOpacity;
+                data.brightness = SettingsService.Instance.Brightness;
+                data.motionBlur = SettingsService.Instance.MotionBlur ? 1 : 0;
+                data.windowMode = SettingsService.Instance.WindowMode;
             }
             if (SurvivorRoster.Instance != null)
             {
@@ -265,6 +272,7 @@ namespace OutpostZero.Shell
             WorldMapService.Instance?.RestoreCampaign(data.radio, data.difficulty, data.broadcast);
             if (data.districtIndex > data.districtsCleared) WorldMapService.Instance?.SelectIndex(data.districtIndex);
             if (data.nextDifficulty > 0) SettingsService.Instance?.SetNextDifficulty(data.nextDifficulty);
+            SettingsService.Instance?.ApplyComfort(data.goreLevel, data.hitStop, data.damageNumbers, data.hudOpacity, data.brightness, data.motionBlur, data.windowMode);
             if (data.survivors != null && data.survivors.Length > 0 && SurvivorRoster.Instance != null)
             {
                 var list = new List<Survivor>();

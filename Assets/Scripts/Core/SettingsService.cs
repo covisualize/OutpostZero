@@ -27,6 +27,13 @@ namespace OutpostZero.Core
         [SerializeField] private float fieldOfView = 55f;
         [SerializeField] private bool merciful;
         [SerializeField] private int nextDifficulty = 2;
+        [SerializeField] private int goreLevel = 1;
+        [SerializeField] private int hitStop = 1;
+        [SerializeField] private int damageNumbers = 1;
+        [SerializeField] private float hudOpacity = 1f;
+        [SerializeField] private float brightness = 1f;
+        [SerializeField] private int motionBlur;
+        [SerializeField] private int windowMode;
 
         public float ScreenShake => screenShake;
         public float MasterVolume => masterVolume;
@@ -43,7 +50,14 @@ namespace OutpostZero.Core
         public float FieldOfView => fieldOfView;
         public bool Merciful => merciful;
         public int NextDifficulty => nextDifficulty < 1 ? 2 : nextDifficulty > 3 ? 3 : nextDifficulty;
-        public string DiscreteKey => (subtitles ? "1" : "0") + colorblindMode + quality + vsync + (merciful ? "1" : "0") + NextDifficulty;
+        public int Gore => Presentation.Gore(goreLevel);
+        public bool HitStop => Presentation.HitStop(hitStop);
+        public bool DamageNumbers => Presentation.DamageNumbers(damageNumbers);
+        public float HudOpacity => Presentation.Opacity(hudOpacity);
+        public float Brightness => Presentation.Brightness(brightness);
+        public bool MotionBlur => Presentation.MotionBlur(motionBlur);
+        public int WindowMode => windowMode;
+        public string DiscreteKey => (subtitles ? "1" : "0") + colorblindMode + quality + vsync + (merciful ? "1" : "0") + NextDifficulty + goreLevel + hitStop + damageNumbers + motionBlur + windowMode;
         public bool ShowSettings { get; private set; }
 
         public event Action OnChanged;
@@ -58,6 +72,7 @@ namespace OutpostZero.Core
             Instance = this;
             ApplyVolume();
             ApplyDisplay();
+            ApplyWindow();
         }
 
         public void SetShake(float value)
@@ -160,6 +175,62 @@ namespace OutpostZero.Core
             OnChanged?.Invoke();
         }
 
+        public void CycleGore()
+        {
+            goreLevel = Presentation.NextGore(goreLevel);
+            OnChanged?.Invoke();
+        }
+
+        public void ToggleHitStop()
+        {
+            hitStop = Presentation.ToggleOff(hitStop);
+            OnChanged?.Invoke();
+        }
+
+        public void ToggleDamageNumbers()
+        {
+            damageNumbers = Presentation.ToggleOff(damageNumbers);
+            OnChanged?.Invoke();
+        }
+
+        public void SetHudOpacity(float value)
+        {
+            hudOpacity = Presentation.Opacity(value);
+            OnChanged?.Invoke();
+        }
+
+        public void SetBrightness(float value)
+        {
+            brightness = Presentation.Brightness(value);
+            OnChanged?.Invoke();
+        }
+
+        public void ToggleMotionBlur()
+        {
+            motionBlur = motionBlur == 1 ? 0 : 1;
+            OnChanged?.Invoke();
+        }
+
+        public void CycleWindow()
+        {
+            windowMode = windowMode == 2 ? 1 : 2;
+            ApplyWindow();
+            OnChanged?.Invoke();
+        }
+
+        public void ApplyComfort(int gore, int stop, int numbers, float opacity, float bright, int blur, int window)
+        {
+            goreLevel = gore <= 0 ? 1 : gore >= 3 ? 3 : gore;
+            hitStop = stop == 2 ? 2 : 1;
+            damageNumbers = numbers == 2 ? 2 : 1;
+            hudOpacity = Presentation.Opacity(opacity);
+            brightness = Presentation.Brightness(bright);
+            motionBlur = blur == 1 ? 1 : 0;
+            windowMode = window == 1 || window == 2 ? window : 0;
+            ApplyWindow();
+            OnChanged?.Invoke();
+        }
+
         public void ToggleVSync()
         {
             vsync = vsync == 0 ? 1 : 0;
@@ -215,6 +286,12 @@ namespace OutpostZero.Core
             var spawners = FindObjectsByType<ZombieSpawner>(FindObjectsSortMode.None);
             for (int i = 0; i < spawners.Length; i++) spawners[i].ApplyCap(tier.Zombies);
             WeatherController.Instance?.ApplyBudget(tier.Particles);
+        }
+
+        private void ApplyWindow()
+        {
+            if (windowMode == 2) Screen.fullScreen = true;
+            else if (windowMode == 1) Screen.fullScreen = false;
         }
     }
 }

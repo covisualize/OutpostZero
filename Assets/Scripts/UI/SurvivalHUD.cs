@@ -2,6 +2,7 @@ using UnityEngine;
 using OutpostZero.Core;
 using OutpostZero.Player;
 using OutpostZero.Combat;
+using OutpostZero.Graphics;
 using OutpostZero.Sensory;
 
 namespace OutpostZero.UI
@@ -79,6 +80,10 @@ namespace OutpostZero.UI
             {
                 currentNoiseLevel = Mathf.Clamp(radius / 30f, 0f, 1f);
             }
+            if (SettingsService.Instance != null && !SettingsService.Instance.Subtitles) return;
+            Vector3 from = player != null ? origin - player.transform.position : origin;
+            string line = Presentation.Caption(type, from.x, from.z, SettingsService.Instance != null ? SettingsService.Instance.Language : "en");
+            if (!string.IsNullOrEmpty(line)) ShowToast(line);
         }
     }
 }

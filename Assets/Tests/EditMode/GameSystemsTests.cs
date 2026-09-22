@@ -910,5 +910,45 @@ namespace OutpostZero.Tests.EditMode
             Assert.IsFalse(SaveCodec.TryDeserialize(JsonUtility.ToJson(future), out _, out error));
             Assert.AreEqual("schema", error);
         }
+
+        [Test]
+        public void GoreCaptionsAndBrightnessKeepTheOldDefaults()
+        {
+            Assert.IsTrue(CharacterLook.Wounded(39f, 100f));
+            Assert.IsFalse(CharacterLook.Wounded(40f, 100f));
+            Assert.IsFalse(CharacterLook.Wounded(10f, 100f, 0));
+            Assert.IsTrue(CharacterLook.Wounded(60f, 100f, 2));
+            Assert.IsFalse(CharacterLook.Wounded(70f, 100f, 2));
+            Assert.IsFalse(CharacterLook.Wounded(60f, 100f, 1));
+
+            Assert.AreEqual(1, Presentation.Gore(0));
+            Assert.AreEqual("Standard", Presentation.GoreName(0));
+            Assert.AreEqual("Heavy", Presentation.GoreName(2));
+            Assert.AreEqual("Off", Presentation.GoreName(3));
+            Assert.AreEqual(2, Presentation.NextGore(1));
+            Assert.AreEqual(3, Presentation.NextGore(2));
+            Assert.AreEqual(1, Presentation.NextGore(3));
+            Assert.IsTrue(Presentation.HitStop(0));
+            Assert.IsFalse(Presentation.HitStop(2));
+            Assert.IsTrue(Presentation.DamageNumbers(1));
+            Assert.AreEqual(1f, Presentation.Opacity(0f), 0.001f);
+            Assert.AreEqual(0.45f, Presentation.Opacity(0.2f), 0.001f);
+            Assert.AreEqual(1f, Presentation.Brightness(0f), 0.001f);
+            Assert.AreEqual(0.15f, Presentation.Exposure(1f), 0.001f);
+            Assert.AreEqual(0.47f, Presentation.Exposure(1.4f), 0.001f);
+            Assert.IsFalse(Presentation.MotionBlur(0));
+            Assert.IsTrue(Presentation.MotionBlur(1));
+
+            Assert.AreEqual("north", Presentation.Compass(0f, 10f, "en"));
+            Assert.AreEqual("south", Presentation.Compass(0f, -8f, "en"));
+            Assert.AreEqual("east", Presentation.Compass(9f, 1f, "en"));
+            Assert.AreEqual("west", Presentation.Compass(-9f, 0f, "en"));
+            Assert.AreEqual("northeast", Presentation.Compass(6f, 6f, "en"));
+            Assert.AreEqual("here", Presentation.Compass(0f, 0f, "en"));
+            Assert.AreEqual("[Zombie scream, norte]", Presentation.Caption(NoiseType.ZombieScream, 0f, 4f, "es"));
+            Assert.AreEqual("[Gunshot, west]", Presentation.Caption(NoiseType.GunshotLoud, -5f, 0f, "en"));
+            Assert.AreEqual("[Explosion, here]", Presentation.Caption(NoiseType.Explosion, 0f, 0f, "en"));
+            Assert.AreEqual("", Presentation.Caption(NoiseType.WalkFootstep, 1f, 0f, "en"));
+        }
     }
 }

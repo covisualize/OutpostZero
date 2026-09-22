@@ -93,8 +93,15 @@ namespace OutpostZero.Graphics
 
         public static bool Wounded(float current, float maximum)
         {
+            return Wounded(current, maximum, 1);
+        }
+
+        public static bool Wounded(float current, float maximum, int gore)
+        {
             if (maximum <= 0.01f) return false;
-            return current / maximum < GoreLine;
+            if (gore <= 0) return false;
+            float line = gore >= 2 ? 0.7f : GoreLine;
+            return current / maximum < line;
         }
 
         private static float Outfit(int index, int channel)

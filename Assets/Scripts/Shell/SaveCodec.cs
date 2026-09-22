@@ -46,6 +46,13 @@ namespace OutpostZero.Shell
         public int difficulty;
         public int broadcast;
         public int nextDifficulty;
+        public int goreLevel;
+        public int hitStop;
+        public int damageNumbers;
+        public float hudOpacity;
+        public float brightness;
+        public int motionBlur;
+        public int windowMode;
         public int slot;
         public string seal = "";
         public float sfxVolume = 1f;

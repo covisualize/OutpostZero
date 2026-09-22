@@ -9,6 +9,7 @@ using OutpostZero.Colony;
 using OutpostZero.Combat;
 using OutpostZero.Core;
 using OutpostZero.Expedition;
+using OutpostZero.Graphics;
 using OutpostZero.Items;
 using OutpostZero.Player;
 using OutpostZero.Shell;
@@ -152,6 +153,7 @@ namespace OutpostZero.UI
             if (root == null) return;
             float scale = SettingsService.Instance != null ? SettingsService.Instance.TextScale : 1f;
             root.style.fontSize = Mathf.RoundToInt(14 * scale);
+            root.style.opacity = SettingsService.Instance != null ? SettingsService.Instance.HudOpacity : 1f;
             var player = PlayerRegistry.Current;
             var hud = FindFirstObjectByType<SurvivalHUD>();
             var life = player != null ? player.GetComponent<HealthSystem>() : null;
@@ -207,7 +209,11 @@ namespace OutpostZero.UI
 
             float noise = hud != null ? hud.NoiseLevel : 0f;
             noiseFill.style.width = Length.Percent(noise * 100f);
-            noiseFill.style.backgroundColor = Color.Lerp(new Color(0.2f, 0.7f, 0.3f), new Color(0.8f, 0.15f, 0.1f), noise);
+            int vision = SettingsService.Instance != null ? SettingsService.Instance.ColorblindMode : 0;
+            if (vision == 1) noiseFill.style.backgroundColor = Color.Lerp(new Color(0.2f, 0.45f, 0.95f), new Color(0.95f, 0.85f, 0.15f), noise);
+            else if (vision == 2) noiseFill.style.backgroundColor = Color.Lerp(new Color(0.1f, 0.1f, 0.1f), Color.white, noise);
+            else noiseFill.style.backgroundColor = Color.Lerp(new Color(0.2f, 0.7f, 0.3f), new Color(0.8f, 0.15f, 0.1f), noise);
+            noiseFill.style.height = vision == 2 ? 8f + noise * 10f : 6f;
             toast.text = hud != null ? hud.Toast ?? "" : "";
             toast.style.display = string.IsNullOrEmpty(toast.text) ? DisplayStyle.None : DisplayStyle.Flex;
 
@@ -433,6 +439,8 @@ namespace OutpostZero.UI
             parent.Add(SliderRow("Interface", settings.UiVolume, settings.SetUi));
             parent.Add(SliderRow("Field of view", settings.FieldOfView, 40f, 75f, settings.SetFieldOfView));
             parent.Add(SliderRow("Text", settings.TextScale, 0.8f, 1.6f, settings.SetTextScale));
+            parent.Add(SliderRow("HUD", settings.HudOpacity, 0.45f, 1f, settings.SetHudOpacity));
+            parent.Add(SliderRow("Brightness", settings.Brightness, 0.6f, 1.4f, settings.SetBrightness));
             parent.Add(Button(settings.Subtitles ? "Subtitles on" : "Subtitles off", () => settings.SetSubtitles(!settings.Subtitles)));
             parent.Add(Button("Colorblind mode " + settings.ColorblindMode, settings.CycleColorblind));
             parent.Add(Button(settings.Language == "es" ? "Idioma: ES" : "Language: EN", () => settings.SetLanguage(settings.Language == "es" ? "en" : "es")));
@@ -441,6 +449,11 @@ namespace OutpostZero.UI
             parent.Add(Button(settings.VSync ? "VSync on" : "VSync off", settings.ToggleVSync));
             parent.Add(Button(settings.Merciful ? "Death: merciful" : "Death: permadeath", settings.ToggleMerciful));
             parent.Add(Button("Next run: " + DifficultyProfile.Name(settings.NextDifficulty), settings.CycleDifficulty));
+            parent.Add(Button("Gore: " + Presentation.GoreName(settings.Gore == 0 ? 3 : settings.Gore), settings.CycleGore));
+            parent.Add(Button(settings.HitStop ? "Hit stop on" : "Hit stop off", settings.ToggleHitStop));
+            parent.Add(Button(settings.DamageNumbers ? "Damage numbers on" : "Damage numbers off", settings.ToggleDamageNumbers));
+            parent.Add(Button(settings.MotionBlur ? "Motion blur on" : "Motion blur off", settings.ToggleMotionBlur));
+            parent.Add(Button(settings.WindowMode == 1 ? "Windowed" : settings.WindowMode == 2 ? "Fullscreen" : "Display: default", settings.CycleWindow));
             parent.Add(Body("Click an action, then press a key. Escape cancels."));
             for (int i = 0; i < ControlBindings.Count; i++)
             {

@@ -63,6 +63,7 @@ namespace OutpostZero.Combat
 
         public void AddNumber(Vector3 world, float amount, bool crit)
         {
+            if (SettingsService.Instance != null && !SettingsService.Instance.DamageNumbers) return;
             numbers.Add(new FloatingDamage
             {
                 World = world + Vector3.up * 1.6f,
@@ -95,6 +96,7 @@ namespace OutpostZero.Combat
         private void HandleKill(GameObject victim, GameObject killer)
         {
             if (!hitStopOnMeleeKill || killer == null) return;
+            if (SettingsService.Instance != null && !SettingsService.Instance.HitStop) return;
             var melee = killer.GetComponentInChildren<MeleeWeapon>();
             if (melee == null || !melee.isActiveAndEnabled) return;
             if (Time.timeScale < 0.2f) return;

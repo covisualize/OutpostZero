@@ -1,5 +1,6 @@
 using UnityEngine;
 using OutpostZero.Combat;
+using OutpostZero.Core;
 
 namespace OutpostZero.Graphics
 {
@@ -43,7 +44,7 @@ namespace OutpostZero.Graphics
         private void LateUpdate()
         {
             var health = GetComponent<HealthSystem>();
-            bool hurt = health != null && CharacterLook.Wounded(health.CurrentHealth, health.MaxHealth);
+            bool hurt = health != null && CharacterLook.Wounded(health.CurrentHealth, health.MaxHealth, GoreLevel());
             if (!painted || hurt != wounded) Paint();
         }
 
@@ -82,11 +83,16 @@ namespace OutpostZero.Graphics
             return body.transform;
         }
 
+        private static int GoreLevel()
+        {
+            return SettingsService.Instance != null ? SettingsService.Instance.Gore : 1;
+        }
+
         private void Paint()
         {
             painted = true;
             var health = GetComponent<HealthSystem>();
-            wounded = health != null && CharacterLook.Wounded(health.CurrentHealth, health.MaxHealth);
+            wounded = health != null && CharacterLook.Wounded(health.CurrentHealth, health.MaxHealth, GoreLevel());
             var tint = CharacterLook.Clothing(seed);
             if (wounded) tint = CharacterLook.Gore(tint);
             var eye = CharacterLook.Eye(role);
