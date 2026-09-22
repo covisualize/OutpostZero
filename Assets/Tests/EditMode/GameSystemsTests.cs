@@ -3613,6 +3613,36 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void ALampCellDiesAndAnOldSaveStartsFull()
+        {
+            Assert.AreEqual(96f, LampCell.Tick(100f, true, 1f), 0.001f);
+            Assert.AreEqual(0f, LampCell.Tick(4f, true, 1f), 0.001f);
+            Assert.AreEqual(0f, LampCell.Tick(0f, true, 1f), 0.001f);
+            Assert.AreEqual(2f, LampCell.Tick(0f, false, 1f), 0.001f);
+            Assert.AreEqual(100f, LampCell.Tick(99f, false, 1f), 0.001f);
+            Assert.AreEqual(50f, LampCell.Tick(50f, true, 0f), 0.001f);
+            Assert.AreEqual(50f, LampCell.Tick(50f, true, -1f), 0.001f);
+            Assert.IsFalse(LampCell.Live(0f));
+            Assert.IsFalse(LampCell.Live(0.5f));
+            Assert.IsTrue(LampCell.Live(0.51f));
+            Assert.AreEqual(1f, LampCell.Beam(100f), 0.001f);
+            Assert.AreEqual(0f, LampCell.Beam(0f), 0.001f);
+            Assert.AreEqual(0.675f, LampCell.Beam(50f), 0.001f);
+            Assert.AreEqual(2.8f, LampCell.Intensity(100f), 0.001f);
+            Assert.AreEqual(0f, LampCell.Intensity(0f), 0.001f);
+            Assert.AreEqual(0f, LampCell.Spent(100f), 0.001f);
+            Assert.AreEqual(60f, LampCell.Spent(40f), 0.001f);
+            Assert.AreEqual(100f, LampCell.FromSpent(0f), 0.001f);
+            Assert.AreEqual(0f, LampCell.FromSpent(100f), 0.001f);
+            Assert.AreEqual(100f, LampCell.FromSpent(-4f), 0.001f);
+            Assert.AreEqual(1f, SpotRange.Exposure(true, false, true, 1f, 0f), 0.001f);
+            Assert.IsTrue(SaveCodec.TryDeserialize("{\"schemaVersion\":1}", out var legacy, out var error), error);
+            Assert.AreEqual(0f, legacy.lampSpent, 0.001f);
+            Assert.AreEqual(100f, LampCell.FromSpent(legacy.lampSpent), 0.001f);
+            Assert.AreEqual("Linterna", Loc.T("hud.lamp", "es"));
+        }
+
+        [Test]
         public void AZombieWithoutARigStillAttacksAndFalls()
         {
             Assert.AreEqual(14f, PoseSheet.Lean(ZombieAI.ZombieState.Chase, 0f), 0.001f);

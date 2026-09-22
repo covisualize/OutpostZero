@@ -289,6 +289,8 @@ namespace OutpostZero.UI
                 healthFill.style.backgroundColor = HudPalette.Health(vision);
             }
             if (player != null) vitalText.AppendLine(Loc.T("hud.stamina") + " " + Mathf.CeilToInt(player.CurrentStamina));
+            if (player != null && (player.FlashlightOn || player.LampCellCharge < LampCell.Full - 0.1f))
+                vitalText.AppendLine(Loc.T("hud.lamp") + " " + Mathf.CeilToInt(player.LampCellCharge));
             if (needs != null)
             {
                 vitalText.AppendLine("Hunger " + Mathf.RoundToInt(needs.Hunger) + "  Thirst " + Mathf.RoundToInt(needs.Thirst) + "  Fatigue " + Mathf.RoundToInt(needs.Fatigue));

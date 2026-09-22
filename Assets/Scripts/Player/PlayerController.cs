@@ -45,6 +45,7 @@ namespace OutpostZero.Player
         [Header("Tactical Equipment")]
         [SerializeField] private Light flashlight;
         [SerializeField] private bool flashlightOn = false;
+        [SerializeField] private float lampCell = LampCell.Full;
 
         // Components
         private CharacterController characterController;
@@ -58,6 +59,8 @@ namespace OutpostZero.Player
         public bool IsAimingDownSights { get; private set; }
         private bool sprintLatch;
         public bool FlashlightOn => flashlightOn;
+        public float LampCellCharge => lampCell;
+        public float LampSpent => LampCell.Spent(lampCell);
         public bool WheelOpen { get; private set; }
         public int WheelSlot { get; private set; } = -1;
         private float wheelHold;
@@ -212,10 +215,22 @@ namespace OutpostZero.Player
                 SelectWeapon(0);
             }
 
-            if (flashlight != null)
-            {
-                flashlight.enabled = flashlightOn;
-            }
+            ApplyLamp();
+        }
+
+        public void RestoreLamp(float spent)
+        {
+            lampCell = LampCell.FromSpent(spent);
+            if (!LampCell.Live(lampCell)) flashlightOn = false;
+            ApplyLamp();
+        }
+
+        private void ApplyLamp()
+        {
+            if (flashlight == null) return;
+            bool shine = flashlightOn && LampCell.Live(lampCell);
+            flashlight.enabled = shine;
+            if (shine) flashlight.intensity = LampCell.Intensity(lampCell);
         }
 
         private void Update()
@@ -232,6 +247,13 @@ namespace OutpostZero.Player
             if (healthSystem.IsDead) return;
 
             HandleInput();
+            lampCell = LampCell.Tick(lampCell, flashlightOn, Time.deltaTime);
+            if (flashlightOn && !LampCell.Live(lampCell))
+            {
+                flashlightOn = false;
+                AudioManager.Instance?.Play("clack");
+            }
+            ApplyLamp();
             healthSystem.Shielded = DodgeClock.Untouchable(Time.time - lastDodge);
             HandleAiming();
             HandleMovement();
@@ -244,9 +266,16 @@ namespace OutpostZero.Player
             // Flashlight Toggle (F)
             if (ExpeditionInput.FlashlightPressed)
             {
-                flashlightOn = !flashlightOn;
-                if (flashlight != null) flashlight.enabled = flashlightOn;
-                if (flashlightOn) CodexDirector.Hear("flashlight");
+                if (!flashlightOn && !LampCell.Live(lampCell))
+                {
+                    AudioManager.Instance?.Play("clack");
+                }
+                else
+                {
+                    flashlightOn = !flashlightOn;
+                    if (flashlightOn) CodexDirector.Hear("flashlight");
+                }
+                ApplyLamp();
             }
 
             if (ExpeditionInput.MedkitPressed)

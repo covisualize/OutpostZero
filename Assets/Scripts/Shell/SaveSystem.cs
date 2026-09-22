@@ -212,6 +212,7 @@ namespace OutpostZero.Shell
                 data.weaponMods = OutpostZero.Player.PlayerRegistry.Current.PackMods();
                 var inventory = OutpostZero.Player.PlayerRegistry.Current.GetComponent<OutpostZero.Player.PlayerInventory>();
                 if (inventory != null) data.packTier = inventory.PackTier;
+                data.lampSpent = OutpostZero.Player.PlayerRegistry.Current.LampSpent;
                 var needs = OutpostZero.Player.PlayerRegistry.Current.GetComponent<OutpostZero.Player.SurvivalNeeds>();
                 if (needs != null)
                 {
@@ -325,6 +326,7 @@ namespace OutpostZero.Shell
             TutorialDirector.Instance?.SetFinished(data.tutorialDone);
             CodexDirector.Instance?.Restore(data.codex);
             OutpostZero.Player.PlayerRegistry.Current?.RestoreMods(data.weaponMods);
+            OutpostZero.Player.PlayerRegistry.Current?.RestoreLamp(data.lampSpent);
             OutpostZero.Player.PlayerRegistry.Current?.GetComponent<OutpostZero.Player.PlayerInventory>()?.SetPackTier(data.packTier);
             float keptFatigue = OutpostZero.Player.BodyState.UnpackFatigue(data.fatigue, data.fatigueSet);
             if (keptFatigue >= 0f)

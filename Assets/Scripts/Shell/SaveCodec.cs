@@ -63,6 +63,7 @@ namespace OutpostZero.Shell
         public int packTier;
         public int fatigue;
         public int fatigueSet;
+        public float lampSpent;
         public int bleed;
         public int infection;
         public string prints = "";
