@@ -144,6 +144,26 @@ namespace OutpostZero.AI
             return best;
         }
 
+        public static ZombieAI Closest(float x, float z, float reach)
+        {
+            if (reach < 0f) return null;
+            ZombieAI bestBody = null;
+            float best = reach;
+            for (int i = 0; i < aliveCrowd.Count; i++)
+            {
+                var zombie = aliveCrowd[i];
+                if (zombie == null || zombie.currentState == ZombieState.Dead) continue;
+                if (zombie.healthSystem != null && zombie.healthSystem.IsDead) continue;
+                float dx = zombie.transform.position.x - x;
+                float dz = zombie.transform.position.z - z;
+                float dist = Mathf.Sqrt(dx * dx + dz * dz);
+                if (dist > best) continue;
+                best = dist;
+                bestBody = zombie;
+            }
+            return bestBody;
+        }
+
         public void PostAt(float x, float z)
         {
             posted = true;

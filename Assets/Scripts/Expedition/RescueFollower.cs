@@ -22,6 +22,7 @@ namespace OutpostZero.Expedition
         private bool following;
         private bool joined;
         private float lastCry;
+        private float lastAid;
 
         public string Name => personName;
         public bool Following => following;
@@ -75,6 +76,24 @@ namespace OutpostZero.Expedition
                 AudioManager.Instance?.PlayAt("scream", transform.position, 0.45f);
                 if (NoiseManager.Instance != null)
                     NoiseManager.Instance.EmitNoise(transform.position, StraggleCall.Radius, 0.8f, NoiseType.ZombieScream, gameObject);
+            }
+
+            if (StreetAid.Due(lastAid, Time.time, ZombieAI.Nearest(nextX, nextZ)))
+            {
+                var foe = ZombieAI.Closest(nextX, nextZ, StreetAid.Reach);
+                if (foe != null)
+                {
+                    lastAid = Time.time;
+                    var health = foe.GetComponent<HealthSystem>();
+                    Vector3 aim = foe.transform.position - transform.position;
+                    aim.y = 0f;
+                    if (aim.sqrMagnitude < 0.0001f) aim = transform.forward;
+                    if (health != null && !health.IsDead)
+                        health.TakeDamage(StreetAid.Damage, foe.transform.position + Vector3.up, aim.normalized, gameObject);
+                    GameplayFeedback.Toast(StreetAid.Line(personName, null));
+                    if (NoiseManager.Instance != null)
+                        NoiseManager.Instance.EmitNoise(transform.position, StreetAid.Noise, 0.7f, NoiseType.MeleeSwing, gameObject);
+                }
             }
 
             var gate = ExtractionZone.Current;

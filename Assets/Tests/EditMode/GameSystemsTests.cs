@@ -6347,6 +6347,32 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void AFollowerSwingsUpCloseAndACryStaysFarther()
+        {
+            Assert.AreEqual(1.6f, StreetAid.Reach, 0.001f);
+            Assert.AreEqual(1.35f, StreetAid.Gap, 0.001f);
+            Assert.AreEqual(14f, StreetAid.Damage, 0.001f);
+            Assert.AreEqual(6f, StreetAid.Noise, 0.001f);
+            Assert.IsTrue(StreetAid.Due(0f, 10f, 1.6f));
+            Assert.IsTrue(StreetAid.Due(0f, 10f, 0f));
+            Assert.IsFalse(StreetAid.Due(0f, 10f, 1.61f));
+            Assert.IsFalse(StreetAid.Due(0f, 10f, -1f));
+            Assert.IsFalse(StreetAid.Due(5f, 6f, 1f));
+            Assert.IsTrue(StreetAid.Due(5f, 6.35f, 1f));
+            Assert.IsFalse(StreetAid.Due(5f, 4f, 1f));
+            Assert.IsFalse(StreetAid.Due(5f, 6.35f, 4f));
+            Assert.IsTrue(StraggleCall.Due(0f, 10f, 4f));
+            Assert.AreEqual(7f, StraggleCall.Near, 0.001f);
+            Assert.AreEqual(6f, StraggleCall.Gap, 0.001f);
+            Assert.AreEqual(16f, StraggleCall.Radius, 0.001f);
+            Assert.AreEqual("Maya swings", StreetAid.Line("Maya", "en"));
+            Assert.AreEqual("Maya golpea", StreetAid.Line("Maya", "es"));
+            Assert.AreEqual("Survivor swings", StreetAid.Line("", "en"));
+            Assert.AreEqual("Superviviente golpea", StreetAid.Line("Survivor", "es"));
+            Assert.AreEqual("Maya cries out", StreetAsk.Cry("Maya", "en"));
+        }
+
+        [Test]
         public void AZombieWithoutARigStillAttacksAndFalls()
         {
             Assert.AreEqual(14f, PoseSheet.Lean(ZombieAI.ZombieState.Chase, 0f), 0.001f);
