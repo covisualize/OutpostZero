@@ -234,8 +234,9 @@ namespace OutpostZero.Colony
                 broadcast = false;
                 return;
             }
-            int security = ColonyStorage.Instance != null ? ColonyStorage.Instance.Security : 0;
-            bool held = !breached && (security > 0 || (HordeDirector.Instance != null && HordeDirector.Instance.Tension < 80f));
+            int walls = GridBuilder.Instance != null ? GridBuilder.Instance.BarricadeCount() : 0;
+            int lights = GridBuilder.Instance != null ? GridBuilder.Instance.CountKind("Lamp") : 0;
+            bool held = RaidOutcome.Holds(raidDay, walls, GuardsOnTheLine(), lights, breached);
             int dropped = YardDead.Dropped(pressure, held);
             if (dropped > 0) ColonyStorage.Instance?.AddBodies(dropped);
             if (held)

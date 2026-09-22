@@ -2865,6 +2865,22 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void AThinDayThreeLosesAndABuiltDayTenHolds()
+        {
+            Assert.AreEqual(2, RaidOutcome.Need(3));
+            Assert.AreEqual(4, RaidOutcome.Need(10));
+            Assert.AreEqual(6, RaidOutcome.Need(20));
+            Assert.IsFalse(RaidOutcome.Holds(3, 1, 0, 0, false));
+            Assert.IsTrue(RaidOutcome.Holds(3, 2, 0, 0, false));
+            Assert.IsTrue(RaidOutcome.Holds(3, 0, 1, 0, false));
+            Assert.IsFalse(RaidOutcome.Holds(3, 4, 2, 2, true));
+            Assert.IsFalse(RaidOutcome.Holds(10, 1, 0, 0, false));
+            Assert.IsTrue(RaidOutcome.Holds(10, 2, 1, 0, false));
+            Assert.IsTrue(RaidOutcome.Holds(10, 1, 0, 3, false));
+            Assert.AreEqual(4, RaidOutcome.Strength(2, 1, 0));
+        }
+
+        [Test]
         public void DemolishingAModuleReturnsHalfTheScrap()
         {
             Assert.AreEqual(3, ScrapRefund.Half(6));
