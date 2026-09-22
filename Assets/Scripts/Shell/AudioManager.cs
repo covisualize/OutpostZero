@@ -517,7 +517,7 @@ namespace OutpostZero.Shell
 
         private static bool StepTone(string id)
         {
-            return id == "step" || id == "step_hard" || id == "step_metal" || id == "step_wood" || id == "step_water";
+            return id == "step" || id == "step_hard" || id == "step_metal" || id == "step_wood" || id == "step_water" || id == "step_gravel";
         }
 
         private static float Tone(string id, float t, float noise)

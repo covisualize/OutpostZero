@@ -764,6 +764,11 @@ namespace OutpostZero.Tests.EditMode
             Assert.AreEqual("step_hard", AudioMix.StepId("sidewalk_corner"));
             Assert.AreEqual("step", AudioMix.StepId("Ground"));
             Assert.AreEqual("step", AudioMix.StepId(null));
+            Assert.AreEqual("step_gravel", AudioMix.StepId("gravel_lot"));
+            Assert.AreEqual("step_gravel", AudioMix.StepId("rubble"));
+            Assert.AreEqual("step_gravel", AudioMix.StepId("dirt_path"));
+            Assert.AreEqual("step_hard", AudioMix.StepId("Road_Straight"));
+            Assert.AreEqual(0.35f, AudioSpace.SpatialBlend("step_gravel"), 0.001f);
         }
 
         [Test]
