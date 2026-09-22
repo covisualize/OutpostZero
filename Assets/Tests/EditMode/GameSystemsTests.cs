@@ -6161,6 +6161,26 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void ABladeBreaksAPaneAndALightRakeDoesNot()
+        {
+            Assert.AreEqual(48f, BladePane.Hit(48f), 0.001f);
+            Assert.AreEqual(0f, BladePane.Hit(-3f), 0.001f);
+            Assert.IsTrue(BladePane.Breaks(48f));
+            Assert.IsTrue(BladePane.Breaks(12f));
+            Assert.IsFalse(BladePane.Breaks(4f));
+            Assert.IsFalse(BladePane.Breaks(0f));
+            Assert.AreEqual(12f, PaneGlass.Hp, 0.001f);
+            Assert.AreEqual(0f, PaneGlass.After(PaneGlass.Hp, 48f), 0.001f);
+            Assert.AreEqual(8f, PaneGlass.After(PaneGlass.Hp, 4f), 0.001f);
+            Assert.AreEqual(48f, WeaponCard.Find("machete").Damage, 0.001f);
+            Assert.AreEqual(4f, PaneClaw.Hit, 0.001f);
+            Assert.AreEqual(18f, PaneCharge.Hit, 0.001f);
+            Assert.AreEqual(9f, PaneGlass.Noise, 0.001f);
+            Assert.AreEqual(9f, BladeClang.Reach, 0.001f);
+            Assert.AreEqual("The pane shatters", Loc.T("pane.break", "en"));
+        }
+
+        [Test]
         public void AZombieWithoutARigStillAttacksAndFalls()
         {
             Assert.AreEqual(14f, PoseSheet.Lean(ZombieAI.ZombieState.Chase, 0f), 0.001f);

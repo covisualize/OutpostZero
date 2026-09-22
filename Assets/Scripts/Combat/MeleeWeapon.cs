@@ -78,21 +78,30 @@ namespace OutpostZero.Combat
 
                 if (angle <= swingArcAngle * 0.5f)
                 {
-                    var damageable = col.GetComponentInParent<IDamageable>();
-                    var hazard = col.GetComponentInParent<DestructibleHazard>();
-                    if ((damageable != null && !damageable.IsDead) || hazard != null)
+                    var pane = col.GetComponent<OutpostZero.Expedition.GlassPane>();
+                    if (pane != null)
                     {
-                        CombatEvents.NoteDir(dirToTarget);
-                        DamageResolver.ResolveBody(col, col.bounds.center, dirToTarget, baseDamage * (GetComponent<WeaponMod>() != null ? GetComponent<WeaponMod>().damageMultiplier : 1f), ownerGameObject, false, WeaponType.Melee);
+                        pane.TakeDamage(BladePane.Hit(baseDamage), col.bounds.center, dirToTarget, ownerGameObject);
                         hitCount++;
-
-                        var rb = col.GetComponentInParent<Rigidbody>();
-                        if (rb != null && !rb.isKinematic)
-                        {
-                            rb.AddForce(dirToTarget * knockbackForce, ForceMode.Impulse);
-                        }
                     }
-                    else if (ContactCue.Wall(col.gameObject.layer)) wall = true;
+                    else
+                    {
+                        var damageable = col.GetComponentInParent<IDamageable>();
+                        var hazard = col.GetComponentInParent<DestructibleHazard>();
+                        if ((damageable != null && !damageable.IsDead) || hazard != null)
+                        {
+                            CombatEvents.NoteDir(dirToTarget);
+                            DamageResolver.ResolveBody(col, col.bounds.center, dirToTarget, baseDamage * (GetComponent<WeaponMod>() != null ? GetComponent<WeaponMod>().damageMultiplier : 1f), ownerGameObject, false, WeaponType.Melee);
+                            hitCount++;
+
+                            var rb = col.GetComponentInParent<Rigidbody>();
+                            if (rb != null && !rb.isKinematic)
+                            {
+                                rb.AddForce(dirToTarget * knockbackForce, ForceMode.Impulse);
+                            }
+                        }
+                        else if (ContactCue.Wall(col.gameObject.layer)) wall = true;
+                    }
                 }
             }
 
