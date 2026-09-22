@@ -2710,6 +2710,23 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void ABreachSpillsTheStores()
+        {
+            Assert.AreEqual(0, RaidSpoil.Scrap(false, 40));
+            Assert.AreEqual(0, RaidSpoil.Scrap(true, 0));
+            Assert.AreEqual(3, RaidSpoil.Scrap(true, 3));
+            Assert.AreEqual(4, RaidSpoil.Scrap(true, 8));
+            Assert.AreEqual(10, RaidSpoil.Scrap(true, 40));
+            Assert.AreEqual(12, RaidSpoil.Scrap(true, 80));
+            Assert.AreEqual(0, RaidSpoil.Meals(false, 9));
+            Assert.AreEqual(0, RaidSpoil.Meals(true, 0));
+            Assert.AreEqual(1, RaidSpoil.Meals(true, 2));
+            Assert.AreEqual(2, RaidSpoil.Meals(true, 6));
+            Assert.AreEqual(3, RaidSpoil.Meals(true, 12));
+            Assert.AreEqual("Se derramaron las reservas", Loc.T("camp.spoiled", "es"));
+        }
+
+        [Test]
         public void DemolishingAModuleReturnsHalfTheScrap()
         {
             Assert.AreEqual(3, ScrapRefund.Half(6));

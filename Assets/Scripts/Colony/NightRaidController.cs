@@ -198,7 +198,7 @@ namespace OutpostZero.Colony
                 return;
             }
             int security = ColonyStorage.Instance != null ? ColonyStorage.Instance.Security : 0;
-            bool held = security > 0 || (HordeDirector.Instance != null && HordeDirector.Instance.Tension < 80f);
+            bool held = !breached && (security > 0 || (HordeDirector.Instance != null && HordeDirector.Instance.Tension < 80f));
             int dropped = YardDead.Dropped(pressure, held);
             if (dropped > 0) ColonyStorage.Instance?.AddBodies(dropped);
             if (held)
@@ -226,8 +226,15 @@ namespace OutpostZero.Colony
             }
             else
             {
-                ColonyStorage.Instance?.AddScrap(-6);
-                string broke = "The raid broke the stores";
+                int scrap = ColonyStorage.Instance != null ? ColonyStorage.Instance.Scrap : 0;
+                int food = ColonyStorage.Instance != null ? ColonyStorage.Instance.Food : 0;
+                int lostScrap = breached ? RaidSpoil.Scrap(true, scrap) : 6;
+                int lostFood = breached ? RaidSpoil.Meals(true, food) : 0;
+                if (lostScrap > 0) ColonyStorage.Instance?.AddScrap(-lostScrap);
+                if (lostFood > 0) ColonyStorage.Instance?.AddFood(-lostFood);
+                string broke = breached ? Loc.T("camp.spoiled") : "The raid broke the stores";
+                if (breached && lostScrap > 0) broke += "  " + Loc.T("camp.scrap") + " -" + lostScrap;
+                if (breached && lostFood > 0) broke += "  " + Loc.T("camp.food") + " -" + lostFood;
                 if (dropped > 0) broke += "  " + Loc.T("camp.bodies") + " " + dropped;
                 GameplayFeedback.Toast(broke);
             }
