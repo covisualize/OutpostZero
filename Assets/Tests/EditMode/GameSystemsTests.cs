@@ -5319,6 +5319,23 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void AFireOnTheStreetBreaksTheView()
+        {
+            Assert.IsTrue(SmokeVeil.Between(-4f, 0f, 4f, 0f, 0f, 0f, 2.4f));
+            Assert.IsFalse(SmokeVeil.Between(1f, 0f, 6f, 0f, 0f, 0f, 2.4f));
+            Assert.IsFalse(SmokeVeil.Between(-4f, 0f, 1f, 0f, 0f, 0f, 2.4f));
+            Assert.IsFalse(SmokeVeil.Between(-5f, 3f, 5f, 3f, 0f, 0f, 2.4f));
+            Assert.IsFalse(SmokeVeil.Between(-4f, 0f, 4f, 0f, 0f, 0f, 0f));
+            Assert.IsFalse(SmokeVeil.Between(-4f, 0f, 4f, 0f, 0f, 0f, -1f));
+            Assert.IsTrue(SmokeVeil.Between(-6f, 0f, 6f, 0f, 0f, 0f, 3.2f));
+            Assert.IsFalse(SmokeVeil.Inside(2.41f, 0f, 0f, 0f, 2.4f));
+            Assert.IsTrue(SmokeVeil.Inside(2.4f, 0f, 0f, 0f, 2.4f));
+            Assert.AreEqual(2.4f, FirePatch.Radius, 0.001f);
+            Assert.AreEqual(3.2f, PowderBed.Radius, 0.001f);
+            Assert.AreEqual(1.8f, CoverSight.Reach, 0.001f);
+        }
+
+        [Test]
         public void AZombieWithoutARigStillAttacksAndFalls()
         {
             Assert.AreEqual(14f, PoseSheet.Lean(ZombieAI.ZombieState.Chase, 0f), 0.001f);

@@ -61,6 +61,7 @@ namespace OutpostZero.Combat
             glow.intensity = 1.8f;
             glow.color = new Color(1f, 0.45f, 0.12f);
             AudioManager.Instance?.PlayAt("burn", transform.position, 0.8f);
+            SmokeMark.Pin(gameObject, FirePatch.Radius);
         }
 
         private void Update()

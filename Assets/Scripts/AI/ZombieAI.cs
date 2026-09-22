@@ -751,6 +751,8 @@ namespace OutpostZero.AI
             float dist = toHead.magnitude;
             if (dist > sightRange * 1.25f) return false;
             if (dist < 0.05f) return true;
+            if (SmokeMark.Hides(transform.position.x, transform.position.z, target.position.x, target.position.z))
+                return false;
             bool headBlocked = Physics.Raycast(eye, toHead.normalized, dist, visionMask);
             Vector3 chest = target.position + Vector3.up * 1.0f;
             Vector3 toChest = chest - eye;
@@ -871,6 +873,8 @@ namespace OutpostZero.AI
             bool inCone = SpotRange.Notices(dist, sightRange, exposure, player.IsCrouching, WeatherController.SightMultiplier, cover, angle, sightAngle);
             if (inCone || inBeam)
             {
+                if (SmokeMark.Hides(transform.position.x, transform.position.z, player.transform.position.x, player.transform.position.z))
+                    return;
                 Vector3 chest = player.transform.position + Vector3.up * 1.0f;
                 bool headBlocked = Physics.Raycast(eyePos, dirToTarget.normalized, dist, visionMask);
                 Vector3 toChest = chest - eyePos;

@@ -65,6 +65,7 @@ namespace OutpostZero.Combat
             glow.range = 7f;
             glow.intensity = 2.2f;
             glow.color = new Color(1f, 0.35f, 0.08f);
+            SmokeMark.Pin(gameObject, PowderBed.Radius);
         }
 
         private void Update()
