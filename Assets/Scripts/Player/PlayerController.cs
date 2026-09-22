@@ -323,6 +323,14 @@ namespace OutpostZero.Player
 
         private float lastCough;
 
+        private static int LeaderWound()
+        {
+            var roster = SurvivorRoster.Instance;
+            var leader = roster != null ? roster.Leader : null;
+            if (leader == null) return 0;
+            return leader.injury;
+        }
+
         private void Update()
         {
             if (GameManager.Instance != null)
@@ -559,7 +567,7 @@ namespace OutpostZero.Player
             sprintLatch = PlayOptions.Stance(ExpeditionInput.SprintHeld, ExpeditionInput.SprintPressed, sprintLatch, sprintMode);
             if (IsCrouching) CodexDirector.Hear("crouch");
             if (IsSprinting) CodexDirector.Hear("sprint");
-            bool wantsToSprint = AimPace.AllowsSprint(IsAimingDownSights) && sprintLatch && !IsCrouching && currentStamina > 5f;
+            bool wantsToSprint = AimPace.AllowsSprint(IsAimingDownSights) && StreetLimp.AllowsSprint(LeaderWound()) && sprintLatch && !IsCrouching && currentStamina > 5f;
 
             IsSprinting = isMoving && wantsToSprint;
             if (IsSprinting && ActiveWeapon is FirearmWeapon sprintGun) sprintGun.TryAbortReload(true, false);
@@ -577,6 +585,7 @@ namespace OutpostZero.Player
             currentSpeed = OutpostZero.Graphics.WetStride.Pace(currentSpeed, groundWet, inPuddle);
             currentSpeed = AimPace.Pace(currentSpeed, IsAimingDownSights);
             currentSpeed = StreetSlick.Speed(currentSpeed, OilPatch.Covers(transform.position.x, transform.position.z));
+            currentSpeed = StreetLimp.Pace(currentSpeed, LeaderWound());
 
             Vector3 moveVector = inputDirection * currentSpeed;
 

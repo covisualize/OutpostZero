@@ -5920,6 +5920,33 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void ACampWoundSlowsTheStreetAndAFeverRefusesASprint()
+        {
+            Assert.AreEqual(0.92f, StreetLimp.Bite, 0.001f);
+            Assert.AreEqual(0.78f, StreetLimp.Fever, 0.001f);
+            Assert.AreEqual(0.62f, StreetLimp.Critical, 0.001f);
+            Assert.AreEqual(4.5f, StreetLimp.Pace(4.5f, 0), 0.001f);
+            Assert.AreEqual(4.14f, StreetLimp.Pace(4.5f, 1), 0.001f);
+            Assert.AreEqual(3.51f, StreetLimp.Pace(4.5f, 2), 0.001f);
+            Assert.AreEqual(2.79f, StreetLimp.Pace(4.5f, 3), 0.001f);
+            Assert.AreEqual(2.79f, StreetLimp.Pace(4.5f, 9), 0.001f);
+            Assert.AreEqual(0f, StreetLimp.Pace(-2f, 2), 0.001f);
+            Assert.IsTrue(StreetLimp.AllowsSprint(0));
+            Assert.IsTrue(StreetLimp.AllowsSprint(1));
+            Assert.IsTrue(StreetLimp.AllowsSprint(-1));
+            Assert.IsFalse(StreetLimp.AllowsSprint(2));
+            Assert.IsFalse(StreetLimp.AllowsSprint(3));
+            Assert.AreEqual("", StreetLimp.Line(0, "en"));
+            Assert.AreEqual("The bite slows you", StreetLimp.Line(1, "en"));
+            Assert.AreEqual("La mordedura te frena", StreetLimp.Line(1, "es"));
+            Assert.AreEqual("The fever slows you", StreetLimp.Line(2, "en"));
+            Assert.AreEqual("La fiebre te frena", StreetLimp.Line(2, "es"));
+            Assert.AreEqual("You can barely walk", StreetLimp.Line(3, "en"));
+            Assert.AreEqual("Apenas puedes caminar", StreetLimp.Line(4, "es"));
+            Assert.AreEqual(2, FeverSpread.Sick);
+        }
+
+        [Test]
         public void AZombieWithoutARigStillAttacksAndFalls()
         {
             Assert.AreEqual(14f, PoseSheet.Lean(ZombieAI.ZombieState.Chase, 0f), 0.001f);

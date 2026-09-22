@@ -141,6 +141,10 @@ namespace OutpostZero.Core
                 if (SurvivorRoster.Instance.LeaderFatigue(out float carried)) fatigue = BodyCarry.Carry(carried, needs.Fatigue, true);
                 needs.Apply(hunger, thirst, fatigue);
             }
+            int wound = SurvivorRoster.Instance != null && SurvivorRoster.Instance.Leader != null
+                ? SurvivorRoster.Instance.Leader.injury
+                : 0;
+            if (wound > 0) GameplayFeedback.Toast(StreetLimp.Line(wound, null));
             zombiesKilled = 0;
             scrapLooted = 0;
             expeditionTimer = 0f;
