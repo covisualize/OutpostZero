@@ -54,7 +54,8 @@ namespace OutpostZero.Combat
             body.name = "PowderSheet";
             body.transform.SetParent(transform, false);
             body.transform.localPosition = new Vector3(0f, 0.06f, 0f);
-            body.transform.localScale = new Vector3(PowderBed.Radius, 0.05f, PowderBed.Radius);
+            float width = PowderBed.Radius * 2f;
+            body.transform.localScale = new Vector3(width, 0.05f, width);
             var solid = body.GetComponent<Collider>();
             if (solid != null) Destroy(solid);
             var renderer = body.GetComponent<Renderer>();
