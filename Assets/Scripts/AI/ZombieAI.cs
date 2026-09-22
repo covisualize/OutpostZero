@@ -490,7 +490,8 @@ namespace OutpostZero.AI
         {
             float paced = LimbCut.Speed(speed, limpLeft > 0f, specialAbility == ZombieSpecialAbility.Charge);
             paced = GasCloud.Speed(paced, GasField.Covers(transform.position.x, transform.position.z));
-            return WhiffClock.Speed(paced, whiffLeft > 0f);
+            paced = WhiffClock.Speed(paced, whiffLeft > 0f);
+            return StreetSlick.Speed(paced, OilPatch.Covers(transform.position.x, transform.position.z));
         }
 
         private float GaitSpeed()

@@ -5393,6 +5393,21 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void AnOilSlickSlowsAStepUntilItCatches()
+        {
+            Assert.AreEqual(0.7f, StreetSlick.Drag, 0.001f);
+            Assert.AreEqual(4.5f, StreetSlick.Speed(4.5f, false), 0.001f);
+            Assert.AreEqual(3.15f, StreetSlick.Speed(4.5f, true), 0.001f);
+            Assert.AreEqual(1.54f, StreetSlick.Speed(2.2f, true), 0.001f);
+            Assert.AreEqual(0f, StreetSlick.Speed(-1f, true), 0.001f);
+            Assert.AreEqual(1.6f, StreetSlick.Radius, 0.001f);
+            Assert.AreEqual(12f, StreetSlick.Life, 0.001f);
+            Assert.AreEqual(2.8f, StreetSlick.Light, 0.001f);
+            Assert.IsTrue(StreetSlick.On(1.6f, 0f, 0f, 0f));
+            Assert.IsFalse(StreetSlick.On(1.61f, 0f, 0f, 0f));
+        }
+
+        [Test]
         public void AZombieWithoutARigStillAttacksAndFalls()
         {
             Assert.AreEqual(14f, PoseSheet.Lean(ZombieAI.ZombieState.Chase, 0f), 0.001f);

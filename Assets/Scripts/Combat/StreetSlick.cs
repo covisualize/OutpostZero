@@ -12,6 +12,7 @@ namespace OutpostZero.Combat
         public const float Radius = 1.6f;
         public const float Life = 12f;
         public const float Light = 2.8f;
+        public const float Drag = 0.7f;
 
         public static bool Wet(float age)
         {
@@ -50,6 +51,13 @@ namespace OutpostZero.Combat
             float dz = z - originZ;
             return dx * dx + dz * dz <= Light * Light;
         }
+
+        public static float Speed(float speed, bool onSlick)
+        {
+            if (speed < 0f) speed = 0f;
+            if (!onSlick) return speed;
+            return speed * Drag;
+        }
     }
 
     /// <summary>The dark patch a broken oil barrel leaves until something lights it.</summary>
@@ -77,6 +85,18 @@ namespace OutpostZero.Combat
                     continue;
                 patch.Catch();
             }
+        }
+
+        public static bool Covers(float x, float z)
+        {
+            for (int i = 0; i < OpenPatches.Count; i++)
+            {
+                var patch = OpenPatches[i];
+                if (patch == null || patch.lit) continue;
+                if (!StreetSlick.Wet(patch.age)) continue;
+                if (StreetSlick.On(x, z, patch.transform.position.x, patch.transform.position.z)) return true;
+            }
+            return false;
         }
 
         public static void Blast(Vector3 at)

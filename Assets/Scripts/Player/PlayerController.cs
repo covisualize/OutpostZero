@@ -560,6 +560,7 @@ namespace OutpostZero.Player
             bool inPuddle = OutpostZero.Graphics.PuddleStep.Inside(transform.position.x, transform.position.z, groundWet);
             currentSpeed = OutpostZero.Graphics.WetStride.Pace(currentSpeed, groundWet, inPuddle);
             currentSpeed = AimPace.Pace(currentSpeed, IsAimingDownSights);
+            currentSpeed = StreetSlick.Speed(currentSpeed, OilPatch.Covers(transform.position.x, transform.position.z));
 
             Vector3 moveVector = inputDirection * currentSpeed;
 
