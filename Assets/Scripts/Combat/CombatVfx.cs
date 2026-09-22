@@ -68,6 +68,45 @@ namespace OutpostZero.Combat
             light.intensity = kind == HazardKind.Explosive ? 6f : 2f;
             light.color = color;
             sphere.AddComponent<BurstFade>().Arm(radius, 0.35f);
+            Leave(origin, kind);
+        }
+
+        private static void Leave(Vector3 origin, HazardKind kind)
+        {
+            if (BlastWake.Ring(kind)) Ring(origin);
+            if (BlastWake.Smokes(kind)) Column(origin);
+            var go = new GameObject("Blast_" + BlastWake.Wake(kind));
+            go.transform.position = new Vector3(origin.x, 0.02f, origin.z);
+            go.AddComponent<BlastRemain>().Arm(kind);
+            OutpostZero.Shell.AudioManager.Instance?.PlayAt(BlastWake.Sound(kind), origin, BlastWake.Volume(kind));
+        }
+
+        private static void Ring(Vector3 origin)
+        {
+            var ring = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            ring.name = "ShockRing";
+            Object.Destroy(ring.GetComponent<Collider>());
+            ring.transform.position = new Vector3(origin.x, 0.08f, origin.z);
+            ring.transform.localScale = new Vector3(0.2f, 0.02f, 0.2f);
+            var renderer = ring.GetComponent<Renderer>();
+            if (renderer != null) renderer.material.color = new Color(1f, 0.55f, 0.15f, 0.45f);
+            ring.AddComponent<BurstFade>().Arm(4.2f, BlastWake.RingTime);
+        }
+
+        private static void Column(Vector3 origin)
+        {
+            var go = new GameObject("SmokeColumn");
+            go.transform.position = origin;
+            var particles = go.AddComponent<ParticleSystem>();
+            var main = particles.main;
+            main.startLifetime = BlastWake.Smoke;
+            main.startSpeed = 1.4f;
+            main.startSize = 0.45f;
+            main.startColor = new Color(0.25f, 0.22f, 0.2f, 0.55f);
+            main.gravityModifier = -0.15f;
+            main.maxParticles = 24;
+            particles.Emit(16);
+            Object.Destroy(go, BlastWake.Smoke);
         }
 
         private static void Muzzle(Vector3 position, Vector3 direction)
@@ -215,6 +254,57 @@ namespace OutpostZero.Combat
             if (shader == null) shader = Shader.Find("Unlit/Color");
             spriteMaterial = new Material(shader);
             return spriteMaterial;
+        }
+
+        private sealed class BlastRemain : MonoBehaviour
+        {
+            private HazardKind kind;
+            private float until;
+
+            public void Arm(HazardKind hazard)
+            {
+                kind = hazard;
+                until = Time.time + BlastWake.Hold(kind);
+                if (kind == HazardKind.Oil || kind == HazardKind.Explosive)
+                {
+                    var fire = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                    fire.name = "GroundFire";
+                    Object.Destroy(fire.GetComponent<Collider>());
+                    fire.transform.SetParent(transform, false);
+                    fire.transform.localScale = new Vector3(1.4f, 0.35f, 1.4f);
+                    var renderer = fire.GetComponent<Renderer>();
+                    if (renderer != null) renderer.material.color = new Color(1f, 0.42f, 0.08f, 0.75f);
+                }
+                if (kind == HazardKind.Oil)
+                {
+                    var slick = GameObject.CreatePrimitive(PrimitiveType.Quad);
+                    slick.name = "OilSlick";
+                    Object.Destroy(slick.GetComponent<Collider>());
+                    slick.transform.SetParent(transform, false);
+                    slick.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
+                    slick.transform.localScale = new Vector3(2.4f, 2.4f, 1f);
+                    var renderer = slick.GetComponent<Renderer>();
+                    if (renderer != null) renderer.material.color = new Color(0.05f, 0.05f, 0.04f, 0.9f);
+                }
+                if (kind == HazardKind.Toxic)
+                {
+                    var cloud = gameObject.AddComponent<ParticleSystem>();
+                    var main = cloud.main;
+                    main.startLifetime = 1.2f;
+                    main.startSpeed = 0.35f;
+                    main.startSize = 0.7f;
+                    main.startColor = new Color(0.4f, 0.85f, 0.28f, 0.45f);
+                    main.loop = true;
+                    main.maxParticles = 20;
+                    cloud.Play();
+                }
+            }
+
+            private void Update()
+            {
+                if (Time.time < until) return;
+                Destroy(gameObject);
+            }
         }
 
         private sealed class BurstFade : MonoBehaviour

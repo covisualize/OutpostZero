@@ -3225,6 +3225,32 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void ABarrelLeavesAWakeAfterTheFlash()
+        {
+            Assert.AreEqual("fire", BlastWake.Wake(HazardKind.Explosive));
+            Assert.AreEqual("cloud", BlastWake.Wake(HazardKind.Toxic));
+            Assert.AreEqual("slick", BlastWake.Wake(HazardKind.Oil));
+            Assert.AreEqual(3.2f, BlastWake.Hold(HazardKind.Explosive), 0.001f);
+            Assert.AreEqual(4.5f, BlastWake.Hold(HazardKind.Toxic), 0.001f);
+            Assert.AreEqual(6f, BlastWake.Hold(HazardKind.Oil), 0.001f);
+            Assert.IsTrue(BlastWake.Ring(HazardKind.Explosive));
+            Assert.IsFalse(BlastWake.Ring(HazardKind.Toxic));
+            Assert.IsFalse(BlastWake.Ring(HazardKind.Oil));
+            Assert.IsTrue(BlastWake.Smokes(HazardKind.Explosive));
+            Assert.IsFalse(BlastWake.Smokes(HazardKind.Oil));
+            Assert.AreEqual("burn", BlastWake.Sound(HazardKind.Explosive));
+            Assert.AreEqual("burn", BlastWake.Sound(HazardKind.Oil));
+            Assert.AreEqual("cloud", BlastWake.Sound(HazardKind.Toxic));
+            Assert.AreEqual(0.32f, BlastWake.Volume(HazardKind.Oil), 0.001f);
+            Assert.AreEqual(0.26f, BlastWake.Volume(HazardKind.Toxic), 0.001f);
+            Assert.AreEqual(2.4f, BlastWake.Smoke, 0.001f);
+            Assert.AreEqual(14f, AudioSpace.MaxDistance("burn"), 0.001f);
+            Assert.AreEqual(12f, AudioSpace.MaxDistance("cloud"), 0.001f);
+            Assert.AreEqual(1.4f, BarrelFuse.Length(HazardKind.Explosive), 0.001f);
+            Assert.AreEqual(14f, OilBurn.Damage, 0.001f);
+        }
+
+        [Test]
         public void TheGeneratorHumsAndTheFireCrackles()
         {
             YardBed.Mix(false, false, false, out float hum, out float crackle, out float buzz);
