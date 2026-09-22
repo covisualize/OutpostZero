@@ -2,6 +2,7 @@ using UnityEngine;
 using OutpostZero.Colony;
 using OutpostZero.Combat;
 using OutpostZero.Core;
+using OutpostZero.Shell;
 
 namespace OutpostZero.Player
 {
@@ -70,7 +71,7 @@ namespace OutpostZero.Player
         public void ApplyInfection(float amount)
         {
             infection = Affliction.Bite(infection);
-            GameplayFeedback.Toast(Affliction.Label(InfectionStage));
+            GameplayFeedback.Toast(StreetHud.Infection(InfectionStage, null));
         }
 
         public bool CureInfection()
