@@ -2,7 +2,6 @@ using UnityEngine;
 using OutpostZero.AI;
 using OutpostZero.Combat;
 using OutpostZero.Core;
-using OutpostZero.Player;
 using OutpostZero.Shell;
 
 namespace OutpostZero.Colony
