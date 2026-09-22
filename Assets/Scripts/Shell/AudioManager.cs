@@ -57,6 +57,7 @@ namespace OutpostZero.Shell
         public static AudioManager Instance { get; private set; }
 
         private readonly Dictionary<string, AudioClip> clips = new Dictionary<string, AudioClip>();
+        private SfxLibrary library;
         private readonly List<AudioSource> pool = new List<AudioSource>();
         private AudioSource ambient;
         private AudioSource percussion;
@@ -86,6 +87,7 @@ namespace OutpostZero.Shell
                 return;
             }
             Instance = this;
+            library = Resources.Load<SfxLibrary>(SfxLibrary.ResourcePath);
             ambient = gameObject.AddComponent<AudioSource>();
             ambient.loop = true;
             ambient.spatialBlend = 0f;
@@ -226,7 +228,7 @@ namespace OutpostZero.Shell
             var snapshot = CurrentSnapshot();
             Levels(out float music, out float sfx, out float ambience, out float ui);
             ApplyLowpass(source, snapshot, wall);
-            source.PlayOneShot(GetClip(id), AudioMix.Gain(id, heard, 1f, music, sfx, ambience, ui, snapshot));
+            source.PlayOneShot(Clip(id), AudioMix.Gain(id, heard, 1f, music, sfx, ambience, ui, snapshot));
         }
 
         private static bool BehindWall(string id, Vector3 position)
@@ -531,7 +533,19 @@ namespace OutpostZero.Shell
             return ClipBook.Tone(id, t, noise);
         }
 
+        private AudioClip Clip(string id)
+        {
+            var authored = library != null ? library.Pick(id, Random.Range(0, 1 << 16)) : null;
+            return authored != null ? authored : Procedural(id);
+        }
+
         private AudioClip GetClip(string id)
+        {
+            var authored = library != null ? library.Pick(id, 0) : null;
+            return authored != null ? authored : Procedural(id);
+        }
+
+        private AudioClip Procedural(string id)
         {
             if (clips.TryGetValue(id, out var clip)) return clip;
             int rate = 22050;
