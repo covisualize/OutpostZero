@@ -1837,6 +1837,40 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void AnInteriorAnnexStaysOpenThroughATwoMeterGap()
+        {
+            RoomPlan.Annex(82.2f, 4f, out float annexX, out float annexZ);
+            Assert.AreEqual(90.2f, annexX, 0.001f);
+            Assert.AreEqual(4f, annexZ, 0.001f);
+
+            var opening = new RoomPlan.Piece[2];
+            Assert.AreEqual(2, RoomPlan.Opening(82.2f, 4f, opening));
+            Assert.IsFalse(RoomPlan.Covers(opening[0], 85.8f, 4f));
+            Assert.IsFalse(RoomPlan.Covers(opening[1], 85.8f, 4f));
+            Assert.IsTrue(RoomPlan.Covers(opening[0], opening[0].X, opening[0].Z));
+
+            string[] kinds = { "clinic", "hospital", "warehouse", "station", "apartment", "storefront", "" };
+            string[] names = { "RoomCot", "RoomCot", "RoomShelf", "RoomDesk", "RoomTable", "RoomCounter", "RoomCounter" };
+            var dressed = new RoomPlan.Piece[8];
+            for (int i = 0; i < kinds.Length; i++)
+            {
+                int count = RoomPlan.Dress(kinds[i], 82.2f, 4f, dressed);
+                Assert.GreaterOrEqual(count, 5);
+                bool found = false;
+                bool floor = false;
+                for (int p = 0; p < count; p++)
+                {
+                    if (dressed[p].Name == names[i]) found = true;
+                    if (dressed[p].Name == "RoomFloor") floor = true;
+                    Assert.IsFalse(RoomPlan.BlocksLane(dressed[p], 4f), kinds[i] + " " + dressed[p].Name);
+                }
+                Assert.IsTrue(found, kinds[i]);
+                Assert.IsTrue(floor);
+                Assert.IsTrue(RoomPlan.Covers(dressed[0], annexX, annexZ));
+            }
+        }
+
+        [Test]
         public void AnEastGridKeepsAWalkFromTheSpawnToTheFarGate()
         {
             var ash = RoadGraph.Build(1701, "ash_market");

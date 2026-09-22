@@ -242,8 +242,10 @@ namespace OutpostZero.Expedition
 
             RaiseWall(insideX, insideZ + 3.6f, 8f, 0.3f);
             RaiseWall(insideX, insideZ - 3.6f, 8f, 0.3f);
-            RaiseWall(insideX + 3.6f, insideZ, 0.3f, 7.4f);
             RaiseWall(insideX - 3.6f, insideZ, 0.3f, 7.4f);
+            var opening = new RoomPlan.Piece[2];
+            int openCount = RoomPlan.Opening(insideX, insideZ, opening);
+            for (int i = 0; i < openCount; i++) Place(opening[i]);
 
             var back = GameObject.CreatePrimitive(PrimitiveType.Cube);
             back.name = "RoomDoor";
@@ -271,6 +273,22 @@ namespace OutpostZero.Expedition
             light.range = 8f;
             light.intensity = 1.1f;
             light.color = new Color(1f, 0.9f, 0.75f);
+
+            var dressed = new RoomPlan.Piece[8];
+            int dressedCount = RoomPlan.Dress(plan.Footprint, insideX, insideZ, dressed);
+            for (int i = 0; i < dressedCount; i++) Place(dressed[i]);
+        }
+
+        private void Place(RoomPlan.Piece piece)
+        {
+            Color color = new Color(0.32f, 0.3f, 0.28f);
+            if (piece.Name == "RoomFloor") color = new Color(0.28f, 0.27f, 0.25f);
+            else if (piece.Name == "RoomCot") color = new Color(0.55f, 0.58f, 0.62f);
+            else if (piece.Name == "RoomShelf") color = new Color(0.42f, 0.32f, 0.22f);
+            else if (piece.Name == "RoomDesk") color = new Color(0.36f, 0.28f, 0.2f);
+            else if (piece.Name == "RoomTable") color = new Color(0.4f, 0.3f, 0.22f);
+            else if (piece.Name == "RoomCounter") color = new Color(0.48f, 0.4f, 0.28f);
+            Mark(piece.X, piece.Y, piece.Z, piece.W, piece.H, piece.D, 0f, piece.Name, color, piece.Solid);
         }
 
         private void RaiseWall(float x, float z, float width, float depth)
