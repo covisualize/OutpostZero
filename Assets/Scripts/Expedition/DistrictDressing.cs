@@ -39,9 +39,74 @@ namespace OutpostZero.Expedition
             int seed = WorldMapService.Instance != null ? WorldMapService.Instance.WorldSeed : DistrictGenerator.DefaultSeed;
             var generated = DistrictGenerator.Scatter(seed, districtId);
             for (int i = 0; i < generated.Length; i++) Spawn(generated[i]);
+            var blocks = DistrictBlocks.Build(seed, districtId);
+            RaiseBlocks(blocks);
+            ObjectiveTracker.Instance?.ExpectPoi(blocks.PoiRole);
+            ExtractionZone.MoveTo(new Vector3(blocks.ExtractX, 0.5f, blocks.ExtractZ));
             KitStructure.Raise(districtId, root);
             RaiseCaravan();
             StreetDetail.RaiseStreet(districtId, root);
+        }
+
+        private void RaiseBlocks(DistrictBlocks.Plan plan)
+        {
+            var walls = DistrictBlocks.Walls(plan);
+            var tint = BlockTint(plan.Footprint);
+            for (int i = 0; i < walls.Length; i++)
+            {
+                var wall = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                wall.name = "DistrictLot";
+                wall.transform.SetParent(root, false);
+                wall.transform.position = new Vector3(walls[i].X, 1.3f, walls[i].Z);
+                wall.transform.localScale = new Vector3(1.85f, 2.6f, 1.95f);
+                wall.layer = GameLayers.Environment;
+                Paint(wall.GetComponent<Renderer>(), tint);
+            }
+
+            var room = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            room.name = "DistrictPoi";
+            room.transform.SetParent(root, false);
+            room.transform.position = new Vector3(plan.PoiX, 0.7f, plan.PoiZ);
+            room.transform.localScale = new Vector3(1.1f, 1.3f, 1.1f);
+            room.layer = GameLayers.Interactable;
+            Paint(room.GetComponent<Renderer>(), plan.PoiRole == "radio" ? new Color(0.72f, 0.58f, 0.22f) : new Color(0.45f, 0.5f, 0.42f));
+            room.AddComponent<DistrictPoi>().Configure(plan.PoiRole);
+
+            var nest = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            nest.name = "DistrictNest";
+            nest.transform.SetParent(root, false);
+            nest.transform.position = new Vector3(plan.NestX, 0.15f, plan.NestZ);
+            nest.transform.localScale = new Vector3(1.2f, 0.08f, 1.2f);
+            var nestCollider = nest.GetComponent<Collider>();
+            if (nestCollider != null) Destroy(nestCollider);
+            Paint(nest.GetComponent<Renderer>(), new Color(0.25f, 0.12f, 0.1f));
+
+            var exit = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            exit.name = "DistrictExtract";
+            exit.transform.SetParent(root, false);
+            exit.transform.position = new Vector3(plan.ExtractX, 0.08f, plan.ExtractZ);
+            exit.transform.localScale = new Vector3(2.4f, 0.04f, 2.4f);
+            var exitCollider = exit.GetComponent<Collider>();
+            if (exitCollider != null) Destroy(exitCollider);
+            Paint(exit.GetComponent<Renderer>(), new Color(0.25f, 0.75f, 0.45f));
+        }
+
+        private static Color BlockTint(string footprint)
+        {
+            if (footprint == "clinic" || footprint == "hospital") return new Color(0.62f, 0.58f, 0.5f);
+            if (footprint == "warehouse") return new Color(0.48f, 0.46f, 0.42f);
+            if (footprint == "station") return new Color(0.32f, 0.3f, 0.28f);
+            return new Color(0.45f, 0.28f, 0.22f);
+        }
+
+        private static void Paint(Renderer renderer, Color color)
+        {
+            if (renderer == null) return;
+            var block = new MaterialPropertyBlock();
+            renderer.GetPropertyBlock(block);
+            block.SetColor("_BaseColor", color);
+            block.SetColor("_Color", color);
+            renderer.SetPropertyBlock(block);
         }
 
         private void RaiseCaravan()

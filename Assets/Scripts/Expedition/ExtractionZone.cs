@@ -7,6 +7,13 @@ namespace OutpostZero.Expedition
     {
         [SerializeField] private float radius = 3.2f;
 
+        public static void MoveTo(Vector3 position)
+        {
+            var zone = FindFirstObjectByType<ExtractionZone>();
+            if (zone == null) zone = Create(position);
+            zone.transform.position = position;
+        }
+
         public static ExtractionZone Create(Vector3 position)
         {
             var existing = FindFirstObjectByType<ExtractionZone>();

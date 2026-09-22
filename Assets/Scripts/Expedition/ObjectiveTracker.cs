@@ -13,6 +13,8 @@ namespace OutpostZero.Expedition
         [SerializeField] private int kills;
         [SerializeField] private int scrap;
         [SerializeField] private bool extracted;
+        [SerializeField] private string poiRole = "";
+        [SerializeField] private bool poiFound;
 
         public int KillGoal => killGoal;
         public int ScrapGoal => scrapGoal;
@@ -20,6 +22,21 @@ namespace OutpostZero.Expedition
         public int Scrap => scrap;
         public bool Extracted => extracted;
         public bool ReadyToExtract => kills >= killGoal && scrap >= scrapGoal;
+        public string PoiRole => poiRole;
+        public bool PoiFound => poiFound;
+
+        public string PoiLine()
+        {
+            return LineFor(poiRole, poiFound);
+        }
+
+        public static string LineFor(string role, bool found)
+        {
+            if (string.IsNullOrEmpty(role)) return "";
+            bool radio = role == "radio";
+            if (found) return radio ? "Radio part stowed" : "Cache searched";
+            return radio ? "Find the radio part" : "Find the cache";
+        }
         public event Action OnObjectivesChanged;
 
         private void Awake()
@@ -86,11 +103,26 @@ namespace OutpostZero.Expedition
             OnObjectivesChanged?.Invoke();
         }
 
+        public void ExpectPoi(string role)
+        {
+            poiRole = string.IsNullOrEmpty(role) ? "" : role;
+            poiFound = false;
+            OnObjectivesChanged?.Invoke();
+        }
+
+        public void MarkPoi()
+        {
+            poiFound = true;
+            OnObjectivesChanged?.Invoke();
+        }
+
         public void ResetProgress()
         {
             kills = 0;
             scrap = 0;
             extracted = false;
+            poiFound = false;
+            poiRole = "";
             OnObjectivesChanged?.Invoke();
         }
     }

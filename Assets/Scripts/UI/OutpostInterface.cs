@@ -186,7 +186,11 @@ namespace OutpostZero.UI
             vitals.text = vitalText.ToString();
 
             var objectiveText = new StringBuilder();
-            if (tracker != null) objectiveText.AppendLine("Kills " + tracker.Kills + "/" + tracker.KillGoal + "   Scrap " + tracker.Scrap + "/" + tracker.ScrapGoal);
+            if (tracker != null)
+            {
+                objectiveText.AppendLine("Kills " + tracker.Kills + "/" + tracker.KillGoal + "   Scrap " + tracker.Scrap + "/" + tracker.ScrapGoal);
+                if (!string.IsNullOrEmpty(tracker.PoiLine())) objectiveText.AppendLine(tracker.PoiLine());
+            }
             var district = WorldMapService.Instance != null ? WorldMapService.Instance.Current : null;
             if (district != null) objectiveText.AppendLine(district.displayName + " — " + district.encounter);
             if (HordeDirector.Instance != null) objectiveText.AppendLine("Tension " + Mathf.RoundToInt(HordeDirector.Instance.Tension) + "  " + HordeDirector.Instance.State);

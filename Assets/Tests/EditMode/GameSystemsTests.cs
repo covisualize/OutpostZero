@@ -1003,5 +1003,58 @@ namespace OutpostZero.Tests.EditMode
             Assert.AreEqual(45f, HordeSchedule.Advance(60f, 45f, 3, out kind));
             Assert.AreEqual("", kind);
         }
+
+        [Test]
+        public void ABlockStaysWalkableFromTheSpawnToTheWayOut()
+        {
+            var ash = DistrictBlocks.Build(1701, "ash_market");
+            Assert.AreEqual("storefront", ash.Footprint);
+            Assert.AreEqual("cache", ash.PoiRole);
+            Assert.AreEqual("gate", ash.ExtractKind);
+            Assert.AreEqual(-5.5f, ash.ExtractX);
+            Assert.AreEqual(-10f, ash.ExtractZ);
+            Assert.AreEqual("Find the cache", ObjectiveTracker.LineFor("cache", false));
+            Assert.AreEqual("Radio part stowed", ObjectiveTracker.LineFor("radio", true));
+            Assert.AreEqual("", ObjectiveTracker.LineFor("", false));
+            Assert.IsTrue(DistrictBlocks.Navigable(ash));
+
+            var hospital = DistrictBlocks.Build(1701, "old_hospital");
+            Assert.AreEqual("clinic", hospital.Footprint);
+            Assert.AreEqual("radio", hospital.PoiRole);
+            Assert.AreEqual("alley", hospital.ExtractKind);
+            Assert.AreEqual(8f, hospital.PoiZ);
+
+            var downtown = DistrictBlocks.Build(4, "downtown_core");
+            Assert.AreEqual("station", downtown.Footprint);
+            Assert.AreEqual("plaza", downtown.ExtractKind);
+            Assert.AreEqual(14f, downtown.PoiZ);
+            Assert.AreEqual(-12f, downtown.ExtractX);
+            Assert.AreEqual(16f, downtown.ExtractZ);
+
+            var mall = DistrictBlocks.Build(1701, "mall");
+            var mallAgain = DistrictBlocks.Build(1701, "mall");
+            Assert.AreEqual(mall.PoiZ, mallAgain.PoiZ);
+            Assert.AreEqual(mall.NestZ, mallAgain.NestZ);
+            Assert.AreEqual("plaza", mall.ExtractKind);
+            var other = DistrictBlocks.Build(99991, "mall");
+            Assert.IsTrue(mall.PoiZ != other.PoiZ || mall.NestZ != other.NestZ);
+
+            var ids = CampaignBoard.All();
+            for (int seed = 1; seed <= 100; seed++)
+            {
+                for (int d = 0; d < ids.Length; d++)
+                {
+                    var plan = DistrictBlocks.Build(seed, ids[d].Id);
+                    Assert.IsTrue(DistrictBlocks.Navigable(plan), ids[d].Id + " " + seed);
+                    var obstacles = new List<DistrictLayout.Piece>();
+                    obstacles.AddRange(DistrictLayout.For(ids[d].Id));
+                    obstacles.AddRange(DistrictGenerator.Scatter(seed, ids[d].Id));
+                    var pieces = obstacles.ToArray();
+                    Assert.IsTrue(DistrictBlocks.ClearOf(DistrictBlocks.Open(plan), pieces, 1.05f), ids[d].Id + " open " + seed);
+                    Assert.IsTrue(DistrictBlocks.ClearOf(DistrictBlocks.Walls(plan), pieces, 1.05f), ids[d].Id + " wall " + seed);
+                    Assert.GreaterOrEqual(DistrictBlocks.Walls(plan).Length, 12);
+                }
+            }
+        }
     }
 }
