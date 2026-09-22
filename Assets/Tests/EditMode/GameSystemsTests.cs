@@ -3002,6 +3002,35 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void TwoSeedsOpenDifferentCampsAndAFieldMedicStartsReady()
+        {
+            var a = SurvivorDraw.Open(1701);
+            var b = SurvivorDraw.Open(1888);
+            Assert.AreEqual(4, a.Length);
+            Assert.AreEqual(4, b.Length);
+            Assert.IsTrue(a[0].Leader);
+            Assert.IsFalse(a[1].Leader);
+            Assert.AreNotEqual(SurvivorDraw.Signature(a), SurvivorDraw.Signature(b));
+            Assert.AreEqual(SurvivorDraw.Signature(a), SurvivorDraw.Signature(SurvivorDraw.Open(1701)));
+            Assert.AreNotEqual(a[0].Name, a[1].Name);
+            Assert.AreNotEqual(a[0].Trait, a[1].Trait);
+            Assert.IsTrue(a[0].Bond.Contains(a[1].Name.Split(' ')[0]));
+            bool medic = false;
+            for (int seed = 1; seed <= 40; seed++)
+            {
+                var camp = SurvivorDraw.Open(seed);
+                for (int i = 0; i < camp.Length; i++)
+                {
+                    if (camp[i].Trait != "Field Medic") continue;
+                    Assert.AreEqual(4, camp[i].Medicine);
+                    medic = true;
+                }
+            }
+            Assert.IsTrue(medic);
+            Assert.AreEqual("Volátil", Loc.T("trait.volatile", "es"));
+        }
+
+        [Test]
         public void DemolishingAModuleReturnsHalfTheScrap()
         {
             Assert.AreEqual(3, ScrapRefund.Half(6));

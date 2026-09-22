@@ -100,31 +100,52 @@ namespace OutpostZero.Colony
 
         public void Seed()
         {
+            int seed = WorldMapService.Instance != null ? WorldMapService.Instance.WorldSeed : 0;
+            Seed(seed);
+        }
+
+        public void Seed(int seed)
+        {
             memorials.Clear();
             corpses.Clear();
             survivors.Clear();
-            survivors.Add(Make("mara", "Mara Quill", "Steady Hands", true, "Close to Jonas"));
-            survivors.Add(Make("jonas", "Jonas Reed", "Light Sleeper", false, "Close to Mara"));
-            survivors.Add(Make("priya", "Priya Sen", "Field Medic", false, "Trusts Ellis"));
-            survivors.Add(Make("ellis", "Ellis Ward", "Scrounger", false, "Trusts Priya"));
+            var drafts = SurvivorDraw.Open(seed);
+            for (int i = 0; i < drafts.Length; i++) survivors.Add(Make(drafts[i]));
             OnRosterChanged?.Invoke();
+        }
+
+        private static Survivor Make(SurvivorDraw.Draft draft)
+        {
+            return new Survivor
+            {
+                id = draft.Id,
+                displayName = draft.Name,
+                trait = draft.Trait,
+                leader = draft.Leader,
+                morale = 72f,
+                hunger = 78f,
+                thirst = 78f,
+                opinion = string.IsNullOrEmpty(draft.Bond) ? 0 : 18,
+                combat = draft.Combat,
+                medicine = draft.Medicine,
+                engineering = draft.Engineering,
+                cooking = draft.Cooking,
+                scavenge = draft.Scavenge,
+                task = draft.Leader ? "Lead" : "Rest",
+                bond = draft.Bond
+            };
         }
 
         private static Survivor Make(string id, string name, string trait, bool leader, string bond)
         {
-            return new Survivor
+            return Make(new SurvivorDraw.Draft
             {
-                id = id,
-                displayName = name,
-                trait = trait,
-                leader = leader,
-                morale = 72f,
-                hunger = 78f,
-                thirst = 78f,
-                opinion = string.IsNullOrEmpty(bond) ? 0 : 18,
-                task = "Rest",
-                bond = bond
-            };
+                Id = id,
+                Name = name,
+                Trait = trait,
+                Leader = leader,
+                Bond = bond
+            });
         }
 
         public bool MarkLeaderDead(Vector3 corpsePosition)
@@ -563,6 +584,8 @@ namespace OutpostZero.Colony
         }
 
         public void ResetRoster() => Seed();
+
+        public void ResetRoster(int seed) => Seed(seed);
 
         private Survivor ChooseHeir()
         {

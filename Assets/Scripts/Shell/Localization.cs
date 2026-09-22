@@ -287,6 +287,7 @@ namespace OutpostZero.Shell
             { "trait.medic", "Field Medic" },
             { "trait.scrounger", "Scrounger" },
             { "trait.watchful", "Watchful" },
+            { "trait.volatile", "Volatile" },
             { "mood.inspired", "Inspired" },
             { "mood.steady", "Steady" },
             { "mood.depressed", "Depressed" },
@@ -643,6 +644,7 @@ namespace OutpostZero.Shell
             { "trait.medic", "Médico de campo" },
             { "trait.scrounger", "Rebuscador" },
             { "trait.watchful", "Vigilante" },
+            { "trait.volatile", "Volátil" },
             { "mood.inspired", "Inspirado" },
             { "mood.steady", "Estable" },
             { "mood.depressed", "Deprimido" },
@@ -775,6 +777,7 @@ namespace OutpostZero.Shell
                 : trait == "Field Medic" ? "trait.medic"
                 : trait == "Scrounger" ? "trait.scrounger"
                 : trait == "Watchful" ? "trait.watchful"
+                : trait == "Volatile" ? "trait.volatile"
                 : "";
             if (key.Length == 0) return trait ?? "";
             return Pick(key, trait);

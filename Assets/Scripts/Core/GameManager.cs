@@ -226,10 +226,17 @@ namespace OutpostZero.Core
 
         public void BeginNewOutpost()
         {
-            SurvivorRoster.Instance?.ResetRoster();
             ObjectiveTracker.Instance?.ResetProgress();
             int next = SettingsService.Instance != null ? SettingsService.Instance.NextDifficulty : 2;
             WorldMapService.Instance?.ResetMap(next);
+            int camp = System.Environment.TickCount;
+            if (camp == 0) camp = DistrictGenerator.DefaultSeed + 3;
+            if (WorldMapService.Instance != null)
+            {
+                WorldMapService.Instance.RerollSeed();
+                camp = WorldMapService.Instance.WorldSeed ^ camp;
+            }
+            SurvivorRoster.Instance?.ResetRoster(camp);
             ColonyStorage.Instance?.ResetStores();
             GridBuilder.Instance?.ClearAll();
             TutorialDirector.Instance?.SetFinished(false);
@@ -263,9 +270,9 @@ namespace OutpostZero.Core
         public void RestartCurrentScene()
         {
             Time.timeScale = 1f;
-            SurvivorRoster.Instance?.ResetRoster();
             ObjectiveTracker.Instance?.ResetProgress();
             WorldMapService.Instance?.ResetMap();
+            SurvivorRoster.Instance?.ResetRoster();
             ColonyStorage.Instance?.ResetStores();
             GridBuilder.Instance?.ClearAll();
             TutorialDirector.Instance?.SetFinished(false);
