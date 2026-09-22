@@ -3069,6 +3069,21 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void AWallStopsAScreamAndMufflesTheGun()
+        {
+            Assert.AreEqual(0.8f, EarWall.Gain(0.8f, false, true), 0.001f);
+            Assert.AreEqual(0f, EarWall.Gain(0.8f, true, true), 0.001f);
+            Assert.AreEqual(0.36f, EarWall.Gain(0.8f, true, false), 0.001f);
+            Assert.AreEqual(EarWall.MuffledHz, EarWall.Muffle(AudioMix.OpenHz), 0.001f);
+            Assert.AreEqual(AudioMix.PausedHz, EarWall.Muffle(AudioMix.PausedHz), 0.001f);
+            Assert.IsTrue(EarWall.InWorld(AudioSpace.SpatialBlend("gun")));
+            Assert.IsTrue(EarWall.InWorld(AudioSpace.SpatialBlend("scream")));
+            Assert.IsFalse(EarWall.InWorld(AudioSpace.SpatialBlend("step")));
+            Assert.IsFalse(EarWall.InWorld(AudioSpace.SpatialBlend("rain")));
+            Assert.IsFalse(EarWall.InWorld(AudioSpace.SpatialBlend("ambient")));
+        }
+
+        [Test]
         public void DemolishingAModuleReturnsHalfTheScrap()
         {
             Assert.AreEqual(3, ScrapRefund.Half(6));

@@ -156,10 +156,26 @@ namespace OutpostZero.Shell
             source.maxDistance = AudioSpace.MaxDistance(id);
             source.rolloffMode = AudioRolloffMode.Linear;
             source.pitch = pitch > 0f ? pitch : Random.Range(0.94f, 1.06f);
+            bool wall = BehindWall(id, position);
+            float heard = EarWall.Gain(volume, wall, id == "scream");
+            if (heard <= 0.001f) return;
             var snapshot = CurrentSnapshot();
             Levels(out float music, out float sfx, out float ambience, out float ui);
-            ApplyLowpass(source, snapshot);
-            source.PlayOneShot(GetClip(id), AudioMix.Gain(id, volume, 1f, music, sfx, ambience, ui, snapshot));
+            ApplyLowpass(source, snapshot, wall);
+            source.PlayOneShot(GetClip(id), AudioMix.Gain(id, heard, 1f, music, sfx, ambience, ui, snapshot));
+        }
+
+        private static bool BehindWall(string id, Vector3 position)
+        {
+            if (!EarWall.InWorld(AudioSpace.SpatialBlend(id))) return false;
+            var listener = PlayerRegistry.Current;
+            if (listener == null) return false;
+            Vector3 ear = listener.transform.position + Vector3.up * 1.5f;
+            Vector3 to = position - ear;
+            float distance = to.magnitude;
+            if (distance <= EarWall.Clear) return false;
+            Vector3 direction = to / distance;
+            return Physics.Raycast(ear, direction, distance - 0.4f, GameLayers.VisionOcclusionMask, QueryTriggerInteraction.Ignore);
         }
 
         private void UpdateWeather(MixSnapshot snapshot, float music, float sfx, float ambience, float ui)
@@ -209,9 +225,15 @@ namespace OutpostZero.Shell
 
         private static void ApplyLowpass(AudioSource source, MixSnapshot snapshot)
         {
+            ApplyLowpass(source, snapshot, false);
+        }
+
+        private static void ApplyLowpass(AudioSource source, MixSnapshot snapshot, bool wall)
+        {
             var filter = source.GetComponent<AudioLowPassFilter>();
             if (filter == null) filter = source.gameObject.AddComponent<AudioLowPassFilter>();
-            filter.cutoffFrequency = AudioMix.LowpassHz(snapshot);
+            float hz = AudioMix.LowpassHz(snapshot);
+            filter.cutoffFrequency = wall ? EarWall.Muffle(hz) : hz;
         }
 
         private void Step()
