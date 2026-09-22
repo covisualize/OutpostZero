@@ -386,7 +386,8 @@ namespace OutpostZero.AI
             if (agent == null || abilityClock.Phase == 2) return;
             float speed = GaitSpeed();
             if (speed <= 0f) return;
-            agent.speed = LimbCut.Speed(speed, limpLeft > 0f, specialAbility == ZombieSpecialAbility.Charge);
+            float paced = LimbCut.Speed(speed, limpLeft > 0f, specialAbility == ZombieSpecialAbility.Charge);
+            agent.speed = GasCloud.Speed(paced, GasField.Covers(transform.position.x, transform.position.z));
         }
 
         private float GaitSpeed()
@@ -546,7 +547,8 @@ namespace OutpostZero.AI
                     Vector3 step = spot - transform.position;
                     step.y = 0f;
                     if (step.sqrMagnitude > 0.01f)
-                        transform.position += step.normalized * LimbCut.Speed(chaseSpeed, limpLeft > 0f, specialAbility == ZombieSpecialAbility.Charge) * Time.deltaTime;
+                        float paced = LimbCut.Speed(chaseSpeed, limpLeft > 0f, specialAbility == ZombieSpecialAbility.Charge);
+                        transform.position += step.normalized * GasCloud.Speed(paced, GasField.Covers(transform.position.x, transform.position.z)) * Time.deltaTime;
                 }
                 return true;
             }

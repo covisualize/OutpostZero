@@ -47,6 +47,12 @@ namespace OutpostZero.Player
             GameplayFeedback.Toast(PackSay.Poison(null));
         }
 
+        public void HoldPoison(float seconds)
+        {
+            if (seconds <= 0f) return;
+            poisonRemaining = Mathf.Max(poisonRemaining, seconds);
+        }
+
         public void ApplyBleed(float seconds)
         {
             bleedRemaining = -1f;

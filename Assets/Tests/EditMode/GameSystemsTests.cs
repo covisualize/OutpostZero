@@ -5225,6 +5225,29 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void AToxicCloudSlowsThePackAndDoesNotBurnThem()
+        {
+            Assert.AreEqual(4f, GasCloud.Radius, 0.001f);
+            Assert.AreEqual(25f, GasCloud.Life, 0.001f);
+            Assert.AreEqual(0.62f, GasCloud.Pace, 0.001f);
+            Assert.AreEqual(0f, GasCloud.Hurt, 0.001f);
+            Assert.IsTrue(GasCloud.Live(0f));
+            Assert.IsTrue(GasCloud.Live(24.9f));
+            Assert.IsFalse(GasCloud.Live(25f));
+            Assert.IsFalse(GasCloud.Live(-0.1f));
+            Assert.IsTrue(GasCloud.Inside(4f, 0f));
+            Assert.IsFalse(GasCloud.Inside(4.01f, 0f));
+            Assert.IsFalse(GasCloud.Inside(3f, 3f));
+            Assert.IsTrue(GasCloud.Covers(3f, 1f, 0f, 0f, 1f));
+            Assert.IsFalse(GasCloud.Covers(3f, 1f, 0f, 0f, 25f));
+            Assert.IsFalse(GasCloud.Covers(6f, 0f, 0f, 0f, 1f));
+            Assert.AreEqual(4.6f, GasCloud.Speed(4.6f, false), 0.001f);
+            Assert.AreEqual(2.852f, GasCloud.Speed(4.6f, true), 0.001f);
+            Assert.AreEqual(0f, GasCloud.Speed(-2f, true), 0.001f);
+            Assert.AreEqual(4.5f, BlastWake.Hold(HazardKind.Toxic), 0.001f);
+        }
+
+        [Test]
         public void AZombieWithoutARigStillAttacksAndFalls()
         {
             Assert.AreEqual(14f, PoseSheet.Lean(ZombieAI.ZombieState.Chase, 0f), 0.001f);
