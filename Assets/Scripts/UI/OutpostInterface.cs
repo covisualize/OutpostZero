@@ -304,41 +304,41 @@ namespace OutpostZero.UI
                 vitalText.AppendLine(Loc.T("hud.lamp") + " " + Mathf.CeilToInt(player.LampCellCharge));
             if (needs != null)
             {
-                vitalText.AppendLine("Hunger " + Mathf.RoundToInt(needs.Hunger) + "  Thirst " + Mathf.RoundToInt(needs.Thirst) + "  Fatigue " + Mathf.RoundToInt(needs.Fatigue));
-                if (NeedsPressure.Hungry(needs.Hunger)) vitalText.Append("  Hungry");
-                if (NeedsPressure.Dry(needs.Thirst)) vitalText.Append("  Thirsty");
-                if (NeedsPressure.Tired(needs.Fatigue)) vitalText.Append("  Exhausted");
+                vitalText.AppendLine(StreetHud.Needs(Mathf.RoundToInt(needs.Hunger), Mathf.RoundToInt(needs.Thirst), Mathf.RoundToInt(needs.Fatigue), null));
+                if (NeedsPressure.Hungry(needs.Hunger)) vitalText.Append("  ").Append(StreetHud.Flag("hud.hungry", null));
+                if (NeedsPressure.Dry(needs.Thirst)) vitalText.Append("  ").Append(StreetHud.Flag("hud.thirsty", null));
+                if (NeedsPressure.Tired(needs.Fatigue)) vitalText.Append("  ").Append(StreetHud.Flag("hud.exhausted", null));
             }
             if (veil != null) veil.style.display = needs != null && NeedsPressure.Tired(needs.Fatigue) ? DisplayStyle.Flex : DisplayStyle.None;
-            if (visibility != null) vitalText.Append("Exposure " + Mathf.RoundToInt(visibility.Exposure * 100f) + "%");
+            if (visibility != null) vitalText.Append(StreetHud.Exposure(Mathf.RoundToInt(visibility.Exposure * 100f), null));
             if (effects != null)
             {
-                if (effects.IsBleeding) vitalText.Append("  Bleeding");
-                if (effects.IsPoisoned) vitalText.Append("  Poison");
-                if (effects.InfectionStage > 0) vitalText.Append("  " + Affliction.Label(effects.InfectionStage));
-                if (effects.SprintBonus > 1f) vitalText.Append("  Adrenaline");
+                if (effects.IsBleeding) vitalText.Append("  ").Append(StreetHud.Flag("hud.bleeding", null));
+                if (effects.IsPoisoned) vitalText.Append("  ").Append(StreetHud.Flag("hud.poison", null));
+                if (effects.InfectionStage > 0) vitalText.Append("  ").Append(StreetHud.Infection(effects.InfectionStage, null));
+                if (effects.SprintBonus > 1f) vitalText.Append("  ").Append(StreetHud.Flag("hud.adrenaline", null));
             }
             var services = CampServices.Instance;
-            if (services != null && services.Contacts > 0) vitalText.Append("  Watchtower " + services.Contacts);
+            if (services != null && services.Contacts > 0) vitalText.Append("  ").Append(StreetHud.Watch(services.Contacts, null));
             vitals.text = vitalText.ToString();
 
             var objectiveText = new StringBuilder();
             if (tracker != null)
             {
-                objectiveText.AppendLine("Kills " + tracker.Kills + "/" + tracker.KillGoal + "   Scrap " + tracker.Scrap + "/" + tracker.ScrapGoal);
+                objectiveText.AppendLine(StreetHud.Quota(tracker.Kills, tracker.KillGoal, tracker.Scrap, tracker.ScrapGoal, null));
                 if (!string.IsNullOrEmpty(tracker.PoiLine())) objectiveText.AppendLine(tracker.PoiLine());
             }
             if (!string.IsNullOrEmpty(RescueFollower.Status())) objectiveText.AppendLine(RescueFollower.Status());
             var district = WorldMapService.Instance != null ? WorldMapService.Instance.Current : null;
             if (district != null) objectiveText.AppendLine(district.displayName + " — " + district.encounter);
-            if (HordeDirector.Instance != null) objectiveText.AppendLine("Tension " + Mathf.RoundToInt(HordeDirector.Instance.Tension) + "  " + HordeDirector.Instance.State);
+            if (HordeDirector.Instance != null) objectiveText.AppendLine(StreetHud.Tension(Mathf.RoundToInt(HordeDirector.Instance.Tension), HordeDirector.Instance.State.ToString(), null));
             if (WorldClock.Instance != null) objectiveText.AppendLine(WorldClock.Instance.Label);
             var interactor = player != null ? player.GetComponent<PlayerInteractor>() : null;
             if (interactor != null && !string.IsNullOrEmpty(interactor.Prompt)) objectiveText.Append("[E] " + interactor.Prompt);
             var raid = NightRaidController.Instance;
-            if (raid != null && raid.Running) objectiveText.Append("   Raid " + Mathf.CeilToInt(raid.Remaining) + "s");
+            if (raid != null && raid.Running) objectiveText.Append("   ").Append(StreetHud.Raid(Mathf.CeilToInt(raid.Remaining), null));
             var gate = ExtractionZone.Current;
-            if (gate != null && gate.Holding) objectiveText.AppendLine("Hold to extract " + Mathf.CeilToInt(ExtractWatch.HoldSeconds - gate.Hold) + "s");
+            if (gate != null && gate.Holding) objectiveText.AppendLine(StreetHud.Hold(Mathf.CeilToInt(ExtractWatch.HoldSeconds - gate.Hold), null));
             objectives.text = objectiveText.ToString();
 
             var flow = GameManager.Instance != null ? GameManager.Instance.CurrentState : GameState.ExpeditionActive;
@@ -366,10 +366,7 @@ namespace OutpostZero.UI
                     var face = player.transform.forward;
                     string sector = StreetHeading.Sector(StreetHeading.Incoming(face.x, face.z, hit.x, hit.z));
                     hurt.style.backgroundColor = HudPalette.Hurt(vision);
-                    hurt.text = sector == "front" ? "Hit from the front"
-                        : sector == "back" ? "Hit from behind"
-                        : sector == "left" ? "Hit from the left"
-                        : "Hit from the right";
+                    hurt.text = StreetHud.Hit(sector, null);
                     hurt.style.display = DisplayStyle.Flex;
                 }
             }
@@ -387,8 +384,9 @@ namespace OutpostZero.UI
             else if (player != null && player.ActiveWeapon is FirearmWeapon gun)
             {
                 bool low = MagPulse.Low(gun.CurrentAmmo, gun.MaxMagazine, gun.IsReloading);
-                string reload = gun.IsReloading ? "  reload " + Mathf.RoundToInt(gun.ReloadFill * 100f) + "%" : low ? "  low" : "";
-                weapon.text = gun.WeaponName + "   " + gun.CurrentAmmo + " / " + gun.ReserveAmmo + reload;
+                string reload = StreetHud.Ammo("", gun.CurrentAmmo, gun.ReserveAmmo, gun.IsReloading, Mathf.RoundToInt(gun.ReloadFill * 100f), low, null);
+                int split = reload.IndexOf("   ");
+                weapon.text = gun.WeaponName + (split >= 0 ? reload.Substring(split) : "");
                 weapon.style.color = low ? HudPalette.Warn(vision) : Color.white;
                 weapon.style.opacity = MagPulse.Alpha(Time.unscaledTime, low);
             }
@@ -400,7 +398,7 @@ namespace OutpostZero.UI
             }
             else
             {
-                weapon.text = "No weapon";
+                weapon.text = StreetHud.None(null);
                 weapon.style.color = Color.white;
                 weapon.style.opacity = 1f;
             }

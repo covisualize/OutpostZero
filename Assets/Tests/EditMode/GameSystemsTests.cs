@@ -817,6 +817,32 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void TheStreetBoardSpeaksSpanish()
+        {
+            Assert.AreEqual("Hunger 40  Thirst 55  Fatigue 80", StreetHud.Needs(40, 55, 80, "en"));
+            Assert.AreEqual("Hambre 40  Sed 55  Fatiga 80", StreetHud.Needs(40, 55, 80, "es"));
+            Assert.AreEqual("Hunger 0  Thirst 0  Fatigue 0", StreetHud.Needs(-1, -2, -3, "en"));
+            Assert.AreEqual("Kills 3/8   Scrap 4/15", StreetHud.Quota(3, 8, 4, 15, "en"));
+            Assert.AreEqual("Bajas 3/8   Chatarra 4/15", StreetHud.Quota(3, 8, 4, 15, "es"));
+            Assert.AreEqual("Tension 80  Peak", StreetHud.Tension(80, "Peak", "en"));
+            Assert.AreEqual("Tensión 50  Subida", StreetHud.Tension(50, "BuildUp", "es"));
+            Assert.AreEqual("Hold to extract 3s", StreetHud.Hold(3, "en"));
+            Assert.AreEqual("Mantén para extraer 0s", StreetHud.Hold(-4, "es"));
+            Assert.AreEqual("Hit from the front", StreetHud.Hit("front", "en"));
+            Assert.AreEqual("Golpe por detrás", StreetHud.Hit("back", "es"));
+            Assert.AreEqual("No weapon", StreetHud.None("en"));
+            Assert.AreEqual("Sin arma", StreetHud.None("es"));
+            Assert.AreEqual("Pistol   4 / 20  reload 40%", StreetHud.Ammo("Pistol", 4, 20, true, 40, true, "en"));
+            Assert.AreEqual("Pistol   2 / 20  bajo", StreetHud.Ammo("Pistol", 2, 20, false, 0, true, "es"));
+            Assert.AreEqual(Affliction.Label(2), StreetHud.Infection(2, "en"));
+            Assert.AreEqual("Infección II", StreetHud.Infection(2, "es"));
+            Assert.AreEqual("Raid 8s", StreetHud.Raid(8, "en"));
+            Assert.AreEqual("Asalto 8s", StreetHud.Raid(8, "es"));
+            Assert.IsTrue(Loc.T("hint.aim", "en").Contains("shortens the step"));
+            Assert.IsTrue(Loc.T("hint.aim", "es").Contains("acorta el paso"));
+        }
+
+        [Test]
         public void MistSitsOnTheStreetWhenTheAirIsThick()
         {
             Assert.IsTrue(MistBank.Shows(WeatherKind.Fog, 0f));
