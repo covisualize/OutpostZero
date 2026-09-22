@@ -88,6 +88,12 @@ namespace OutpostZero.Tests.EditMode
         {
             Assert.AreEqual("PAUSED", Loc.T("menu.pause"));
             Assert.AreEqual("missing.key", Loc.T("missing.key"));
+            Assert.AreEqual("PAUSA", Loc.T("menu.pause", "es"));
+            Assert.AreEqual("Entrar al santuario", Loc.T("menu.enter", "es"));
+            Assert.AreEqual("AJUSTES", Loc.T("set.title", "es"));
+            Assert.AreEqual("Superviviente", Loc.T("diff.survivor", "es"));
+            Assert.AreEqual("Survivor", Loc.Difficulty(2));
+            Assert.AreEqual("missing.key", Loc.T("missing.key", "es"));
         }
 
         [Test]

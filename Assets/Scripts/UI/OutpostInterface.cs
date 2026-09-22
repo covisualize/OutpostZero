@@ -526,21 +526,21 @@ namespace OutpostZero.UI
                     menu.Add(Title(Loc.T("menu.pause")));
                     menu.Add(Button(Loc.T("menu.resume"), () => GameManager.Instance.TogglePause()));
                     menu.Add(Button(Loc.T("menu.save"), () => SaveSystem.Instance?.Save()));
-                    menu.Add(Button("Codex", () => { codexOpen = true; codexId = ""; }));
-                    menu.Add(Button("Skip the lesson", () => TutorialDirector.Instance?.Dismiss()));
+                    menu.Add(Button(Loc.T("menu.codex"), () => { codexOpen = true; codexId = ""; }));
+                    menu.Add(Button(Loc.T("menu.skip"), () => TutorialDirector.Instance?.Dismiss()));
                     menu.Add(Button(Loc.T("menu.camp"), () => Go(FlowStep.Sanctuary, () => GameManager.Instance.EnterCamp())));
                     menu.Add(Button(Loc.T("menu.settings"), () => SettingsService.Instance?.TogglePanel()));
                     menu.Add(Button(Loc.T("menu.main"), () => Go(FlowStep.MainMenu, () => GameManager.Instance.SetState(GameState.MainMenu))));
-                    menu.Add(Button("Restart", () => Go(FlowStep.Boot, () => GameManager.Instance.RestartCurrentScene())));
+                    menu.Add(Button(Loc.T("menu.restart"), () => Go(FlowStep.Boot, () => GameManager.Instance.RestartCurrentScene())));
                     break;
                 case GameState.SuccessionScreen:
-                    menu.Add(Title("LEADER KILLED"));
+                    menu.Add(Title(Loc.T("menu.leader")));
                     if (SurvivorRoster.Instance != null && SurvivorRoster.Instance.Memorials.Count > 0)
                     {
                         var fallen = SurvivorRoster.Instance.Memorials[SurvivorRoster.Instance.Memorials.Count - 1];
                         menu.Add(Body(SuccessionLedger.Card(fallen)));
                     }
-                    menu.Add(Body("Choose who walks out at dawn."));
+                    menu.Add(Body(Loc.T("menu.choose")));
                     if (SurvivorRoster.Instance != null)
                     {
                         foreach (var survivor in SurvivorRoster.Instance.Survivors)
@@ -550,41 +550,41 @@ namespace OutpostZero.UI
                             menu.Add(Button(survivor.displayName + " — " + survivor.trait + "  " + ColonyDay.Mood(survivor.morale), () => GameManager.Instance.AcceptSuccessor(id)));
                         }
                     }
-                    menu.Add(Button("The outpost falls", () => GameManager.Instance.SetState(GameState.GameOver)));
+                    menu.Add(Button(Loc.T("menu.falls"), () => GameManager.Instance.SetState(GameState.GameOver)));
                     break;
                 case GameState.Victory:
-                    menu.Add(Title("OUTPOST HOLDS"));
-                    menu.Add(Body("The broadcast went out. The gate can stay shut."));
+                    menu.Add(Title(Loc.T("menu.holds")));
+                    menu.Add(Body(Loc.T("menu.broadcast")));
                     DrawBoard(menu);
-                    menu.Add(Button("Enter sanctuary", () => Go(FlowStep.Sanctuary, () => GameManager.Instance.EnterCamp())));
-                    menu.Add(Button("Keep the nights", () => Go(FlowStep.Sanctuary, () =>
+                    menu.Add(Button(Loc.T("menu.enter"), () => Go(FlowStep.Sanctuary, () => GameManager.Instance.EnterCamp())));
+                    menu.Add(Button(Loc.T("menu.endless"), () => Go(FlowStep.Sanctuary, () =>
                     {
                         WorldMapService.Instance?.TryBeginEndless();
                         GameManager.Instance.EnterCamp();
                     })));
-                    menu.Add(Button("New outpost", () => Go(FlowStep.Sanctuary, () => GameManager.Instance.BeginNewOutpost())));
+                    menu.Add(Button(Loc.T("menu.new"), () => Go(FlowStep.Sanctuary, () => GameManager.Instance.BeginNewOutpost())));
                     break;
                 case GameState.ExpeditionResults:
                     menu.Add(Title(Loc.T("result.title")));
                     var map = WorldMapService.Instance;
-                    menu.Add(Body(map != null && map.CampaignWon ? "The tower is on the air." : "Supplies are back inside the gate."));
-                    if (map != null && map.Current != null) menu.Add(Body("Next: " + map.Current.displayName));
-                    menu.Add(Button("Enter sanctuary", () => Go(FlowStep.Sanctuary, () => GameManager.Instance.EnterCamp())));
+                    menu.Add(Body(map != null && map.CampaignWon ? Loc.T("menu.air") : Loc.T("menu.supplies")));
+                    if (map != null && map.Current != null) menu.Add(Body(Loc.T("menu.next") + " " + map.Current.displayName));
+                    menu.Add(Button(Loc.T("menu.enter"), () => Go(FlowStep.Sanctuary, () => GameManager.Instance.EnterCamp())));
                     break;
                 case GameState.GameOver:
                     menu.Add(Title(Loc.T("gameover.title")));
                     int remembered = SurvivorRoster.Instance != null ? SurvivorRoster.Instance.Memorials.Count : 0;
-                    menu.Add(Body(remembered > 0 ? remembered + " names on the memorial wall." : "Every name on the roster is gone."));
+                    menu.Add(Body(remembered > 0 ? remembered + " " + Loc.T("menu.names") : Loc.T("menu.names_none")));
                     DrawBoard(menu);
-                    menu.Add(Button("New outpost", () => Go(FlowStep.Sanctuary, () => GameManager.Instance.BeginNewOutpost())));
+                    menu.Add(Button(Loc.T("menu.new"), () => Go(FlowStep.Sanctuary, () => GameManager.Instance.BeginNewOutpost())));
                     break;
                 case GameState.MainMenu:
                     if (credits)
                     {
-                        menu.Add(Title("CREDITS"));
-                        menu.Add(Body("Outpost Zero " + SceneRoute.Version));
-                        menu.Add(Body("A sanctuary, a street, and whoever is still on the board."));
-                        menu.Add(Button("Back", () => credits = false));
+                        menu.Add(Title(Loc.T("menu.credits")));
+                        menu.Add(Body(Loc.T("menu.brand") + " " + SceneRoute.Version));
+                        menu.Add(Body(Loc.T("menu.blurb")));
+                        menu.Add(Button(Loc.T("menu.back"), () => credits = false));
                         break;
                     }
                     if (slotsOpen)
@@ -592,20 +592,20 @@ namespace OutpostZero.UI
                         DrawSlots(menu);
                         break;
                     }
-                    menu.Add(Title("OUTPOST ZERO"));
-                    menu.Add(Body("Version " + SceneRoute.Version));
-                    menu.Add(Button("Continue", () => Go(FlowStep.Sanctuary, () =>
+                    menu.Add(Title(Loc.T("menu.title")));
+                    menu.Add(Body(Loc.T("menu.version") + " " + SceneRoute.Version));
+                    menu.Add(Button(Loc.T("menu.continue"), () => Go(FlowStep.Sanctuary, () =>
                     {
                         if (SaveSystem.Instance == null || !SaveSystem.Instance.Load())
                             GameManager.Instance.SetState(GameState.MainMenu);
                     })));
-                    menu.Add(Button("Saves", () => slotsOpen = true));
-                    menu.Add(Button("Difficulty: " + DifficultyProfile.Name(SettingsService.Instance != null ? SettingsService.Instance.NextDifficulty : 2), () => SettingsService.Instance?.CycleDifficulty()));
-                    menu.Add(Button("New outpost", () => Go(FlowStep.Sanctuary, () => GameManager.Instance.BeginNewOutpost())));
+                    menu.Add(Button(Loc.T("menu.saves"), () => slotsOpen = true));
+                    menu.Add(Button(Loc.T("set.next") + " " + Loc.Difficulty(SettingsService.Instance != null ? SettingsService.Instance.NextDifficulty : 2), () => SettingsService.Instance?.CycleDifficulty()));
+                    menu.Add(Button(Loc.T("menu.new"), () => Go(FlowStep.Sanctuary, () => GameManager.Instance.BeginNewOutpost())));
                     menu.Add(Button(Loc.T("menu.settings"), () => SettingsService.Instance?.TogglePanel()));
-                    menu.Add(Button("Credits", () => credits = true));
-                    menu.Add(Button("Skip the lesson", () => TutorialDirector.Instance?.Dismiss()));
-                    menu.Add(Button("Back to the street", () => Go(FlowStep.Expedition, () => GameManager.Instance.BeginExpedition())));
+                    menu.Add(Button(Loc.T("menu.credits"), () => credits = true));
+                    menu.Add(Button(Loc.T("menu.skip"), () => TutorialDirector.Instance?.Dismiss()));
+                    menu.Add(Button(Loc.T("menu.street"), () => Go(FlowStep.Expedition, () => GameManager.Instance.BeginExpedition())));
                     break;
             }
             menu.style.display = menu.childCount > 0 ? DisplayStyle.Flex : DisplayStyle.None;
@@ -613,11 +613,11 @@ namespace OutpostZero.UI
 
         private void DrawBoard(VisualElement menu)
         {
-            menu.Add(Body("Local board"));
+            menu.Add(Body(Loc.T("menu.board")));
             var runs = RunArchive.Instance != null ? RunArchive.Instance.Runs : null;
             if (runs == null || runs.Length == 0)
             {
-                menu.Add(Body("No finished runs yet."));
+                menu.Add(Body(Loc.T("menu.board_empty")));
                 return;
             }
             int count = runs.Length < 4 ? runs.Length : 4;
@@ -627,37 +627,37 @@ namespace OutpostZero.UI
         private void BuildSettings(VisualElement parent)
         {
             var settings = SettingsService.Instance;
-            parent.Add(Title("SETTINGS"));
-            parent.Add(SliderRow("Shake", settings.ScreenShake, settings.SetShake));
-            parent.Add(SliderRow("Volume", settings.MasterVolume, settings.SetVolume));
-            parent.Add(SliderRow("Effects", settings.SfxVolume, settings.SetSfx));
-            parent.Add(SliderRow("Music", settings.MusicVolume, settings.SetMusic));
-            parent.Add(SliderRow("Ambience", settings.AmbienceVolume, settings.SetAmbience));
-            parent.Add(SliderRow("Interface", settings.UiVolume, settings.SetUi));
-            parent.Add(SliderRow("Field of view", settings.FieldOfView, 40f, 75f, settings.SetFieldOfView));
-            parent.Add(SliderRow("Text", settings.TextScale, 0.8f, 1.6f, settings.SetTextScale));
-            parent.Add(SliderRow("HUD", settings.HudOpacity, 0.45f, 1f, settings.SetHudOpacity));
-            parent.Add(SliderRow("Brightness", settings.Brightness, 0.6f, 1.4f, settings.SetBrightness));
-            parent.Add(Button(settings.Subtitles ? "Subtitles on" : "Subtitles off", () => settings.SetSubtitles(!settings.Subtitles)));
-            parent.Add(Button("Colorblind mode " + settings.ColorblindMode, settings.CycleColorblind));
+            parent.Add(Title(Loc.T("set.title")));
+            parent.Add(SliderRow(Loc.T("set.shake"), settings.ScreenShake, settings.SetShake));
+            parent.Add(SliderRow(Loc.T("set.volume"), settings.MasterVolume, settings.SetVolume));
+            parent.Add(SliderRow(Loc.T("set.effects"), settings.SfxVolume, settings.SetSfx));
+            parent.Add(SliderRow(Loc.T("set.music"), settings.MusicVolume, settings.SetMusic));
+            parent.Add(SliderRow(Loc.T("set.ambience"), settings.AmbienceVolume, settings.SetAmbience));
+            parent.Add(SliderRow(Loc.T("set.ui"), settings.UiVolume, settings.SetUi));
+            parent.Add(SliderRow(Loc.T("set.fov"), settings.FieldOfView, 40f, 75f, settings.SetFieldOfView));
+            parent.Add(SliderRow(Loc.T("set.text"), settings.TextScale, 0.8f, 1.6f, settings.SetTextScale));
+            parent.Add(SliderRow(Loc.T("set.hud"), settings.HudOpacity, 0.45f, 1f, settings.SetHudOpacity));
+            parent.Add(SliderRow(Loc.T("set.bright"), settings.Brightness, 0.6f, 1.4f, settings.SetBrightness));
+            parent.Add(Button(settings.Subtitles ? Loc.T("set.subs_on") : Loc.T("set.subs_off"), () => settings.SetSubtitles(!settings.Subtitles)));
+            parent.Add(Button(Loc.T("set.color") + " " + settings.ColorblindMode, settings.CycleColorblind));
             parent.Add(Button(settings.Language == "es" ? "Idioma: ES" : "Language: EN", () => settings.SetLanguage(settings.Language == "es" ? "en" : "es")));
-            string[] tiers = { "Low", "Medium", "High", "Ultra" };
-            parent.Add(Button("Quality: " + tiers[Mathf.Clamp(settings.Quality, 0, 3)], settings.CycleQuality));
-            parent.Add(Button(settings.VSync ? "VSync on" : "VSync off", settings.ToggleVSync));
-            parent.Add(Button("Frame cap: " + PlayOptions.FrameName(settings.FrameCap), settings.CycleFrameCap));
-            parent.Add(Button("Resolution: " + DisplayModes.Name(settings.Resolution), settings.CycleResolution));
-            parent.Add(Button(settings.AimAssist == 0 ? "Aim assist off" : settings.AimAssist == 2 ? "Aim assist strong" : "Aim assist light", settings.CycleAim));
-            parent.Add(Button(settings.InvertLook ? "Invert look" : "Look: normal", settings.ToggleInvert));
-            parent.Add(Button(settings.CrouchMode == 1 ? "Crouch: toggle" : "Crouch: hold", settings.ToggleCrouchMode));
-            parent.Add(Button(settings.SprintMode == 1 ? "Sprint: toggle" : "Sprint: hold", settings.ToggleSprintMode));
-            parent.Add(Button(settings.Merciful ? "Death: merciful" : "Death: permadeath", settings.ToggleMerciful));
-            parent.Add(Button("Next run: " + DifficultyProfile.Name(settings.NextDifficulty), settings.CycleDifficulty));
-            parent.Add(Button("Gore: " + Presentation.GoreName(settings.Gore == 0 ? 3 : settings.Gore), settings.CycleGore));
-            parent.Add(Button(settings.HitStop ? "Hit stop on" : "Hit stop off", settings.ToggleHitStop));
-            parent.Add(Button(settings.DamageNumbers ? "Damage numbers on" : "Damage numbers off", settings.ToggleDamageNumbers));
-            parent.Add(Button(settings.MotionBlur ? "Motion blur on" : "Motion blur off", settings.ToggleMotionBlur));
-            parent.Add(Button(settings.WindowMode == 1 ? "Windowed" : settings.WindowMode == 2 ? "Fullscreen" : "Display: default", settings.CycleWindow));
-            parent.Add(Body("Click an action, then press a key. Escape cancels."));
+            int tier = Mathf.Clamp(settings.Quality, 0, 3);
+            parent.Add(Button(Loc.T("set.quality") + " " + Loc.T("set.tier" + tier), settings.CycleQuality));
+            parent.Add(Button(settings.VSync ? Loc.T("set.vsync_on") : Loc.T("set.vsync_off"), settings.ToggleVSync));
+            parent.Add(Button(Loc.T("set.frame") + " " + PlayOptions.FrameName(settings.FrameCap), settings.CycleFrameCap));
+            parent.Add(Button(Loc.T("set.resolution") + " " + DisplayModes.Name(settings.Resolution), settings.CycleResolution));
+            parent.Add(Button(settings.AimAssist == 0 ? Loc.T("set.aim_off") : settings.AimAssist == 2 ? Loc.T("set.aim_strong") : Loc.T("set.aim_light"), settings.CycleAim));
+            parent.Add(Button(settings.InvertLook ? Loc.T("set.invert") : Loc.T("set.look"), settings.ToggleInvert));
+            parent.Add(Button(settings.CrouchMode == 1 ? Loc.T("set.crouch_toggle") : Loc.T("set.crouch_hold"), settings.ToggleCrouchMode));
+            parent.Add(Button(settings.SprintMode == 1 ? Loc.T("set.sprint_toggle") : Loc.T("set.sprint_hold"), settings.ToggleSprintMode));
+            parent.Add(Button(settings.Merciful ? Loc.T("set.merciful") : Loc.T("set.perma"), settings.ToggleMerciful));
+            parent.Add(Button(Loc.T("set.next") + " " + Loc.Difficulty(settings.NextDifficulty), settings.CycleDifficulty));
+            parent.Add(Button(Loc.T("set.gore") + " " + Presentation.GoreName(settings.Gore == 0 ? 3 : settings.Gore), settings.CycleGore));
+            parent.Add(Button(settings.HitStop ? Loc.T("set.hit_on") : Loc.T("set.hit_off"), settings.ToggleHitStop));
+            parent.Add(Button(settings.DamageNumbers ? Loc.T("set.num_on") : Loc.T("set.num_off"), settings.ToggleDamageNumbers));
+            parent.Add(Button(settings.MotionBlur ? Loc.T("set.blur_on") : Loc.T("set.blur_off"), settings.ToggleMotionBlur));
+            parent.Add(Button(settings.WindowMode == 1 ? Loc.T("set.window") : settings.WindowMode == 2 ? Loc.T("set.full") : Loc.T("set.display"), settings.CycleWindow));
+            parent.Add(Body(Loc.T("set.keys")));
             for (int i = 0; i < ControlBindings.Count; i++)
             {
                 var action = (ControlBindings.Action)i;
@@ -669,14 +669,14 @@ namespace OutpostZero.UI
                     padListen = -1;
                 }));
             }
-            parent.Add(Button("Reset keys", () =>
+            parent.Add(Button(Loc.T("set.reset_keys"), () =>
             {
                 ControlBindings.ResetDefaults();
                 listening = -1;
                 SettingsService.Instance?.NoteBindings();
                 menuKey = "";
             }));
-            parent.Add(Body("Click a pad action, then press a button. Escape cancels."));
+            parent.Add(Body(Loc.T("set.pad")));
             for (int i = 0; i < PadBindings.Count; i++)
             {
                 var action = (PadBindings.Action)i;
@@ -688,21 +688,21 @@ namespace OutpostZero.UI
                     listening = -1;
                 }));
             }
-            parent.Add(Button("Reset pad", () =>
+            parent.Add(Button(Loc.T("set.reset_pad"), () =>
             {
                 PadBindings.ResetDefaults();
                 padListen = -1;
                 SettingsService.Instance?.NoteBindings();
                 menuKey = "";
             }));
-            parent.Add(Button("Revert", () =>
+            parent.Add(Button(Loc.T("set.revert"), () =>
             {
                 if (!string.IsNullOrEmpty(settingsBaseline)) SettingsService.Instance?.ImportSettings(settingsBaseline);
                 listening = -1;
                 padListen = -1;
                 menuKey = "";
             }));
-            parent.Add(Button("Close", settings.TogglePanel));
+            parent.Add(Button(Loc.T("set.close"), settings.TogglePanel));
             parent.style.display = DisplayStyle.Flex;
         }
 
