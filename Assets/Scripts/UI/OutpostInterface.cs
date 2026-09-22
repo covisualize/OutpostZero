@@ -633,6 +633,8 @@ namespace OutpostZero.UI
                         menu.Add(Title(Loc.T("menu.credits")));
                         menu.Add(Body(Loc.T("menu.brand") + " " + SceneRoute.Version));
                         menu.Add(Body(Loc.T("menu.blurb")));
+                        menu.Add(Body(Loc.T("menu.tones")));
+                        menu.Add(Body(SoundCredit.Count + " " + Loc.T("menu.tones_n")));
                         menu.Add(Button(Loc.T("menu.back"), () => credits = false));
                         break;
                     }

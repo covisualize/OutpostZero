@@ -3468,6 +3468,44 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void AThirdFogDayOpensOvercastAndTheMarketStaysClear()
+        {
+            Assert.AreEqual(WeatherKind.Fog, SkyBand.Cast(WeatherKind.Fog, 3));
+            Assert.AreEqual(WeatherKind.Fog, CloudDeck.Lay(WeatherKind.Fog, 2));
+            Assert.AreEqual(WeatherKind.Fog, CloudDeck.Lay(WeatherKind.Fog, 0));
+            Assert.AreEqual(WeatherKind.Overcast, CloudDeck.Lay(WeatherKind.Fog, 3));
+            Assert.AreEqual(WeatherKind.Overcast, CloudDeck.Lay(WeatherKind.Fog, 6));
+            Assert.AreEqual(WeatherKind.Rain, CloudDeck.Lay(WeatherKind.Rain, 1));
+            Assert.AreEqual(WeatherKind.Storm, CloudDeck.Lay(WeatherKind.Rain, 2));
+            Assert.AreEqual(WeatherKind.Clear, CloudDeck.Lay(WeatherKind.Clear, 3));
+            Assert.AreEqual(WeatherKind.Clear, CloudDeck.Lay(DistrictRules.For("ash_market").Weather, 3));
+            Assert.AreEqual(WeatherKind.Fog, DistrictRules.For("old_hospital").Weather);
+            Assert.AreEqual(WeatherKind.Overcast, CloudDeck.Lay(DistrictRules.For("old_hospital").Weather, 3));
+            Assert.AreEqual(0.9f, WeatherSurface.Sight(WeatherKind.Overcast), 0.001f);
+            Assert.AreEqual(0.1f, WeatherSurface.Wetness(WeatherKind.Overcast), 0.001f);
+            Assert.AreEqual("wind", AshFall.Bed(WeatherKind.Overcast, "old_hospital"));
+        }
+
+        [Test]
+        public void EveryToneHasACreditAndAMissingOneDoesNot()
+        {
+            Assert.AreEqual("", SoundCredit.Line(null));
+            Assert.AreEqual("", SoundCredit.Line(""));
+            Assert.AreEqual("", SoundCredit.Line("nope"));
+            Assert.IsFalse(SoundCredit.Covers("nope"));
+            Assert.AreEqual(ClipBook.Ids.Length, SoundCredit.Count);
+            for (int i = 0; i < ClipBook.Ids.Length; i++)
+            {
+                string id = ClipBook.Ids[i];
+                Assert.IsTrue(SoundCredit.Covers(id), id);
+                Assert.AreEqual(id + " — generated", SoundCredit.Line(id));
+            }
+            Assert.AreEqual("Every tone is generated in the game.", Loc.T("menu.tones", "en"));
+            Assert.AreEqual("Cada tono se genera en el juego.", Loc.T("menu.tones", "es"));
+            Assert.AreEqual("tonos generados", Loc.T("menu.tones_n", "es"));
+        }
+
+        [Test]
         public void AZombieWithoutARigStillAttacksAndFalls()
         {
             Assert.AreEqual(14f, PoseSheet.Lean(ZombieAI.ZombieState.Chase, 0f), 0.001f);
