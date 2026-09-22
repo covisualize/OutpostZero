@@ -1629,5 +1629,46 @@ namespace OutpostZero.Tests.EditMode
             Assert.AreEqual("> 1  Pistol", WeaponWheel.Row(0, "Pistol", true));
             Assert.AreEqual("  3  empty", WeaponWheel.Row(2, "", false));
         }
+
+        [Test]
+        public void SettingsFileKeepsAZeroAndPadRebindRejectsADuplicate()
+        {
+            var snap = SettingsFile.Defaults();
+            snap.language = "es";
+            snap.resolution = 3;
+            snap.music = 0f;
+            string json = SettingsFile.ToJson(snap);
+            Assert.IsTrue(SettingsFile.TryFromJson(json, out var loaded));
+            Assert.AreEqual("es", loaded.language);
+            Assert.AreEqual(3, loaded.resolution);
+            Assert.AreEqual(0f, loaded.music, 0.001f);
+            Assert.AreEqual(0.7f, SettingsFile.Defaults().music, 0.001f);
+            Assert.IsTrue(SettingsFile.TryFromJson("{\"shake\":0.5}", out var partial));
+            Assert.AreEqual(0.5f, partial.shake, 0.001f);
+            Assert.AreEqual(0.7f, partial.music, 0.001f);
+            Assert.AreEqual("en", partial.language);
+            Assert.IsFalse(SettingsFile.TryFromJson("", out _));
+
+            PadBindings.ResetDefaults();
+            try
+            {
+                Assert.AreEqual("South", PadBindings.Label(PadBindings.Action.Interact));
+                Assert.AreEqual("RightTrigger", PadBindings.Label(PadBindings.Action.Fire));
+                Assert.AreEqual("LeftShoulder", PadBindings.Label(PadBindings.Action.Wheel));
+                Assert.AreEqual("LeftTrigger", PadBindings.Label(PadBindings.Action.Aim));
+                Assert.IsFalse(PadBindings.TryRebindNamed(PadBindings.Action.Interact, "North"));
+                Assert.IsTrue(PadBindings.TryRebindNamed(PadBindings.Action.Interact, "RightShoulder"));
+                string packed = PadBindings.Pack();
+                PadBindings.ResetDefaults();
+                Assert.AreEqual("South", PadBindings.Label(PadBindings.Action.Interact));
+                PadBindings.Unpack(packed);
+                Assert.AreEqual("RightShoulder", PadBindings.Label(PadBindings.Action.Interact));
+                Assert.AreEqual("North", PadBindings.Label(PadBindings.Action.Medkit));
+            }
+            finally
+            {
+                PadBindings.ResetDefaults();
+            }
+        }
     }
 }

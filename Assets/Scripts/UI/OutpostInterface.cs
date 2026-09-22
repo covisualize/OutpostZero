@@ -47,6 +47,9 @@ namespace OutpostZero.UI
         private string packKey = "";
         private readonly List<Label> popups = new List<Label>();
         private int listening = -1;
+        private int padListen = -1;
+        private string settingsBaseline = "";
+        private bool settingsWasOpen;
         private bool credits;
         private bool slotsOpen;
         private bool codexOpen;
@@ -55,6 +58,25 @@ namespace OutpostZero.UI
 
         private void Update()
         {
+            if (padListen >= 0)
+            {
+                if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
+                {
+                    padListen = -1;
+                    menuKey = "";
+                    return;
+                }
+                for (int i = 0; i < PadBindings.Buttons.Length; i++)
+                {
+                    if (!ExpeditionInput.PadButtonPressed(PadBindings.Buttons[i])) continue;
+                    if (PadBindings.TryRebindNamed((PadBindings.Action)padListen, PadBindings.Buttons[i]))
+                        SettingsService.Instance?.NoteBindings();
+                    padListen = -1;
+                    menuKey = "";
+                    return;
+                }
+            }
+
             if (listening < 0 || Keyboard.current == null) return;
             foreach (Key key in (Key[])System.Enum.GetValues(typeof(Key)))
             {
@@ -62,6 +84,7 @@ namespace OutpostZero.UI
                 var control = Keyboard.current[key];
                 if (control == null || !control.wasPressedThisFrame) continue;
                 if (key != Key.Escape) ControlBindings.TryRebind((ControlBindings.Action)listening, key);
+                if (key != Key.Escape) SettingsService.Instance?.NoteBindings();
                 listening = -1;
                 menuKey = "";
                 return;
@@ -378,11 +401,14 @@ namespace OutpostZero.UI
             bool inventory = shell != null && shell.InventoryOpen;
             var state = GameManager.Instance != null ? GameManager.Instance.CurrentState : GameState.ExpeditionActive;
             bool settings = SettingsService.Instance != null && SettingsService.Instance.ShowSettings;
+            if (settings && !settingsWasOpen) settingsBaseline = SettingsService.Instance.ExportSettings();
+            if (!settings) settingsBaseline = "";
+            settingsWasOpen = settings;
             bool trade = FactionTrade.Instance != null && FactionTrade.Instance.Open;
             string language = SettingsService.Instance != null ? SettingsService.Instance.Language : "en";
             string discrete = SettingsService.Instance != null ? SettingsService.Instance.DiscreteKey : "";
             string tradeKey = FactionTrade.Instance != null ? FactionTrade.Instance.Signature : "";
-            string nextMenu = state + "|" + settings + "|" + trade + "|" + language + "|" + discrete + "|" + ControlBindings.Signature() + "|" + listening + "|" + credits + "|" + slotsOpen + "|" + codexOpen + "|" + codexId + "|" + tradeKey;
+            string nextMenu = state + "|" + settings + "|" + trade + "|" + language + "|" + discrete + "|" + ControlBindings.Signature() + "|" + PadBindings.Signature() + "|" + listening + "|" + padListen + "|" + credits + "|" + slotsOpen + "|" + codexOpen + "|" + codexId + "|" + tradeKey;
             if (nextMenu != menuKey)
             {
                 menuKey = nextMenu;
@@ -637,12 +663,43 @@ namespace OutpostZero.UI
                 var action = (ControlBindings.Action)i;
                 int index = i;
                 string caption = listening == index ? "Press a key for " + action : action + ": " + ControlBindings.Label(action);
-                parent.Add(Button(caption, () => listening = index));
+                parent.Add(Button(caption, () =>
+                {
+                    listening = index;
+                    padListen = -1;
+                }));
             }
             parent.Add(Button("Reset keys", () =>
             {
                 ControlBindings.ResetDefaults();
                 listening = -1;
+                SettingsService.Instance?.NoteBindings();
+                menuKey = "";
+            }));
+            parent.Add(Body("Click a pad action, then press a button. Escape cancels."));
+            for (int i = 0; i < PadBindings.Count; i++)
+            {
+                var action = (PadBindings.Action)i;
+                int index = i;
+                string caption = padListen == index ? "Press a button for " + action : "Pad " + action + ": " + PadBindings.Label(action);
+                parent.Add(Button(caption, () =>
+                {
+                    padListen = index;
+                    listening = -1;
+                }));
+            }
+            parent.Add(Button("Reset pad", () =>
+            {
+                PadBindings.ResetDefaults();
+                padListen = -1;
+                SettingsService.Instance?.NoteBindings();
+                menuKey = "";
+            }));
+            parent.Add(Button("Revert", () =>
+            {
+                if (!string.IsNullOrEmpty(settingsBaseline)) SettingsService.Instance?.ImportSettings(settingsBaseline);
+                listening = -1;
+                padListen = -1;
                 menuKey = "";
             }));
             parent.Add(Button("Close", settings.TogglePanel));

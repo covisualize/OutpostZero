@@ -66,8 +66,7 @@ namespace OutpostZero.Player
         {
             get
             {
-                var pad = Gamepad.current;
-                if (pad != null && (pad.rightTrigger.isPressed || pad.rightShoulder.isPressed)) return true;
+                if (PadHeld(PadBindings.Action.Fire)) return true;
                 return Mouse.current != null ? Mouse.current.leftButton.isPressed : Input.GetMouseButton(0);
             }
         }
@@ -76,8 +75,7 @@ namespace OutpostZero.Player
         {
             get
             {
-                var pad = Gamepad.current;
-                if (pad != null && (pad.rightTrigger.wasPressedThisFrame || pad.rightShoulder.wasPressedThisFrame)) return true;
+                if (PadDown(PadBindings.Action.Fire)) return true;
                 return Mouse.current != null ? Mouse.current.leftButton.wasPressedThisFrame : Input.GetMouseButtonDown(0);
             }
         }
@@ -86,31 +84,29 @@ namespace OutpostZero.Player
         {
             get
             {
-                var pad = Gamepad.current;
-                if (pad != null && pad.leftTrigger.isPressed) return true;
+                if (PadHeld(PadBindings.Action.Aim)) return true;
                 return Mouse.current != null ? Mouse.current.rightButton.isPressed : Input.GetMouseButton(1);
             }
         }
-        public static bool PausePressed => Pressed(ControlBindings.Action.Pause) || PadDown(pad => pad.startButton.wasPressedThisFrame);
-        public static bool ReloadPressed => Pressed(ControlBindings.Action.Reload) || PadDown(pad => pad.buttonWest.wasPressedThisFrame);
-        public static bool InteractPressed => Pressed(ControlBindings.Action.Interact) || PadDown(pad => pad.buttonSouth.wasPressedThisFrame);
-        public static bool MedkitPressed => Pressed(ControlBindings.Action.Medkit) || PadDown(pad => pad.buttonNorth.wasPressedThisFrame);
-        public static bool FlashlightPressed => Pressed(ControlBindings.Action.Flashlight) || PadDown(pad => pad.dpadUp.wasPressedThisFrame);
-        public static bool CrouchHeld => Held(ControlBindings.Action.Crouch) || Held(Key.LeftCtrl) || PadHeld(pad => pad.rightStickButton.isPressed);
-        public static bool CrouchPressed => Pressed(ControlBindings.Action.Crouch) || Pressed(Key.LeftCtrl) || PadDown(pad => pad.rightStickButton.wasPressedThisFrame);
-        public static bool SprintHeld => Held(ControlBindings.Action.Sprint) || PadHeld(pad => pad.leftStickButton.isPressed);
-        public static bool SprintPressed => Pressed(ControlBindings.Action.Sprint) || PadDown(pad => pad.leftStickButton.wasPressedThisFrame);
-        public static bool InventoryPressed => Pressed(ControlBindings.Action.Inventory) || Pressed(Key.I) || PadDown(pad => pad.selectButton.wasPressedThisFrame);
-        public static bool ThrowPressed => Pressed(ControlBindings.Action.Throw) || PadDown(pad => pad.buttonEast.wasPressedThisFrame);
-        public static bool TakedownPressed => Pressed(ControlBindings.Action.Takedown);
-        public static bool BuildPressed => Pressed(ControlBindings.Action.Build) || PadDown(pad => pad.dpadDown.wasPressedThisFrame);
+        public static bool PausePressed => Pressed(ControlBindings.Action.Pause) || PadDown(PadBindings.Action.Pause);
+        public static bool ReloadPressed => Pressed(ControlBindings.Action.Reload) || PadDown(PadBindings.Action.Reload);
+        public static bool InteractPressed => Pressed(ControlBindings.Action.Interact) || PadDown(PadBindings.Action.Interact);
+        public static bool MedkitPressed => Pressed(ControlBindings.Action.Medkit) || PadDown(PadBindings.Action.Medkit);
+        public static bool FlashlightPressed => Pressed(ControlBindings.Action.Flashlight) || PadDown(PadBindings.Action.Flashlight);
+        public static bool CrouchHeld => Held(ControlBindings.Action.Crouch) || Held(Key.LeftCtrl) || PadHeld(PadBindings.Action.Crouch);
+        public static bool CrouchPressed => Pressed(ControlBindings.Action.Crouch) || Pressed(Key.LeftCtrl) || PadDown(PadBindings.Action.Crouch);
+        public static bool SprintHeld => Held(ControlBindings.Action.Sprint) || PadHeld(PadBindings.Action.Sprint);
+        public static bool SprintPressed => Pressed(ControlBindings.Action.Sprint) || PadDown(PadBindings.Action.Sprint);
+        public static bool InventoryPressed => Pressed(ControlBindings.Action.Inventory) || Pressed(Key.I) || PadDown(PadBindings.Action.Inventory);
+        public static bool ThrowPressed => Pressed(ControlBindings.Action.Throw) || PadDown(PadBindings.Action.Throw);
+        public static bool TakedownPressed => Pressed(ControlBindings.Action.Takedown) || PadDown(PadBindings.Action.Takedown);
+        public static bool BuildPressed => Pressed(ControlBindings.Action.Build) || PadDown(PadBindings.Action.Build);
 
         public static bool WheelHeld
         {
             get
             {
-                var pad = Gamepad.current;
-                if (pad != null && pad.leftShoulder.isPressed) return true;
+                if (PadHeld(PadBindings.Action.Wheel)) return true;
                 if (Mouse.current != null && Mouse.current.middleButton.isPressed) return true;
                 if (Mouse.current == null && Input.GetMouseButton(2)) return true;
                 return Held(Key.Z);
@@ -121,12 +117,18 @@ namespace OutpostZero.Player
         {
             get
             {
-                var pad = Gamepad.current;
-                if (pad == null) return 0;
-                if (pad.dpadRight.wasPressedThisFrame) return 1;
-                if (pad.dpadLeft.wasPressedThisFrame) return -1;
+                if (PadDown(PadBindings.Action.NextWeapon)) return 1;
+                if (PadDown(PadBindings.Action.PrevWeapon)) return -1;
                 return 0;
             }
+        }
+
+        public static bool PadButtonPressed(string name)
+        {
+            var pad = Gamepad.current;
+            if (pad == null) return false;
+            var button = Button(pad, name);
+            return button != null && button.wasPressedThisFrame;
         }
 
         public static bool WeaponSlotPressed(int index)
@@ -173,16 +175,41 @@ namespace OutpostZero.Player
 
         private static bool Down(UnityEngine.InputSystem.Controls.KeyControl key) => key != null && key.isPressed;
 
-        private static bool PadDown(System.Func<Gamepad, bool> read)
+        private static bool PadDown(PadBindings.Action action) => PadMatch(action, true);
+
+        private static bool PadHeld(PadBindings.Action action) => PadMatch(action, false);
+
+        private static bool PadMatch(PadBindings.Action action, bool down)
         {
             var pad = Gamepad.current;
-            return pad != null && read(pad);
+            if (pad == null) return false;
+            var button = Button(pad, PadBindings.Label(action));
+            if (button == null) return false;
+            return down ? button.wasPressedThisFrame : button.isPressed;
         }
 
-        private static bool PadHeld(System.Func<Gamepad, bool> read)
+        private static UnityEngine.InputSystem.Controls.ButtonControl Button(Gamepad pad, string name)
         {
-            var pad = Gamepad.current;
-            return pad != null && read(pad);
+            switch (name)
+            {
+                case "South": return pad.buttonSouth;
+                case "East": return pad.buttonEast;
+                case "West": return pad.buttonWest;
+                case "North": return pad.buttonNorth;
+                case "Start": return pad.startButton;
+                case "Select": return pad.selectButton;
+                case "LeftShoulder": return pad.leftShoulder;
+                case "RightShoulder": return pad.rightShoulder;
+                case "LeftTrigger": return pad.leftTrigger;
+                case "RightTrigger": return pad.rightTrigger;
+                case "LeftStick": return pad.leftStickButton;
+                case "RightStick": return pad.rightStickButton;
+                case "DpadUp": return pad.dpadUp;
+                case "DpadDown": return pad.dpadDown;
+                case "DpadLeft": return pad.dpadLeft;
+                case "DpadRight": return pad.dpadRight;
+                default: return null;
+            }
         }
 
         private static KeyCode ToLegacy(Key key)

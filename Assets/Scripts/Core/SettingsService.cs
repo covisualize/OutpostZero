@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
@@ -73,6 +74,7 @@ namespace OutpostZero.Core
         public bool ShowSettings { get; private set; }
 
         public event Action OnChanged;
+        private bool suppressWrite;
 
         private void Awake()
         {
@@ -82,6 +84,7 @@ namespace OutpostZero.Core
                 return;
             }
             Instance = this;
+            LoadFile();
             ApplyVolume();
             ApplyDisplay();
             ApplyWindow();
@@ -101,137 +104,137 @@ namespace OutpostZero.Core
         public void SetShake(float value)
         {
             screenShake = Mathf.Clamp01(value);
-            OnChanged?.Invoke();
+            Raise();
         }
 
         public void SetVolume(float value)
         {
             masterVolume = Mathf.Clamp01(value);
             ApplyVolume();
-            OnChanged?.Invoke();
+            Raise();
         }
 
         public void SetTextScale(float value)
         {
             textScale = Mathf.Clamp(value, 0.8f, 1.6f);
-            OnChanged?.Invoke();
+            Raise();
         }
 
         public void SetSubtitles(bool value)
         {
             subtitles = value;
-            OnChanged?.Invoke();
+            Raise();
         }
 
         public void CycleColorblind()
         {
             colorblindMode = (colorblindMode + 1) % 3;
-            OnChanged?.Invoke();
+            Raise();
         }
 
         public void SetLanguage(string code)
         {
             language = string.IsNullOrEmpty(code) ? "en" : code;
-            OnChanged?.Invoke();
+            Raise();
         }
 
         public void SetSfx(float value)
         {
             sfxVolume = Mathf.Clamp01(value);
-            OnChanged?.Invoke();
+            Raise();
         }
 
         public void SetMusic(float value)
         {
             musicVolume = Mathf.Clamp01(value);
-            OnChanged?.Invoke();
+            Raise();
         }
 
         public void SetAmbience(float value)
         {
             ambienceVolume = Mathf.Clamp01(value);
-            OnChanged?.Invoke();
+            Raise();
         }
 
         public void SetUi(float value)
         {
             uiVolume = Mathf.Clamp01(value);
-            OnChanged?.Invoke();
+            Raise();
         }
 
         public void SetFieldOfView(float value)
         {
             fieldOfView = Mathf.Clamp(value, 40f, 75f);
-            OnChanged?.Invoke();
+            Raise();
         }
 
         public void CycleQuality()
         {
             quality = (quality + 1) % 4;
             ApplyDisplay();
-            OnChanged?.Invoke();
+            Raise();
         }
 
         public void ToggleMerciful()
         {
             merciful = !merciful;
-            OnChanged?.Invoke();
+            Raise();
         }
 
         public void SetMerciful(bool value)
         {
             merciful = value;
-            OnChanged?.Invoke();
+            Raise();
         }
 
         public void CycleDifficulty()
         {
             int current = NextDifficulty;
             nextDifficulty = current >= 3 ? 1 : current + 1;
-            OnChanged?.Invoke();
+            Raise();
         }
 
         public void SetNextDifficulty(int value)
         {
             if (value <= 0) return;
             nextDifficulty = value >= 3 ? 3 : value;
-            OnChanged?.Invoke();
+            Raise();
         }
 
         public void CycleGore()
         {
             goreLevel = Presentation.NextGore(goreLevel);
-            OnChanged?.Invoke();
+            Raise();
         }
 
         public void ToggleHitStop()
         {
             hitStop = Presentation.ToggleOff(hitStop);
-            OnChanged?.Invoke();
+            Raise();
         }
 
         public void ToggleDamageNumbers()
         {
             damageNumbers = Presentation.ToggleOff(damageNumbers);
-            OnChanged?.Invoke();
+            Raise();
         }
 
         public void SetHudOpacity(float value)
         {
             hudOpacity = Presentation.Opacity(value);
-            OnChanged?.Invoke();
+            Raise();
         }
 
         public void SetBrightness(float value)
         {
             brightness = Presentation.Brightness(value);
-            OnChanged?.Invoke();
+            Raise();
         }
 
         public void ToggleMotionBlur()
         {
             motionBlur = motionBlur == 1 ? 0 : 1;
-            OnChanged?.Invoke();
+            Raise();
         }
 
         public void CycleWindow()
@@ -239,14 +242,14 @@ namespace OutpostZero.Core
             windowMode = windowMode == 2 ? 1 : 2;
             ApplyWindow();
             ApplyResolution();
-            OnChanged?.Invoke();
+            Raise();
         }
 
         public void CycleResolution()
         {
             resolution = DisplayModes.Next(Resolution);
             ApplyResolution();
-            OnChanged?.Invoke();
+            Raise();
         }
 
         public void ApplyComfort(int gore, int stop, int numbers, float opacity, float bright, int blur, int window)
@@ -259,38 +262,38 @@ namespace OutpostZero.Core
             motionBlur = blur == 1 ? 1 : 0;
             windowMode = window == 1 || window == 2 ? window : 0;
             ApplyWindow();
-            OnChanged?.Invoke();
+            Raise();
         }
 
         public void CycleAim()
         {
             aimAssist = AimAssist >= 2 ? 0 : AimAssist + 1;
-            OnChanged?.Invoke();
+            Raise();
         }
 
         public void ToggleInvert()
         {
             invertLook = InvertLook ? 0 : 1;
-            OnChanged?.Invoke();
+            Raise();
         }
 
         public void ToggleCrouchMode()
         {
             crouchMode = CrouchMode == 1 ? 0 : 1;
-            OnChanged?.Invoke();
+            Raise();
         }
 
         public void ToggleSprintMode()
         {
             sprintMode = SprintMode == 1 ? 0 : 1;
-            OnChanged?.Invoke();
+            Raise();
         }
 
         public void CycleFrameCap()
         {
             frameCap = PlayOptions.NextFrame(FrameCap);
             ApplyDisplay();
-            OnChanged?.Invoke();
+            Raise();
         }
 
         public void ApplyPlay(int assist, int invert, int crouch, int sprint, int cap, int display = 0)
@@ -302,14 +305,14 @@ namespace OutpostZero.Core
             frameCap = cap < 0 || cap > 4 ? 0 : cap;
             resolution = display < 0 || display >= DisplayModes.Count ? 0 : display;
             ApplyDisplay();
-            OnChanged?.Invoke();
+            Raise();
         }
 
         public void ToggleVSync()
         {
             vsync = vsync == 0 ? 1 : 0;
             ApplyDisplay();
-            OnChanged?.Invoke();
+            Raise();
         }
 
         public void TogglePanel() => ShowSettings = !ShowSettings;
@@ -322,7 +325,7 @@ namespace OutpostZero.Core
             subtitles = captions;
             language = string.IsNullOrEmpty(lang) ? "en" : lang;
             ApplyVolume();
-            OnChanged?.Invoke();
+            Raise();
         }
 
         public void ApplyPresentation(float sfx, float music, int tier, int sync, float fov, string bindings, float ambience = 0f, float ui = 0f)
@@ -337,7 +340,7 @@ namespace OutpostZero.Core
             OutpostZero.Player.ControlBindings.Unpack(bindings);
             ApplyVolume();
             ApplyDisplay();
-            OnChanged?.Invoke();
+            Raise();
         }
 
         private void ApplyVolume()
@@ -376,6 +379,131 @@ namespace OutpostZero.Core
         {
             if (windowMode == 2) Screen.fullScreen = true;
             else if (windowMode == 1) Screen.fullScreen = false;
+        }
+
+        public string ExportSettings() => SettingsFile.ToJson(CaptureFile());
+
+        public void ImportSettings(string json)
+        {
+            if (!SettingsFile.TryFromJson(json, out var snap)) return;
+            suppressWrite = true;
+            ApplyImported(snap);
+            suppressWrite = false;
+            Raise();
+        }
+
+        public void NoteBindings() => Raise();
+
+        private void Raise()
+        {
+            if (!suppressWrite) WriteFile();
+            OnChanged?.Invoke();
+        }
+
+        private void LoadFile()
+        {
+            try
+            {
+                string path = Path.Combine(Application.persistentDataPath, SettingsFile.FileName);
+                if (!File.Exists(path)) return;
+                if (!SettingsFile.TryFromJson(File.ReadAllText(path), out var snap)) return;
+                suppressWrite = true;
+                ApplyImported(snap);
+                suppressWrite = false;
+            }
+            catch (Exception ex)
+            {
+                suppressWrite = false;
+                Debug.LogWarning("[Settings] " + ex.Message);
+            }
+        }
+
+        private void WriteFile()
+        {
+            try
+            {
+                string dir = Application.persistentDataPath;
+                if (string.IsNullOrEmpty(dir)) return;
+                File.WriteAllText(Path.Combine(dir, SettingsFile.FileName), ExportSettings());
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning("[Settings] " + ex.Message);
+            }
+        }
+
+        private SettingsFile.Snapshot CaptureFile()
+        {
+            return new SettingsFile.Snapshot
+            {
+                shake = screenShake,
+                master = masterVolume,
+                sfx = sfxVolume,
+                music = musicVolume,
+                ambience = ambienceVolume,
+                ui = uiVolume,
+                text = textScale,
+                fov = fieldOfView,
+                opacity = hudOpacity,
+                brightness = brightness,
+                colorblind = colorblindMode,
+                quality = quality,
+                vsync = vsync,
+                difficulty = NextDifficulty,
+                gore = Gore == 0 ? 3 : Gore,
+                hitStop = HitStop ? 1 : 2,
+                numbers = DamageNumbers ? 1 : 2,
+                blur = motionBlur,
+                window = windowMode,
+                aim = AimAssist,
+                invert = invertLook,
+                crouch = CrouchMode,
+                sprint = SprintMode,
+                frame = FrameCap,
+                resolution = Resolution,
+                subtitles = subtitles,
+                merciful = merciful,
+                language = string.IsNullOrEmpty(language) ? "en" : language,
+                keys = OutpostZero.Player.ControlBindings.Pack(),
+                pad = OutpostZero.Player.PadBindings.Pack()
+            };
+        }
+
+        private void ApplyImported(SettingsFile.Snapshot snap)
+        {
+            screenShake = Mathf.Clamp01(snap.shake);
+            masterVolume = Mathf.Clamp01(snap.master);
+            sfxVolume = Mathf.Clamp01(snap.sfx);
+            musicVolume = Mathf.Clamp01(snap.music);
+            ambienceVolume = Mathf.Clamp01(snap.ambience);
+            uiVolume = Mathf.Clamp01(snap.ui);
+            textScale = Mathf.Clamp(snap.text <= 0f ? 1f : snap.text, 0.8f, 1.6f);
+            fieldOfView = Mathf.Clamp(snap.fov < 40f ? 55f : snap.fov, 40f, 75f);
+            hudOpacity = Presentation.Opacity(snap.opacity);
+            brightness = Presentation.Brightness(snap.brightness);
+            colorblindMode = snap.colorblind < 0 ? 0 : snap.colorblind % 3;
+            quality = Mathf.Clamp(snap.quality, 0, 3);
+            vsync = snap.vsync == 0 ? 0 : 1;
+            nextDifficulty = snap.difficulty <= 0 ? 2 : snap.difficulty >= 3 ? 3 : snap.difficulty;
+            goreLevel = snap.gore <= 0 ? 1 : snap.gore >= 3 ? 3 : snap.gore;
+            hitStop = snap.hitStop == 2 ? 2 : 1;
+            damageNumbers = snap.numbers == 2 ? 2 : 1;
+            motionBlur = snap.blur == 1 ? 1 : 0;
+            windowMode = snap.window == 1 || snap.window == 2 ? snap.window : 0;
+            aimAssist = snap.aim <= 0 ? 0 : snap.aim >= 2 ? 2 : 1;
+            invertLook = snap.invert == 1 ? 1 : 0;
+            crouchMode = snap.crouch == 1 ? 1 : 0;
+            sprintMode = snap.sprint == 1 ? 1 : 0;
+            frameCap = snap.frame < 0 || snap.frame > 4 ? 0 : snap.frame;
+            resolution = snap.resolution < 0 || snap.resolution >= DisplayModes.Count ? 0 : snap.resolution;
+            subtitles = snap.subtitles;
+            merciful = snap.merciful;
+            language = string.IsNullOrEmpty(snap.language) ? "en" : snap.language;
+            OutpostZero.Player.ControlBindings.Unpack(snap.keys);
+            OutpostZero.Player.PadBindings.Unpack(snap.pad);
+            ApplyVolume();
+            ApplyDisplay();
+            ApplyWindow();
         }
     }
 }
