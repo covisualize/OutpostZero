@@ -158,17 +158,20 @@ namespace OutpostZero.Colony
                     if (KinBoard.Grieves(person.bond, person.kin, fallenName, fallenId))
                     {
                         person.morale -= 40f;
+                        if (BondMark.Partner(KinBoard.Read(person.kin, fallenId))) person.morale -= BondMark.PartnerGrief;
                         Once(events, "grief");
                     }
                     else person.morale -= 25f;
                 }
 
                 int opinionBefore = person.opinion;
+                int bitter = WorstCoworker(people, person);
                 if (SharesWork(people, person) && !TraitHook.Holds(person.trait, person.aside, person.mark, "Loner"))
                 {
                     person.opinion += 2;
                     person.kin = KinBoard.Warm(person.kin, people, person.id, person.task, false);
                 }
+                if (BondMark.Rival(bitter)) person.opinion -= BondMark.RivalCut;
                 if (TraitHook.Holds(person.trait, person.aside, person.mark, "Volatile"))
                 {
                     person.opinion -= MealTable.FeudShift(6, leaderPresent, leadSkill);
@@ -238,6 +241,26 @@ namespace OutpostZero.Colony
             }
             if (Average(people) > 70f) return new[] { "celebration" };
             return Array.Empty<string>();
+        }
+
+        private static int WorstCoworker(IList<ColonistDay> people, ColonistDay self)
+        {
+            if (self == null || people == null) return 0;
+            int worst = 0;
+            bool any = false;
+            for (int i = 0; i < people.Count; i++)
+            {
+                var other = people[i];
+                if (other == null || !other.alive || other.id == self.id) continue;
+                if (other.task != self.task || string.IsNullOrEmpty(other.id)) continue;
+                int score = KinBoard.Read(self.kin, other.id);
+                if (!any || score < worst)
+                {
+                    worst = score;
+                    any = true;
+                }
+            }
+            return any ? worst : 0;
         }
 
         private static bool SharesWork(IList<ColonistDay> people, ColonistDay self)

@@ -3794,6 +3794,48 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void APartnerGrievesHarderAndARivalSoursTheShift()
+        {
+            Assert.AreEqual("Partner", BondMark.Kind(80));
+            Assert.AreEqual("Partner", BondMark.Kind(100));
+            Assert.AreEqual("Friend", BondMark.Kind(40));
+            Assert.AreEqual("", BondMark.Kind(39));
+            Assert.AreEqual("", BondMark.Kind(-39));
+            Assert.AreEqual("Rival", BondMark.Kind(-40));
+            Assert.AreEqual("", KinBoard.Bitter(""));
+            Assert.AreEqual("", KinBoard.Bitter("ellis:-39"));
+            Assert.AreEqual("ellis", KinBoard.Bitter("ellis:-40"));
+            Assert.AreEqual("ellis", KinBoard.Bitter("jonas:-40|ellis:-80"));
+            Assert.AreEqual("ellis", KinBoard.Closest("jonas:40|ellis:80"));
+            Assert.AreEqual("Pareja", Loc.T("bond.partner", "es"));
+            Assert.AreEqual("Amigo", Loc.T("bond.friend", "es"));
+            Assert.AreEqual("Rival", Loc.T("bond.rival", "es"));
+
+            var partnered = new List<ColonistDay>
+            {
+                new ColonistDay { id = "jonas", task = "Guard", kin = "mara:80", morale = 80f, hunger = 78f, thirst = 78f },
+                new ColonistDay { id = "ellis", task = "Scavenge", morale = 80f, hunger = 78f, thirst = 78f },
+                new ColonistDay { id = "mara", name = "Mara Quill", alive = false, task = "Fallen" }
+            };
+            int food = 0;
+            int water = 0;
+            var grief = ColonyDay.Simulate(partnered, ref food, ref water, false, false, "Mara Quill");
+            Assert.AreEqual(28f, partnered[0].morale, 0.001f);
+            Assert.AreEqual(55f, partnered[1].morale, 0.001f);
+            Assert.Contains("grief", grief);
+
+            var rivals = new List<ColonistDay>
+            {
+                new ColonistDay { id = "jonas", task = "Guard", morale = 80f, hunger = 78f, thirst = 78f, opinion = 20, kin = "ellis:-40" },
+                new ColonistDay { id = "ellis", task = "Guard", morale = 80f, hunger = 78f, thirst = 78f, opinion = 20 }
+            };
+            ColonyDay.Simulate(rivals, ref food, ref water, false, false, "");
+            Assert.AreEqual(18, rivals[0].opinion);
+            Assert.AreEqual(22, rivals[1].opinion);
+            Assert.AreEqual("ellis:-38", rivals[0].kin);
+        }
+
+        [Test]
         public void AZombieWithoutARigStillAttacksAndFalls()
         {
             Assert.AreEqual(14f, PoseSheet.Lean(ZombieAI.ZombieState.Chase, 0f), 0.001f);

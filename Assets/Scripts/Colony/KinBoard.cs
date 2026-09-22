@@ -119,6 +119,25 @@ namespace OutpostZero.Colony
             return book ?? "";
         }
 
+        public static string Bitter(string book)
+        {
+            if (string.IsNullOrEmpty(book)) return "";
+            string bestId = "";
+            int best = BondMark.RivalAt + 1;
+            string[] rows = book.Split('|');
+            for (int i = 0; i < rows.Length; i++)
+            {
+                string row = rows[i];
+                int colon = row.IndexOf(':');
+                if (colon <= 0) continue;
+                int score = Clamp(Parse(row.Substring(colon + 1)));
+                if (score > BondMark.RivalAt || score >= best) continue;
+                best = score;
+                bestId = row.Substring(0, colon);
+            }
+            return bestId;
+        }
+
         public static string Closest(string book)
         {
             if (string.IsNullOrEmpty(book)) return "";

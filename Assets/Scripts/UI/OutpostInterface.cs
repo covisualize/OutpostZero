@@ -544,6 +544,21 @@ namespace OutpostZero.UI
             return marks;
         }
 
+        private static string Bonds(string kin)
+        {
+            string text = "";
+            string closeId = KinBoard.Closest(kin);
+            if (closeId.Length > 0)
+            {
+                string kind = BondMark.Kind(KinBoard.Read(kin, closeId));
+                string key = kind == "Partner" ? "bond.partner" : "bond.friend";
+                text += "  " + Loc.T(key) + " " + closeId;
+            }
+            string bitter = KinBoard.Bitter(kin);
+            if (bitter.Length > 0) text += "  " + Loc.T("bond.rival") + " " + bitter;
+            return text;
+        }
+
         private static string QuestLine(string id, string quests)
         {
             if (id == "clinic") return CaravanBook.QuestDone(quests, "clinic") ? "Field dressings learned" : "The Clinic wants 4 medkits";
@@ -812,7 +827,7 @@ namespace OutpostZero.UI
                         + " " + Loc.T("camp.water") + " " + Mathf.RoundToInt(survivor.thirst)
                         + "  " + survivor.bond
                         + "  " + Loc.T("camp.opinion") + " " + survivor.opinion
-                        + (KinBoard.Closest(survivor.kin).Length > 0 ? "  " + Loc.T("camp.close") + " " + KinBoard.Closest(survivor.kin) : "")
+                        + Bonds(survivor.kin)
                         + (skills.Length > 0 ? "  " + skills : "")
                         + (leads.Length > 0 ? "  " + leads : "")
                         + (LifeLine.Line(survivor.age, survivor.past, null).Length > 0 ? "  " + LifeLine.Line(survivor.age, survivor.past, null) : "")
