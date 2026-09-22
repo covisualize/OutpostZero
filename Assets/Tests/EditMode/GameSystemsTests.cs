@@ -1507,5 +1507,23 @@ namespace OutpostZero.Tests.EditMode
             Assert.AreEqual(ItemUse.Cure, ItemCatalog.Find("antibiotics").Use);
             Assert.AreEqual(ItemUse.Relief, ItemCatalog.Find("painkillers").Use);
         }
+
+        [Test]
+        public void HungerSlowsRecoveryAndThirstShrinksStamina()
+        {
+            Assert.AreEqual(55f, NeedsPressure.HungerPerSecond * 600f, 0.01f);
+            Assert.AreEqual(50f, NeedsPressure.ThirstPerSecond * 600f, 0.01f);
+            Assert.AreEqual(55f, NeedsPressure.FatiguePerSecond * 600f, 0.01f);
+            Assert.AreEqual(0.85f, NeedsPressure.Regen(24f), 0.001f);
+            Assert.AreEqual(1f, NeedsPressure.Regen(25f), 0.001f);
+            Assert.AreEqual(80f, NeedsPressure.StaminaCap(24f, 100f), 0.01f);
+            Assert.AreEqual(100f, NeedsPressure.StaminaCap(25f, 100f), 0.01f);
+            Assert.AreEqual(0.62f, NeedsPressure.Aim(76f), 0.001f);
+            Assert.AreEqual(1f, NeedsPressure.Aim(75f), 0.001f);
+            Assert.IsTrue(NeedsPressure.Hungry(24f));
+            Assert.IsTrue(NeedsPressure.Dry(10f));
+            Assert.IsFalse(NeedsPressure.Tired(75f));
+            Assert.IsTrue(NeedsPressure.Tired(76f));
+        }
     }
 }

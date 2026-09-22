@@ -36,6 +36,7 @@ namespace OutpostZero.UI
         private Label compass;
         private Label hurt;
         private Label feed;
+        private VisualElement veil;
         private VisualElement noiseFill;
         private VisualElement healthFill;
         private VisualElement ghostFill;
@@ -78,6 +79,17 @@ namespace OutpostZero.UI
 
             root.style.flexGrow = 1;
             root.pickingMode = PickingMode.Position;
+
+            veil = new VisualElement();
+            veil.pickingMode = PickingMode.Ignore;
+            veil.style.position = Position.Absolute;
+            veil.style.left = 0;
+            veil.style.top = 0;
+            veil.style.right = 0;
+            veil.style.bottom = 0;
+            veil.style.backgroundColor = new Color(0.02f, 0.02f, 0.04f, 0.28f);
+            veil.style.display = DisplayStyle.None;
+            root.Add(veil);
 
             var left = Column(16, 16, 420);
             vitals = Body();
@@ -229,7 +241,11 @@ namespace OutpostZero.UI
             if (needs != null)
             {
                 vitalText.AppendLine("Hunger " + Mathf.RoundToInt(needs.Hunger) + "  Thirst " + Mathf.RoundToInt(needs.Thirst) + "  Fatigue " + Mathf.RoundToInt(needs.Fatigue));
+                if (NeedsPressure.Hungry(needs.Hunger)) vitalText.Append("  Hungry");
+                if (NeedsPressure.Dry(needs.Thirst)) vitalText.Append("  Thirsty");
+                if (NeedsPressure.Tired(needs.Fatigue)) vitalText.Append("  Exhausted");
             }
+            if (veil != null) veil.style.display = needs != null && NeedsPressure.Tired(needs.Fatigue) ? DisplayStyle.Flex : DisplayStyle.None;
             if (visibility != null) vitalText.Append("Exposure " + Mathf.RoundToInt(visibility.Exposure * 100f) + "%");
             if (effects != null)
             {

@@ -367,7 +367,7 @@ namespace OutpostZero.Player
             if (aimStick.sqrMagnitude > 0.04f)
             {
                 Vector3 stickDir = new Vector3(aimStick.x, 0f, aimStick.y);
-                transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(stickDir), rotationSpeed * Time.deltaTime);
+                transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(stickDir), AimBlend());
                 NudgeAim();
                 return;
             }
@@ -393,10 +393,17 @@ namespace OutpostZero.Player
                 if (lookDirection.sqrMagnitude > 0.01f)
                 {
                     Quaternion targetRot = Quaternion.LookRotation(lookDirection);
-                    transform.rotation = Quaternion.Slerp(transform.rotation, targetRot, rotationSpeed * Time.deltaTime);
+                    transform.rotation = Quaternion.Slerp(transform.rotation, targetRot, AimBlend());
                 }
             }
             NudgeAim();
+        }
+
+        private float AimBlend()
+        {
+            var needs = GetComponent<SurvivalNeeds>();
+            float scale = needs != null ? needs.AimScale : 1f;
+            return rotationSpeed * Time.deltaTime * scale;
         }
 
         private void NudgeAim()
@@ -433,21 +440,23 @@ namespace OutpostZero.Player
 
         private void HandleStamina()
         {
+            var needs = GetComponent<SurvivalNeeds>();
+            float cap = needs != null ? needs.StaminaCap(maxStamina) : maxStamina;
+            if (currentStamina > cap) currentStamina = cap;
             if (IsSprinting)
             {
                 currentStamina = Mathf.Max(0f, currentStamina - staminaDrainRate * Time.deltaTime);
                 lastStaminaDrainTime = Time.time;
-                OnStaminaChanged?.Invoke(currentStamina, maxStamina);
+                OnStaminaChanged?.Invoke(currentStamina, cap);
             }
             else if (Time.time - lastStaminaDrainTime >= staminaRegenDelay)
             {
-                if (currentStamina < maxStamina)
+                if (currentStamina < cap)
                 {
                     float rate = IsCrouching ? staminaRegenRate * 1.4f : staminaRegenRate;
-                var needs = GetComponent<SurvivalNeeds>();
-                if (needs != null) rate *= needs.StaminaRegenMultiplier;
-                    currentStamina = Mathf.Min(maxStamina, currentStamina + rate * Time.deltaTime);
-                    OnStaminaChanged?.Invoke(currentStamina, maxStamina);
+                    if (needs != null) rate *= needs.StaminaRegenMultiplier;
+                    currentStamina = Mathf.Min(cap, currentStamina + rate * Time.deltaTime);
+                    OnStaminaChanged?.Invoke(currentStamina, cap);
                 }
             }
         }
