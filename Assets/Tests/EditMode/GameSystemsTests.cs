@@ -805,6 +805,18 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void SightsPullAShotGroupTighter()
+        {
+            Assert.AreEqual(2.5f, SightGroup.Angle(2.5f, false), 0.001f);
+            Assert.AreEqual(1.55f, SightGroup.Angle(2.5f, true), 0.001f);
+            Assert.AreEqual(0f, SightGroup.Angle(-1f, true), 0.001f);
+            Assert.AreEqual(0.62f, SightGroup.Tight, 0.001f);
+            float open = RecoilBloom.Spread(2.5f, 1f, 80f);
+            Assert.AreEqual(5f, open, 0.001f);
+            Assert.AreEqual(3.1f, SightGroup.Angle(open, true), 0.001f);
+        }
+
+        [Test]
         public void MistSitsOnTheStreetWhenTheAirIsThick()
         {
             Assert.IsTrue(MistBank.Shows(WeatherKind.Fog, 0f));
