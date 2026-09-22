@@ -210,6 +210,7 @@ namespace OutpostZero.Combat
                 }
                 Vector3 eject = muzzlePoint != null ? muzzlePoint.right : transform.right;
                 CombatVfx.Shot(spawnPos, direction, end, eject, tracer, weaponType);
+                OilPatch.Shot(spawnPos, end);
             }
         }
 

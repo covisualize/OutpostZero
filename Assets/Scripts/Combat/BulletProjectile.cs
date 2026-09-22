@@ -51,6 +51,7 @@ namespace OutpostZero.Combat
 
             if (Time.time - spawnTime >= maxLifetime)
             {
+                OilPatch.Shot(origin, transform.position);
                 Destroy(gameObject);
             }
         }
@@ -62,6 +63,7 @@ namespace OutpostZero.Combat
             float amount = PelletDrop.Damage(damage, flown, reach, weapon);
             DamageResolver.Resolve(hit, amount, shooter, true, weapon);
             CombatVfx.Tracer(transform.position, hit.point);
+            OilPatch.Shot(origin, hit.point);
             Destroy(gameObject);
         }
     }

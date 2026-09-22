@@ -5248,6 +5248,29 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void AShotLightsTheOilOnTheStreet()
+        {
+            Assert.AreEqual(1.6f, StreetSlick.Radius, 0.001f);
+            Assert.AreEqual(12f, StreetSlick.Life, 0.001f);
+            Assert.AreEqual(2.8f, StreetSlick.Light, 0.001f);
+            Assert.IsTrue(StreetSlick.Wet(0f));
+            Assert.IsTrue(StreetSlick.Wet(11.9f));
+            Assert.IsFalse(StreetSlick.Wet(12f));
+            Assert.IsFalse(StreetSlick.Wet(-0.1f));
+            Assert.IsTrue(StreetSlick.On(1.6f, 0f, 0f, 0f));
+            Assert.IsFalse(StreetSlick.On(1.61f, 0f, 0f, 0f));
+            Assert.IsTrue(StreetSlick.Crosses(-5f, 0f, 5f, 0f, 0f, 0f));
+            Assert.IsFalse(StreetSlick.Crosses(-5f, 3f, 5f, 3f, 0f, 0f));
+            Assert.IsTrue(StreetSlick.Crosses(0f, 0f, 0.4f, 0f, 0f, 0f));
+            Assert.IsFalse(StreetSlick.Crosses(4f, 4f, 6f, 6f, 0f, 0f));
+            Assert.IsTrue(StreetSlick.Near(2.8f, 0f, 0f, 0f));
+            Assert.IsFalse(StreetSlick.Near(2.81f, 0f, 0f, 0f));
+            Assert.AreEqual(3.5f, OilBurn.Ignite, 0.001f);
+            Assert.AreEqual(14f, OilBurn.Damage, 0.001f);
+            Assert.AreEqual(4f, FirePatch.Life, 0.001f);
+        }
+
+        [Test]
         public void AZombieWithoutARigStillAttacksAndFalls()
         {
             Assert.AreEqual(14f, PoseSheet.Lean(ZombieAI.ZombieState.Chase, 0f), 0.001f);

@@ -114,6 +114,8 @@ namespace OutpostZero.Combat
             GameplayFeedback.Toast(kind == HazardKind.Explosive ? "Barrel exploded" : kind == HazardKind.Toxic ? "Toxic cloud" : "Oil spill");
             Chain(origin);
             if (kind == HazardKind.Toxic) GasField.Open(transform.position);
+            if (kind == HazardKind.Oil) OilPatch.Leave(transform.position);
+            if (kind == HazardKind.Explosive) OilPatch.Blast(transform.position);
             Destroy(gameObject);
         }
 

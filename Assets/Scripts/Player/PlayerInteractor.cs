@@ -247,6 +247,7 @@ namespace OutpostZero.Player
                     }
                 }
                 CombatVfx.Burst(blast, HazardKind.Explosive);
+                OilPatch.Blast(blast);
                 CombatEvents.RaiseHit(blast, Vector3.up, gameObject);
                 GameplayFeedback.Toast(FightSay.Burst(null));
                 Destroy(gameObject);
@@ -276,6 +277,7 @@ namespace OutpostZero.Player
             if (molotov)
             {
                 OutpostZero.Colony.GridBuilder.Instance?.IgniteNear(origin.x, origin.z, Time.time);
+                OilPatch.Blast(origin);
                 Collider[] hits = Physics.OverlapSphere(origin, FirePatch.BurstRadius);
                 foreach (var hit in hits)
                 {
