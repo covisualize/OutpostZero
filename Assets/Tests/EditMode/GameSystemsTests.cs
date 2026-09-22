@@ -5876,6 +5876,25 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void TheCampCardNamesABiteAFeverAndACriticalWound()
+        {
+            Assert.AreEqual("", WoundCard.Line(0, "en"));
+            Assert.AreEqual("", WoundCard.Line(-1, "es"));
+            Assert.AreEqual("Bitten", WoundCard.Line(1, "en"));
+            Assert.AreEqual("Mordida", WoundCard.Line(1, "es"));
+            Assert.AreEqual("Fever", WoundCard.Line(2, "en"));
+            Assert.AreEqual("Fiebre", WoundCard.Line(2, "es"));
+            Assert.AreEqual("Critical", WoundCard.Line(3, "en"));
+            Assert.AreEqual("Crítica", WoundCard.Line(3, "es"));
+            Assert.AreEqual("Critical", WoundCard.Line(4, "en"));
+            Assert.AreEqual("Medic", CampRoutine.Choose("Guard", 80f, 80f, 70f, 2));
+            Assert.AreEqual("Guard", CampRoutine.Choose("Guard", 80f, 80f, 70f, 1));
+            Assert.AreEqual(1, HomeSick.Carry(0, 1));
+            Assert.AreEqual(2, HomeSick.Carry(0, 2));
+            Assert.AreEqual(3, FeverSpread.Cap);
+        }
+
+        [Test]
         public void AZombieWithoutARigStillAttacksAndFalls()
         {
             Assert.AreEqual(14f, PoseSheet.Lean(ZombieAI.ZombieState.Chase, 0f), 0.001f);

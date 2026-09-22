@@ -862,8 +862,10 @@ namespace OutpostZero.UI
                     string post = doing == survivor.task ? Loc.Task(survivor.task) : Loc.Task(survivor.task) + " → " + Loc.Task(doing);
                     string skills = Practice.Line(survivor.combat, survivor.medicine, survivor.engineering, survivor.cooking, survivor.scavenge, null);
                     string leads = Heir.Line(survivor.leadership, null);
+                    string wound = WoundCard.Line(survivor.injury, null);
                     camp.Add(Body(flag + " " + survivor.displayName + " (" + Marks(survivor) + ") " + post
                         + "  " + Loc.Mood(mood)
+                        + (wound.Length > 0 ? "  " + wound : "")
                         + "  " + Loc.T("camp.food") + " " + Mathf.RoundToInt(survivor.hunger)
                         + " " + Loc.T("camp.water") + " " + Mathf.RoundToInt(survivor.thirst)
                         + (survivor.fatigue > 0f ? "  " + Loc.T("camp.wear") + " " + Mathf.RoundToInt(survivor.fatigue) + (NeedsPressure.Tired(survivor.fatigue) ? " " + Loc.T("camp.tired") : "") : "")
