@@ -341,6 +341,16 @@ namespace OutpostZero.Colony
             views.Clear();
         }
 
+        public int MendCount()
+        {
+            int count = 0;
+            for (int i = 0; i < placed.Count; i++)
+            {
+                if (MendBoard.Needs(placed[i].site, placed[i].integrity)) count++;
+            }
+            return count;
+        }
+
         public int CountKind(string kind)
         {
             int count = 0;

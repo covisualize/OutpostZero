@@ -2827,6 +2827,33 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void TheMorningAfterARaidHaulsBodiesAndMendsBoards()
+        {
+            var tasks = new[] { "Guard", "Cook", "Rest", "Medic" };
+            var alive = new[] { true, true, true, false };
+            var leader = new[] { false, true, false, false };
+            int flags = MorningBoard.Apply(tasks, alive, leader, true, true);
+            Assert.AreEqual(3, flags);
+            Assert.AreEqual("Clear", tasks[0]);
+            Assert.AreEqual("Cook", tasks[1]);
+            Assert.AreEqual("Build", tasks[2]);
+            Assert.AreEqual("Medic", tasks[3]);
+            Assert.AreEqual("camp.morning", MorningBoard.Key(flags));
+            var held = new[] { "Clear", "Build", "Guard" };
+            var living = new[] { true, true, true };
+            var leads = new[] { false, false, true };
+            Assert.AreEqual(0, MorningBoard.Apply(held, living, leads, true, true));
+            Assert.AreEqual("Guard", held[2]);
+            var cooks = new[] { "Cook", "Medic" };
+            var up = new[] { true, true };
+            var notLead = new[] { false, false };
+            Assert.AreEqual(0, MorningBoard.Apply(cooks, up, notLead, true, true));
+            Assert.AreEqual("camp.haul", MorningBoard.Key(1));
+            Assert.AreEqual("camp.mend", MorningBoard.Key(2));
+            Assert.AreEqual("Recoge el patio y repara las tablas", Loc.T("camp.morning", "es"));
+        }
+
+        [Test]
         public void DemolishingAModuleReturnsHalfTheScrap()
         {
             Assert.AreEqual(3, ScrapRefund.Half(6));

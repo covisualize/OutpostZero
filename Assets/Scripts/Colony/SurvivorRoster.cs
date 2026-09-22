@@ -289,6 +289,25 @@ namespace OutpostZero.Colony
             SaveSystem.Instance?.Save(false);
         }
 
+        public string PostRaid(bool bodies, bool damaged)
+        {
+            int count = survivors.Count;
+            var tasks = new string[count];
+            var alive = new bool[count];
+            var leader = new bool[count];
+            for (int i = 0; i < count; i++)
+            {
+                tasks[i] = survivors[i].task;
+                alive[i] = survivors[i].alive;
+                leader[i] = survivors[i].leader;
+            }
+            int flags = MorningBoard.Apply(tasks, alive, leader, bodies, damaged);
+            if (flags == 0) return "";
+            for (int i = 0; i < count; i++) survivors[i].task = tasks[i];
+            OnRosterChanged?.Invoke();
+            return MorningBoard.Key(flags);
+        }
+
         public void Assign(string id, string task)
         {
             var survivor = Find(id);

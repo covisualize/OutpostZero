@@ -274,6 +274,10 @@ namespace OutpostZero.Colony
                 if (dropped > 0) broke += "  " + Loc.T("camp.bodies") + " " + dropped;
                 GameplayFeedback.Toast(broke);
             }
+            bool bodiesLeft = ColonyStorage.Instance != null && ColonyStorage.Instance.Bodies > 0;
+            bool damaged = GridBuilder.Instance != null && GridBuilder.Instance.MendCount() > 0;
+            string morning = SurvivorRoster.Instance != null ? SurvivorRoster.Instance.PostRaid(bodiesLeft, damaged) : "";
+            if (!string.IsNullOrEmpty(morning)) GameplayFeedback.Toast(Loc.T(morning));
             broadcast = false;
             GameManager.Instance?.SetState(GameState.CampManagement);
         }
