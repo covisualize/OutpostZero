@@ -330,7 +330,7 @@ namespace OutpostZero.UI
             }
             if (!string.IsNullOrEmpty(RescueFollower.Status())) objectiveText.AppendLine(RescueFollower.Status());
             var district = WorldMapService.Instance != null ? WorldMapService.Instance.Current : null;
-            if (district != null) objectiveText.AppendLine(district.displayName + " — " + district.encounter);
+            if (district != null) objectiveText.AppendLine(StreetAsk.Place(district.id, district.displayName, district.encounter, null));
             if (HordeDirector.Instance != null) objectiveText.AppendLine(StreetHud.Tension(Mathf.RoundToInt(HordeDirector.Instance.Tension), HordeDirector.Instance.State.ToString(), null));
             if (WorldClock.Instance != null) objectiveText.AppendLine(WorldClock.Instance.Label);
             var interactor = player != null ? player.GetComponent<PlayerInteractor>() : null;
@@ -641,7 +641,7 @@ namespace OutpostZero.UI
                     var map = WorldMapService.Instance;
                     menu.Add(Body(map != null && map.CampaignWon ? Loc.T("menu.air") : Loc.T("menu.supplies")));
                     DrawHaul(menu);
-                    if (map != null && map.Current != null) menu.Add(Body(Loc.T("menu.next") + " " + map.Current.displayName));
+                    if (map != null && map.Current != null) menu.Add(Body(Loc.T("menu.next") + " " + Loc.District(map.Current.id)));
                     menu.Add(Button(Loc.T("menu.enter"), () => Go(FlowStep.Sanctuary, () => GameManager.Instance.EnterCamp())));
                     break;
                 case GameState.GameOver:

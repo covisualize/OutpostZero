@@ -19,7 +19,7 @@ namespace OutpostZero.Items
         public string Contents => ContainerHold.Signature(stacks);
         public string StampId => stamp ?? "";
         public int HeldCount => stacks == null ? 0 : stacks.Length;
-        public string Prompt => looted ? string.Empty : rolled ? "Take from container" : "Search container";
+        public string Prompt => looted ? string.Empty : rolled ? StreetAsk.Take(null) : StreetAsk.Search(null);
 
         public string HeldId(int index)
         {

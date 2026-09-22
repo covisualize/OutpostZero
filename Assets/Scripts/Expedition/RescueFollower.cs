@@ -4,6 +4,7 @@ using OutpostZero.Combat;
 using OutpostZero.Core;
 using OutpostZero.Items;
 using OutpostZero.Player;
+using OutpostZero.Shell;
 
 namespace OutpostZero.Expedition
 {
@@ -21,14 +22,14 @@ namespace OutpostZero.Expedition
 
         public string Name => personName;
         public bool Following => following;
-        public string Prompt => joined || following ? string.Empty : "Bring " + personName + " along";
+        public string Prompt => joined || following ? string.Empty : StreetAsk.Along(personName, null);
 
         public static string Status()
         {
             var person = Current;
             if (person == null || person.joined) return "";
-            if (!person.following) return "Bring " + person.personName + " to the gate";
-            return person.personName + " is with you";
+            if (!person.following) return StreetAsk.ToGate(person.personName, null);
+            return StreetAsk.With(person.personName, null);
         }
 
         public void Configure(string id, string displayName)
@@ -53,7 +54,7 @@ namespace OutpostZero.Expedition
         {
             if (!CanInteract(inventory)) return;
             following = true;
-            GameplayFeedback.Toast(personName + " is with you");
+            GameplayFeedback.Toast(StreetAsk.With(personName, null));
         }
 
         private void Update()

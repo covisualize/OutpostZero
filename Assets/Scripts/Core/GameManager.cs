@@ -209,7 +209,7 @@ namespace OutpostZero.Core
         {
             var next = SurvivorRoster.Instance != null ? SurvivorRoster.Instance.Promote(survivorId) : null;
             BringToCamp(true);
-            GameplayFeedback.Toast(next != null ? next.displayName + " takes the gate" : "Back inside the gate");
+            GameplayFeedback.Toast(next != null ? StreetAsk.Takes(next.displayName, null) : StreetAsk.Back(null));
             SaveSystem.Instance?.Save(false);
         }
 

@@ -13,7 +13,7 @@ namespace OutpostZero.Expedition
         private Vector3 destination;
         private bool leaving;
 
-        public string Prompt => DoorMap.Prompt(leaving);
+        public string Prompt => DoorMap.Prompt(leaving, null);
 
         public void Configure(Vector3 target, bool toStreet)
         {

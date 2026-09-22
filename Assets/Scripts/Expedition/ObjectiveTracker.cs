@@ -27,15 +27,23 @@ namespace OutpostZero.Expedition
 
         public string PoiLine()
         {
-            return LineFor(poiRole, poiFound);
+            return LineFor(poiRole, poiFound, null);
         }
 
         public static string LineFor(string role, bool found)
         {
+            return LineFor(role, found, "en");
+        }
+
+        public static string LineFor(string role, bool found, string language)
+        {
             if (string.IsNullOrEmpty(role)) return "";
             bool radio = role == "radio";
-            if (found) return radio ? "Radio part stowed" : "Cache searched";
-            return radio ? "Find the radio part" : "Find the cache";
+            string key = found
+                ? (radio ? "ask.stowed" : "ask.searched")
+                : (radio ? "ask.findradio" : "ask.findcache");
+            if (string.IsNullOrEmpty(language)) return Shell.Loc.T(key);
+            return Shell.Loc.T(key, language);
         }
         public event Action OnObjectivesChanged;
 

@@ -26,7 +26,14 @@ namespace OutpostZero.Expedition
 
         public static string Prompt(bool leaving)
         {
-            return leaving ? "Step outside" : "Step inside";
+            return Prompt(leaving, "en");
+        }
+
+        public static string Prompt(bool leaving, string language)
+        {
+            string key = leaving ? "ask.out" : "ask.in";
+            if (string.IsNullOrEmpty(language)) return Shell.Loc.T(key);
+            return Shell.Loc.T(key, language);
         }
     }
 }

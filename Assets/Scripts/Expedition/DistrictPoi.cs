@@ -2,6 +2,7 @@ using UnityEngine;
 using OutpostZero.Core;
 using OutpostZero.Items;
 using OutpostZero.Player;
+using OutpostZero.Shell;
 
 namespace OutpostZero.Expedition
 {
@@ -14,7 +15,7 @@ namespace OutpostZero.Expedition
         private string stamp = "";
         private bool taken;
 
-        public string Prompt => taken ? string.Empty : role == "radio" ? "Take the radio part" : "Search the cache";
+        public string Prompt => taken ? string.Empty : role == "radio" ? StreetAsk.Radio(null) : StreetAsk.Cache(null);
 
         public void Configure(string poiRole)
         {

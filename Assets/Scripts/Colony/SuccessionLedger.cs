@@ -4,6 +4,7 @@ using System.Globalization;
 using UnityEngine;
 using OutpostZero.Items;
 using OutpostZero.Player;
+using OutpostZero.Shell;
 
 namespace OutpostZero.Colony
 {
@@ -177,7 +178,7 @@ namespace OutpostZero.Colony
         private string gear = "";
         private bool taken;
 
-        public string Prompt => taken ? string.Empty : "Recover gear";
+        public string Prompt => taken ? string.Empty : StreetAsk.Gear(null);
 
         public void Configure(int corpseIndex, string packedGear)
         {

@@ -4493,6 +4493,49 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void AStreetPromptFollowsTheLanguage()
+        {
+            Assert.AreEqual("Search container", StreetAsk.Search("en"));
+            Assert.AreEqual("Busca el contenedor", StreetAsk.Search("es"));
+            Assert.AreEqual("Take from container", StreetAsk.Take("en"));
+            Assert.AreEqual("Coge del contenedor", StreetAsk.Take("es"));
+            Assert.AreEqual("Take the radio part", StreetAsk.Radio("en"));
+            Assert.AreEqual("Coge la pieza de radio", StreetAsk.Radio("es"));
+            Assert.AreEqual("Search the cache", StreetAsk.Cache("en"));
+            Assert.AreEqual("Busca el alijo", StreetAsk.Cache("es"));
+            Assert.AreEqual("Recover gear", StreetAsk.Gear("en"));
+            Assert.AreEqual("Recupera el equipo", StreetAsk.Gear("es"));
+            Assert.AreEqual("Step inside", DoorMap.Prompt(false));
+            Assert.AreEqual("Step outside", DoorMap.Prompt(true));
+            Assert.AreEqual("Entra", DoorMap.Prompt(false, "es"));
+            Assert.AreEqual("Sal", DoorMap.Prompt(true, "es"));
+            Assert.AreEqual("Find the cache", ObjectiveTracker.LineFor("cache", false));
+            Assert.AreEqual("Radio part stowed", ObjectiveTracker.LineFor("radio", true));
+            Assert.AreEqual("", ObjectiveTracker.LineFor("", false));
+            Assert.AreEqual("Busca el alijo", ObjectiveTracker.LineFor("cache", false, "es"));
+            Assert.AreEqual("Busca la pieza de radio", ObjectiveTracker.LineFor("radio", false, "es"));
+            Assert.AreEqual("Alijo registrado", ObjectiveTracker.LineFor("cache", true, "es"));
+            Assert.AreEqual("Pieza de radio guardada", ObjectiveTracker.LineFor("radio", true, "es"));
+            Assert.AreEqual("Bring Mara along", StreetAsk.Along("Mara", "en"));
+            Assert.AreEqual("Trae a Mara", StreetAsk.Along("Mara", "es"));
+            Assert.AreEqual("Bring Survivor along", StreetAsk.Along("", "en"));
+            Assert.AreEqual("Trae a Superviviente", StreetAsk.Along("Survivor", "es"));
+            Assert.AreEqual("Bring Mara to the gate", StreetAsk.ToGate("Mara", "en"));
+            Assert.AreEqual("Lleva a Mara a la puerta", StreetAsk.ToGate("Mara", "es"));
+            Assert.AreEqual("Mara is with you", StreetAsk.With("Mara", "en"));
+            Assert.AreEqual("Mara va contigo", StreetAsk.With("Mara", "es"));
+            Assert.AreEqual("Mara takes the gate", StreetAsk.Takes("Mara", "en"));
+            Assert.AreEqual("Mara toma la puerta", StreetAsk.Takes("Mara", "es"));
+            Assert.AreEqual("Back inside the gate", StreetAsk.Back("en"));
+            Assert.AreEqual("De vuelta en la puerta", StreetAsk.Back("es"));
+            Assert.AreEqual("Ash Market — Loot the stalls, watch the alleys", StreetAsk.Place("ash_market", "Ash Market", "Loot the stalls, watch the alleys", "en"));
+            Assert.AreEqual("Mercado de ceniza — Saquea los puestos, vigila los callejones", StreetAsk.Place("ash_market", "Ash Market", "Loot the stalls, watch the alleys", "es"));
+            Assert.AreEqual("Downtown Core — The tower site is past the plaza", StreetAsk.Place("downtown_core", "Downtown Core", "The tower site is past the plaza", "en"));
+            Assert.AreEqual("Centro — El sitio de la torre queda tras la plaza", StreetAsk.Place("downtown_core", "", "", "es"));
+            Assert.AreEqual("Relay — Still closed", StreetAsk.Place("relay", "Relay", "Still closed", "en"));
+        }
+
+        [Test]
         public void StreetLampsFollowTheDarkAndNoonStaysOut()
         {
             Assert.AreEqual(0f, DayNightCycle.HourToNight(12f), 0.001f);
