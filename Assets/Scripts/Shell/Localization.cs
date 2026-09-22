@@ -438,6 +438,11 @@ namespace OutpostZero.Shell
             { "mood.steady", "Steady" },
             { "mood.depressed", "Depressed" },
             { "mood.breakdown", "Breakdown" },
+            { "bill.craft", "Craft" },
+            { "bill.scrap", "scrap" },
+            { "bill.cloth", "cloth" },
+            { "bill.chem", "chem" },
+            { "bill.tape", "tape" },
             { "bark.cant", "I can't do this." },
             { "bark.cook", "Fire's lit." },
             { "bark.guard", "Watching the gate." },
@@ -947,6 +952,11 @@ namespace OutpostZero.Shell
             { "mood.steady", "Estable" },
             { "mood.depressed", "Deprimido" },
             { "mood.breakdown", "Colapso" },
+            { "bill.craft", "Fabricar" },
+            { "bill.scrap", "chatarra" },
+            { "bill.cloth", "tela" },
+            { "bill.chem", "quím" },
+            { "bill.tape", "cinta" },
             { "bark.cant", "No puedo con esto." },
             { "bark.cook", "El fuego está listo." },
             { "bark.guard", "Vigilo la puerta." },
@@ -1099,8 +1109,13 @@ namespace OutpostZero.Shell
 
         public static string Mood(string mood)
         {
+            return Mood(mood, null);
+        }
+
+        public static string Mood(string mood, string language)
+        {
             if (string.IsNullOrEmpty(mood)) return "";
-            return Pick("mood." + mood.ToLowerInvariant(), mood);
+            return Pick("mood." + mood.ToLowerInvariant(), mood, language);
         }
 
         public static string Bark(string action, float morale)

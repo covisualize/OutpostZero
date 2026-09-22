@@ -4250,6 +4250,21 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void ACraftRowAndAMoodSpeakSpanish()
+        {
+            Assert.AreEqual(CraftBill.Line("9mm (12)", 3, 0, 1, 0), CraftSay.Line("9mm (12)", 3, 0, 1, 0, "en"));
+            Assert.AreEqual("9mm (12)   chatarra 3   quím 1", CraftSay.Line("9mm (12)", 3, 0, 1, 0, "es"));
+            Assert.AreEqual("Craft   scrap 4   cloth 2   tape 1", CraftSay.Line("", 4, 2, 0, 1, "en"));
+            Assert.AreEqual("Fabricar   chatarra 4   tela 2   cinta 1", CraftSay.Line("", 4, 2, -3, 1, "es"));
+            Assert.AreEqual("Inspired", Loc.Mood(ColonyDay.Mood(80f), "en"));
+            Assert.AreEqual("Inspirado", Loc.Mood(ColonyDay.Mood(80f), "es"));
+            Assert.AreEqual("Steady", Loc.Mood("Steady", "en"));
+            Assert.AreEqual("Estable", Loc.Mood("Steady", "es"));
+            Assert.AreEqual("Colapso", Loc.Mood("Breakdown", "es"));
+            Assert.AreEqual("", Loc.Mood("", "es"));
+        }
+
+        [Test]
         public void StreetLampsFollowTheDarkAndNoonStaysOut()
         {
             Assert.AreEqual(0f, DayNightCycle.HourToNight(12f), 0.001f);

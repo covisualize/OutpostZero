@@ -618,7 +618,7 @@ namespace OutpostZero.UI
                         {
                             if (!survivor.alive) continue;
                             string id = survivor.id;
-                            menu.Add(Button(survivor.displayName + " — " + Marks(survivor) + "  " + ColonyDay.Mood(survivor.morale, survivor.trait, survivor.aside, survivor.mark), () => GameManager.Instance.AcceptSuccessor(id)));
+                            menu.Add(Button(survivor.displayName + " — " + Marks(survivor) + "  " + Loc.Mood(ColonyDay.Mood(survivor.morale, survivor.trait, survivor.aside, survivor.mark)), () => GameManager.Instance.AcceptSuccessor(id)));
                         }
                     }
                     menu.Add(Button(Loc.T("menu.falls"), () => GameManager.Instance.SetState(GameState.GameOver)));
@@ -1014,7 +1014,7 @@ namespace OutpostZero.UI
                 if (!CraftGate.Open(id, benchTier, prints)) continue;
                 if (!CraftBill.TryOf(id, out var bill)) continue;
                 int due = CraftingBench.Priced(bill.Scrap, bench, benchTier);
-                camp.Add(Button(CraftBill.Line(Loc.Recipe(id, recipe.Label), due, bill.Cloth, bill.Chemicals, bill.Tape), () => CraftingBench.Instance?.Craft(id)));
+                camp.Add(Button(CraftSay.Line(Loc.Recipe(id, recipe.Label), due, bill.Cloth, bill.Chemicals, bill.Tape, null), () => CraftingBench.Instance?.Craft(id)));
             }
             var map = WorldMapService.Instance;
             if (map != null)
