@@ -213,6 +213,12 @@ namespace OutpostZero.UI
                 weapon.text = player.ActiveWeapon.WeaponName;
             }
             else weapon.text = "No weapon";
+            var carried = player != null ? player.GetComponent<PlayerInventory>() : null;
+            if (carried != null)
+            {
+                weapon.style.whiteSpace = WhiteSpace.PreWrap;
+                weapon.text += "\n" + carried.BeltLine;
+            }
 
             float noise = hud != null ? hud.NoiseLevel : 0f;
             noiseFill.style.width = Length.Percent(noise * 100f);
@@ -642,7 +648,18 @@ namespace OutpostZero.UI
             fill.style.backgroundColor = heavy ? new Color(0.75f, 0.2f, 0.16f) : new Color(0.35f, 0.62f, 0.38f);
             track.Add(fill);
             pack.Add(track);
-            if (inventory.MedicalKits > 0) pack.Add(Body("Medkit x" + inventory.MedicalKits));
+            if (inventory.MedicalKits > 0)
+            {
+                var medRow = new VisualElement { style = { flexDirection = FlexDirection.Row } };
+                var medLabel = Body();
+                medLabel.text = "Medkit x" + inventory.MedicalKits;
+                medLabel.style.flexGrow = 1;
+                medRow.Add(medLabel);
+                medRow.Add(Button("Use", () => inventory.UseMedkit()));
+                string medMark = inventory.BeltMark("medkit");
+                medRow.Add(Button(string.IsNullOrEmpty(medMark) ? "Belt" : "Belt " + medMark, () => inventory.ToggleBelt("medkit")));
+                pack.Add(medRow);
+            }
             if (inventory.ScrapCount > 0) pack.Add(Body("Scrap x" + inventory.ScrapCount));
             var scroll = new ScrollView();
             scroll.style.height = 220;
@@ -657,6 +674,11 @@ namespace OutpostZero.UI
                 row.Add(Button("Use", () => inventory.TryUse(id)));
                 row.Add(Button("Drop", () => inventory.Drop(id, 1)));
                 row.Add(Button("Split", () => inventory.DropHalf(id)));
+                if (ItemBelt.Fits(id))
+                {
+                    string mark = inventory.BeltMark(id);
+                    row.Add(Button(string.IsNullOrEmpty(mark) ? "Belt" : "Belt " + mark, () => inventory.ToggleBelt(id)));
+                }
                 scroll.Add(row);
             }
             pack.Add(scroll);
@@ -814,6 +836,7 @@ namespace OutpostZero.UI
             builder.Append(inventory.ScrapCount);
             builder.Append(Mathf.RoundToInt(inventory.CurrentWeight * 10f));
             if (LootContainer.Open != null) builder.Append(LootContainer.Open.Contents);
+            builder.Append(inventory.BeltLine);
             return builder.ToString();
         }
 

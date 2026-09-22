@@ -129,6 +129,18 @@ namespace OutpostZero.Player
             }
         }
 
+        public static bool BeltPressed(int index)
+        {
+            switch (index)
+            {
+                case 0: return Pressed(Key.Digit5);
+                case 1: return Pressed(Key.Digit6);
+                case 2: return Pressed(Key.Digit7);
+                case 3: return Pressed(Key.Digit8);
+                default: return false;
+            }
+        }
+
         private static bool Pressed(ControlBindings.Action action) => Pressed(ControlBindings.KeyFor(action));
 
         private static bool Held(ControlBindings.Action action) => Held(ControlBindings.KeyFor(action));
@@ -182,6 +194,10 @@ namespace OutpostZero.Player
                 case Key.Digit2: return KeyCode.Alpha2;
                 case Key.Digit3: return KeyCode.Alpha3;
                 case Key.Digit4: return KeyCode.Alpha4;
+                case Key.Digit5: return KeyCode.Alpha5;
+                case Key.Digit6: return KeyCode.Alpha6;
+                case Key.Digit7: return KeyCode.Alpha7;
+                case Key.Digit8: return KeyCode.Alpha8;
                 default: return KeyCode.None;
             }
         }

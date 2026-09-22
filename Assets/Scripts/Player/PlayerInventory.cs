@@ -36,6 +36,7 @@ namespace OutpostZero.Player
 
         [Header("Item Bag")]
         [SerializeField] private List<InventoryItem> items = new List<InventoryItem>();
+        private readonly string[] belt = new[] { "", "", "", "" };
 
         public float CurrentWeight => currentWeight;
         public float MaxWeightCapacity => maxWeightCapacity;
@@ -43,8 +44,45 @@ namespace OutpostZero.Player
         public int ScrapCount => scrapCount;
         public int MedicalKits => medicalKits;
         public IReadOnlyList<InventoryItem> Items => items;
+        public string BeltLine => ItemBelt.Line(belt);
 
         public event Action OnInventoryChanged;
+
+        public string BeltMark(string id) => ItemBelt.Mark(belt, id);
+
+        public bool ToggleBelt(string id)
+        {
+            bool occupied = ItemBelt.Mark(belt, id) != "";
+            int slot = ItemBelt.Toggle(belt, id);
+            if (slot < 0)
+            {
+                if (slot == -2) GameplayFeedback.Toast("Belt is full");
+                return false;
+            }
+            GameplayFeedback.Toast(occupied ? "Cleared belt" : "Belt " + (slot + 5));
+            OnInventoryChanged?.Invoke();
+            return true;
+        }
+
+        public bool UseBelt(int index)
+        {
+            string id = ItemBelt.IdAt(belt, index);
+            if (string.IsNullOrEmpty(id)) return false;
+            bool used = TryUse(id);
+            if (used && id == "medkit") GameplayFeedback.Toast("Medkit used  +50 HP");
+            if (!StillCarrying(id)) belt[index] = "";
+            return used;
+        }
+
+        private bool StillCarrying(string id)
+        {
+            if (id == "medkit") return medicalKits > 0;
+            for (int i = 0; i < items.Count; i++)
+            {
+                if (items[i] != null && items[i].ItemId == id && items[i].Quantity > 0) return true;
+            }
+            return false;
+        }
 
         private void Start()
         {

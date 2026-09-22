@@ -4,6 +4,7 @@ using OutpostZero.AI;
 using OutpostZero.Core;
 using OutpostZero.Sensory;
 using OutpostZero.Combat;
+using OutpostZero.Items;
 using OutpostZero.Shell;
 
 namespace OutpostZero.Player
@@ -259,6 +260,14 @@ namespace OutpostZero.Player
             for (int i = 0; i < 4; i++)
             {
                 if (ExpeditionInput.WeaponSlotPressed(i)) SelectWeapon(i);
+            }
+
+            if (inventory != null)
+            {
+                for (int i = 0; i < ItemBelt.Count; i++)
+                {
+                    if (ExpeditionInput.BeltPressed(i)) inventory.UseBelt(i);
+                }
             }
 
             float scroll = ExpeditionInput.Scroll;

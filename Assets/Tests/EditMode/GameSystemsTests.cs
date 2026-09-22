@@ -1441,5 +1441,25 @@ namespace OutpostZero.Tests.EditMode
             Assert.AreEqual(3, moved);
             Assert.AreEqual("scrap*2", ContainerHold.Signature(crate));
         }
+
+        [Test]
+        public void ABeltPocketTakesAConsumableAndRefusesAFifth()
+        {
+            var slots = ItemBelt.Fresh();
+            Assert.AreEqual(-1, ItemBelt.Toggle(slots, "ammo_rifle"));
+            Assert.AreEqual(-1, ItemBelt.Toggle(slots, "scrap"));
+            Assert.AreEqual(0, ItemBelt.Toggle(slots, "bandage"));
+            Assert.AreEqual("5", ItemBelt.Mark(slots, "bandage"));
+            Assert.AreEqual("bandage", ItemBelt.IdAt(slots, 0));
+            Assert.AreEqual(0, ItemBelt.Toggle(slots, "bandage"));
+            Assert.AreEqual("", ItemBelt.IdAt(slots, 0));
+            Assert.AreEqual(0, ItemBelt.Toggle(slots, "bandage"));
+            Assert.AreEqual(1, ItemBelt.Toggle(slots, "water"));
+            Assert.AreEqual(2, ItemBelt.Toggle(slots, "canned_food"));
+            Assert.AreEqual(3, ItemBelt.Toggle(slots, "molotov"));
+            Assert.AreEqual(-2, ItemBelt.Toggle(slots, "noise_lure"));
+            Assert.AreEqual("5 Bandage   6 Water Bottle   7 Canned Food   8 Molotov", ItemBelt.Line(slots));
+            Assert.AreEqual("5 -   6 -   7 -   8 -", ItemBelt.Line(ItemBelt.Fresh()));
+        }
     }
 }
