@@ -15,6 +15,7 @@ namespace OutpostZero.Colony
         [SerializeField] private int cloth;
         [SerializeField] private int chemicals;
         [SerializeField] private int tape;
+        [SerializeField] private int raw;
 
         public int Scrap => scrap;
         public int Food => food;
@@ -23,7 +24,8 @@ namespace OutpostZero.Colony
         public int Cloth => cloth;
         public int Chemicals => chemicals;
         public int Tape => tape;
-        public int Used => CampRoom.Bulk(scrap, food, water, cloth, chemicals, tape);
+        public int Raw => raw;
+        public int Used => CampRoom.Bulk(scrap, food, water, cloth, chemicals, tape, raw);
         public int Room => CampRoom.Room(GridBuilder.Instance != null ? GridBuilder.Instance.CountKind("Crate") : 0);
         public event Action OnStorageChanged;
 
@@ -44,6 +46,16 @@ namespace OutpostZero.Colony
         public int AddCloth(int amount) => Admit(ref cloth, amount, CampRoom.Cloth);
         public int AddChemicals(int amount) => Admit(ref chemicals, amount, CampRoom.Chemicals);
         public int AddTape(int amount) => Admit(ref tape, amount, CampRoom.Tape);
+        public int AddRaw(int amount) => Admit(ref raw, amount, CampRoom.Raw);
+
+        public int TakeRaw(int amount)
+        {
+            if (amount <= 0 || raw <= 0) return 0;
+            int taken = amount < raw ? amount : raw;
+            raw -= taken;
+            OnStorageChanged?.Invoke();
+            return taken;
+        }
 
         public void RestoreScrap(int amount) => Shift(ref scrap, amount);
         public void RestoreCloth(int amount) => Shift(ref cloth, amount);
@@ -67,6 +79,12 @@ namespace OutpostZero.Colony
             cloth = Mathf.Max(0, nextCloth);
             chemicals = Mathf.Max(0, nextChemicals);
             tape = Mathf.Max(0, nextTape);
+            OnStorageChanged?.Invoke();
+        }
+
+        public void SetRaw(int nextRaw)
+        {
+            raw = Mathf.Max(0, nextRaw);
             OnStorageChanged?.Invoke();
         }
 
@@ -95,6 +113,7 @@ namespace OutpostZero.Colony
             cloth = 0;
             chemicals = 0;
             tape = 0;
+            raw = 0;
             OnStorageChanged?.Invoke();
         }
 

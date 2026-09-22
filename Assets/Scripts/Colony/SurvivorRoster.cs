@@ -268,12 +268,17 @@ namespace OutpostZero.Colony
                             storage.AddCloth(cloth);
                             if (chemicals > 0) storage.AddChemicals(chemicals);
                             if (tape > 0) storage.AddTape(tape);
+                            if (scrap > 0) storage.AddRaw(1);
                         }
                         break;
                     case "Cook":
-                        int meals = Pay(2, survivor.morale);
-                        if (meals > 0 && storage != null) storage.AddFood(meals);
-                        if (meals > 0) survivor.morale = Mathf.Min(100f, survivor.morale + 3f);
+                        int hands = Pay(2, survivor.morale);
+                        bool fire = GridBuilder.Instance != null && GridBuilder.Instance.HasKind("Campfire");
+                        int raw = storage != null ? storage.Raw : 0;
+                        CookPot.Serve(fire, raw, hands, out int spent, out int served, out int lift);
+                        if (spent > 0 && storage != null) storage.TakeRaw(spent);
+                        if (served > 0 && storage != null) storage.AddFood(served);
+                        if (lift > 0) survivor.morale = Mathf.Min(100f, survivor.morale + lift);
                         break;
                     case "Guard":
                         int watch = Pay(1, survivor.morale);

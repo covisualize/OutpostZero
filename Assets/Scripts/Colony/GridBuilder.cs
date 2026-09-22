@@ -24,7 +24,8 @@ namespace OutpostZero.Colony
         Spikes,
         Oil,
         Crate,
-        Lamp
+        Lamp,
+        Campfire
     }
 
     [Serializable]
@@ -72,6 +73,7 @@ namespace OutpostZero.Colony
         {
             TickOil(Time.time);
             TickLamps();
+            TickFires();
             if (GameManager.Instance == null || GameManager.Instance.CurrentState != GameState.CampManagement) return;
             if (Player.ExpeditionInput.BuildPressed)
             {
@@ -229,11 +231,22 @@ namespace OutpostZero.Colony
             }
         }
 
+        private void TickFires()
+        {
+            int count = placed.Count < views.Count ? placed.Count : views.Count;
+            for (int i = 0; i < count; i++)
+            {
+                if (placed[i].kind != "Campfire" || views[i] == null) continue;
+                var ember = views[i].GetComponent<Light>();
+                if (ember != null) ember.enabled = BuildSite.Ready(placed[i].site, placed[i].integrity);
+            }
+        }
+
         private void SpawnView(PlacedModule module)
         {
             var view = GameObject.CreatePrimitive(PrimitiveType.Cube);
             view.name = "Module_" + module.kind;
-            bool flat = module.kind == "Spikes" || module.kind == "Oil";
+            bool flat = module.kind == "Spikes" || module.kind == "Oil" || module.kind == "Campfire";
             float y = flat ? 0.04f : module.kind == "Lamp" ? 1.2f : 0.6f;
             view.transform.position = new Vector3(module.x, y, module.z);
             view.transform.rotation = Quaternion.Euler(0f, module.rotation, 0f);
@@ -255,7 +268,7 @@ namespace OutpostZero.Colony
                     ? new Color(0.95f, 0.42f, 0.08f)
                     : ColorFor(module.kind);
             }
-            if (module.kind == "Spikes" || module.kind == "Oil")
+            if (module.kind == "Spikes" || module.kind == "Oil" || module.kind == "Campfire")
             {
                 var pad = view.GetComponent<Collider>();
                 if (pad != null) Destroy(pad);
@@ -282,6 +295,15 @@ namespace OutpostZero.Colony
                 var source = view.AddComponent<LightSource>();
                 source.Configure(FloodBeam.Radius);
                 source.enabled = false;
+            }
+            if (module.kind == "Campfire")
+            {
+                var ember = view.AddComponent<Light>();
+                ember.type = LightType.Point;
+                ember.range = 6f;
+                ember.intensity = 1.6f;
+                ember.color = new Color(1f, 0.45f, 0.15f);
+                ember.enabled = false;
             }
             views.Add(view);
         }
@@ -517,6 +539,7 @@ namespace OutpostZero.Colony
                 case ModuleKind.Oil: return 9;
                 case ModuleKind.Crate: return 10;
                 case ModuleKind.Lamp: return 13;
+                case ModuleKind.Campfire: return 7;
                 default: return 6;
             }
         }
@@ -539,6 +562,7 @@ namespace OutpostZero.Colony
                 case "Oil": return new Vector3(2.4f, 0.06f, 2.4f);
                 case "Crate": return new Vector3(1.1f, 0.9f, 0.8f);
                 case "Lamp": return new Vector3(0.35f, 2.2f, 0.35f);
+                case "Campfire": return new Vector3(1.2f, 0.2f, 1.2f);
                 default: return new Vector3(1.8f * health, 1.1f * Mathf.Lerp(0.35f, 1f, health), 0.4f);
             }
         }
@@ -560,6 +584,7 @@ namespace OutpostZero.Colony
                 case "Oil": return new Color(0.12f, 0.1f, 0.08f);
                 case "Crate": return new Color(0.42f, 0.3f, 0.18f);
                 case "Lamp": return new Color(0.85f, 0.8f, 0.55f);
+                case "Campfire": return new Color(0.72f, 0.28f, 0.12f);
                 default: return new Color(0.48f, 0.42f, 0.32f);
             }
         }

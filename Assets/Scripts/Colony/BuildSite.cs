@@ -13,6 +13,7 @@ namespace OutpostZero.Colony
                 case "Barricade":
                 case "Spikes":
                 case "Oil":
+                case "Campfire":
                     return 1;
                 case "Cot":
                 case "Water":

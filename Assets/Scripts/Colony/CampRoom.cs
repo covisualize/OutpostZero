@@ -14,6 +14,7 @@ namespace OutpostZero.Colony
         public const int Cloth = 3;
         public const int Chemicals = 4;
         public const int Tape = 3;
+        public const int Raw = 2;
 
         public static int Room(int crates)
         {
@@ -21,7 +22,7 @@ namespace OutpostZero.Colony
             return Base + crates * PerCrate;
         }
 
-        public static int Bulk(int scrap, int food, int water, int cloth, int chemicals, int tape)
+        public static int Bulk(int scrap, int food, int water, int cloth, int chemicals, int tape, int raw = 0)
         {
             if (scrap < 0) scrap = 0;
             if (food < 0) food = 0;
@@ -29,7 +30,8 @@ namespace OutpostZero.Colony
             if (cloth < 0) cloth = 0;
             if (chemicals < 0) chemicals = 0;
             if (tape < 0) tape = 0;
-            return scrap * Scrap + food * Food + water * Water + cloth * Cloth + chemicals * Chemicals + tape * Tape;
+            if (raw < 0) raw = 0;
+            return scrap * Scrap + food * Food + water * Water + cloth * Cloth + chemicals * Chemicals + tape * Tape + raw * Raw;
         }
 
         public static int Fit(int used, int unit, int amount, int room)

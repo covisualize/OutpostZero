@@ -36,6 +36,7 @@ namespace OutpostZero.Tests.EditMode
                 day = 4,
                 hour = 6.5f,
                 colonyScrap = 22,
+                raw = 4,
                 language = "es",
                 districtIndex = 2,
                 survivors = new[]
@@ -52,6 +53,7 @@ namespace OutpostZero.Tests.EditMode
             Assert.AreEqual(1, loaded.schemaVersion);
             Assert.AreEqual(4, loaded.day);
             Assert.AreEqual(22, loaded.colonyScrap);
+            Assert.AreEqual(4, loaded.raw);
             Assert.AreEqual("es", loaded.language);
             Assert.AreEqual(2, loaded.districtIndex);
             Assert.AreEqual("mara", loaded.survivors[0].id);
@@ -1951,7 +1953,7 @@ namespace OutpostZero.Tests.EditMode
             Assert.AreEqual("", bill.Skill);
             Assert.AreEqual(7, CraftBill.ScrapDue(bill.Scrap, true));
             var street = LootTables.Roll("street", 2);
-            Assert.AreEqual(6, street.Length);
+            Assert.AreEqual(7, street.Length);
             Assert.AreEqual("pipe_bomb", street[5].ItemId);
         }
 
@@ -2048,6 +2050,40 @@ namespace OutpostZero.Tests.EditMode
             Assert.AreEqual(2, BuildSite.Need("Lamp"));
             Assert.AreEqual(13, GridBuilder.Cost(ModuleKind.Lamp));
             Assert.AreEqual("Foco", Loc.T("camp.lamp", "es"));
+        }
+
+        [Test]
+        public void ACampfireTurnsRawFoodIntoAMeal()
+        {
+            CookPot.Serve(false, 4, 2, out int coldSpent, out int coldFood, out int coldMorale);
+            Assert.AreEqual(0, coldSpent);
+            Assert.AreEqual(1, coldFood);
+            Assert.AreEqual(2, coldMorale);
+            CookPot.Serve(true, 0, 2, out int emptySpent, out int emptyFood, out int emptyMorale);
+            Assert.AreEqual(0, emptySpent);
+            Assert.AreEqual(1, emptyFood);
+            Assert.AreEqual(2, emptyMorale);
+            CookPot.Serve(true, 4, 2, out int spent, out int food, out int morale);
+            Assert.AreEqual(2, spent);
+            Assert.AreEqual(6, food);
+            Assert.AreEqual(8, morale);
+            CookPot.Serve(true, 1, 2, out int shortSpent, out int shortFood, out int shortMorale);
+            Assert.AreEqual(1, shortSpent);
+            Assert.AreEqual(3, shortFood);
+            Assert.AreEqual(8, shortMorale);
+            CookPot.Serve(true, 3, 0, out int idleSpent, out int idleFood, out int idleMorale);
+            Assert.AreEqual(0, idleSpent);
+            Assert.AreEqual(0, idleFood);
+            Assert.AreEqual(0, idleMorale);
+            Assert.AreEqual(18, CampRoom.Bulk(4, 1, 1, 1, 1, 1));
+            Assert.AreEqual(22, CampRoom.Bulk(4, 1, 1, 1, 1, 1, 2));
+            Assert.AreEqual(1, BuildSite.Need("Campfire"));
+            Assert.AreEqual(7, GridBuilder.Cost(ModuleKind.Campfire));
+            Assert.AreEqual(12, ItemCatalog.Find("raw_food").Hunger);
+            var street = LootTables.Roll("street", 2);
+            Assert.AreEqual("raw_food", street[6].ItemId);
+            Assert.AreEqual("Fogata", Loc.T("camp.fire", "es"));
+            Assert.AreEqual("Comida cruda", Loc.Item("raw_food", "es"));
         }
 
         [Test]

@@ -173,6 +173,7 @@ namespace OutpostZero.Shell
                 data.cloth = ColonyStorage.Instance.Cloth;
                 data.chemicals = ColonyStorage.Instance.Chemicals;
                 data.tape = ColonyStorage.Instance.Tape;
+                data.raw = ColonyStorage.Instance.Raw;
             }
             if (GameManager.Instance != null)
             {
@@ -277,6 +278,7 @@ namespace OutpostZero.Shell
             GameManager.Instance?.SetLifetimeKills(data.lifetimeKills);
             ColonyStorage.Instance?.Set(data.colonyScrap, data.food, data.water);
             ColonyStorage.Instance?.SetSupplies(data.cloth, data.chemicals, data.tape);
+            ColonyStorage.Instance?.SetRaw(data.raw);
             FactionTrade.Instance?.Restore(data.factionStanding, data.factions, data.quests);
             SettingsService.Instance?.ApplySnapshot(data.shake, data.volume, data.textScale, data.subtitles, data.language);
             SettingsService.Instance?.ApplyPresentation(data.sfxVolume, data.musicVolume, data.quality, data.vsync, data.fieldOfView, data.bindings, data.ambienceVolume, data.uiVolume);

@@ -754,7 +754,7 @@ namespace OutpostZero.UI
             if (storage != null)
             {
                 camp.Add(Body(Loc.T("camp.scrap") + " " + storage.Scrap + "  " + Loc.T("camp.food") + " " + storage.Food + "  " + Loc.T("camp.water") + " " + storage.Water
-                    + "  " + Loc.T("camp.cloth") + " " + storage.Cloth + "  " + Loc.T("camp.chem") + " " + storage.Chemicals + "  " + Loc.T("camp.tape") + " " + storage.Tape
+                    + "  " + Loc.T("camp.cloth") + " " + storage.Cloth + "  " + Loc.T("camp.chem") + " " + storage.Chemicals                     + "  " + Loc.T("camp.tape") + " " + storage.Tape + "  " + Loc.T("camp.raw") + " " + storage.Raw
                     + "  " + (services != null && services.GeneratorOnline ? Loc.T("camp.gen_on") : Loc.T("camp.gen_off"))));
                 camp.Add(Body(Loc.T("camp.room") + " " + storage.Used + "/" + storage.Room));
             }
@@ -828,6 +828,7 @@ namespace OutpostZero.UI
             build.Add(Button(Loc.T("camp.oil"), () => GridBuilder.Instance?.Select(ModuleKind.Oil)));
             build.Add(Button(Loc.T("camp.crate"), () => GridBuilder.Instance?.Select(ModuleKind.Crate)));
             build.Add(Button(Loc.T("camp.lamp"), () => GridBuilder.Instance?.Select(ModuleKind.Lamp)));
+            build.Add(Button(Loc.T("camp.fire"), () => GridBuilder.Instance?.Select(ModuleKind.Campfire)));
             if (GridBuilder.Instance != null)
             {
                 int sprout = -1;
@@ -1082,7 +1083,7 @@ namespace OutpostZero.UI
             if (ColonyStorage.Instance != null)
             {
                 builder.Append(ColonyStorage.Instance.Scrap).Append(ColonyStorage.Instance.Food).Append(ColonyStorage.Instance.Water).Append(ColonyStorage.Instance.Security);
-                builder.Append(ColonyStorage.Instance.Cloth).Append(ColonyStorage.Instance.Chemicals).Append(ColonyStorage.Instance.Tape);
+                builder.Append(ColonyStorage.Instance.Cloth).Append(ColonyStorage.Instance.Chemicals).Append(ColonyStorage.Instance.Tape).Append(ColonyStorage.Instance.Raw);
             }
             if (SurvivorRoster.Instance != null)
             {

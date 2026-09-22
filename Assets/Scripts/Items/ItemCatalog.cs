@@ -46,6 +46,7 @@ namespace OutpostZero.Items
             new ItemRecord { Id = "antibiotics", DisplayName = "Antibiotics", Category = Core.ItemCategory.Medical, Weight = 0.15f, Use = ItemUse.Cure },
             new ItemRecord { Id = "painkillers", DisplayName = "Painkillers", Category = Core.ItemCategory.Medical, Weight = 0.1f, Use = ItemUse.Relief },
             new ItemRecord { Id = "canned_food", DisplayName = "Canned Food", Category = Core.ItemCategory.FoodWater, Weight = 0.4f, Hunger = 35f, Use = ItemUse.Food },
+            new ItemRecord { Id = "raw_food", DisplayName = "Raw Food", Category = Core.ItemCategory.FoodWater, Weight = 0.35f, Hunger = 12f, Use = ItemUse.Food },
             new ItemRecord { Id = "water", DisplayName = "Water Bottle", Category = Core.ItemCategory.FoodWater, Weight = 0.5f, Thirst = 40f, Use = ItemUse.Water },
             new ItemRecord { Id = "ammo_9mm", DisplayName = "9mm Rounds", Category = Core.ItemCategory.Ammunition, Weight = 0.02f, AmmoType = Core.WeaponType.Pistol, AmmoAmount = 12, Use = ItemUse.Ammo },
             new ItemRecord { Id = "ammo_shells", DisplayName = "Shotgun Shells", Category = Core.ItemCategory.Ammunition, Weight = 0.04f, AmmoType = Core.WeaponType.Shotgun, AmmoAmount = 6, Use = ItemUse.Ammo },
@@ -113,7 +114,8 @@ namespace OutpostZero.Items
                 new Grant { ItemId = "cloth", Count = 1 },
                 new Grant { ItemId = rng.NextDouble() > 0.6 ? "chemicals" : "tape", Count = 1 },
                 new Grant { ItemId = "flare", Count = rng.NextDouble() > 0.72 ? 1 : 0 },
-                new Grant { ItemId = "pipe_bomb", Count = rng.NextDouble() > 0.88 ? 1 : 0 }
+                new Grant { ItemId = "pipe_bomb", Count = rng.NextDouble() > 0.88 ? 1 : 0 },
+                new Grant { ItemId = "raw_food", Count = rng.NextDouble() > 0.5 ? 1 : 0 }
             };
         }
     }

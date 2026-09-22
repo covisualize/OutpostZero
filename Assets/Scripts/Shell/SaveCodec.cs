@@ -45,6 +45,7 @@ namespace OutpostZero.Shell
         public int cloth;
         public int chemicals;
         public int tape;
+        public int raw;
         public int kills;
         public int lifetimeKills;
         public int districtsCleared;

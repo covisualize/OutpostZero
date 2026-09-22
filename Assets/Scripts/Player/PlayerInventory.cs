@@ -211,6 +211,7 @@ namespace OutpostZero.Player
             if (DepositMaterial(storage, "cloth")) moved = true;
             if (DepositMaterial(storage, "chemicals")) moved = true;
             if (DepositMaterial(storage, "tape")) moved = true;
+            if (DepositRaw(storage)) moved = true;
             if (!moved) return;
             RecalculateWeight();
             OnInventoryChanged?.Invoke();
@@ -225,6 +226,17 @@ namespace OutpostZero.Player
             if (id == "cloth") moved = storage.AddCloth(count);
             else if (id == "chemicals") moved = storage.AddChemicals(count);
             else moved = storage.AddTape(count);
+            if (moved <= 0) return false;
+            existing.Quantity -= moved;
+            if (existing.Quantity <= 0) items.Remove(existing);
+            return true;
+        }
+
+        private bool DepositRaw(OutpostZero.Colony.ColonyStorage storage)
+        {
+            var existing = items.Find(item => item.ItemId == "raw_food");
+            if (existing == null || existing.Quantity <= 0) return false;
+            int moved = storage.AddRaw(existing.Quantity);
             if (moved <= 0) return false;
             existing.Quantity -= moved;
             if (existing.Quantity <= 0) items.Remove(existing);
