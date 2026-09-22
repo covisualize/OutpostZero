@@ -776,6 +776,21 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void ASprintOrAHitDropsAReloadBeforeTheRack()
+        {
+            Assert.IsFalse(ReloadBreak.Abort(false, false, 0f));
+            Assert.IsTrue(ReloadBreak.Abort(true, false, 0f));
+            Assert.IsTrue(ReloadBreak.Abort(false, true, 0.5f));
+            Assert.IsTrue(ReloadBreak.Abort(false, true, 0.71f));
+            Assert.IsFalse(ReloadBreak.Abort(true, false, 0.72f));
+            Assert.IsFalse(ReloadBreak.Abort(true, true, 1f));
+            Assert.IsTrue(ReloadBreak.Saves(0.72f));
+            Assert.IsFalse(ReloadBreak.Saves(0.719f));
+            Assert.AreEqual(0.72f, ReloadBreak.Rack, 0.001f);
+            Assert.AreEqual("rack", GunCue.Stage(0.72f, 2));
+        }
+
+        [Test]
         public void MistSitsOnTheStreetWhenTheAirIsThick()
         {
             Assert.IsTrue(MistBank.Shows(WeatherKind.Fog, 0f));

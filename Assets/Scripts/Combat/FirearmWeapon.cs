@@ -14,6 +14,7 @@ namespace OutpostZero.Combat
         [SerializeField] private int reserveAmmo = 60;
         [SerializeField] private float reloadDuration = 1.8f;
         [SerializeField] private bool isReloading = false;
+        private bool abortReload;
 
         [Header("Shooting Properties")]
         [SerializeField] private Transform muzzlePoint;
@@ -242,6 +243,15 @@ namespace OutpostZero.Combat
             StartCoroutine(ReloadRoutine());
         }
 
+        public bool TryAbortReload(bool sprinting, bool hit)
+        {
+            if (!isReloading) return false;
+            float fill = reloadWait > 0.001f ? reloadElapsed / reloadWait : 0f;
+            if (!ReloadBreak.Abort(sprinting, hit, fill)) return false;
+            abortReload = true;
+            return true;
+        }
+
         private IEnumerator ReloadRoutine()
         {
             isReloading = true;
@@ -257,6 +267,14 @@ namespace OutpostZero.Combat
 
             while (reloadElapsed < reloadWait)
             {
+                if (abortReload)
+                {
+                    abortReload = false;
+                    isReloading = false;
+                    reloadElapsed = 0f;
+                    Cue("clack");
+                    yield break;
+                }
                 reloadElapsed += Time.deltaTime;
                 string beat = GunCue.Stage(MagPulse.Fill(reloadElapsed, reloadWait), stage);
                 if (beat.Length > 0)

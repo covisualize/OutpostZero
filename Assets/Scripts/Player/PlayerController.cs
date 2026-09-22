@@ -540,6 +540,7 @@ namespace OutpostZero.Player
             bool wantsToSprint = sprintLatch && !IsCrouching && currentStamina > 5f;
 
             IsSprinting = isMoving && wantsToSprint;
+            if (IsSprinting && ActiveWeapon is FirearmWeapon sprintGun) sprintGun.TryAbortReload(true, false);
 
             // Speed evaluation
             float currentSpeed = walkSpeed;
@@ -779,6 +780,7 @@ namespace OutpostZero.Player
 
         private void HandleHurt(float amount, Vector3 point)
         {
+            if (ActiveWeapon is FirearmWeapon hurtGun) hurtGun.TryAbortReload(false, true);
             if (!Combat.ContactCue.Pain(true, healthSystem.CurrentHealth)) return;
             Shell.AudioManager.Instance?.Play("pained", 0.4f, 0.92f);
         }
