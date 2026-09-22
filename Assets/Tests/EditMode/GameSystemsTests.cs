@@ -6506,6 +6506,29 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void BringingTheStreetBodyHomeGivesALittleMoraleBack()
+        {
+            Assert.AreEqual(4f, StreetMourn.Back, 0.001f);
+            Assert.AreEqual(68f, StreetMourn.Lift(64f), 0.001f);
+            Assert.AreEqual(100f, StreetMourn.Lift(98f), 0.001f);
+            Assert.AreEqual(100f, StreetMourn.Lift(100f), 0.001f);
+            Assert.AreEqual(4f, StreetMourn.Lift(0f), 0.001f);
+            Assert.AreEqual(4f, StreetMourn.Lift(-2f), 0.001f);
+            Assert.IsTrue(StreetMourn.Named("street", "Maya", "Maya"));
+            Assert.IsFalse(StreetMourn.Named("raid", "Maya", "Maya"));
+            Assert.IsFalse(StreetMourn.Named("street", "Maya", "Imani"));
+            Assert.IsFalse(StreetMourn.Named("street", "", "Maya"));
+            Assert.AreEqual("The body is home", StreetMourn.Line("en"));
+            Assert.AreEqual("El cuerpo está en casa", StreetMourn.Line("es"));
+            Assert.AreEqual(8f, StreetMourn.Loss, 0.001f);
+            Assert.AreEqual(64f, StreetMourn.After(72f), 0.001f);
+            Assert.AreEqual(25f, SuccessionLedger.CampLoss, 0.001f);
+            Assert.AreEqual(40f, SuccessionLedger.FriendLoss, 0.001f);
+            Assert.AreEqual("Nothing left but the name", Loc.T("ask.nameonly", "en"));
+            Assert.AreEqual("Gear recovered", Loc.T("ask.kept", "en"));
+        }
+
+        [Test]
         public void AZombieWithoutARigStillAttacksAndFalls()
         {
             Assert.AreEqual(14f, PoseSheet.Lean(ZombieAI.ZombieState.Chase, 0f), 0.001f);

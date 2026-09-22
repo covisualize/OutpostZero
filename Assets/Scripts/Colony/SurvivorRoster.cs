@@ -285,8 +285,29 @@ namespace OutpostZero.Colony
         public void Recover(int index)
         {
             if (index < 0 || index >= corpses.Count) return;
-            corpses[index].recovered = true;
+            var mark = corpses[index];
+            if (mark == null || mark.recovered) return;
+            mark.recovered = true;
+            if (StreetBody(mark.name))
+            {
+                for (int i = 0; i < survivors.Count; i++)
+                {
+                    if (survivors[i] == null || !survivors[i].alive) continue;
+                    survivors[i].morale = StreetMourn.Lift(survivors[i].morale);
+                }
+                GameplayFeedback.Toast(StreetMourn.Line(null));
+            }
             OnRosterChanged?.Invoke();
+        }
+
+        private bool StreetBody(string name)
+        {
+            for (int i = 0; i < memorials.Count; i++)
+            {
+                var row = memorials[i];
+                if (row != null && StreetMourn.Named(row.cause, name, row.name)) return true;
+            }
+            return false;
         }
 
         public void RestoreStory(string memorialPacked, string corpsePacked)
