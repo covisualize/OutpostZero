@@ -568,6 +568,41 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void ACookTurnsRawFoodIntoMealsBeforeTheDayIsServed()
+        {
+            Assert.AreEqual(0, CookPot.Stew(0, 0, 2, true));
+            Assert.AreEqual(0, CookPot.Stew(3, 0, 2, false));
+            Assert.AreEqual(2, CookPot.Stew(5, 0, CampRoom.Food, true));
+            Assert.AreEqual(1, CookPot.Stew(1, 0, 2, true));
+            Assert.AreEqual(0, CookPot.Stew(4, 2, 2, true));
+            Assert.AreEqual(1, CookPot.Stew(4, 1, 2, true));
+            Assert.AreEqual(0, CookPot.Stew(-1, 0, 2, true));
+            var pot = new List<ColonistDay>
+            {
+                new ColonistDay { id = "cook", task = "Cook", hunger = 40f, thirst = 90f, morale = 50f }
+            };
+            int food = 0;
+            int raw = 3;
+            int water = 0;
+            var notes = ColonyDay.Simulate(pot, ref food, ref water, false, false, "", 0, ref raw);
+            Assert.AreEqual(1, raw);
+            Assert.AreEqual(1, food);
+            Assert.AreEqual(70f, pot[0].hunger, 0.001f);
+            Assert.Contains("stew", notes);
+            int plainFood = 0;
+            int plainRaw = 3;
+            int plainWater = 0;
+            var plain = new List<ColonistDay>
+            {
+                new ColonistDay { id = "ada", task = "Rest", hunger = 40f, thirst = 90f, morale = 50f }
+            };
+            ColonyDay.Simulate(plain, ref plainFood, ref plainWater, false, false, "", 0, ref plainRaw);
+            Assert.AreEqual(2, plainRaw);
+            Assert.AreEqual(0, plainFood);
+            Assert.AreEqual(44f, plain[0].hunger, 0.001f);
+        }
+
+        [Test]
         public void MistSitsOnTheStreetWhenTheAirIsThick()
         {
             Assert.IsTrue(MistBank.Shows(WeatherKind.Fog, 0f));

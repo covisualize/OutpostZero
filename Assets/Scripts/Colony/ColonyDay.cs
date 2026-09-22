@@ -123,6 +123,16 @@ namespace OutpostZero.Colony
 
             string fallenFirst = FirstName(fallenName);
             string fallenId = KinBoard.FallenId(people, fallenName);
+            if (anyCook)
+            {
+                int made = CookPot.Stew(raw, food, CampRoom.Food, true);
+                if (made > 0)
+                {
+                    raw -= made;
+                    food += made;
+                    Once(events, "stew");
+                }
+            }
             if (FeverSpread.Try(people)) Once(events, "fever");
             for (int i = 0; i < people.Count; i++)
             {
