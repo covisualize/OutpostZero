@@ -3231,6 +3231,26 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void FliesSitOnTheNearestDumpster()
+        {
+            Assert.IsTrue(FlyBed.Counts("Dumpster_Alley"));
+            Assert.IsFalse(FlyBed.Counts("Crate_01"));
+            Assert.IsFalse(FlyBed.Counts(null));
+            Assert.IsFalse(FlyBed.Counts(""));
+            Assert.AreEqual(0.16f, FlyBed.Gain(0f), 0.001f);
+            Assert.AreEqual(0.08f, FlyBed.Gain(4f), 0.001f);
+            Assert.AreEqual(0f, FlyBed.Gain(8f), 0.001f);
+            Assert.AreEqual(0f, FlyBed.Gain(9f), 0.001f);
+            Assert.AreEqual(0f, FlyBed.Gain(-1f), 0.001f);
+            Assert.AreEqual(2, FlyBed.Nearest(new[] { 9f, 3f, 1f }));
+            Assert.AreEqual(1, FlyBed.Nearest(new[] { 6f, 2f, 8f }));
+            Assert.AreEqual(-1, FlyBed.Nearest(new[] { 8f, 12f }));
+            Assert.AreEqual(-1, FlyBed.Nearest(null));
+            Assert.AreEqual(8f, AudioSpace.MaxDistance("flies"), 0.001f);
+            Assert.AreEqual(MixBus.Ambience, AudioMix.BusOf("flies"));
+        }
+
+        [Test]
         public void GoreOffDropsBloodAndAShotgunSpraysTheWall()
         {
             Assert.AreEqual(0, GoreMark.Splats(0, false, true));

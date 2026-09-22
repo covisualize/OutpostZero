@@ -145,6 +145,9 @@ namespace OutpostZero.Core
                 else hazard.Configure(HazardKind.Explosive);
             }
 
+            if (name.Contains("Dumpster") && go.GetComponent<FlyMark>() == null)
+                go.AddComponent<FlyMark>();
+
             if ((name.Contains("Crate") || name.Contains("Dumpster")) && go.GetComponent<LootContainer>() == null)
             {
                 var container = go.AddComponent<LootContainer>();

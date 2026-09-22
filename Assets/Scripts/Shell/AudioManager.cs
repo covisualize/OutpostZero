@@ -29,6 +29,7 @@ namespace OutpostZero.Shell
             if (id == "gun" || id == "shotgun" || id == "gun_far") return 32f;
             if (id == "groan" || id == "snarl" || id == "grunt") return 22f;
             if (id == "hum" || id == "crackle" || id == "buzz") return Colony.YardBed.Reach;
+            if (id == "flies") return FlyBed.Reach;
             if (id == "hiss") return 20f;
             return 18f;
         }
@@ -60,6 +61,8 @@ namespace OutpostZero.Shell
         private AudioSource hum;
         private AudioSource crackle;
         private AudioSource buzz;
+        private AudioSource flies;
+        private float[] flyDistances = System.Array.Empty<float>();
 
         private void Awake()
         {
@@ -84,6 +87,8 @@ namespace OutpostZero.Shell
             hum = AddWorld("hum");
             crackle = AddWorld("crackle");
             buzz = AddWorld("buzz");
+            flies = AddWorld("flies");
+            flies.maxDistance = FlyBed.Reach;
         }
 
         private AudioSource AddWorld(string id)
@@ -161,6 +166,7 @@ namespace OutpostZero.Shell
             if (combat != null) ApplyLowpass(combat, snapshot);
             UpdateWeather(snapshot, music, sfx, ambience, ui);
             UpdateYard(snapshot, music, sfx, ambience, ui);
+            UpdateFlies(snapshot, music, sfx, ambience, ui);
             if (tension >= 75f && !peaked)
             {
                 peaked = true;
@@ -257,6 +263,41 @@ namespace OutpostZero.Shell
             Hold(hum, "hum", genX, genZ, humGain, snapshot, music, sfx, ambience, ui);
             Hold(crackle, "crackle", fireX, fireZ, crackleGain, snapshot, music, sfx, ambience, ui);
             Hold(buzz, "buzz", lampX, lampZ, buzzGain, snapshot, music, sfx, ambience, ui);
+        }
+
+        private void UpdateFlies(MixSnapshot snapshot, float music, float sfx, float ambience, float ui)
+        {
+            var live = FlyMark.Live;
+            var listener = PlayerRegistry.Current;
+            int count = live.Count;
+            if (listener == null || count == 0)
+            {
+                Hold(flies, "flies", 0f, 0f, 0f, snapshot, music, sfx, ambience, ui);
+                return;
+            }
+            if (flyDistances.Length != count) flyDistances = new float[count];
+            Vector3 ear = listener.transform.position;
+            for (int i = 0; i < count; i++)
+            {
+                var mark = live[i];
+                if (mark == null)
+                {
+                    flyDistances[i] = FlyBed.Reach + 1f;
+                    continue;
+                }
+                Vector3 at = mark.transform.position;
+                float dx = at.x - ear.x;
+                float dz = at.z - ear.z;
+                flyDistances[i] = Mathf.Sqrt(dx * dx + dz * dz);
+            }
+            int best = FlyBed.Nearest(flyDistances);
+            if (best < 0 || live[best] == null)
+            {
+                Hold(flies, "flies", 0f, 0f, 0f, snapshot, music, sfx, ambience, ui);
+                return;
+            }
+            Vector3 bin = live[best].transform.position;
+            Hold(flies, "flies", bin.x, bin.z, FlyBed.Gain(flyDistances[best]), snapshot, music, sfx, ambience, ui);
         }
 
         private void Hold(AudioSource source, string id, float x, float z, float gain, MixSnapshot snapshot, float music, float sfx, float ambience, float ui)
@@ -482,6 +523,7 @@ namespace OutpostZero.Shell
             if (id == "hum") return Mathf.Sin(t * 6f);
             if (id == "crackle") return noise;
             if (id == "buzz") return Mathf.Sin(t * 55f) * 0.35f;
+            if (id == "flies") return noise * Mathf.Sin(t * 90f) * 0.4f;
             if (id == "hiss") return noise * Mathf.Sin(t * 28f);
             if (id == "chop") return noise * Mathf.Sin(t * 12f);
             if (id == "clang") return Mathf.Sin(t * 70f);
@@ -496,7 +538,7 @@ namespace OutpostZero.Shell
         {
             if (clips.TryGetValue(id, out var clip)) return clip;
             int rate = 22050;
-            bool loop = id == "ambient" || id == "rain" || id == "wind" || id == "stem_perc" || id == "stem_combat" || id == "hum" || id == "crackle" || id == "buzz";
+            bool loop = id == "ambient" || id == "rain" || id == "wind" || id == "stem_perc" || id == "stem_combat" || id == "hum" || id == "crackle" || id == "buzz" || id == "flies";
             float seconds = loop ? 2f : id == "boom_far" ? 0.7f : id == "roar" || id == "stomp" ? 0.5f : id == "boom" ? 0.45f : id == "gun_far" ? 0.42f : id == "breath" || id == "groan" ? 0.5f : id == "shriek" ? 0.28f : id == "heart" || id == "hiss" ? 0.22f : id == "dry" || id == "take_soft" || id == "take_box" || id == "take_metal" ? 0.08f : 0.18f;
             int samples = Mathf.CeilToInt(rate * seconds);
             var data = new float[samples];
