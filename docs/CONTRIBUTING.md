@@ -28,18 +28,18 @@ In Unity Hub, choose **Add > Add project from disk**, pick the clone, and open i
 Windows (PowerShell):
 
 ```powershell
-& "C:\Program Files\Blender Foundation\Blender 4.2\blender.exe" -b -P BlenderScripts\build_all_assets.py
-& "C:\Program Files\Blender Foundation\Blender 4.2\blender.exe" -b -P BlenderScripts\build_all_assets.py -- --only characters,weapons
+& "C:\Program Files\Blender Foundation\Blender 4.2\blender.exe" -b -P BlenderScripts\pipeline.py -- --changed
+& "C:\Program Files\Blender Foundation\Blender 4.2\blender.exe" -b -P BlenderScripts\pipeline.py -- --only Prop_Dumpster
 ```
 
 Linux / macOS (bash):
 
 ```bash
-blender -b -P BlenderScripts/build_all_assets.py
-blender -b -P BlenderScripts/build_all_assets.py -- --only props --models-dir /tmp/outpost-models
+blender -b -P BlenderScripts/pipeline.py -- --changed
+blender -b -P BlenderScripts/pipeline.py -- --category props --models-dir /tmp/outpost-models
 ```
 
-Categories are `characters`, `weapons`, `architecture`, `props`, `kit`, `base`. Output goes to `Assets/Models/<Category>`. Set `OUTPOST_MODELS_DIR` or pass `--models-dir` to write somewhere else.
+`--changed` rebuilds only the entries whose generator, shared build code, or manifest entry moved since the last build. Commit the rebuilt FBX, textures, sidecars, and `Assets/Models/.pipeline-cache.json` together; the Blender CI job fails when they are stale. See [`BlenderScripts/README.md`](../BlenderScripts/README.md) for every flag.
 
 ## 3. Build the scene
 
@@ -76,7 +76,7 @@ It prints `passed N, native-only N, failed N`. Native-only tests call engine cod
 
 ```powershell
 cd BlenderScripts
-python -m unittest test_paths.py test_manifest.py test_character_rig.py test_texture_set.py test_kit_catalog.py test_character_detail.py test_asset_audit.py
+python -m unittest discover -s . -p "test_*.py"
 ```
 
 ## 5. CI
@@ -86,7 +86,7 @@ Every push and pull request runs:
 | Workflow | Jobs | Needs secrets |
 |---|---|---|
 | `typecheck.yml` | Compile against Unity 6 and run EditMode tests on .NET | No |
-| `blender-assets.yml` | Repo-relative path and manifest tests; headless Blender 4.2 asset build | No |
+| `blender-assets.yml` | Pipeline and manifest tests; changed-asset plan and PR comment; headless Blender 4.2 `--changed` build; stale-model and byte-for-byte reproducibility checks | No |
 | `unity-ci.yml` | EditMode tests, PlayMode smoke tests, headless scene validation and Linux player; Windows player on version tags | `UNITY_LICENSE`, `UNITY_EMAIL`, `UNITY_PASSWORD` |
 
 A PR is ready when Typecheck and Blender assets pass and nothing new shows up in the Unity jobs. The Unity jobs fail at license activation until a maintainer adds the three secrets. See [GameCI activation](https://game.ci/docs/github/activation).
