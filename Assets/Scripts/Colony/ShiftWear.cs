@@ -17,7 +17,7 @@ namespace OutpostZero.Colony
         {
             if (fatigue < 0f) fatigue = 0f;
             if (fatigue > 100f) fatigue = 100f;
-            if (task == "Rest") return NightRest.Wake(fatigue, cot);
+            if (task == "Rest" || task == "Quarantine") return NightRest.Wake(fatigue, cot);
             if (task == "Lead") return Clamp(fatigue + Lead);
             if (IsLabor(task)) return Clamp(fatigue + Labor);
             return fatigue;

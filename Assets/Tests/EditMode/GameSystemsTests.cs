@@ -5895,6 +5895,31 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void AHurtColonistCanTakeTheCotAndAHealthyOneStaysUp()
+        {
+            Assert.IsTrue(CotPull.Holds(1));
+            Assert.IsTrue(CotPull.Holds(2));
+            Assert.IsTrue(CotPull.Holds(3));
+            Assert.IsFalse(CotPull.Holds(0));
+            Assert.IsFalse(CotPull.Holds(-1));
+            Assert.AreEqual("On the cot", CotPull.Bed("en"));
+            Assert.AreEqual("En la camilla", CotPull.Bed("es"));
+            Assert.AreEqual("They are not hurt", CotPull.Refuse("en"));
+            Assert.AreEqual("No está herido", CotPull.Refuse("es"));
+            Assert.AreEqual(40f, ShiftWear.After(80f, "Quarantine", false), 0.001f);
+            Assert.AreEqual(10f, ShiftWear.After(80f, "Quarantine", true), 0.001f);
+            Assert.AreEqual(22f, ShiftWear.After(0f, "Guard", false), 0.001f);
+            Assert.AreEqual(0f, ShiftWear.After(0f, "Fallen", false), 0.001f);
+            Assert.IsFalse(YardSoak.Outdoor("Quarantine"));
+            Assert.IsTrue(YardSoak.Outdoor("Guard"));
+            Assert.IsFalse(FeverSpread.Source(2, "Quarantine", true));
+            Assert.IsTrue(FeverSpread.Source(2, "Guard", true));
+            Assert.IsFalse(FeverSpread.Source(1, "Guard", true));
+            Assert.AreEqual("Medic", CampRoutine.Choose("Quarantine", 80f, 80f, 70f, 1));
+            Assert.AreEqual("Cuarentena", Loc.Task("Quarantine", "es"));
+        }
+
+        [Test]
         public void AZombieWithoutARigStillAttacksAndFalls()
         {
             Assert.AreEqual(14f, PoseSheet.Lean(ZombieAI.ZombieState.Chase, 0f), 0.001f);

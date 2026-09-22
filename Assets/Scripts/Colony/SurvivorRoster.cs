@@ -413,6 +413,15 @@ namespace OutpostZero.Colony
         {
             var survivor = Find(id);
             if (survivor == null || !survivor.alive) return;
+            if (task == "Quarantine")
+            {
+                if (!CotPull.Holds(survivor.injury))
+                {
+                    GameplayFeedback.Toast(CotPull.Refuse(null));
+                    return;
+                }
+                GameplayFeedback.Toast(CotPull.Bed(null));
+            }
             survivor.task = task;
             OnRosterChanged?.Invoke();
         }
