@@ -54,6 +54,9 @@ namespace OutpostZero.Combat
             {
                 audioSource.PlayOneShot(swingSound);
             }
+            string whoosh = SwingCue.Sound(weaponType);
+            if (whoosh.Length > 0)
+                OutpostZero.Shell.AudioManager.Instance?.PlayAt(whoosh, transform.position, SwingCue.Volume);
 
             // Emit faint noise (whiff / grunt)
             EmitWeaponNoise();

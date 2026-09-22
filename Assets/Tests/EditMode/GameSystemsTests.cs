@@ -3637,6 +3637,16 @@ namespace OutpostZero.Tests.EditMode
             Assert.AreEqual(0.051f, RainMask.Heard(0.06f, true), 0.001f);
             Assert.AreEqual(0f, RainMask.Heard(0.05f, true), 0.001f);
             Assert.AreEqual(0.15f, RainMask.Cover, 0.001f);
+            Assert.AreEqual("whoosh", SwingCue.Sound(WeaponType.Melee));
+            Assert.AreEqual("", SwingCue.Sound(WeaponType.Pistol));
+            Assert.AreEqual(0.36f, SwingCue.Volume, 0.001f);
+            Assert.AreEqual(14f, AudioSpace.MaxDistance("whoosh"), 0.001f);
+            Assert.AreEqual(0.95f, PitchGate.Next(0f, 0f), 0.001f);
+            Assert.AreEqual(1.05f, PitchGate.Next(0f, 1f), 0.001f);
+            Assert.AreEqual(1f, PitchGate.Next(0f, 0.5f), 0.001f);
+            Assert.AreEqual(1.02f, PitchGate.Next(1f, 0.5f), 0.001f);
+            Assert.AreEqual(0.97f, PitchGate.Next(0.95f, 0f), 0.001f);
+            Assert.AreEqual(1.03f, PitchGate.Next(1.05f, 1f), 0.001f);
             Assert.AreEqual(0, KinBoard.Read("", "ellis"));
             Assert.AreEqual(0, KinBoard.Read("ellis:2", "jonas"));
             Assert.AreEqual("ellis:2", KinBoard.Shift("", "ellis", 2));

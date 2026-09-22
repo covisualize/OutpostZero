@@ -40,6 +40,7 @@ namespace OutpostZero.Shell
             if (id == "cloud") return 12f;
             if (id == "splash") return 8f;
             if (id == "spit") return 8f;
+            if (id == "whoosh") return 14f;
             return 18f;
         }
     }
@@ -199,6 +200,8 @@ namespace OutpostZero.Shell
             PlayAt(id, transform.position, volume, pitch);
         }
 
+        private float lastOpen;
+
         public void PlayAt(string id, Vector3 position, float volume = 1f, float pitch = 0f)
         {
             var source = Rent();
@@ -207,7 +210,12 @@ namespace OutpostZero.Shell
             source.minDistance = 1.5f;
             source.maxDistance = AudioSpace.MaxDistance(id);
             source.rolloffMode = AudioRolloffMode.Linear;
-            source.pitch = pitch > 0f ? pitch : Random.Range(0.94f, 1.06f);
+            if (pitch > 0f) source.pitch = pitch;
+            else
+            {
+                lastOpen = PitchGate.Next(lastOpen, Random.value);
+                source.pitch = lastOpen;
+            }
             bool wall = BehindWall(id, position);
             float heard = EarWall.Gain(volume, wall, id == "scream");
             if (heard <= 0.001f) return;
@@ -547,6 +555,7 @@ namespace OutpostZero.Shell
             if (id == "flies") return noise * Mathf.Sin(t * 90f) * 0.4f;
             if (id == "hiss") return noise * Mathf.Sin(t * 28f);
             if (id == "chop") return noise * Mathf.Sin(t * 12f);
+            if (id == "whoosh") return noise * Mathf.Sin(t * 22f);
             if (id == "clang") return Mathf.Sin(t * 70f);
             if (id == "pained") return Mathf.Sin(t * 16f);
             if (id == "take_soft") return Mathf.Sin(t * 24f);
