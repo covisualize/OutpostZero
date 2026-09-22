@@ -14,6 +14,7 @@ using OutpostZero.Combat;
 using OutpostZero.AI;
 using OutpostZero.UI;
 using OutpostZero.Utils;
+using OutpostZero.Graphics;
 
 namespace OutpostZero.EditorTools
 {
@@ -412,6 +413,11 @@ namespace OutpostZero.EditorTools
             renderer.sharedMaterial = GetOrCreateMaterial("Mat_Ground_Asphalt", new Color(0.18f, 0.19f, 0.21f));
             baseGround.isStatic = true;
             GameLayers.ApplyRecursively(groundRoot, GameLayers.Environment);
+
+            var probeHost = new GameObject("LightProbeGrid");
+            probeHost.transform.SetParent(groundRoot.transform, false);
+            var group = probeHost.AddComponent<LightProbeGroup>();
+            group.probePositions = ProbeGrid.Lights(ProbeGrid.YardMin, ProbeGrid.YardMax, ProbeGrid.YardMin, ProbeGrid.YardMax);
 
             // Central Avenue (North-South, 4 straight road tiles)
             InstantiateModel("Environment/Road_Tile_Straight.fbx", "Road_North_2", new Vector3(0, 0, 15), Quaternion.identity, Vector3.one, groundRoot.transform);

@@ -3745,6 +3745,34 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void ADistrictBlockGetsOneProbeAndTheYardKeepsASixMeterGrid()
+        {
+            Assert.AreEqual(6f, ProbeGrid.Step, 0.001f);
+            Assert.AreEqual(128, ProbeGrid.Resolution);
+            Assert.AreEqual(1.6f, ProbeGrid.Eye, 0.001f);
+            Assert.AreEqual(1, ProbeGrid.Span(0f, 0f));
+            Assert.AreEqual(3, ProbeGrid.Span(-6f, 6f));
+            Assert.AreEqual(11, ProbeGrid.Span(ProbeGrid.YardMin, ProbeGrid.YardMax));
+            var local = ProbeGrid.Lights(-6f, 6f, -6f, 6f);
+            Assert.AreEqual(9, local.Length);
+            Assert.AreEqual(-6f, local[0].x, 0.001f);
+            Assert.AreEqual(1.6f, local[0].y, 0.001f);
+            Assert.AreEqual(-6f, local[0].z, 0.001f);
+            Assert.AreEqual(0f, local[4].x, 0.001f);
+            Assert.AreEqual(0f, local[4].z, 0.001f);
+            var yard = ProbeGrid.Lights(ProbeGrid.YardMin, ProbeGrid.YardMax, ProbeGrid.YardMin, ProbeGrid.YardMax);
+            Assert.AreEqual(121, yard.Length);
+            Assert.AreEqual(new Vector3(-4f, 1.6f, 2f), ProbeGrid.Center(-8f, 0f, -4f, 8f));
+            var box = ProbeGrid.Box(-14f, 0f, -10f, 16f);
+            Assert.AreEqual(16f, box.x, 0.001f);
+            Assert.AreEqual(8f, box.y, 0.001f);
+            Assert.AreEqual(28f, box.z, 0.001f);
+            var tight = ProbeGrid.Box(1f, 2f, 3f, 4f);
+            Assert.AreEqual(8f, tight.x, 0.001f);
+            Assert.AreEqual(8f, tight.z, 0.001f);
+        }
+
+        [Test]
         public void ADeepBuilderRaisesExtraAndAFourthShiftDoesNot()
         {
             Assert.AreEqual(0, BuildDepth.Raise(4));

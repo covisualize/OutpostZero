@@ -94,6 +94,7 @@ namespace OutpostZero.Expedition
             var exitCollider = exit.GetComponent<Collider>();
             if (exitCollider != null) Destroy(exitCollider);
             Paint(exit.GetComponent<Renderer>(), new Color(0.25f, 0.75f, 0.45f));
+            ProbeField.Place(root, DistrictBlocks.Open(plan));
             RaiseRoom(plan);
         }
 
