@@ -17,7 +17,7 @@ A 3D top-down / isometric post-apocalyptic survival game built in Unity, combini
    **`Tools > Outpost Zero > Build Prototype Test Arena`**
 3. Open the Navigation window (**Window > AI > Navigation**).
 4. Click **Bake** to generate the NavMesh on the ground and around urban obstacles.
-5. Press **Play**!
+5. Press **Play**! Playing the arena directly opens the main menu. To test a cold start, open `Assets/Scenes/Boot.unity` (build index 0) and press Play: it streams the arena behind the loading card and logs how long the menu took to appear against the 5 s budget.
 
 ---
 
@@ -36,6 +36,7 @@ A 3D top-down / isometric post-apocalyptic survival game built in Unity, combini
 | **F** | Toggle Tactical Flashlight |
 | **Q** | Use Medical Kit (Restores 50 HP) |
 | **Escape** | Pause Expedition / Open Options |
+| **F9** | Dev menu (editor and development builds only): scene jump, god mode, spawn zombies, give a supply kit, skip 6 hours, reboot through Boot |
 
 ---
 

@@ -101,6 +101,7 @@ namespace OutpostZero.Player
         public static bool ThrowPressed => Pressed(ControlBindings.Action.Throw) || PadDown(PadBindings.Action.Throw);
         public static bool TakedownPressed => Pressed(ControlBindings.Action.Takedown) || PadDown(PadBindings.Action.Takedown);
         public static bool WatchPressed => Pressed(Key.F3);
+        public static bool DevPressed => Pressed(Key.F9);
         public static bool BuildPressed => Pressed(ControlBindings.Action.Build) || PadDown(PadBindings.Action.Build);
         public static bool DodgePressed => Pressed(Key.Space) || PadDown(PadBindings.Action.Dodge);
 
@@ -234,6 +235,7 @@ namespace OutpostZero.Player
                 case Key.Z: return KeyCode.Z;
                 case Key.Space: return KeyCode.Space;
                 case Key.F3: return KeyCode.F3;
+                case Key.F9: return KeyCode.F9;
                 case Key.Digit1: return KeyCode.Alpha1;
                 case Key.Digit2: return KeyCode.Alpha2;
                 case Key.Digit3: return KeyCode.Alpha3;

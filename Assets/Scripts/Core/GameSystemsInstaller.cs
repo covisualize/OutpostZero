@@ -46,6 +46,7 @@ namespace OutpostZero.Core
             Add<TutorialDirector>(host.gameObject);
             Add<CodexDirector>(host.gameObject);
             Add<OutpostZero.UI.SceneFlow>(host.gameObject);
+            Add<DevPanel>(host.gameObject);
             Add<CampServices>(host.gameObject);
             Add<CampPopulation>(host.gameObject);
             Add<DistrictDressing>(host.gameObject);

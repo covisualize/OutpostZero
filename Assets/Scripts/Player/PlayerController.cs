@@ -355,7 +355,7 @@ namespace OutpostZero.Player
             }
             ApplyLamp();
             ApplyRail();
-            healthSystem.Shielded = DodgeClock.Untouchable(Time.time - lastDodge);
+            healthSystem.Shielded = OutpostZero.Shell.DevCheats.Shielded(DodgeClock.Untouchable(Time.time - lastDodge));
             HandleAiming();
             HandleMovement();
             HandleStamina();

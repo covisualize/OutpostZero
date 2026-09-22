@@ -200,6 +200,56 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void BootStreamsTheOutpostAndReadsParkedProgressAsFull()
+        {
+            Assert.AreEqual("Boot", BootPlan.SceneFor(FlowStep.Boot));
+            Assert.AreEqual("PrototypeArena", BootPlan.SceneFor(FlowStep.MainMenu));
+            Assert.AreEqual("PrototypeArena", BootPlan.SceneFor(FlowStep.Expedition));
+            Assert.AreEqual(0f, BootPlan.Bar(0f));
+            Assert.AreEqual(0.5f, BootPlan.Bar(0.45f), 0.0001f);
+            Assert.AreEqual(1f, BootPlan.Bar(0.9f));
+            Assert.IsFalse(BootPlan.Loaded(0.89f));
+            Assert.IsTrue(BootPlan.Loaded(0.9f));
+            Assert.IsTrue(BootPlan.InBudget(4.9f));
+            Assert.IsFalse(BootPlan.InBudget(5f));
+        }
+
+        [Test]
+        public void BootSceneIsFirstInBuildAndRunsTheLoader()
+        {
+            string root = Directory.GetCurrentDirectory();
+            string build = File.ReadAllText(Path.Combine(root, "ProjectSettings", "EditorBuildSettings.asset"));
+            int boot = build.IndexOf("Assets/Scenes/Boot.unity");
+            int arena = build.IndexOf("Assets/Scenes/PrototypeArena.unity");
+            Assert.GreaterOrEqual(boot, 0);
+            Assert.Greater(arena, boot);
+            string scene = File.ReadAllText(Path.Combine(root, "Assets", "Scenes", "Boot.unity"));
+            string meta = File.ReadAllText(Path.Combine(root, "Assets", "Scripts", "UI", "BootLoader.cs.meta"));
+            string guid = meta.Substring(meta.IndexOf("guid: ") + 6, 32);
+            StringAssert.Contains("guid: " + guid, scene);
+            StringAssert.Contains("SceneRoots", scene);
+        }
+
+        [Test]
+        public void DevMenuStaysOutOfReleaseAndGodModeShields()
+        {
+            Assert.IsTrue(DevCheats.Allowed(true, false));
+            Assert.IsTrue(DevCheats.Allowed(false, true));
+            Assert.IsFalse(DevCheats.Allowed(false, false));
+            Assert.IsTrue(DevCheats.Toggle(true, false));
+            Assert.IsFalse(DevCheats.Toggle(true, true));
+            Assert.IsFalse(DevCheats.Toggle(false, false));
+            DevCheats.SetGod(false);
+            Assert.IsFalse(DevCheats.Shielded(false));
+            Assert.IsTrue(DevCheats.Shielded(true));
+            DevCheats.SetGod(true);
+            Assert.IsTrue(DevCheats.Shielded(false));
+            DevCheats.SetGod(false);
+            foreach (var id in DevCheats.Kit) Assert.IsNotNull(ItemCatalog.Find(id), id);
+            Assert.AreNotEqual(Loc.T("dev.title", "en"), Loc.T("dev.title", "es"));
+        }
+
+        [Test]
         public void KitAssemblesAnEnterableThreeStoreyBlock()
         {
             string path = Path.Combine(Directory.GetCurrentDirectory(), "Assets", "Resources", "KitCatalog.json");
