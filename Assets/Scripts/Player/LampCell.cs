@@ -11,6 +11,7 @@ namespace OutpostZero.Player
         public const float Drain = 4f;
         public const float Charge = 2f;
         public const float Peak = 2.8f;
+        public const float Pack = 60f;
 
         public static float Tick(float charge, bool on, float dt)
         {
@@ -54,6 +55,21 @@ namespace OutpostZero.Player
             if (spent < 0f) spent = 0f;
             if (spent > Full) spent = Full;
             return Full - spent;
+        }
+
+        public static bool Tops(float charge)
+        {
+            return charge >= Full;
+        }
+
+        public static float Fill(float charge, float amount)
+        {
+            if (charge < 0f) charge = 0f;
+            if (charge > Full) charge = Full;
+            if (amount < 0f) amount = 0f;
+            float next = charge + amount;
+            if (next > Full) return Full;
+            return next;
         }
     }
 }

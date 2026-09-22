@@ -4,6 +4,7 @@ using UnityEngine;
 using OutpostZero.Colony;
 using OutpostZero.Core;
 using OutpostZero.Items;
+using OutpostZero.Shell;
 
 namespace OutpostZero.Player
 {
@@ -206,6 +207,19 @@ namespace OutpostZero.Player
                 if (!TryConsume(id)) return false;
                 GetComponent<StatusEffectController>()?.ApplyPainkiller();
                 GameplayFeedback.Toast("Painkillers");
+                return true;
+            }
+            if (record.Id == "cell")
+            {
+                var body = GetComponent<PlayerController>();
+                if (body == null || LampCell.Tops(body.LampCellCharge))
+                {
+                    GameplayFeedback.Toast(Loc.T("lamp.full"));
+                    return false;
+                }
+                if (!TryConsume(id)) return false;
+                body.AddLamp(LampCell.Pack);
+                GameplayFeedback.Toast(Loc.T("lamp.fit"));
                 return true;
             }
             if (!TryConsume(id)) return false;

@@ -3643,6 +3643,38 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void ALampCellFromTheBenchFillsSixtyAndTheStreetStaysPut()
+        {
+            var cell = ItemCatalog.Find("cell");
+            Assert.IsNotNull(cell);
+            Assert.AreEqual(ItemUse.Cell, cell.Use);
+            Assert.AreEqual(0.15f, cell.Weight, 0.001f);
+            Assert.AreEqual("Fills the lamp by 60", ItemBrief.Effect(cell));
+            Assert.AreEqual("Pila", Loc.Item("cell", "es"));
+            Assert.AreEqual("Llena la linterna 60", Loc.T("unit.cell", "es"));
+            Assert.AreEqual(60f, LampCell.Pack, 0.001f);
+            Assert.AreEqual(60f, LampCell.Fill(0f, LampCell.Pack), 0.001f);
+            Assert.AreEqual(100f, LampCell.Fill(50f, LampCell.Pack), 0.001f);
+            Assert.AreEqual(100f, LampCell.Fill(100f, LampCell.Pack), 0.001f);
+            Assert.AreEqual(40f, LampCell.Fill(40f, 0f), 0.001f);
+            Assert.IsTrue(LampCell.Tops(100f));
+            Assert.IsFalse(LampCell.Tops(99f));
+            Assert.AreEqual(96f, LampCell.Tick(100f, true, 1f), 0.001f);
+            Assert.IsTrue(CraftBill.TryOf("cell", out var bill));
+            Assert.AreEqual(3, bill.Scrap);
+            Assert.AreEqual(1, bill.Chemicals);
+            Assert.AreEqual(0, bill.Cloth);
+            Assert.AreEqual(CraftBill.Workbench, bill.Station);
+            Assert.AreEqual(1, CraftGate.TierOf("cell"));
+            Assert.IsTrue(CraftGate.Open("cell", 1, ""));
+            Assert.AreEqual("Pila", Loc.T("recipe.cell", "es"));
+            var street = LootTables.Roll("street", 2);
+            Assert.AreEqual(7, street.Length);
+            Assert.AreEqual("raw_food", street[6].ItemId);
+            Assert.AreEqual("pipe_bomb", street[5].ItemId);
+        }
+
+        [Test]
         public void AZombieWithoutARigStillAttacksAndFalls()
         {
             Assert.AreEqual(14f, PoseSheet.Lean(ZombieAI.ZombieState.Chase, 0f), 0.001f);

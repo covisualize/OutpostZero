@@ -44,6 +44,7 @@ namespace OutpostZero.Colony
             else if (id == "repair_kit") cost = Make(6, 0, 1, 1, Workbench, "");
             else if (id == "barricade_kit") cost = Make(8, 0, 0, 2, Workbench, "");
             else if (id == "radio_spare") cost = Make(12, 0, 2, 1, Workbench, "");
+            else if (id == "cell") cost = Make(3, 0, 1, 0, Workbench, "");
             else return false;
             return true;
         }

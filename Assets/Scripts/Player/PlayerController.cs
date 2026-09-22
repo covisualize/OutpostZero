@@ -218,6 +218,12 @@ namespace OutpostZero.Player
             ApplyLamp();
         }
 
+        public void AddLamp(float amount)
+        {
+            lampCell = LampCell.Fill(lampCell, amount);
+            ApplyLamp();
+        }
+
         public void RestoreLamp(float spent)
         {
             lampCell = LampCell.FromSpent(spent);

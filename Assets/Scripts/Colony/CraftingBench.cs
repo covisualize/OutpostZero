@@ -40,7 +40,8 @@ namespace OutpostZero.Colony
             new Recipe { Id = "flare", Label = "Flare", ScrapCost = 4, OutputId = "flare", OutputCount = 1 },
             new Recipe { Id = "repair_kit", Label = "Generator repair", ScrapCost = 6, OutputId = "repair_kit", OutputCount = 1 },
             new Recipe { Id = "barricade_kit", Label = "Reinforced wall", ScrapCost = 8, OutputId = "barricade_kit", OutputCount = 1 },
-            new Recipe { Id = "radio_spare", Label = "Radio spare", ScrapCost = 12, OutputId = "radio_spare", OutputCount = 1 }
+            new Recipe { Id = "radio_spare", Label = "Radio spare", ScrapCost = 12, OutputId = "radio_spare", OutputCount = 1 },
+            new Recipe { Id = "cell", Label = "Lamp cell", ScrapCost = 3, OutputId = "cell", OutputCount = 1 }
         };
 
         private void Awake()
