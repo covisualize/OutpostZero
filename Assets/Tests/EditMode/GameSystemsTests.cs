@@ -6279,6 +6279,47 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void ACampWoundSlowsTheReloadAndTheNextSwing()
+        {
+            Assert.AreEqual(1.2f, WoundRack.Bite, 0.001f);
+            Assert.AreEqual(1.45f, WoundRack.Fever, 0.001f);
+            Assert.AreEqual(1.8f, WoundRack.Critical, 0.001f);
+            Assert.AreEqual(1f, WoundRack.Scale(0), 0.001f);
+            Assert.AreEqual(1f, WoundRack.Scale(-2), 0.001f);
+            Assert.AreEqual(1.2f, WoundRack.Scale(1), 0.001f);
+            Assert.AreEqual(1.45f, WoundRack.Scale(2), 0.001f);
+            Assert.AreEqual(1.8f, WoundRack.Scale(3), 0.001f);
+            Assert.AreEqual(1.8f, WoundRack.Scale(9), 0.001f);
+            Assert.AreEqual(1.8f, WoundRack.Reload(1.8f, 0, 0), 0.001f);
+            Assert.AreEqual(2.16f, WoundRack.Reload(1.8f, 0, 1), 0.001f);
+            Assert.AreEqual(2.61f, WoundRack.Reload(1.8f, 0, 2), 0.001f);
+            Assert.AreEqual(3.24f, WoundRack.Reload(1.8f, 0, 3), 0.001f);
+            Assert.AreEqual(3.24f, WoundRack.Reload(1.8f, 0, 9), 0.001f);
+            Assert.AreEqual(0f, WoundRack.Reload(-2f, 0, 2), 0.001f);
+            Assert.AreEqual(1.296f, WoundRack.Reload(1.8f, 8, 0), 0.001f);
+            Assert.AreEqual(1.8792f, WoundRack.Reload(1.8f, 8, 2), 0.001f);
+            Assert.AreEqual(1f, FieldHand.Reload(0), 0.001f);
+            Assert.AreEqual(0.8f, FieldHand.Reload(8), 0.001f);
+            Assert.AreEqual(1f, HandDepth.Reload(4), 0.001f);
+            Assert.AreEqual(0.9f, HandDepth.Reload(8), 0.001f);
+            float machete = 1f / 1.8f;
+            Assert.AreEqual(machete, WoundRack.Swing(machete, 0, WeaponType.Melee), 0.001f);
+            Assert.AreEqual(machete * 1.45f, WoundRack.Swing(machete, 2, WeaponType.Melee), 0.001f);
+            Assert.AreEqual(machete * 1.8f, WoundRack.Swing(machete, 3, WeaponType.Melee), 0.001f);
+            Assert.AreEqual(0f, WoundRack.Swing(-1f, 2, WeaponType.Melee), 0.001f);
+            Assert.AreEqual(1f / 9f, WoundRack.Swing(1f / 9f, 3, WeaponType.Rifle), 0.001f);
+            Assert.AreEqual(1f / 14f, WoundRack.Swing(1f / 14f, 3, WeaponType.SMG), 0.001f);
+            Assert.AreEqual("", WoundRack.Line(0, "en"));
+            Assert.AreEqual("The wound slows your hands", WoundRack.Line(1, "en"));
+            Assert.AreEqual("The wound slows your hands", WoundRack.Line(3, "en"));
+            Assert.AreEqual("La herida retrasa las manos", WoundRack.Line(2, "es"));
+            Assert.AreEqual(1.8f, WeaponCard.Find("machete").Rate, 0.001f);
+            Assert.AreEqual(9f, WeaponCard.Find("rifle_assault").Rate, 0.001f);
+            Assert.AreEqual(14f, WeaponCard.Find("smg").Rate, 0.001f);
+            Assert.AreEqual(34f, WeaponCard.Find("pistol_9mm").Damage, 0.001f);
+        }
+
+        [Test]
         public void AZombieWithoutARigStillAttacksAndFalls()
         {
             Assert.AreEqual(14f, PoseSheet.Lean(ZombieAI.ZombieState.Chase, 0f), 0.001f);

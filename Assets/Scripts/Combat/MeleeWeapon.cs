@@ -48,7 +48,10 @@ namespace OutpostZero.Combat
         {
             if (!CanAttack()) return false;
 
-            nextAttackTime = Time.time + (1f / attackRate);
+            int wound = OutpostZero.Colony.SurvivorRoster.Instance != null && OutpostZero.Colony.SurvivorRoster.Instance.Leader != null
+                ? OutpostZero.Colony.SurvivorRoster.Instance.Leader.injury
+                : 0;
+            nextAttackTime = Time.time + OutpostZero.Player.WoundRack.Swing(1f / attackRate, wound, weaponType);
 
             if (audioSource != null && swingSound != null)
             {

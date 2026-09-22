@@ -277,7 +277,12 @@ namespace OutpostZero.Combat
             isReloading = true;
             reloadElapsed = 0f;
             int guardSkill = SurvivorRoster.LeaderPractice("Guard");
-            reloadWait = reloadDuration * FieldHand.Reload(guardSkill) * HandDepth.Reload(guardSkill);
+            int wound = SurvivorRoster.Instance != null && SurvivorRoster.Instance.Leader != null
+                ? SurvivorRoster.Instance.Leader.injury
+                : 0;
+            reloadWait = OutpostZero.Player.WoundRack.Reload(reloadDuration, guardSkill, wound);
+            string slow = OutpostZero.Player.WoundRack.Line(wound, null);
+            if (slow.Length > 0) GameplayFeedback.Toast(slow);
             OnReloadStarted?.Invoke();
             PlaySound(reloadSound);
             int stage = 0;
