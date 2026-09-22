@@ -3575,6 +3575,46 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void AMuzzleMatchesTheGunAndTheWatchCountsIt()
+        {
+            Assert.IsFalse(MuzzleShape.Shows(WeaponType.Melee));
+            Assert.IsTrue(MuzzleShape.Shows(WeaponType.Pistol));
+            Assert.IsTrue(MuzzleShape.Smoke(WeaponType.Shotgun));
+            Assert.IsFalse(MuzzleShape.Smoke(WeaponType.Pistol));
+            Assert.IsFalse(MuzzleShape.Smoke(WeaponType.Rifle));
+            Assert.IsTrue(MuzzleShape.Strobe(WeaponType.Rifle));
+            Assert.IsTrue(MuzzleShape.Strobe(WeaponType.SMG));
+            Assert.IsFalse(MuzzleShape.Strobe(WeaponType.Shotgun));
+            Assert.IsFalse(MuzzleShape.Strobe(WeaponType.Pistol));
+            Assert.AreEqual(0.12f, MuzzleShape.Scale(WeaponType.Pistol), 0.001f);
+            Assert.AreEqual(0.28f, MuzzleShape.Scale(WeaponType.Shotgun), 0.001f);
+            Assert.AreEqual(0.08f, MuzzleShape.Scale(WeaponType.Rifle), 0.001f);
+            Assert.AreEqual(0.08f, MuzzleShape.Scale(WeaponType.SMG), 0.001f);
+            Assert.AreEqual(3.2f, MuzzleShape.Range(WeaponType.Pistol), 0.001f);
+            Assert.AreEqual(6.5f, MuzzleShape.Range(WeaponType.Shotgun), 0.001f);
+            Assert.AreEqual(5.5f, MuzzleShape.Range(WeaponType.Rifle), 0.001f);
+            Assert.AreEqual(2.4f, MuzzleShape.Intensity(WeaponType.Pistol), 0.001f);
+            Assert.AreEqual(4.2f, MuzzleShape.Intensity(WeaponType.Shotgun), 0.001f);
+            Assert.AreEqual(5f, MuzzleShape.Intensity(WeaponType.SMG), 0.001f);
+            Assert.AreEqual(0.05f, MuzzleShape.Hold(WeaponType.Pistol), 0.001f);
+            Assert.AreEqual(0.08f, MuzzleShape.Hold(WeaponType.Shotgun), 0.001f);
+            Assert.AreEqual(0.03f, MuzzleShape.Hold(WeaponType.Rifle), 0.001f);
+            VfxLedger.Reset();
+            VfxLedger.Borrow();
+            VfxLedger.Borrow();
+            Assert.AreEqual(2, VfxLedger.Live);
+            Assert.AreEqual(2, VfxLedger.Peak);
+            VfxLedger.Return();
+            Assert.AreEqual(1, VfxLedger.Live);
+            Assert.AreEqual(2, VfxLedger.Peak);
+            Assert.AreEqual("vfx 1  peak 2", VfxLedger.Line());
+            VfxLedger.Return();
+            VfxLedger.Return();
+            Assert.AreEqual(0, VfxLedger.Live);
+            VfxLedger.Reset();
+        }
+
+        [Test]
         public void ThunderCoversAGunshotAndStillNamesItself()
         {
             Assert.IsFalse(StormCover.ThunderDue(0f, 20f, false));

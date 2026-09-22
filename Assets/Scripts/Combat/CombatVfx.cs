@@ -20,7 +20,7 @@ namespace OutpostZero.Combat
         public static void Shot(Vector3 muzzle, Vector3 direction, Vector3 end, Vector3 eject, bool tracer, WeaponType type)
         {
             direction = direction.sqrMagnitude > 0.001f ? direction.normalized : Vector3.forward;
-            if (FlashCap.Take(Time.time, Quiet())) Muzzle(muzzle, direction);
+            if (MuzzleShape.Shows(type) && FlashCap.Take(Time.time, Quiet())) Muzzle(muzzle, direction, type);
             if (tracer) Tracer(muzzle, end);
             Shell(muzzle, eject, type);
         }
@@ -29,6 +29,7 @@ namespace OutpostZero.Combat
         {
             if (!FlashCap.Take(Time.time, Quiet())) return false;
             var flash = new GameObject("Lightning");
+            Seat(flash);
             flash.transform.position = position;
             var light = flash.AddComponent<Light>();
             light.type = LightType.Point;
@@ -52,6 +53,7 @@ namespace OutpostZero.Combat
             float radius = kind == HazardKind.Explosive ? 4.2f : 2.4f;
             var sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
             sphere.name = "Burst_" + kind;
+            Seat(sphere);
             Object.Destroy(sphere.GetComponent<Collider>());
             sphere.transform.position = origin;
             sphere.transform.localScale = Vector3.one * 0.4f;
@@ -77,6 +79,7 @@ namespace OutpostZero.Combat
             if (BlastWake.Ring(kind)) Ring(origin);
             if (BlastWake.Smokes(kind)) Column(origin);
             var go = new GameObject("Blast_" + BlastWake.Wake(kind));
+            Seat(go);
             go.transform.position = new Vector3(origin.x, 0.02f, origin.z);
             go.AddComponent<BlastRemain>().Arm(kind);
             OutpostZero.Shell.AudioManager.Instance?.PlayAt(BlastWake.Sound(kind), origin, BlastWake.Volume(kind));
@@ -86,6 +89,7 @@ namespace OutpostZero.Combat
         {
             var ring = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
             ring.name = "ShockRing";
+            Seat(ring);
             Object.Destroy(ring.GetComponent<Collider>());
             ring.transform.position = new Vector3(origin.x, 0.08f, origin.z);
             ring.transform.localScale = new Vector3(0.2f, 0.02f, 0.2f);
@@ -97,6 +101,7 @@ namespace OutpostZero.Combat
         private static void Column(Vector3 origin)
         {
             var go = new GameObject("SmokeColumn");
+            Seat(go);
             go.transform.position = origin;
             var particles = go.AddComponent<ParticleSystem>();
             var main = particles.main;
@@ -110,31 +115,61 @@ namespace OutpostZero.Combat
             Object.Destroy(go, BlastWake.Smoke);
         }
 
-        private static void Muzzle(Vector3 position, Vector3 direction)
+        private static void Muzzle(Vector3 position, Vector3 direction, WeaponType type)
+        {
+            Flash(position, direction, type, 0.15f, 1f);
+            if (MuzzleShape.Strobe(type)) Flash(position, direction, type, 0.28f, 0.45f);
+            if (MuzzleShape.Smoke(type)) SmokePuff(position);
+        }
+
+        private static void Flash(Vector3 position, Vector3 direction, WeaponType type, float reach, float scale)
         {
             var flash = new GameObject("MuzzleFlash");
-            flash.transform.position = position + direction * 0.15f;
+            Seat(flash);
+            flash.transform.position = position + direction * reach;
             var light = flash.AddComponent<Light>();
             light.type = LightType.Point;
-            light.range = 4.5f;
-            light.intensity = 3.5f;
+            light.range = MuzzleShape.Range(type);
+            light.intensity = MuzzleShape.Intensity(type) * scale;
             light.color = new Color(1f, 0.78f, 0.45f);
             var spark = GameObject.CreatePrimitive(PrimitiveType.Sphere);
             Object.Destroy(spark.GetComponent<Collider>());
             spark.transform.SetParent(flash.transform, false);
-            spark.transform.localScale = Vector3.one * 0.12f;
+            spark.transform.localScale = Vector3.one * (MuzzleShape.Scale(type) * scale);
             var renderer = spark.GetComponent<Renderer>();
             if (renderer != null)
             {
                 renderer.sharedMaterial = SpriteMaterial();
                 renderer.material.color = new Color(1f, 0.9f, 0.55f, 0.9f);
             }
-            flash.AddComponent<BurstFade>().Arm(0.45f, 0.05f);
+            flash.AddComponent<BurstFade>().Arm(0.45f, MuzzleShape.Hold(type));
+        }
+
+        private static void SmokePuff(Vector3 position)
+        {
+            var go = new GameObject("MuzzleSmoke");
+            Seat(go);
+            go.transform.position = position;
+            var particles = go.AddComponent<ParticleSystem>();
+            var main = particles.main;
+            main.startLifetime = 0.35f;
+            main.startSpeed = 0.6f;
+            main.startSize = 0.18f;
+            main.startColor = new Color(0.35f, 0.32f, 0.28f, 0.55f);
+            main.maxParticles = 8;
+            particles.Emit(6);
+            Object.Destroy(go, 0.4f);
+        }
+
+        private static void Seat(GameObject go)
+        {
+            if (go != null && go.GetComponent<VfxSeat>() == null) go.AddComponent<VfxSeat>();
         }
 
         public static void Tracer(Vector3 from, Vector3 to)
         {
             var tracer = new GameObject("Tracer");
+            Seat(tracer);
             var line = tracer.AddComponent<LineRenderer>();
             line.positionCount = 2;
             line.SetPosition(0, from);
@@ -153,6 +188,7 @@ namespace OutpostZero.Combat
         {
             var shell = GameObject.CreatePrimitive(PrimitiveType.Cube);
             shell.name = "Shell";
+            Seat(shell);
             shell.transform.position = position;
             bool hull = type == WeaponType.Shotgun;
             shell.transform.localScale = hull ? new Vector3(0.04f, 0.04f, 0.09f) : new Vector3(0.03f, 0.03f, 0.07f);
@@ -191,6 +227,7 @@ namespace OutpostZero.Combat
                 OutpostZero.Shell.AudioManager.Instance?.PlayAt(sound, transform.position, volume);
                 var mark = GameObject.CreatePrimitive(PrimitiveType.Quad);
                 mark.name = "BrassMark";
+                Seat(mark);
                 Object.Destroy(mark.GetComponent<Collider>());
                 mark.transform.position = transform.position + Vector3.down * 0.02f;
                 mark.transform.rotation = Quaternion.Euler(90f, 0f, 0f);
@@ -204,6 +241,7 @@ namespace OutpostZero.Combat
         public static void Mist(Vector3 point)
         {
             var go = new GameObject("HeadMist");
+            Seat(go);
             go.transform.position = point + Vector3.up * 0.15f;
             var particles = go.AddComponent<ParticleSystem>();
             var main = particles.main;
@@ -222,6 +260,7 @@ namespace OutpostZero.Combat
         {
             var mark = GameObject.CreatePrimitive(PrimitiveType.Quad);
             mark.name = "BloodDrip";
+            Seat(mark);
             Object.Destroy(mark.GetComponent<Collider>());
             mark.transform.position = feet + Vector3.up * 0.02f;
             mark.transform.rotation = Quaternion.Euler(90f, 0f, 0f);
@@ -234,6 +273,7 @@ namespace OutpostZero.Combat
         public static void Embers(Vector3 origin)
         {
             var go = new GameObject("FireEmbers");
+            Seat(go);
             go.transform.position = origin + Vector3.up * 0.2f;
             var particles = go.AddComponent<ParticleSystem>();
             var main = particles.main;
@@ -250,6 +290,7 @@ namespace OutpostZero.Combat
         public static void Sparks(Vector3 origin)
         {
             var go = new GameObject("LampSparks");
+            Seat(go);
             go.transform.position = origin;
             var particles = go.AddComponent<ParticleSystem>();
             var main = particles.main;
@@ -267,6 +308,7 @@ namespace OutpostZero.Combat
         {
             if (count <= 0) return;
             var go = new GameObject(wet ? "StepSplash" : "StepDust");
+            Seat(go);
             go.transform.position = feet + Vector3.up * 0.05f;
             var particles = go.AddComponent<ParticleSystem>();
             var main = particles.main;
