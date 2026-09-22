@@ -3723,6 +3723,33 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void ADeepScavengerBringsExtraScrapAndSometimesACell()
+        {
+            Assert.AreEqual(0, ScrapDepth.Extra(4));
+            Assert.AreEqual(0, ScrapDepth.Extra(0));
+            Assert.AreEqual(0, ScrapDepth.Extra(-1));
+            Assert.AreEqual(1, ScrapDepth.Extra(5));
+            Assert.AreEqual(4, ScrapDepth.Extra(8));
+            Assert.AreEqual(4, ScrapDepth.Extra(12));
+            Assert.AreEqual(1, Practice.Bonus(4));
+            Assert.AreEqual(1, Practice.Bonus(8));
+            Assert.IsFalse(HaulCell.Due(5, 3));
+            Assert.IsFalse(HaulCell.Due(1, 4));
+            Assert.IsTrue(HaulCell.Due(5, 4));
+            Assert.IsFalse(HaulCell.Due(1, 8));
+            Assert.IsTrue(HaulCell.Due(3, 8));
+            Assert.IsFalse(HaulCell.Due(0, 0));
+            Assert.IsTrue(HaulCell.Due(-5, 4));
+            CraftBill.Salvage(1, false, out int cloth, out int chemicals, out int tape);
+            Assert.AreEqual(1, cloth);
+            Assert.AreEqual(1, chemicals);
+            Assert.AreEqual(0, tape);
+            Assert.IsTrue(SaveCodec.TryDeserialize("{\"schemaVersion\":1}", out var legacy, out var error), error);
+            Assert.AreEqual(0, legacy.cells);
+            Assert.AreEqual("Pilas", Loc.T("camp.cell", "es"));
+        }
+
+        [Test]
         public void AZombieWithoutARigStillAttacksAndFalls()
         {
             Assert.AreEqual(14f, PoseSheet.Lean(ZombieAI.ZombieState.Chase, 0f), 0.001f);

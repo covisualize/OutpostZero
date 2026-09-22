@@ -401,6 +401,7 @@ namespace OutpostZero.Colony
                         {
                             survivor.scavenge = Practice.Gain(survivor.scavenge);
                             scrap += Practice.Bonus(survivor.scavenge);
+                            scrap += ScrapDepth.Extra(survivor.scavenge);
                         }
                         if (scrap > 0 && storage != null) storage.AddScrap(scrap);
                         if (scrap > 0) survivor.morale = Mathf.Max(0f, survivor.morale - 4f);
@@ -412,6 +413,7 @@ namespace OutpostZero.Colony
                             if (tape > 0) storage.AddTape(tape);
                             if (scrap > 0) storage.AddRaw(1);
                             if (scrap > 0) storage.AddRounds(GuardVolley.Brought(scrounge));
+                            if (scrap > 0 && HaulCell.Due(day * 17 + index, survivor.scavenge)) storage.AddCells(1);
                         }
                         break;
                     case "Cook":

@@ -176,6 +176,7 @@ namespace OutpostZero.Shell
                 data.raw = ColonyStorage.Instance.Raw;
                 data.bodies = ColonyStorage.Instance.Bodies;
                 data.rounds = ColonyStorage.Instance.Rounds;
+                data.cells = ColonyStorage.Instance.Cells;
                 data.shots = ColonyStorage.Instance.Shots;
                 data.prints = ColonyStorage.Instance.Prints;
             }
@@ -315,6 +316,7 @@ namespace OutpostZero.Shell
             ColonyStorage.Instance?.SetRaw(data.raw);
             ColonyStorage.Instance?.SetBodies(data.bodies);
             ColonyStorage.Instance?.SetRounds(data.rounds);
+            ColonyStorage.Instance?.SetCells(data.cells);
             ColonyStorage.Instance?.SetShots(data.shots);
             CampServices.Instance?.SetFuel(FuelTank.Unpack(data.fuel, data.fuelSet));
             ColonyStorage.Instance?.SetPrints(data.prints);

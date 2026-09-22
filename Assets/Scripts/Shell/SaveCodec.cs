@@ -57,6 +57,7 @@ namespace OutpostZero.Shell
         public int raw;
         public int bodies;
         public int rounds;
+        public int cells;
         public int fuel;
         public int fuelSet;
         public int shots;

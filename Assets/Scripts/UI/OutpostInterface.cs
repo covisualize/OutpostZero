@@ -776,6 +776,17 @@ namespace OutpostZero.UI
                     + (services != null ? "  " + Loc.T("camp.fuel") + " " + FuelTank.Label(services.FuelHours) : "")));
                 camp.Add(Body(Loc.T("camp.room") + " " + storage.Used + "/" + storage.Room));
                 if (storage.Bodies > 0) camp.Add(Body(Loc.T("camp.bodies") + " " + storage.Bodies));
+                if (storage.Cells > 0)
+                {
+                    camp.Add(Button(Loc.T("camp.cell") + " " + storage.Cells, () =>
+                    {
+                        var pack = PlayerRegistry.Current != null ? PlayerRegistry.Current.GetComponent<PlayerInventory>() : null;
+                        var record = ItemCatalog.Find("cell");
+                        if (pack == null || record == null || ColonyStorage.Instance == null) return;
+                        if (!pack.TryAddItem(record.Id, record.DisplayName, record.Category, 1, record.Weight)) return;
+                        ColonyStorage.Instance.TakeCell();
+                    }));
+                }
             }
             var roster = SurvivorRoster.Instance;
             if (roster != null)
