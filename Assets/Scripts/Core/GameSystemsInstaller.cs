@@ -143,6 +143,7 @@ namespace OutpostZero.Core
                 if (name.Contains("Toxic")) hazard.Configure(HazardKind.Toxic);
                 else if (name.Contains("Oil")) hazard.Configure(HazardKind.Oil);
                 else hazard.Configure(HazardKind.Explosive);
+                hazard.Stamp(StreetLedger.Mark(name, go.transform.position.x, go.transform.position.z));
             }
 
             if (name.Contains("Dumpster") && go.GetComponent<FlyMark>() == null)

@@ -21,12 +21,38 @@ namespace OutpostZero.Combat
         private bool detonated;
         private float fuseAt;
         private float nextHiss;
+        private string stamp = "";
+
+        public string StampId => stamp ?? "";
 
         public void Configure(HazardKind hazardKind)
         {
             kind = hazardKind;
             if (kind == HazardKind.Toxic) damage = 18f;
             if (kind == HazardKind.Oil) damage = 8f;
+        }
+
+        public void Stamp(string mark)
+        {
+            stamp = mark ?? "";
+        }
+
+        public void Silence()
+        {
+            detonated = true;
+            gameObject.SetActive(false);
+        }
+
+        public static void Sweep()
+        {
+            if (WorldMapService.Instance == null) return;
+            var hazards = Object.FindObjectsByType<DestructibleHazard>(FindObjectsSortMode.None);
+            for (int i = 0; i < hazards.Length; i++)
+            {
+                if (hazards[i] == null) continue;
+                if (!WorldMapService.Instance.StreetTaken(hazards[i].StampId)) continue;
+                hazards[i].Silence();
+            }
         }
 
         public void TakeHit(float amount)
@@ -62,6 +88,7 @@ namespace OutpostZero.Combat
         private void Detonate()
         {
             detonated = true;
+            if (!string.IsNullOrEmpty(stamp)) WorldMapService.Instance?.NoteStreet(stamp);
             Vector3 origin = transform.position + Vector3.up * 0.5f;
             if (NoiseManager.Instance != null)
             {

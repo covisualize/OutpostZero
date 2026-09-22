@@ -1067,6 +1067,23 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void ABurstBarrelStaysGoneOnTheNextTrip()
+        {
+            string barrel = StreetLedger.Mark("barrel_explosive", 1.6f, 4f);
+            string crate = StreetLedger.Mark("crate", 1.6f, 4f);
+            Assert.AreEqual("barrel_explosive@16,40", barrel);
+            Assert.AreNotEqual(barrel, crate);
+            string packed = StreetLedger.Note("", "rail_yard", barrel);
+            Assert.IsTrue(StreetLedger.Has(packed, "rail_yard", barrel));
+            Assert.IsFalse(StreetLedger.Has(packed, "rail_yard", crate));
+            Assert.IsFalse(StreetLedger.Has(packed, "ash_market", barrel));
+            Assert.AreEqual(1, StreetLedger.Count(packed, "rail_yard"));
+            packed = StreetLedger.Note(packed, "rail_yard", crate);
+            Assert.AreEqual(2, StreetLedger.Count(packed, "rail_yard"));
+            Assert.AreEqual(0, StreetLedger.Count(packed, "ash_market"));
+        }
+
+        [Test]
         public void AnEmptiedCrateStaysEmptyOnTheSameStreet()
         {
             Assert.AreEqual("crate@16,40", StreetLedger.Mark("crate", 1.6f, 4f));

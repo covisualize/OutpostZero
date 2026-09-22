@@ -216,6 +216,18 @@ namespace OutpostZero.Expedition
             Paint(body.GetComponent<Renderer>(), color);
         }
 
+        private void Scar(float x, float z)
+        {
+            var scar = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            scar.name = "BarrelScar";
+            scar.transform.SetParent(root, false);
+            scar.transform.position = new Vector3(x, 0.02f, z);
+            scar.transform.localScale = new Vector3(1.15f, 0.02f, 1.15f);
+            var collider = scar.GetComponent<Collider>();
+            if (collider != null) Destroy(collider);
+            Paint(scar.GetComponent<Renderer>(), new Color(0.08f, 0.06f, 0.05f));
+        }
+
         private static void Keep(LootContainer box, string table, string mark)
         {
             box.Configure(table);
@@ -418,10 +430,18 @@ namespace OutpostZero.Expedition
 
             if (barrel)
             {
+                string mark = StreetLedger.Mark(piece.Role, piece.X, piece.Z);
+                if (WorldMapService.Instance != null && WorldMapService.Instance.StreetTaken(mark))
+                {
+                    Scar(piece.X, piece.Z);
+                    Destroy(body);
+                    return;
+                }
                 var hazard = body.AddComponent<DestructibleHazard>();
                 if (piece.Role.Contains("toxic")) hazard.Configure(HazardKind.Toxic);
                 else if (piece.Role.Contains("oil")) hazard.Configure(HazardKind.Oil);
                 else hazard.Configure(HazardKind.Explosive);
+                hazard.Stamp(mark);
             }
             else if (piece.Role.StartsWith("crate"))
             {
