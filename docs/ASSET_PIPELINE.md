@@ -102,7 +102,7 @@ python3 BlenderScripts/texture_set.py
 - Cameras and lights are dropped. Materials are imported via material description.
 - Characters (`/Characters/`) get a Generic rig with an avatar created from the model, and uncompressed animation. Their clips are handed to `SurvivorAnimatorBuilder.AssignMotions`, which binds them into `Resources/SurvivorLocomotion.controller`. Other models import without animation.
 - If `<Name>_Albedo.png` exists, a `OutpostZero/TriplanarRim` material is created or updated with albedo, normal, occlusion and mask maps. On later imports every source material the sidecar lists is remapped onto that baked material, so each LOD renders with it.
-- A prefab is created the first time the model is imported, with the collider the sidecar names (`box` fitted to LOD0's bounds, `mesh`, `convex`, or `none`). Existing prefabs are never overwritten, so hand edits survive re-imports.
+- A prefab is created the first time the model is imported, with the collider the sidecar names (`box`, `mesh`, `convex`, or `none`). A `box` takes the sidecar's bind-pose `size`, `floor` and `center`, because a skinned renderer's bounds cover every animation pose. Existing prefabs are never overwritten, so hand edits survive re-imports.
 
 ## Levels of detail and colliders
 
@@ -120,6 +120,31 @@ python3 BlenderScripts/texture_set.py
 | `Props`, `Weapons` | 2000 |
 | `Kit` | 1500 |
 | `Environment`, `BaseBuilding` | 8000 |
+
+## Artifact suite
+
+`Assets/Tests/EditMode/Artifacts/` reads the committed files as plain text, so it runs in the Typecheck job without a Unity licence as well as in Unity. Each test prints one line per problem naming the file:
+
+| Test | Fails when |
+|---|---|
+| `ManifestMatchesDisk` | an entry has no FBX, meta or sidecar, or an FBX sits in `Assets/Models` with no entry |
+| `UvsAndTextures` | an FBX has no UVs, or a map is missing, has no meta, or is not the manifest size |
+| `PrefabExistsForEveryModel` | a prefab is missing, does not come from its FBX, has no collider, or a rigged FBX imports no rig |
+| `ScaleAndPivotSane` | a model is under 3 cm or over 40 m, sits more than 5 cm off a bottom pivot, or a character is not 1.4 to 2.6 m tall |
+| `BoxCollidersMatchTheBindPose` | a box collider drifts from the sidecar, or a prefab turns its model more than 45 degrees |
+| `MaterialsResolved` | a baked material or prefab points at a GUID with no asset |
+| `TriangleBudget` | LOD0 is over the `asset_audit.py` budget for its folder |
+| `ScenePathsResolve` | a build scene or `ModelPaths` constant is missing |
+
+`Tools/Typecheck/triage.py` writes `.typecheck/results/editmode-junit.xml` and fails the job if the suite takes more than 60 s. When colliders drift, rewrite them from the sidecars:
+
+```powershell
+python BlenderScripts\prefab_colliders.py --fix
+```
+
+```bash
+python3 BlenderScripts/prefab_colliders.py --fix
+```
 
 ## Adding a new asset end to end
 

@@ -78,7 +78,7 @@ Play this in a player build, not the editor. Use Survivor difficulty and a fixed
 - [ ] PRO-31 **Play**: start, complete the objective, extract, see the results, and return to camp with the inventory kept.
 - [ ] PRO-32 **Play**: every state animates, the reload matches its clip, and feet don't slide at walk speed.
 - [ ] PRO-33 **Automated** (`SourceHygieneTests`: no legacy `Input.` calls) and **Play**: a full expedition works on an Xbox pad, a PlayStation pad and keyboard and mouse.
-- [ ] PRO-34 **Play**: Tab opens the pack. Use, drop and equip work with the mouse and the pad. The weight bar is right and every item has an icon.
+- [ ] PRO-34 **Play**: Tab opens the pack. Use, drop and equip work with the mouse and the pad. The weight bar is right and every item has an icon. The Show button cycles categories, the equipped block lists the four weapon slots, belt and pack tier, and Stow moves a stack into an open crate.
 
 ### M2: Graphics detail
 
@@ -102,7 +102,7 @@ Play this in a player build, not the editor. Use Survivor difficulty and a fixed
 - [ ] PRO-49 **Automated** (a kit assembles an enterable three-storey block) and **Play**: the storefront and warehouse interiors can be entered.
 - [ ] PRO-50 **Automated** (`ItemDatabaseTests`: every item has a definition, FBX, prefab and 64 px rendered icon, all linked; `ItemDatabase.Get("ammo_9mm")`) and **Play**: icons render in the pack and a dropped item lands as its model, not a cube.
 - [ ] PRO-51 **Automated** (the scene builder has no FBX paths, and every builder id has a prefab) and **Play**: reimporting an FBX regenerates its prefab, and zombies and loot spawn from prefabs.
-- [ ] PRO-52 **Play**: deleting a texture or renaming an FBX turns CI red with a clear message, and the suite runs in under 60 s.
+- [ ] PRO-52 **Play**: deleting a texture or renaming an FBX turns CI red with a clear message, and the suite runs in under 60 s. (Covered off-engine by `Artifacts/ArtifactSuiteTests`; confirm the same in the Unity job.)
 - [ ] PRO-53 **Play**: pushing a `v*` tag produces three zips that launch to the menu, and the version in the menu matches the tag.
 - [ ] PRO-54 **Play**: a new contributor can clone, regenerate assets, build the scene and run the tests from the docs alone.
 
