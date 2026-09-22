@@ -2265,6 +2265,34 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void ALitApproachLosesItsSneak()
+        {
+            RaidPlan.AnchorOf("gate", out float gateX, out float gateZ);
+            var on = new[] { gateX, gateX, gateX + 20f };
+            var z = new[] { gateZ, gateZ, gateZ };
+            var sites = new[] { 0, 0, 0 };
+            var integrity = new[] { 100, 100, 100 };
+            Assert.AreEqual(0, FloodBeam.Covering("gate", on, z, sites, integrity, false));
+            Assert.AreEqual(2, FloodBeam.Covering("gate", on, z, sites, integrity, true));
+            Assert.AreEqual(1, FloodBeam.Covering("gate", on, z, new[] { 1, 0, 0 }, integrity, true));
+            Assert.AreEqual(1, FloodBeam.Covering("gate", on, z, sites, new[] { 0, 100, 100 }, true));
+            Assert.AreEqual(0, FloodBeam.Covering("gate", null, z, sites, integrity, true));
+            var edge = new[] { gateX };
+            var far = new[] { gateZ + FloodBeam.Radius };
+            Assert.AreEqual(0, FloodBeam.Covering("gate", edge, far, new[] { 0 }, new[] { 100 }, true));
+            var inside = new[] { gateZ + FloodBeam.Radius - 0.1f };
+            Assert.AreEqual(1, FloodBeam.Covering("gate", edge, inside, new[] { 0 }, new[] { 100 }, true));
+            Assert.AreEqual(6, FloodBeam.ApproachPressure(8, 1));
+            Assert.AreEqual(4, FloodBeam.ApproachPressure(8, 2));
+            Assert.AreEqual(4, FloodBeam.ApproachPressure(8, 3));
+            Assert.AreEqual(1, FloodBeam.ApproachPressure(2, 2));
+            Assert.AreEqual(1.55f, FloodBeam.ApproachGap(1.2f, 1), 0.001f);
+            Assert.AreEqual(1.9f, FloodBeam.ApproachGap(1.2f, 2), 0.001f);
+            Assert.AreEqual(3.1f, FloodBeam.ApproachGap(2.9f, 2), 0.001f);
+            Assert.AreEqual("Las luces los descubren", Loc.T("camp.lamps", "es"));
+        }
+
+        [Test]
         public void AFarmFeedsTheCampAfterThreeMornings()
         {
             var plots = new[]

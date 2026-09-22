@@ -299,6 +299,32 @@ namespace OutpostZero.Colony
             return new Vector3(-12f, 1.2f, -12f);
         }
 
+        private static int LampsOn(string approach)
+        {
+            if (GridBuilder.Instance == null) return 0;
+            bool powered = CampServices.Instance != null && CampServices.Instance.GeneratorOnline;
+            int count = 0;
+            foreach (var module in GridBuilder.Instance.Placed)
+            {
+                if (module.kind == "Lamp") count++;
+            }
+            var x = new float[count];
+            var z = new float[count];
+            var sites = new int[count];
+            var integrity = new int[count];
+            int cursor = 0;
+            foreach (var module in GridBuilder.Instance.Placed)
+            {
+                if (module.kind != "Lamp") continue;
+                x[cursor] = module.x;
+                z[cursor] = module.z;
+                sites[cursor] = module.site;
+                integrity[cursor] = module.integrity;
+                cursor++;
+            }
+            return FloodBeam.Covering(approach, x, z, sites, integrity, powered);
+        }
+
         private void ApplyWave(int index, bool announce)
         {
             var wave = RaidPlan.WaveAt(raidDay, raidTowers, index);
@@ -307,9 +333,14 @@ namespace OutpostZero.Colony
             int walls = GridBuilder.Instance != null ? GridBuilder.Instance.BarricadeCount() : 0;
             pressure = CampYield.RaidPressure(wave.Pressure + (broadcast ? 4 : 0), generator, walls);
             strikeInterval = broadcast && index == 0 ? 1.2f : wave.Interval;
+            int lamps = LampsOn(approach);
+            pressure = FloodBeam.ApproachPressure(pressure, lamps);
+            strikeInterval = FloodBeam.ApproachGap(strikeInterval, lamps);
             phase = index;
             if (!announce) return;
-            GameplayFeedback.Toast("They come from the " + approach);
+            string line = "They come from the " + approach;
+            if (lamps > 0) line += "  " + Loc.T("camp.lamps");
+            GameplayFeedback.Toast(line);
             int extra = RaidPlan.Reinforcements(index);
             if (extra > 0 && HordeDirector.Instance != null) HordeDirector.Instance.BeginRaid(extra);
         }
