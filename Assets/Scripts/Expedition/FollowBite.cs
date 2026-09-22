@@ -16,7 +16,7 @@ namespace OutpostZero.Expedition
             if (nearest < 0f || nearest > Reach) return false;
             if (last <= 0f) return true;
             if (now < last) return false;
-            return now - last >= Gap;
+            return OutpostZero.Core.Tick.Past(now, last, Gap);
         }
 
         public static int After(int held)

@@ -19,7 +19,7 @@ namespace OutpostZero.Graphics
                 if (halfW <= 0f || halfD <= 0f) continue;
                 float nx = (x - spot.X) / halfW;
                 float nz = (z - spot.Z) / halfD;
-                if (nx * nx + nz * nz <= 1f) return true;
+                if (nx * nx + nz * nz <= 1f + OutpostZero.Core.Tick.Slack) return true;
             }
             return false;
         }

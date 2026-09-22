@@ -20,7 +20,7 @@ namespace OutpostZero.Sensory
             float occlusion = 1f;
             if (wall) occlusion = type == NoiseType.ZombieScream ? 0f : Leak;
             float perceived = (1f - distance / radius) * intensity * occlusion;
-            if (perceived <= Floor) return 0f;
+            if (perceived <= Floor + Tick.Slack) return 0f;
             return perceived;
         }
     }

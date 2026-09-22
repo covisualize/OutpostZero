@@ -16,7 +16,7 @@ namespace OutpostZero.Graphics
         {
             if (bolt <= 0f) return false;
             if (now < bolt) return false;
-            return now - bolt <= Hold;
+            return now - bolt <= Hold + OutpostZero.Core.Tick.Slack;
         }
 
         public static float Glare(float exposure, bool live)
