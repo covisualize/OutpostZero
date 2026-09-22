@@ -137,7 +137,9 @@ namespace OutpostZero.Colony
         {
             var wave = RaidPlan.WaveAt(raidDay, raidTowers, index);
             approach = broadcast && index == 0 ? "gate" : wave.Approach;
-            pressure = wave.Pressure + (broadcast ? 4 : 0);
+            bool generator = GridBuilder.Instance != null && GridBuilder.Instance.HasKind("Generator");
+            int walls = GridBuilder.Instance != null ? GridBuilder.Instance.BarricadeCount() : 0;
+            pressure = CampYield.RaidPressure(wave.Pressure + (broadcast ? 4 : 0), generator, walls);
             strikeInterval = broadcast && index == 0 ? 1.2f : wave.Interval;
             phase = index;
             if (!announce) return;

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 using OutpostZero.Core;
+using OutpostZero.Graphics;
 
 namespace OutpostZero.Colony
 {
@@ -14,7 +15,9 @@ namespace OutpostZero.Colony
         Watchtower,
         Generator,
         Workbench,
-        TradingPost
+        TradingPost,
+        Farm,
+        Purifier
     }
 
     [Serializable]
@@ -25,6 +28,7 @@ namespace OutpostZero.Colony
         public float z;
         public int rotation;
         public int integrity = 100;
+        public int age;
     }
 
     public class GridBuilder : MonoBehaviour
@@ -70,6 +74,24 @@ namespace OutpostZero.Colony
         }
 
         public void Select(ModuleKind kind) => selected = kind;
+
+        public void Grow()
+        {
+            var plots = new CampYield.Plot[placed.Count];
+            for (int i = 0; i < placed.Count; i++)
+            {
+                plots[i].Kind = placed[i].kind;
+                plots[i].Age = placed[i].age;
+                plots[i].Integrity = placed[i].integrity;
+            }
+            CampYield.Advance(plots);
+            bool rain = WeatherController.Instance != null && WeatherController.Instance.Kind == WeatherKind.Rain;
+            CampYield.Produce(plots, rain, out int food, out int water);
+            for (int i = 0; i < placed.Count; i++) placed[i].age = plots[i].Age;
+            if (ColonyStorage.Instance == null) return;
+            if (food > 0) ColonyStorage.Instance.AddFood(food);
+            if (water > 0) ColonyStorage.Instance.AddWater(water);
+        }
 
         public void TryPlaceAtPointer()
         {
@@ -281,6 +303,8 @@ namespace OutpostZero.Colony
                 case ModuleKind.Generator: return 14;
                 case ModuleKind.Workbench: return 12;
                 case ModuleKind.TradingPost: return 20;
+                case ModuleKind.Farm: return 18;
+                case ModuleKind.Purifier: return 15;
                 default: return 6;
             }
         }
@@ -296,6 +320,8 @@ namespace OutpostZero.Colony
                 case "Generator": return new Vector3(1.1f, 0.8f, 0.7f);
                 case "Workbench": return new Vector3(1.6f, 0.9f, 0.8f);
                 case "TradingPost": return new Vector3(1.8f, 1.4f, 1.2f);
+                case "Farm": return new Vector3(2.2f, 0.25f, 2.2f);
+                case "Purifier": return new Vector3(0.7f, 1.3f, 0.7f);
                 default: return new Vector3(1.8f * health, 1.1f * Mathf.Lerp(0.35f, 1f, health), 0.4f);
             }
         }
@@ -310,6 +336,8 @@ namespace OutpostZero.Colony
                 case "Generator": return new Color(0.55f, 0.48f, 0.18f);
                 case "Workbench": return new Color(0.38f, 0.32f, 0.26f);
                 case "TradingPost": return new Color(0.55f, 0.32f, 0.22f);
+                case "Farm": return new Color(0.28f, 0.48f, 0.24f);
+                case "Purifier": return new Color(0.35f, 0.7f, 0.78f);
                 default: return new Color(0.48f, 0.42f, 0.32f);
             }
         }

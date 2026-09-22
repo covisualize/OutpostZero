@@ -819,6 +819,18 @@ namespace OutpostZero.UI
             build.Add(Button(Loc.T("camp.generator"), () => GridBuilder.Instance?.Select(ModuleKind.Generator)));
             build.Add(Button(Loc.T("camp.bench"), () => GridBuilder.Instance?.Select(ModuleKind.Workbench)));
             build.Add(Button(Loc.T("camp.post"), () => GridBuilder.Instance?.Select(ModuleKind.TradingPost)));
+            build.Add(Button(Loc.T("camp.farm"), () => GridBuilder.Instance?.Select(ModuleKind.Farm)));
+            build.Add(Button(Loc.T("camp.purifier"), () => GridBuilder.Instance?.Select(ModuleKind.Purifier)));
+            if (GridBuilder.Instance != null)
+            {
+                int sprout = -1;
+                foreach (var module in GridBuilder.Instance.Placed)
+                {
+                    if (module.kind != "Farm" || module.integrity <= 0 || module.age >= CampYield.FarmWait) continue;
+                    if (sprout < 0 || module.age < sprout) sprout = module.age;
+                }
+                if (sprout >= 0) camp.Add(Body(Loc.T("camp.sprout") + " " + sprout + "/" + CampYield.FarmWait));
+            }
             camp.Add(build);
             camp.Add(Body(Loc.T("camp.craft")));
             bool bench = GridBuilder.Instance != null && GridBuilder.Instance.HasKind("Workbench");
@@ -1057,7 +1069,7 @@ namespace OutpostZero.UI
             if (WorldClock.Instance != null) builder.Append(WorldClock.Instance.Day);
             if (ColonyStorage.Instance != null)
             {
-                builder.Append(ColonyStorage.Instance.Scrap).Append(ColonyStorage.Instance.Food).Append(ColonyStorage.Instance.Security);
+                builder.Append(ColonyStorage.Instance.Scrap).Append(ColonyStorage.Instance.Food).Append(ColonyStorage.Instance.Water).Append(ColonyStorage.Instance.Security);
                 builder.Append(ColonyStorage.Instance.Cloth).Append(ColonyStorage.Instance.Chemicals).Append(ColonyStorage.Instance.Tape);
             }
             if (SurvivorRoster.Instance != null)
@@ -1073,7 +1085,7 @@ namespace OutpostZero.UI
             if (GridBuilder.Instance != null)
             {
                 builder.Append(GridBuilder.Instance.Selected);
-                foreach (var module in GridBuilder.Instance.Placed) builder.Append(module.kind);
+                foreach (var module in GridBuilder.Instance.Placed) builder.Append(module.kind).Append(module.age).Append(module.integrity);
             }
             if (CampServices.Instance != null) builder.Append(CampServices.Instance.GeneratorOnline);
             if (WorldMapService.Instance != null && WorldMapService.Instance.Current != null)

@@ -44,7 +44,7 @@ namespace OutpostZero.Tests.EditMode
                 },
                 modules = new[]
                 {
-                    new ModuleSave { kind = "Barricade", x = 2f, z = -4f, rotation = 0 }
+                    new ModuleSave { kind = "Barricade", x = 2f, z = -4f, rotation = 0, age = 3 }
                 }
             };
 
@@ -58,6 +58,7 @@ namespace OutpostZero.Tests.EditMode
             Assert.IsFalse(loaded.survivors[0].alive);
             Assert.AreEqual("Barricade", loaded.modules[0].kind);
             Assert.AreEqual(100, loaded.modules[0].integrity);
+            Assert.AreEqual(3, loaded.modules[0].age);
         }
 
         [Test]
@@ -1917,6 +1918,41 @@ namespace OutpostZero.Tests.EditMode
             Assert.IsFalse(FlareClock.PulseDue(19.9f, 20.1f));
             Assert.AreEqual(ItemUse.Flare, ItemCatalog.Find("flare").Use);
             Assert.AreEqual("Pulls a search for 20s", ItemBrief.Effect(ItemCatalog.Find("flare")));
+        }
+
+        [Test]
+        public void AFarmFeedsTheCampAfterThreeMornings()
+        {
+            var plots = new[]
+            {
+                new CampYield.Plot { Kind = "Farm", Age = 0, Integrity = 100 },
+                new CampYield.Plot { Kind = "Purifier", Age = 0, Integrity = 100 },
+                new CampYield.Plot { Kind = "Water", Age = 0, Integrity = 100 },
+                new CampYield.Plot { Kind = "Farm", Age = 9, Integrity = 0 }
+            };
+            CampYield.Produce(plots, false, out int earlyFood, out int dryWater);
+            Assert.AreEqual(0, earlyFood);
+            Assert.AreEqual(3, dryWater);
+            CampYield.Produce(plots, true, out _, out int wetWater);
+            Assert.AreEqual(4, wetWater);
+
+            for (int morning = 0; morning < 2; morning++) CampYield.Advance(plots);
+            CampYield.Produce(plots, false, out int waiting, out _);
+            Assert.AreEqual(0, waiting);
+            Assert.AreEqual(2, plots[0].Age);
+            CampYield.Advance(plots);
+            CampYield.Produce(plots, false, out int harvest, out _);
+            Assert.AreEqual(2, harvest);
+            Assert.AreEqual(3, plots[0].Age);
+            Assert.AreEqual(9, plots[3].Age);
+
+            Assert.AreEqual(6, CampYield.RaidPressure(6, false, 0));
+            Assert.AreEqual(8, CampYield.RaidPressure(6, true, 0));
+            Assert.AreEqual(3, CampYield.RaidPressure(6, false, 3));
+            Assert.AreEqual(5, CampYield.RaidPressure(6, true, 3));
+            Assert.AreEqual(1, CampYield.RaidPressure(2, false, 8));
+            Assert.AreEqual(18, GridBuilder.Cost(ModuleKind.Farm));
+            Assert.AreEqual(15, GridBuilder.Cost(ModuleKind.Purifier));
         }
 
         [Test]

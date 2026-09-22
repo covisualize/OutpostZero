@@ -28,6 +28,7 @@ namespace OutpostZero.Shell
         public float z;
         public int rotation;
         public int integrity = 100;
+        public int age;
     }
 
     [Serializable]

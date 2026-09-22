@@ -263,7 +263,7 @@ namespace OutpostZero.Shell
                 var modules = new List<ModuleSave>();
                 foreach (var module in GridBuilder.Instance.Placed)
                 {
-                    modules.Add(new ModuleSave { kind = module.kind, x = module.x, z = module.z, rotation = module.rotation, integrity = module.integrity <= 0 ? 100 : module.integrity });
+                    modules.Add(new ModuleSave { kind = module.kind, x = module.x, z = module.z, rotation = module.rotation, integrity = module.integrity <= 0 ? 100 : module.integrity, age = module.age });
                 }
                 data.modules = modules.ToArray();
             }
@@ -321,7 +321,7 @@ namespace OutpostZero.Shell
                 {
                     foreach (var module in data.modules)
                     {
-                        modules.Add(new PlacedModule { kind = module.kind, x = module.x, z = module.z, rotation = module.rotation, integrity = module.integrity <= 0 ? 100 : module.integrity });
+                        modules.Add(new PlacedModule { kind = module.kind, x = module.x, z = module.z, rotation = module.rotation, integrity = module.integrity <= 0 ? 100 : module.integrity, age = module.age });
                     }
                 }
                 GridBuilder.Instance.Restore(modules.ToArray());

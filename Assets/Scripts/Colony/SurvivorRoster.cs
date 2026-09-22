@@ -306,6 +306,7 @@ namespace OutpostZero.Colony
 
         public void EndDay(bool expeditionWon, string fallenName)
         {
+            GridBuilder.Instance?.Grow();
             var days = Snapshot();
             int food = ColonyStorage.Instance != null ? ColonyStorage.Instance.Food : 0;
             int water = ColonyStorage.Instance != null ? ColonyStorage.Instance.Water : 0;
