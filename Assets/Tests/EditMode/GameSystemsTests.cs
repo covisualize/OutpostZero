@@ -3902,6 +3902,28 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void AShotgunPelletFadesPastFourMeters()
+        {
+            var shotgun = WeaponCard.Find("shotgun_pump");
+            Assert.AreEqual(19f, shotgun.Damage, 0.001f);
+            Assert.AreEqual(16f, shotgun.Range, 0.001f);
+            Assert.AreEqual(7, shotgun.Pellets);
+            Assert.AreEqual(1f, PelletDrop.Scale(0f, 16f, WeaponType.Shotgun), 0.001f);
+            Assert.AreEqual(1f, PelletDrop.Scale(4f, 16f, WeaponType.Shotgun), 0.001f);
+            Assert.AreEqual(0.675f, PelletDrop.Scale(10f, 16f, WeaponType.Shotgun), 0.001f);
+            Assert.AreEqual(0.35f, PelletDrop.Scale(16f, 16f, WeaponType.Shotgun), 0.001f);
+            Assert.AreEqual(0.35f, PelletDrop.Scale(20f, 16f, WeaponType.Shotgun), 0.001f);
+            Assert.AreEqual(1f, PelletDrop.Scale(-2f, 16f, WeaponType.Shotgun), 0.001f);
+            Assert.AreEqual(1f, PelletDrop.Scale(10f, 16f, WeaponType.Rifle), 0.001f);
+            Assert.AreEqual(1f, PelletDrop.Scale(10f, 16f, WeaponType.SMG), 0.001f);
+            Assert.AreEqual(1f, PelletDrop.Scale(10f, 16f, WeaponType.Pistol), 0.001f);
+            Assert.AreEqual(19f, PelletDrop.Damage(19f, 4f, 16f, WeaponType.Shotgun), 0.001f);
+            Assert.AreEqual(6.65f, PelletDrop.Damage(19f, 16f, 16f, WeaponType.Shotgun), 0.001f);
+            Assert.AreEqual(26f, PelletDrop.Damage(26f, 16f, 32f, WeaponType.Rifle), 0.001f);
+            Assert.AreEqual(2f, DamageResolver.HeadshotMultiplier, 0.001f);
+        }
+
+        [Test]
         public void AZombieWithoutARigStillAttacksAndFalls()
         {
             Assert.AreEqual(14f, PoseSheet.Lean(ZombieAI.ZombieState.Chase, 0f), 0.001f);

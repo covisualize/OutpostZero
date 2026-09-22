@@ -10,18 +10,22 @@ namespace OutpostZero.Combat
         [SerializeField] private LayerMask hitLayers;
 
         private float damage;
+        private float reach = 16f;
         private Vector3 direction;
+        private Vector3 origin;
         private GameObject shooter;
         private float spawnTime;
         private Core.WeaponType weapon = Core.WeaponType.Pistol;
 
-        public void Setup(Vector3 dir, float dmg, GameObject attacker, LayerMask targetLayers, Core.WeaponType type = Core.WeaponType.Pistol)
+        public void Setup(Vector3 dir, float dmg, GameObject attacker, LayerMask targetLayers, Core.WeaponType type = Core.WeaponType.Pistol, float range = 16f)
         {
             direction = dir.normalized;
             damage = dmg;
+            reach = range;
             shooter = attacker;
             hitLayers = targetLayers;
             weapon = type;
+            origin = transform.position;
             spawnTime = Time.time;
 
             transform.forward = direction;
@@ -54,7 +58,9 @@ namespace OutpostZero.Combat
         private void OnHit(RaycastHit hit)
         {
             CombatEvents.NoteDir(direction);
-            DamageResolver.Resolve(hit, damage, shooter, true, weapon);
+            float flown = Vector3.Distance(origin, hit.point);
+            float amount = PelletDrop.Damage(damage, flown, reach, weapon);
+            DamageResolver.Resolve(hit, amount, shooter, true, weapon);
             CombatVfx.Tracer(transform.position, hit.point);
             Destroy(gameObject);
         }
