@@ -55,7 +55,7 @@ namespace OutpostZero.Colony
             if (ColonyStorage.Instance != null)
                 ColonyStorage.Instance.SetShots(RaidCall.Carry(ColonyStorage.Instance.Shots, from, day));
             OnClockChanged?.Invoke();
-            GameplayFeedback.Toast("Day " + day + "  morning watch");
+            GameplayFeedback.Toast(ClockFace.Morning(day, null));
         }
 
         public void Set(int nextDay, float nextHour)
@@ -65,6 +65,6 @@ namespace OutpostZero.Colony
             OnClockChanged?.Invoke();
         }
 
-        public string Label => "Day " + day + "  " + Mathf.FloorToInt(hour).ToString("00") + ":" + Mathf.FloorToInt((hour % 1f) * 60f).ToString("00");
+        public string Label => ClockFace.Read(day, hour, null);
     }
 }

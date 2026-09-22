@@ -4265,6 +4265,19 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void TheDayLineSpeaksSpanish()
+        {
+            Assert.AreEqual("Day 3  18:30", ClockFace.Read(3, 18.5f, "en"));
+            Assert.AreEqual("Día 3  18:30", ClockFace.Read(3, 18.5f, "es"));
+            Assert.AreEqual("Day 1  06:30", ClockFace.Read(1, 6.5f, "en"));
+            Assert.AreEqual("Day 1  00:00", ClockFace.Read(0, -2f, "en"));
+            Assert.AreEqual("Day 2  00:00", ClockFace.Read(2, 24f, "en"));
+            Assert.AreEqual("Day 4  morning watch", ClockFace.Morning(4, "en"));
+            Assert.AreEqual("Día 4  guardia de la mañana", ClockFace.Morning(4, "es"));
+            Assert.AreEqual("Day 1  morning watch", ClockFace.Morning(0, "en"));
+        }
+
+        [Test]
         public void StreetLampsFollowTheDarkAndNoonStaysOut()
         {
             Assert.AreEqual(0f, DayNightCycle.HourToNight(12f), 0.001f);
