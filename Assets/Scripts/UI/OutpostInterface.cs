@@ -39,6 +39,7 @@ namespace OutpostZero.UI
         private Label threats;
         private VisualElement veil;
         private VisualElement noiseFill;
+        private Label noiseMark;
         private VisualElement healthFill;
         private VisualElement ghostFill;
         private float ghostRatio = 1f;
@@ -148,11 +149,15 @@ namespace OutpostZero.UI
             bottom.style.top = StyleKeyword.Auto;
             weapon = Body();
             noiseFill = Bar();
+            noiseMark = Body();
+            noiseMark.style.unityFontStyleAndWeight = FontStyle.Bold;
+            noiseMark.style.display = DisplayStyle.None;
             threats = Body();
             threats.style.unityFontStyleAndWeight = FontStyle.Bold;
             threats.style.display = DisplayStyle.None;
             bottom.Add(weapon);
             bottom.Add(threats);
+            bottom.Add(noiseMark);
             bottom.Add(noiseFill);
             root.Add(bottom);
 
@@ -387,7 +392,9 @@ namespace OutpostZero.UI
             if (vision == 1) noiseFill.style.backgroundColor = Color.Lerp(new Color(0.2f, 0.45f, 0.95f), new Color(0.95f, 0.85f, 0.15f), noise);
             else if (vision == 2) noiseFill.style.backgroundColor = Color.Lerp(new Color(0.1f, 0.1f, 0.1f), Color.white, noise);
             else noiseFill.style.backgroundColor = Color.Lerp(new Color(0.2f, 0.7f, 0.3f), new Color(0.8f, 0.15f, 0.1f), noise);
-            noiseFill.style.height = vision == 2 ? 8f + noise * 10f : 6f;
+            noiseFill.style.height = NoiseCue.Height(vision, noise);
+            noiseMark.text = NoiseCue.Mark(vision, noise);
+            noiseMark.style.display = string.IsNullOrEmpty(noiseMark.text) ? DisplayStyle.None : DisplayStyle.Flex;
             toast.text = hud != null ? hud.Toast ?? "" : "";
             toast.style.display = string.IsNullOrEmpty(toast.text) ? DisplayStyle.None : DisplayStyle.Flex;
 

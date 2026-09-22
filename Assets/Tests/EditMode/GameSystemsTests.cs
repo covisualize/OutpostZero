@@ -1812,6 +1812,31 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void AColorblindNoiseMeterChangesShapeWithLoudness()
+        {
+            Assert.AreEqual(6f, NoiseCue.Height(0, 1f), 0.001f);
+            Assert.AreEqual(6f, NoiseCue.Height(1, 0.5f), 0.001f);
+            Assert.AreEqual(8f, NoiseCue.Height(2, 0f), 0.001f);
+            Assert.AreEqual(13f, NoiseCue.Height(2, 0.5f), 0.001f);
+            Assert.AreEqual(18f, NoiseCue.Height(2, 1f), 0.001f);
+            Assert.AreEqual(8f, NoiseCue.Height(2, -1f), 0.001f);
+            Assert.AreEqual(18f, NoiseCue.Height(2, 2f), 0.001f);
+
+            Assert.AreEqual("", NoiseCue.Mark(0, 1f));
+            Assert.AreEqual("", NoiseCue.Mark(3, 1f));
+            Assert.AreEqual(".", NoiseCue.Mark(1, 0f));
+            Assert.AreEqual("-", NoiseCue.Mark(1, 0.25f));
+            Assert.AreEqual("=", NoiseCue.Mark(1, 0.55f));
+            Assert.AreEqual("#", NoiseCue.Mark(1, 0.8f));
+            Assert.AreEqual("#", NoiseCue.Mark(1, 4f));
+            Assert.AreEqual("o", NoiseCue.Mark(2, -0.2f));
+            Assert.AreEqual("^", NoiseCue.Mark(2, 0.549f));
+            Assert.AreEqual("[]", NoiseCue.Mark(2, 0.799f));
+            Assert.AreEqual("*", NoiseCue.Mark(2, 0.8f));
+            Assert.AreNotEqual(NoiseCue.Mark(1, 0.9f), NoiseCue.Mark(2, 0.9f));
+        }
+
+        [Test]
         public void AnEastGridKeepsAWalkFromTheSpawnToTheFarGate()
         {
             var ash = RoadGraph.Build(1701, "ash_market");
