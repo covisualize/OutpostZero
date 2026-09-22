@@ -304,6 +304,11 @@ namespace OutpostZero.Colony
                         if (pace > 0 && GridBuilder.Instance != null && (GridBuilder.Instance.Raise(pace) || GridBuilder.Instance.Patch(pace)))
                             survivor.morale = Mathf.Max(0f, survivor.morale - 2f);
                         break;
+                    case "Clear":
+                        int haul = YardDead.Hands(survivor.morale);
+                        if (haul > 0 && storage != null && storage.TakeBodies(haul) > 0)
+                            survivor.morale = Mathf.Max(0f, survivor.morale - 2f);
+                        break;
                 }
             }
             OnRosterChanged?.Invoke();
@@ -321,7 +326,8 @@ namespace OutpostZero.Colony
             int food = ColonyStorage.Instance != null ? ColonyStorage.Instance.Food : 0;
             int water = ColonyStorage.Instance != null ? ColonyStorage.Instance.Water : 0;
             bool cot = CampServices.Instance != null && CampServices.Instance.CotOnline;
-            var notes = ColonyDay.Simulate(days, ref food, ref water, cot, expeditionWon, fallenName);
+            int bodies = ColonyStorage.Instance != null ? ColonyStorage.Instance.Bodies : 0;
+            var notes = ColonyDay.Simulate(days, ref food, ref water, cot, expeditionWon, fallenName, bodies);
             ApplySnapshot(days);
             Spend(food, water);
             Publish(notes);

@@ -11,6 +11,7 @@ namespace OutpostZero.Colony
             if (morale < 10f) return "Rest";
             if (injury >= 2 || assigned == "Quarantine") return "Medic";
             if (hunger < 45f || thirst < 40f) return "Cook";
+            if (assigned == "Clear") return "Clear";
             if (morale < 30f && assigned == "Scavenge") return "Rest";
             if (string.IsNullOrEmpty(assigned) || assigned == "Lead" || assigned == "Fallen") return "Rest";
             return assigned;
@@ -24,6 +25,7 @@ namespace OutpostZero.Colony
             if (action == "Medic") return "Hold still.";
             if (action == "Scavenge") return "I'll check the piles.";
             if (action == "Build") return "I'll raise it.";
+            if (action == "Clear") return "I'll haul them.";
             if (morale > 70f) return "We'll hold.";
             return "Resting.";
         }

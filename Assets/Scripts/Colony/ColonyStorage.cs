@@ -16,6 +16,7 @@ namespace OutpostZero.Colony
         [SerializeField] private int chemicals;
         [SerializeField] private int tape;
         [SerializeField] private int raw;
+        [SerializeField] private int bodies;
 
         public int Scrap => scrap;
         public int Food => food;
@@ -25,6 +26,7 @@ namespace OutpostZero.Colony
         public int Chemicals => chemicals;
         public int Tape => tape;
         public int Raw => raw;
+        public int Bodies => bodies;
         public int Used => CampRoom.Bulk(scrap, food, water, cloth, chemicals, tape, raw);
         public int Room => CampRoom.Room(GridBuilder.Instance != null ? GridBuilder.Instance.CountKind("Crate") : 0);
         public event Action OnStorageChanged;
@@ -88,6 +90,28 @@ namespace OutpostZero.Colony
             OnStorageChanged?.Invoke();
         }
 
+        public void AddBodies(int amount)
+        {
+            if (amount <= 0) return;
+            bodies += amount;
+            OnStorageChanged?.Invoke();
+        }
+
+        public int TakeBodies(int amount)
+        {
+            if (amount <= 0 || bodies <= 0) return 0;
+            int taken = amount < bodies ? amount : bodies;
+            bodies -= taken;
+            OnStorageChanged?.Invoke();
+            return taken;
+        }
+
+        public void SetBodies(int nextBodies)
+        {
+            bodies = Mathf.Max(0, nextBodies);
+            OnStorageChanged?.Invoke();
+        }
+
         public bool TrySpendScrap(int amount)
         {
             if (scrap < amount) return false;
@@ -114,6 +138,7 @@ namespace OutpostZero.Colony
             chemicals = 0;
             tape = 0;
             raw = 0;
+            bodies = 0;
             OnStorageChanged?.Invoke();
         }
 

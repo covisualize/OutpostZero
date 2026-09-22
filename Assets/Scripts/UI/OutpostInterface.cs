@@ -757,6 +757,7 @@ namespace OutpostZero.UI
                     + "  " + Loc.T("camp.cloth") + " " + storage.Cloth + "  " + Loc.T("camp.chem") + " " + storage.Chemicals                     + "  " + Loc.T("camp.tape") + " " + storage.Tape + "  " + Loc.T("camp.raw") + " " + storage.Raw
                     + "  " + (services != null && services.GeneratorOnline ? Loc.T("camp.gen_on") : Loc.T("camp.gen_off"))));
                 camp.Add(Body(Loc.T("camp.room") + " " + storage.Used + "/" + storage.Room));
+                if (storage.Bodies > 0) camp.Add(Body(Loc.T("camp.bodies") + " " + storage.Bodies));
             }
             var roster = SurvivorRoster.Instance;
             if (roster != null)
@@ -791,6 +792,7 @@ namespace OutpostZero.UI
                     row.Add(Button(Loc.Task("Cook"), () => roster.Assign(id, "Cook")));
                     row.Add(Button(Loc.Task("Medic"), () => roster.Assign(id, "Medic")));
                     row.Add(Button(Loc.Task("Build"), () => roster.Assign(id, "Build")));
+                    row.Add(Button(Loc.Task("Clear"), () => roster.Assign(id, "Clear")));
                     camp.Add(row);
                 }
             }

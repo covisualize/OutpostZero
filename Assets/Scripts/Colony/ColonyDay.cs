@@ -46,8 +46,14 @@ namespace OutpostZero.Colony
 
         public static string[] Simulate(IList<ColonistDay> people, ref int food, ref int water, bool cot, bool expeditionWon, string fallenName)
         {
+            return Simulate(people, ref food, ref water, cot, expeditionWon, fallenName, 0);
+        }
+
+        public static string[] Simulate(IList<ColonistDay> people, ref int food, ref int water, bool cot, bool expeditionWon, string fallenName, int bodies)
+        {
             var events = new List<string>();
             if (people == null) return Array.Empty<string>();
+            int stain = YardDead.MoodHit(bodies);
 
             bool anyCook = false;
             bool medic = false;
@@ -69,6 +75,7 @@ namespace OutpostZero.Colony
                 var person = people[i];
                 if (person == null || !person.alive) continue;
 
+                person.morale -= stain;
                 float hungerBefore = person.hunger;
                 person.hunger = Clamp(person.hunger - 18f);
                 person.thirst = Clamp(person.thirst - 22f);

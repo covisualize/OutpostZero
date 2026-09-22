@@ -2107,6 +2107,55 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void AClearShiftHaulsTwoBodiesAndTheRestCostMorale()
+        {
+            Assert.AreEqual(4, YardDead.Dropped(4, true));
+            Assert.AreEqual(2, YardDead.Dropped(4, false));
+            Assert.AreEqual(0, YardDead.Dropped(0, true));
+            Assert.AreEqual(0, YardDead.Dropped(1, false));
+            Assert.AreEqual(1, YardDead.Dropped(3, false));
+            Assert.AreEqual(2, YardDead.Hands(70f));
+            Assert.AreEqual(2, YardDead.Hands(30f));
+            Assert.AreEqual(1, YardDead.Hands(20f));
+            Assert.AreEqual(0, YardDead.Hands(5f));
+            Assert.AreEqual(2, YardDead.Left(4, 2));
+            Assert.AreEqual(4, YardDead.Left(4, 0));
+            Assert.AreEqual(0, YardDead.Left(2, 5));
+            Assert.AreEqual(0, YardDead.Left(-1, 1));
+            Assert.AreEqual(12, YardDead.MoodHit(2));
+            Assert.AreEqual(18, YardDead.MoodHit(4));
+            Assert.AreEqual(0, YardDead.MoodHit(0));
+            Assert.AreEqual("Clear", CampRoutine.Choose("Clear", 80f, 80f, 60f, 0));
+            Assert.AreEqual("Cook", CampRoutine.Choose("Clear", 20f, 80f, 60f, 0));
+            Assert.AreEqual("Medic", CampRoutine.Choose("Clear", 80f, 80f, 60f, 2));
+            Assert.AreEqual("I'll haul them.", CampRoutine.Bark("Clear", 60f));
+
+            var people = new List<ColonistDay>
+            {
+                new ColonistDay { id = "ada", morale = 60f, hunger = 90f, thirst = 90f, task = "Clear" }
+            };
+            int food = 0;
+            int water = 0;
+            ColonyDay.Simulate(people, ref food, ref water, false, false, "", 2);
+            Assert.AreEqual(48f, people[0].morale);
+            Assert.AreEqual("Clear", people[0].task);
+            people[0].morale = 60f;
+            people[0].hunger = 90f;
+            people[0].thirst = 90f;
+            ColonyDay.Simulate(people, ref food, ref water, false, false, "", 0);
+            Assert.AreEqual(60f, people[0].morale);
+
+            var data = new SaveGameData { bodies = 3 };
+            Assert.IsTrue(SaveCodec.TryDeserialize(SaveCodec.Serialize(data), out var loaded, out var error), error);
+            Assert.AreEqual(3, loaded.bodies);
+            Assert.IsTrue(SaveCodec.TryDeserialize("{\"schemaVersion\":1}", out var legacy, out var legacyError), legacyError);
+            Assert.AreEqual(0, legacy.bodies);
+            Assert.AreEqual("Retirar", Loc.T("task.clear", "es"));
+            Assert.AreEqual("Cuerpos", Loc.T("camp.bodies", "es"));
+            Assert.AreEqual("Los retiro.", Loc.T("bark.clear", "es"));
+        }
+
+        [Test]
         public void AFarmFeedsTheCampAfterThreeMornings()
         {
             var plots = new[]

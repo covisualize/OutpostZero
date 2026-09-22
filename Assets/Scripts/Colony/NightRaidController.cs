@@ -115,6 +115,8 @@ namespace OutpostZero.Colony
             running = false;
             int security = ColonyStorage.Instance != null ? ColonyStorage.Instance.Security : 0;
             bool held = security > 0 || (HordeDirector.Instance != null && HordeDirector.Instance.Tension < 80f);
+            int dropped = YardDead.Dropped(pressure, held);
+            if (dropped > 0) ColonyStorage.Instance?.AddBodies(dropped);
             if (held)
             {
                 SurvivorRoster.Instance?.TickTasks();
@@ -125,7 +127,10 @@ namespace OutpostZero.Colony
                         if (survivor.alive) survivor.morale = Mathf.Min(100f, survivor.morale + 6f);
                     }
                 }
-                GameplayFeedback.Toast(broadcast ? "The broadcast went out" : "The gate held");
+                int left = ColonyStorage.Instance != null ? ColonyStorage.Instance.Bodies : dropped;
+                string heldLine = broadcast ? "The broadcast went out" : "The gate held";
+                if (left > 0) heldLine += "  " + Loc.T("camp.bodies") + " " + left;
+                GameplayFeedback.Toast(heldLine);
                 if (broadcast && WorldMapService.Instance != null && WorldMapService.Instance.GeneratorBuilt)
                 {
                     WorldMapService.Instance.NoteBroadcast();
@@ -138,7 +143,9 @@ namespace OutpostZero.Colony
             else
             {
                 ColonyStorage.Instance?.AddScrap(-6);
-                GameplayFeedback.Toast("The raid broke the stores");
+                string broke = "The raid broke the stores";
+                if (dropped > 0) broke += "  " + Loc.T("camp.bodies") + " " + dropped;
+                GameplayFeedback.Toast(broke);
             }
             broadcast = false;
             GameManager.Instance?.SetState(GameState.CampManagement);
