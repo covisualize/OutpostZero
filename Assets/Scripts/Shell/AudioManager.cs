@@ -29,6 +29,7 @@ namespace OutpostZero.Shell
             if (id == "gun" || id == "shotgun" || id == "gun_far") return 32f;
             if (id == "groan" || id == "snarl" || id == "grunt") return 22f;
             if (id == "hum" || id == "crackle" || id == "buzz") return Colony.YardBed.Reach;
+            if (id == "hiss") return 20f;
             return 18f;
         }
     }
@@ -458,6 +459,7 @@ namespace OutpostZero.Shell
             if (id == "hum") return Mathf.Sin(t * 6f);
             if (id == "crackle") return noise;
             if (id == "buzz") return Mathf.Sin(t * 55f) * 0.35f;
+            if (id == "hiss") return noise * Mathf.Sin(t * 28f);
             return noise;
         }
 
@@ -466,7 +468,7 @@ namespace OutpostZero.Shell
             if (clips.TryGetValue(id, out var clip)) return clip;
             int rate = 22050;
             bool loop = id == "ambient" || id == "rain" || id == "wind" || id == "stem_perc" || id == "stem_combat" || id == "hum" || id == "crackle" || id == "buzz";
-            float seconds = loop ? 2f : id == "boom_far" ? 0.7f : id == "roar" || id == "stomp" ? 0.5f : id == "boom" ? 0.45f : id == "gun_far" ? 0.42f : id == "breath" || id == "groan" ? 0.5f : id == "shriek" ? 0.28f : id == "heart" ? 0.22f : id == "dry" ? 0.07f : 0.18f;
+            float seconds = loop ? 2f : id == "boom_far" ? 0.7f : id == "roar" || id == "stomp" ? 0.5f : id == "boom" ? 0.45f : id == "gun_far" ? 0.42f : id == "breath" || id == "groan" ? 0.5f : id == "shriek" ? 0.28f : id == "heart" || id == "hiss" ? 0.22f : id == "dry" ? 0.07f : 0.18f;
             int samples = Mathf.CeilToInt(rate * seconds);
             var data = new float[samples];
             var random = new System.Random(id.GetHashCode());

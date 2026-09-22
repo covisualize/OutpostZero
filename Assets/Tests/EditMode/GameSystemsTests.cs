@@ -3136,6 +3136,25 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void AHitBarrelHissesThenCooksOff()
+        {
+            Assert.IsTrue(BarrelFuse.Arms(HazardKind.Explosive));
+            Assert.IsTrue(BarrelFuse.Arms(HazardKind.Toxic));
+            Assert.IsFalse(BarrelFuse.Arms(HazardKind.Oil));
+            Assert.AreEqual(1.4f, BarrelFuse.Length(HazardKind.Explosive), 0.001f);
+            Assert.AreEqual(0.8f, BarrelFuse.Length(HazardKind.Toxic), 0.001f);
+            Assert.AreEqual(0f, BarrelFuse.Length(HazardKind.Oil), 0.001f);
+            Assert.IsFalse(BarrelFuse.Due(0f, 5f, 1.4f));
+            Assert.IsFalse(BarrelFuse.Due(1f, 2.3f, 1.4f));
+            Assert.IsTrue(BarrelFuse.Due(1f, 2.4f, 1.4f));
+            Assert.IsTrue(BarrelFuse.HissDue(0f, 1f));
+            Assert.IsFalse(BarrelFuse.HissDue(1f, 1.2f));
+            Assert.IsTrue(BarrelFuse.HissDue(1f, 1.35f));
+            Assert.AreEqual(20f, AudioSpace.MaxDistance("hiss"), 0.001f);
+            Assert.AreEqual("El barril silba", Loc.T("barrel.hiss", "es"));
+        }
+
+        [Test]
         public void GoreOffDropsBloodAndAShotgunSpraysTheWall()
         {
             Assert.AreEqual(0, GoreMark.Splats(0, false, true));
