@@ -73,7 +73,7 @@ namespace OutpostZero.Player
             string id = ItemBelt.IdAt(belt, index);
             if (string.IsNullOrEmpty(id)) return false;
             bool used = TryUse(id);
-            if (used && id == "medkit") GameplayFeedback.Toast(FieldHand.Dose(LastDoseSkill));
+            if (used && id == "medkit") GameplayFeedback.Toast(FieldHand.Dose(LastDoseSkill, null));
             if (!StillCarrying(id)) belt[index] = "";
             return used;
         }
@@ -194,19 +194,19 @@ namespace OutpostZero.Player
                 var fever = GetComponent<StatusEffectController>();
                 if (fever == null || !Affliction.AntibioticsWork(fever.InfectionStage))
                 {
-                    GameplayFeedback.Toast("Antibiotics won't help");
+                    GameplayFeedback.Toast(FieldHand.Fail(null));
                     return false;
                 }
                 if (!TryConsume(id)) return false;
                 fever.CureInfection();
-                GameplayFeedback.Toast("The fever breaks");
+                GameplayFeedback.Toast(FieldHand.Breaks(null));
                 return true;
             }
             if (record.Id == "painkillers")
             {
                 if (!TryConsume(id)) return false;
                 GetComponent<StatusEffectController>()?.ApplyPainkiller();
-                GameplayFeedback.Toast("Painkillers");
+                GameplayFeedback.Toast(FieldHand.Relief(record.Id, null));
                 return true;
             }
             if (TossKind.Throws(record.Id))
@@ -240,7 +240,7 @@ namespace OutpostZero.Player
             if (record.Thirst > 0f) needs?.Drink(record.Thirst);
             if (RationNoise.Calls(record.Hunger, record.Thirst) && OutpostZero.Sensory.NoiseManager.Instance != null)
                 OutpostZero.Sensory.NoiseManager.Instance.EmitNoise(transform.position, RationNoise.Radius, RationNoise.Loud, NoiseType.RationBite, gameObject);
-            GameplayFeedback.Toast("Used " + record.DisplayName);
+            GameplayFeedback.Toast(FieldHand.Spent(record.Id, null));
             return true;
         }
 

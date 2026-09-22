@@ -4297,6 +4297,24 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void AMedkitAndAFeverFollowTheLanguage()
+        {
+            Assert.AreEqual("Medkit used  +50 HP", FieldHand.Dose(0));
+            Assert.AreEqual("Medkit used  +56 HP", FieldHand.Dose(4, "en"));
+            Assert.AreEqual("Medkit used  +60 HP", FieldHand.Dose(8, "en"));
+            Assert.AreEqual("Botiquín usado  +50 PS", FieldHand.Dose(0, "es"));
+            Assert.AreEqual("Botiquín usado  +56 PS", FieldHand.Dose(4, "es"));
+            Assert.AreEqual("Antibiotics won't help", FieldHand.Fail("en"));
+            Assert.AreEqual("Los antibióticos no sirven", FieldHand.Fail("es"));
+            Assert.AreEqual("The fever breaks", FieldHand.Breaks("en"));
+            Assert.AreEqual("La fiebre cede", FieldHand.Breaks("es"));
+            Assert.AreEqual("Painkillers", FieldHand.Relief("painkillers", "en"));
+            Assert.AreEqual("Analgésicos", FieldHand.Relief("painkillers", "es"));
+            Assert.AreEqual("Used Bandage", FieldHand.Spent("bandage", "en"));
+            Assert.AreEqual("Usado Vendaje", FieldHand.Spent("bandage", "es"));
+        }
+
+        [Test]
         public void StreetLampsFollowTheDarkAndNoonStaysOut()
         {
             Assert.AreEqual(0f, DayNightCycle.HourToNight(12f), 0.001f);
