@@ -150,9 +150,12 @@ namespace OutpostZero.Colony
                 return false;
             }
 
+            int stock = 0;
             if (record.Use == ItemUse.Ammo)
             {
                 inventory.GrantAmmoPublic(record.AmmoType, record.AmmoAmount * recipe.OutputCount);
+                stock = AmmoPress.Rounds(recipe.Id, recipe.OutputCount);
+                if (stock > 0) storage.AddRounds(stock);
             }
             else if (!inventory.TryAddItem(record.Id, record.DisplayName, record.Category, recipe.OutputCount, record.Weight))
             {
@@ -161,7 +164,7 @@ namespace OutpostZero.Colony
                 return false;
             }
 
-            GameplayFeedback.Toast("Crafted " + recipe.Label);
+            GameplayFeedback.Toast(stock > 0 ? Loc.T("camp.press") + " " + stock : "Crafted " + recipe.Label);
             return true;
         }
 

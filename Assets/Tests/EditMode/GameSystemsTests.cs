@@ -2644,6 +2644,20 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void PressingAmmoAlsoStocksTheCamp()
+        {
+            Assert.AreEqual(0, AmmoPress.Rounds("bandage", 1));
+            Assert.AreEqual(0, AmmoPress.Rounds(null, 1));
+            Assert.AreEqual(0, AmmoPress.Rounds("ammo_rifle", 0));
+            Assert.AreEqual(4, AmmoPress.Rounds("ammo_9mm", 1));
+            Assert.AreEqual(6, AmmoPress.Rounds("ammo_shells", 1));
+            Assert.AreEqual(8, AmmoPress.Rounds("ammo_rifle", 1));
+            Assert.AreEqual(16, AmmoPress.Rounds("ammo_rifle", 2));
+            Assert.AreEqual(24, AmmoPress.Rounds("ammo_rifle", 5));
+            Assert.AreEqual("Prensadas", Loc.T("camp.press", "es"));
+        }
+
+        [Test]
         public void DemolishingAModuleReturnsHalfTheScrap()
         {
             Assert.AreEqual(3, ScrapRefund.Half(6));

@@ -2,6 +2,7 @@ using UnityEngine;
 using OutpostZero.Core;
 using OutpostZero.Items;
 using OutpostZero.Player;
+using OutpostZero.Shell;
 
 namespace OutpostZero.Colony
 {
@@ -80,7 +81,13 @@ namespace OutpostZero.Colony
                 ColonyStorage.Instance.RestoreScrap(price);
                 return false;
             }
-            if (record.Use == ItemUse.Ammo) inventory.GrantAmmoPublic(record.AmmoType, record.AmmoAmount);
+            int stock = 0;
+            if (record.Use == ItemUse.Ammo)
+            {
+                inventory.GrantAmmoPublic(record.AmmoType, record.AmmoAmount);
+                stock = AmmoPress.Rounds(itemId, 1);
+                if (stock > 0) ColonyStorage.Instance.AddRounds(stock);
+            }
             else if (!inventory.TryAddItem(record.Id, record.DisplayName, record.Category, 1, record.Weight))
             {
                 ColonyStorage.Instance.RestoreScrap(price);
@@ -88,7 +95,7 @@ namespace OutpostZero.Colony
                 return false;
             }
             CaravanBook.Shift(standing, faction, 2);
-            GameplayFeedback.Toast(CaravanBook.Display(faction) + " deal sealed");
+            GameplayFeedback.Toast(CaravanBook.Display(faction) + " deal sealed" + (stock > 0 ? "  " + Loc.T("camp.rounds") + " +" + stock : ""));
             return true;
         }
 
