@@ -6529,6 +6529,29 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void AFollowerSwingOrCryPullsAnIdleZombieAndAChaseStays()
+        {
+            Assert.IsTrue(FollowPull.Chases(true, true, false, NoiseType.MeleeSwing));
+            Assert.IsTrue(FollowPull.Chases(true, true, false, NoiseType.ZombieScream));
+            Assert.IsFalse(FollowPull.Chases(true, true, true, NoiseType.MeleeSwing));
+            Assert.IsFalse(FollowPull.Chases(true, true, true, NoiseType.ZombieScream));
+            Assert.IsFalse(FollowPull.Chases(true, false, false, NoiseType.MeleeSwing));
+            Assert.IsFalse(FollowPull.Chases(false, true, false, NoiseType.ZombieScream));
+            Assert.IsFalse(FollowPull.Chases(true, true, false, NoiseType.GunshotLoud));
+            Assert.IsFalse(FollowPull.Chases(true, true, false, NoiseType.GunshotQuiet));
+            Assert.IsFalse(FollowPull.Chases(true, true, false, NoiseType.WalkFootstep));
+            Assert.IsFalse(FollowPull.Chases(true, true, false, NoiseType.SprintFootstep));
+            Assert.IsFalse(FollowPull.Chases(true, true, false, NoiseType.Cough));
+            Assert.IsFalse(FollowPull.Chases(true, true, false, NoiseType.DoorSwing));
+            Assert.IsFalse(FollowPull.Chases(true, true, false, NoiseType.BleedDrip));
+            Assert.IsFalse(FollowPull.Chases(true, true, false, NoiseType.ObjectBroken));
+            Assert.AreEqual(6f, StreetAid.Noise, 0.001f);
+            Assert.AreEqual(16f, StraggleCall.Radius, 0.001f);
+            Assert.AreEqual(1.6f, StreetAid.Reach, 0.001f);
+            Assert.AreEqual(7f, StraggleCall.Near, 0.001f);
+        }
+
+        [Test]
         public void AZombieWithoutARigStillAttacksAndFalls()
         {
             Assert.AreEqual(14f, PoseSheet.Lean(ZombieAI.ZombieState.Chase, 0f), 0.001f);

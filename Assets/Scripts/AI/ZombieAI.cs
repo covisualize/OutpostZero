@@ -1034,8 +1034,18 @@ namespace OutpostZero.AI
         {
             if (currentState == ZombieState.Dead) return;
 
+            bool chasing = currentState == ZombieState.Chase && currentTarget != null;
+            var escort = source != null ? source.GetComponent<RescueFollower>() : null;
+            if (FollowPull.Chases(escort != null, escort != null && escort.Following, chasing, noiseType))
+            {
+                lastKnownPosition = origin;
+                currentTarget = source.transform;
+                SetState(ZombieState.Chase);
+                return;
+            }
+
             // If already chasing, only redirect if much closer sound
-            if (currentState == ZombieState.Chase && currentTarget != null) return;
+            if (chasing) return;
 
             lastKnownPosition = origin;
 
