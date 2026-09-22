@@ -5622,6 +5622,39 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void ABoltLightsACrouchAndAQuietSkyStaysDark()
+        {
+            Assert.AreEqual(0.55f, BoltGlare.Hold, 0.001f);
+            Assert.AreEqual(0.42f, BoltGlare.Lift, 0.001f);
+            Assert.AreEqual(0.85f, BoltGlare.Flash, 0.001f);
+            Assert.AreEqual(0.45f, BoltGlare.Mix, 0.001f);
+            Assert.IsFalse(BoltGlare.Live(0f, 10f));
+            Assert.IsFalse(BoltGlare.Live(10f, 9f));
+            Assert.IsTrue(BoltGlare.Live(10f, 10f));
+            Assert.IsTrue(BoltGlare.Live(10f, 10.55f));
+            Assert.IsFalse(BoltGlare.Live(10f, 10.56f));
+            Assert.AreEqual(0.22f, BoltGlare.Glare(0.22f, false), 0.001f);
+            Assert.AreEqual(0.64f, BoltGlare.Glare(0.22f, true), 0.001f);
+            Assert.AreEqual(1f, BoltGlare.Glare(0.85f, true), 0.001f);
+            Assert.AreEqual(1f, BoltGlare.Glare(1f, true), 0.001f);
+            Assert.AreEqual(0.42f, BoltGlare.Glare(-1f, true), 0.001f);
+            Assert.AreEqual(0.15f, BoltGlare.Bright(0.15f, false), 0.001f);
+            Assert.AreEqual(1f, BoltGlare.Bright(0.15f, true), 0.001f);
+            Assert.AreEqual(0.65f, BoltGlare.Bright(-0.2f, true), 0.001f);
+            Assert.AreEqual(-0.2f, RaidGrade.Exposure(1f, true), 0.001f);
+            BoltGlare.Wash(false, 1f, 0.96f, 0.9f, out float stillR, out float stillG, out float stillB);
+            Assert.AreEqual(1f, stillR, 0.001f);
+            Assert.AreEqual(0.96f, stillG, 0.001f);
+            Assert.AreEqual(0.9f, stillB, 0.001f);
+            BoltGlare.Wash(true, 0.72f, 0.58f, 0.78f, out float washR, out float washG, out float washB);
+            Assert.AreEqual(0.846f, washR, 0.001f);
+            Assert.AreEqual(0.769f, washG, 0.001f);
+            Assert.AreEqual(0.879f, washB, 0.001f);
+            Assert.AreEqual(4.5f, SkyBand.BoltGap, 0.001f);
+            Assert.AreEqual(0.6f, StormCover.Delay, 0.001f);
+        }
+
+        [Test]
         public void AZombieWithoutARigStillAttacksAndFalls()
         {
             Assert.AreEqual(14f, PoseSheet.Lean(ZombieAI.ZombieState.Chase, 0f), 0.001f);

@@ -79,6 +79,7 @@ namespace OutpostZero.Graphics
                 poisoned = effects != null && effects.IsPoisoned;
             }
             bool motion = SettingsService.Instance != null && SettingsService.Instance.MotionBlur;
+            bool flash = BoltGlare.Live(Sensory.StormCover.Bolt, Time.time);
             bloom.intensity.Override(budget.Bloom);
             vignette.intensity.Override(PoisonVeil.Shade(RaidGrade.Vignette(raid, tier), poisoned));
             grain.active = raid || budget.Grain;
@@ -86,9 +87,10 @@ namespace OutpostZero.Graphics
             if (color != null)
             {
                 float bright = SettingsService.Instance != null ? SettingsService.Instance.Brightness : 1f;
-                color.postExposure.Override(RaidGrade.Exposure(bright, raid));
+                color.postExposure.Override(BoltGlare.Bright(RaidGrade.Exposure(bright, raid), flash));
                 RaidGrade.Filter(raid, out float red, out float green, out float blue);
                 PoisonVeil.Tint(poisoned, red, green, blue, out red, out green, out blue);
+                BoltGlare.Wash(flash, red, green, blue, out red, out green, out blue);
                 color.colorFilter.Override(new Color(red, green, blue));
             }
             if (blur != null)
