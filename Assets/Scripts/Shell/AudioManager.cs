@@ -406,6 +406,8 @@ namespace OutpostZero.Shell
                 surface = hit.collider.name;
             }
             string step = AudioMix.StepId(surface);
+            if (OutpostZero.Expedition.GlassShard.Covers(player.transform.position.x, player.transform.position.z))
+                step = "step_glass";
             bool hard = step == "step_hard" || step == "step_metal";
             float pitch = hard ? Random.Range(1.05f, 1.2f) : Random.Range(0.85f, 1f);
             PlayAt(step, player.transform.position, player.IsCrouching ? 0.12f : 0.28f, pitch);

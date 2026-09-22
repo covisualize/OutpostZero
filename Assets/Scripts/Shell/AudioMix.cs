@@ -71,6 +71,7 @@ namespace OutpostZero.Shell
             if (name.Contains("metal") || name.Contains("grate") || name.Contains("manhole")) return "step_metal";
             if (name.Contains("wood") || name.Contains("plank") || name.Contains("board")) return "step_wood";
             if (name.Contains("water") || name.Contains("puddle")) return "step_water";
+            if (name.Contains("glass")) return "step_glass";
             if (name.Contains("gravel") || name.Contains("rubble") || name.Contains("dirt") || name.Contains("ash")) return "step_gravel";
             if (name.Contains("road") || name.Contains("street") || name.Contains("concrete") || name.Contains("asphalt") || name.Contains("sidewalk")) return "step_hard";
             return "step";

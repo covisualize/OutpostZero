@@ -619,7 +619,15 @@ namespace OutpostZero.Player
             string surface = "";
             if (Physics.Raycast(transform.position + Vector3.up, Vector3.down, out RaycastHit ground, 2.2f, GameLayers.VisionOcclusionMask, QueryTriggerInteraction.Ignore))
                 surface = ground.collider != null ? ground.collider.name : "";
-            radius = StepReach.Radius(radius, AudioMix.StepId(surface));
+            bool crunch = OutpostZero.Expedition.GlassShard.Covers(transform.position.x, transform.position.z);
+            string stepId = crunch ? "step_glass" : AudioMix.StepId(surface);
+            radius = StepReach.Radius(radius, stepId);
+            if (crunch && OutpostZero.Expedition.GlassShard.BiteAt(transform.position.x, transform.position.z))
+            {
+                var life = GetComponent<HealthSystem>();
+                if (life != null) life.TakeDamage(OutpostZero.Expedition.GlassCrunch.Nick, transform.position, Vector3.up, null);
+                GameplayFeedback.Toast(Loc.T("pane.cut"));
+            }
 
             if (NoiseManager.Instance != null && radius > 0f)
             {

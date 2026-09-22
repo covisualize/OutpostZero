@@ -12,6 +12,7 @@ namespace OutpostZero.Sensory
         public const float Wood = 0.9f;
         public const float Gravel = 0.75f;
         public const float Water = 1.18f;
+        public const float GlassCrunchReach = 1.28f;
 
         public static float Scale(string stepId)
         {
@@ -20,6 +21,7 @@ namespace OutpostZero.Sensory
             if (stepId == "step_wood") return Wood;
             if (stepId == "step_gravel") return Gravel;
             if (stepId == "step_water") return Water;
+            if (stepId == "step_glass") return GlassCrunchReach;
             return 1f;
         }
 

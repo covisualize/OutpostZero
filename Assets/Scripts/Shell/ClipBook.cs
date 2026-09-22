@@ -12,7 +12,7 @@ namespace OutpostZero.Shell
         public static readonly string[] Ids =
         {
             "ambient", "pulse", "rain", "storm", "wind", "ash",
-            "step", "step_hard", "step_metal", "step_wood", "step_water", "step_gravel",
+            "step", "step_hard", "step_metal", "step_wood", "step_water", "step_gravel", "step_glass",
             "ui", "stem_perc", "stem_combat",
             "stinger_kill", "stinger_death", "stinger_extract", "stinger_raid", "stinger_dawn",
             "gun", "shotgun", "rifle", "smg", "swing", "gun_far", "boom", "boom_far", "kill",
@@ -61,6 +61,7 @@ namespace OutpostZero.Shell
             if (id == "step_wood") return noise * Mathf.Sin(t * 13f);
             if (id == "step_water") return noise * Mathf.Sin(t * 6.5f);
             if (id == "step_gravel") return noise * Mathf.Sin(t * 25f);
+            if (id == "step_glass") return noise * Mathf.Sin(t * 64f);
             if (id == "ui") return Mathf.Sin(t * 40f);
             if (id == "stem_perc") return Mathf.Sin(t * 48f) > 0.65f ? noise : 0f;
             if (id == "stem_combat") return Mathf.Sin(t * 16f);

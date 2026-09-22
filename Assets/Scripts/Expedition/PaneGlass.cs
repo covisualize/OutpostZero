@@ -83,6 +83,7 @@ namespace OutpostZero.Expedition
             OutpostZero.Shell.AudioManager.Instance?.PlayAt("splinter", transform.position, 0.55f);
             if (NoiseManager.Instance != null)
                 NoiseManager.Instance.EmitNoise(transform.position, PaneGlass.Noise, 0.8f, NoiseType.ObjectBroken, null);
+            GlassShard.Leave(transform.position);
             Destroy(gameObject);
         }
     }

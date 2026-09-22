@@ -5758,6 +5758,27 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void ABrokenPaneLeavesGlassThatCutsTheFirstStep()
+        {
+            Assert.AreEqual(0.55f, GlassCrunch.Radius, 0.001f);
+            Assert.AreEqual(1.28f, GlassCrunch.Reach, 0.001f);
+            Assert.AreEqual(1.28f, StepReach.GlassCrunchReach, 0.001f);
+            Assert.AreEqual(3f, GlassCrunch.Nick, 0.001f);
+            Assert.AreEqual(8, GlassCrunch.Cap);
+            Assert.IsTrue(GlassCrunch.On(0f, 0f, 0f, 0f));
+            Assert.IsTrue(GlassCrunch.On(0.5f, 0f, 0f, 0f));
+            Assert.IsFalse(GlassCrunch.On(0.7f, 0f, 0f, 0f));
+            Assert.AreEqual("step_glass", AudioMix.StepId("Shard_glass"));
+            Assert.AreEqual("step", AudioMix.StepId("Ground"));
+            Assert.AreEqual(7.68f, StepReach.Radius(6f, "step_glass"), 0.001f);
+            Assert.AreEqual(8.1f, StepReach.Radius(6f, "step_metal"), 0.001f);
+            Assert.IsTrue(ClipBook.Has("step_glass"));
+            Assert.AreEqual(12f, PaneGlass.Hp, 0.001f);
+            Assert.AreEqual("Glass cuts", Loc.T("pane.cut", "en"));
+            Assert.AreEqual("El cristal corta", Loc.T("pane.cut", "es"));
+        }
+
+        [Test]
         public void AZombieWithoutARigStillAttacksAndFalls()
         {
             Assert.AreEqual(14f, PoseSheet.Lean(ZombieAI.ZombieState.Chase, 0f), 0.001f);
