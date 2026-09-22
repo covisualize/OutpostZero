@@ -82,6 +82,7 @@ namespace OutpostZero.Combat
                 if (damageable == null || damageable.IsDead) continue;
                 if (!FirePatch.Inside(Vector3.Distance(transform.position, hit.bounds.center))) continue;
                 damageable.TakeDamage(FirePatch.Damage, hit.bounds.center, (hit.transform.position - transform.position).normalized, gameObject);
+                hit.GetComponentInParent<OutpostZero.AI.ZombieAI>()?.Ignite();
             }
         }
     }

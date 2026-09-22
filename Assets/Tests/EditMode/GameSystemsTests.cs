@@ -5271,6 +5271,31 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void ABodyKeepsBurningAfterItLeavesTheFire()
+        {
+            Assert.AreEqual(3.5f, Ember.Seconds, 0.001f);
+            Assert.AreEqual(0.5f, Ember.Gap, 0.001f);
+            Assert.AreEqual(4f, Ember.Damage, 0.001f);
+            Assert.AreEqual(1.4f, Ember.Spread, 0.001f);
+            Assert.IsFalse(Ember.Alight(0f));
+            Assert.IsTrue(Ember.Alight(0.2f));
+            Assert.AreEqual(3.5f, Ember.Catch(0f), 0.001f);
+            Assert.AreEqual(3.5f, Ember.Catch(-1f), 0.001f);
+            Assert.AreEqual(1.2f, Ember.Catch(1.2f), 0.001f);
+            Assert.AreEqual(3f, Ember.Tick(3.5f, 0.5f), 0.001f);
+            Assert.AreEqual(0f, Ember.Tick(0.2f, 0.5f), 0.001f);
+            Assert.AreEqual(3.5f, Ember.Tick(3.5f, 0f), 0.001f);
+            Assert.IsTrue(Ember.Due(3.5f, 3f));
+            Assert.IsFalse(Ember.Due(2.6f, 2.5f));
+            Assert.IsFalse(Ember.Due(0.4f, 0f));
+            Assert.IsFalse(Ember.Due(0f, 0f));
+            Assert.IsTrue(Ember.Reaches(1.4f, 0f));
+            Assert.IsFalse(Ember.Reaches(1.41f, 0f));
+            Assert.AreEqual(6f, FirePatch.Damage, 0.001f);
+            Assert.AreEqual(4f, FirePatch.Life, 0.001f);
+        }
+
+        [Test]
         public void AZombieWithoutARigStillAttacksAndFalls()
         {
             Assert.AreEqual(14f, PoseSheet.Lean(ZombieAI.ZombieState.Chase, 0f), 0.001f);

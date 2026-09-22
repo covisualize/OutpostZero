@@ -86,6 +86,8 @@ namespace OutpostZero.AI
         private float lostSight;
         private float lastDrip;
         private float limpLeft;
+        private float burnLeft;
+        private Light emberLight;
         private SearchMemory.Sweep searchSweep;
         private float dashX;
         private float dashZ = 1f;
@@ -265,6 +267,12 @@ namespace OutpostZero.AI
             lastDrip = 0f;
             searchSweep = new SearchMemory.Sweep();
             limpLeft = 0f;
+            burnLeft = 0f;
+            if (emberLight != null)
+            {
+                Destroy(emberLight.gameObject);
+                emberLight = null;
+            }
             dashX = 0f;
             dashZ = 1f;
             SetState(ZombieState.Wander);
@@ -274,6 +282,53 @@ namespace OutpostZero.AI
         public void SetAbility(ZombieSpecialAbility ability)
         {
             specialAbility = ability;
+        }
+
+        public void Ignite()
+        {
+            if (currentState == ZombieState.Dead || healthSystem != null && healthSystem.IsDead) return;
+            burnLeft = Ember.Catch(burnLeft);
+            ShowEmber();
+        }
+
+        private void TickEmber()
+        {
+            float before = burnLeft;
+            burnLeft = Ember.Tick(burnLeft, Time.deltaTime);
+            ShowEmber();
+            if (!Ember.Due(before, burnLeft) || healthSystem == null || healthSystem.IsDead) return;
+            healthSystem.TakeDamage(Ember.Damage, transform.position + Vector3.up, Vector3.up, gameObject);
+            OilPatch.Blast(transform.position);
+            if (healthSystem.IsDead) return;
+            for (int i = 0; i < aliveCrowd.Count; i++)
+            {
+                var other = aliveCrowd[i];
+                if (other == null || other == this) continue;
+                float dx = other.transform.position.x - transform.position.x;
+                float dz = other.transform.position.z - transform.position.z;
+                if (!Ember.Reaches(dx, dz)) continue;
+                other.Ignite();
+            }
+        }
+
+        private void ShowEmber()
+        {
+            if (burnLeft > 0f)
+            {
+                if (emberLight != null) return;
+                var go = new GameObject("Ember");
+                go.transform.SetParent(transform, false);
+                go.transform.localPosition = new Vector3(0f, 1.1f, 0f);
+                emberLight = go.AddComponent<Light>();
+                emberLight.type = LightType.Point;
+                emberLight.range = 3.5f;
+                emberLight.intensity = 1.4f;
+                emberLight.color = new Color(1f, 0.45f, 0.1f);
+                return;
+            }
+            if (emberLight == null) return;
+            Destroy(emberLight.gameObject);
+            emberLight = null;
         }
 
         public void ApplyImpulse(Vector3 direction, float force, float stun)
@@ -329,6 +384,7 @@ namespace OutpostZero.AI
                 if (gameState != GameState.ExpeditionActive && gameState != GameState.RaidActive) return;
             }
             limpLeft = LimbCut.Tick(limpLeft, Time.deltaTime);
+            TickEmber();
             Drip();
 
             if (posted)
