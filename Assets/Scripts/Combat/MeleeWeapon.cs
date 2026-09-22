@@ -105,6 +105,21 @@ namespace OutpostZero.Combat
                 }
             }
 
+            var bars = Physics.OverlapSphere(origin, range, GameLayers.InteractableMask);
+            for (int i = 0; i < bars.Length; i++)
+            {
+                var col = bars[i];
+                if (col == null) continue;
+                var door = col.GetComponent<OutpostZero.Expedition.StreetDoor>();
+                if (door == null || !door.Barred) continue;
+                Vector3 toDoor = col.bounds.center - origin;
+                toDoor.y = 0f;
+                if (toDoor.sqrMagnitude < 0.0001f) continue;
+                if (Vector3.Angle(forward, toDoor.normalized) > swingArcAngle * 0.5f) continue;
+                door.Strike(ownerGameObject);
+                hitCount++;
+            }
+
             if (hitCount == 0 && wall)
             {
                 OutpostZero.Shell.AudioManager.Instance?.PlayAt("clang", origin, 0.42f, 0.85f);

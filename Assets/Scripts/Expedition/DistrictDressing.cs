@@ -259,7 +259,7 @@ namespace OutpostZero.Expedition
             slab.transform.localScale = new Vector3(0.18f, 2.2f, 1.05f);
             slab.layer = GameLayers.Interactable;
             Paint(slab.GetComponent<Renderer>(), new Color(0.35f, 0.24f, 0.16f));
-            slab.AddComponent<StreetDoor>().Configure(new Vector3(insideX, 0.05f, insideZ), false);
+            slab.AddComponent<StreetDoor>().Configure(new Vector3(insideX, 0.05f, insideZ), false, true);
 
             var floor = GameObject.CreatePrimitive(PrimitiveType.Cube);
             floor.name = "RoomFloor";

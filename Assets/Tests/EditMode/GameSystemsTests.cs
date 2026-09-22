@@ -6181,6 +6181,33 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void ABarredDoorHoldsUntilTheThirdSwingAndTheWayOutStaysOpen()
+        {
+            Assert.AreEqual(3, DoorBar.Hits);
+            Assert.AreEqual(8f, DoorBar.Noise, 0.001f);
+            Assert.AreEqual(12f, DoorBar.BreakNoise, 0.001f);
+            Assert.IsTrue(DoorBar.Holds(3));
+            Assert.IsTrue(DoorBar.Holds(1));
+            Assert.IsFalse(DoorBar.Holds(0));
+            Assert.IsFalse(DoorBar.Holds(-1));
+            Assert.AreEqual(2, DoorBar.After(3));
+            Assert.AreEqual(1, DoorBar.After(2));
+            Assert.AreEqual(0, DoorBar.After(1));
+            Assert.AreEqual(0, DoorBar.After(0));
+            Assert.AreEqual("Barred", DoorBar.Face("en"));
+            Assert.AreEqual("Atrancada", DoorBar.Face("es"));
+            Assert.AreEqual("The bar holds", DoorBar.Hold("en"));
+            Assert.AreEqual("La tranca aguanta", DoorBar.Hold("es"));
+            Assert.AreEqual("The bar gives", DoorBar.Gives("en"));
+            Assert.AreEqual("La tranca cede", DoorBar.Gives("es"));
+            Assert.AreEqual("Step inside", DoorMap.Prompt(false));
+            Assert.AreEqual("Step outside", DoorMap.Prompt(true));
+            Assert.AreEqual("Inside", DoorMap.Cross(false, "en"));
+            Assert.AreEqual(90f, DoorMap.Shift, 0.001f);
+            Assert.AreEqual(48f, WeaponCard.Find("machete").Damage, 0.001f);
+        }
+
+        [Test]
         public void AZombieWithoutARigStillAttacksAndFalls()
         {
             Assert.AreEqual(14f, PoseSheet.Lean(ZombieAI.ZombieState.Chase, 0f), 0.001f);

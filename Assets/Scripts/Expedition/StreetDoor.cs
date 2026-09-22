@@ -12,19 +12,43 @@ namespace OutpostZero.Expedition
     {
         private Vector3 destination;
         private bool leaving;
+        private int bar;
 
-        public string Prompt => DoorMap.Prompt(leaving, null);
+        public string Prompt => DoorBar.Holds(bar) ? DoorBar.Face(null) : DoorMap.Prompt(leaving, null);
+
+        public bool Barred => DoorBar.Holds(bar);
 
         public void Configure(Vector3 target, bool toStreet)
         {
+            Configure(target, toStreet, false);
+        }
+
+        public void Configure(Vector3 target, bool toStreet, bool barred)
+        {
             destination = target;
             leaving = toStreet;
+            bar = barred ? DoorBar.Hits : 0;
+        }
+
+        public void Strike(GameObject attacker)
+        {
+            if (!DoorBar.Holds(bar)) return;
+            bar = DoorBar.After(bar);
+            bool open = !DoorBar.Holds(bar);
+            GameplayFeedback.Toast(open ? DoorBar.Gives(null) : DoorBar.Hold(null));
+            if (Sensory.NoiseManager.Instance != null)
+                Sensory.NoiseManager.Instance.EmitNoise(transform.position, open ? DoorBar.BreakNoise : DoorBar.Noise, 0.85f, NoiseType.ObjectBroken, attacker);
         }
 
         public bool CanInteract(PlayerInventory inventory) => inventory != null;
 
         public void Interact(PlayerInventory inventory)
         {
+            if (DoorBar.Holds(bar))
+            {
+                GameplayFeedback.Toast(DoorBar.Hold(null));
+                return;
+            }
             var player = inventory != null ? inventory.GetComponent<PlayerController>() : null;
             if (player == null) player = PlayerRegistry.Current;
             if (player == null) return;
