@@ -21,9 +21,12 @@ namespace OutpostZero.UI
         private float noiseDecaySpeed = 3.5f;
         private string toastMessage;
         private float toastUntil;
+        private string caption;
+        private float captionUntil;
 
         public float NoiseLevel => currentNoiseLevel;
         public string Toast => Time.unscaledTime <= toastUntil ? toastMessage : null;
+        public string Caption => Time.unscaledTime <= captionUntil ? caption : null;
         public HealthSystem Health => playerHealth;
         public PlayerInventory Inventory => inventory;
 
@@ -57,6 +60,12 @@ namespace OutpostZero.UI
             toastUntil = Time.unscaledTime + 2.4f;
         }
 
+        private void ShowCaption(string message)
+        {
+            caption = message;
+            captionUntil = Time.unscaledTime + 2.4f;
+        }
+
         private void OnDestroy()
         {
             if (NoiseManager.Instance != null)
@@ -83,7 +92,7 @@ namespace OutpostZero.UI
             if (SettingsService.Instance != null && !SettingsService.Instance.Subtitles) return;
             Vector3 from = player != null ? origin - player.transform.position : origin;
             string line = Presentation.Caption(type, from.x, from.z, SettingsService.Instance != null ? SettingsService.Instance.Language : "en");
-            if (!string.IsNullOrEmpty(line)) ShowToast(line);
+            if (!string.IsNullOrEmpty(line)) ShowCaption(line);
         }
     }
 }

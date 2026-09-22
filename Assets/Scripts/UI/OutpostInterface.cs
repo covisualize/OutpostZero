@@ -33,6 +33,7 @@ namespace OutpostZero.UI
         private Label weapon;
         private Label tutorial;
         private Label toast;
+        private Label subtitle;
         private Label compass;
         private Label hurt;
         private Label feed;
@@ -183,6 +184,16 @@ namespace OutpostZero.UI
             toast.style.backgroundColor = new Color(0.12f, 0.1f, 0.08f, 0.9f);
             toast.pickingMode = PickingMode.Ignore;
             root.Add(toast);
+
+            subtitle = Body();
+            subtitle.style.position = Position.Absolute;
+            subtitle.style.top = 116;
+            subtitle.style.left = Length.Percent(25);
+            subtitle.style.width = Length.Percent(50);
+            subtitle.style.unityTextAlign = TextAnchor.MiddleCenter;
+            subtitle.style.backgroundColor = new Color(0.05f, 0.07f, 0.1f, 0.88f);
+            subtitle.pickingMode = PickingMode.Ignore;
+            root.Add(subtitle);
 
             compass = Body();
             compass.style.position = Position.Absolute;
@@ -432,6 +443,9 @@ namespace OutpostZero.UI
             }
             toast.text = hud != null ? hud.Toast ?? "" : "";
             toast.style.display = string.IsNullOrEmpty(toast.text) ? DisplayStyle.None : DisplayStyle.Flex;
+            bool captions = SettingsService.Instance == null || SettingsService.Instance.Subtitles;
+            subtitle.text = captions && hud != null ? hud.Caption ?? "" : "";
+            subtitle.style.display = string.IsNullOrEmpty(subtitle.text) ? DisplayStyle.None : DisplayStyle.Flex;
 
             var tutorialDirector = TutorialDirector.Instance;
             bool showTutorial = tutorialDirector != null && !tutorialDirector.Finished && !string.IsNullOrEmpty(tutorialDirector.Current)

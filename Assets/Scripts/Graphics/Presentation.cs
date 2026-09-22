@@ -96,6 +96,8 @@ namespace OutpostZero.Graphics
             if (type == NoiseType.GunshotLoud || type == NoiseType.GunshotQuiet) return es ? "[Disparo, " + where + "]" : "[Gunshot, " + where + "]";
             if (type == NoiseType.Explosion) return es ? "[Explosión, " + where + "]" : "[Explosion, " + where + "]";
             if (type == NoiseType.Thunder) return es ? "[Trueno, " + where + "]" : "[Thunder, " + where + "]";
+            if (type == NoiseType.ObjectBroken) return es ? "[Rotura, " + where + "]" : "[Something broke, " + where + "]";
+            if (type == NoiseType.MeleeSwing) return es ? "[Corte, " + where + "]" : "[Blade, " + where + "]";
             return "";
         }
     }

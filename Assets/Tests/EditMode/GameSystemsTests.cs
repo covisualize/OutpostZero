@@ -1386,6 +1386,12 @@ namespace OutpostZero.Tests.EditMode
             Assert.AreEqual("[Gunshot, west]", Presentation.Caption(NoiseType.GunshotLoud, -5f, 0f, "en"));
             Assert.AreEqual("[Explosion, here]", Presentation.Caption(NoiseType.Explosion, 0f, 0f, "en"));
             Assert.AreEqual("", Presentation.Caption(NoiseType.WalkFootstep, 1f, 0f, "en"));
+            Assert.AreEqual("", Presentation.Caption(NoiseType.SprintFootstep, 1f, 0f, "en"));
+            Assert.AreEqual("", Presentation.Caption(NoiseType.SneakFootstep, 1f, 0f, "es"));
+            Assert.AreEqual("[Something broke, east]", Presentation.Caption(NoiseType.ObjectBroken, 4f, 0f, "en"));
+            Assert.AreEqual("[Rotura, este]", Presentation.Caption(NoiseType.ObjectBroken, 4f, 0f, "es"));
+            Assert.AreEqual("[Blade, north]", Presentation.Caption(NoiseType.MeleeSwing, 0f, 4f, "en"));
+            Assert.AreEqual("[Corte, norte]", Presentation.Caption(NoiseType.MeleeSwing, 0f, 4f, "es"));
         }
 
         [Test]
