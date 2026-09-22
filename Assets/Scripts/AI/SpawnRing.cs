@@ -20,11 +20,11 @@ namespace OutpostZero.AI
 
         public static bool InFront(float camX, float camZ, float fwdX, float fwdZ, float x, float z)
         {
-            float flen = Math.Sqrt(fwdX * fwdX + fwdZ * fwdZ);
+            float flen = (float)Math.Sqrt(fwdX * fwdX + fwdZ * fwdZ);
             if (flen < 0.2f) return false;
             float dx = x - camX;
             float dz = z - camZ;
-            float len = Math.Sqrt(dx * dx + dz * dz);
+            float len = (float)Math.Sqrt(dx * dx + dz * dz);
             if (len < 0.001f) return true;
             float dot = (dx * (fwdX / flen) + dz * (fwdZ / flen)) / len;
             return dot > 0.35f;

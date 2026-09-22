@@ -211,19 +211,19 @@ namespace OutpostZero.Shell
             }
             if (TutorialDirector.Instance != null) data.tutorialDone = TutorialDirector.Instance.Finished;
             if (CodexDirector.Instance != null) data.codex = CodexDirector.Instance.Packed;
-            if (OutpostZero.Player.PlayerRegistry.Current != null)
+            if (OutpostZero.Core.PlayerRegistry.Current != null)
             {
-                data.weaponMods = OutpostZero.Player.PlayerRegistry.Current.PackMods();
-                var inventory = OutpostZero.Player.PlayerRegistry.Current.GetComponent<OutpostZero.Player.PlayerInventory>();
+                data.weaponMods = OutpostZero.Core.PlayerRegistry.Current.PackMods();
+                var inventory = OutpostZero.Core.PlayerRegistry.Current.GetComponent<OutpostZero.Player.PlayerInventory>();
                 if (inventory != null) data.packTier = inventory.PackTier;
-                data.lampSpent = OutpostZero.Player.PlayerRegistry.Current.LampSpent;
-                var needs = OutpostZero.Player.PlayerRegistry.Current.GetComponent<OutpostZero.Player.SurvivalNeeds>();
+                data.lampSpent = OutpostZero.Core.PlayerRegistry.Current.LampSpent;
+                var needs = OutpostZero.Core.PlayerRegistry.Current.GetComponent<OutpostZero.Player.SurvivalNeeds>();
                 if (needs != null)
                 {
                     data.fatigue = OutpostZero.Player.BodyState.PackFatigue(needs.Fatigue);
                     data.fatigueSet = 1;
                 }
-                var effects = OutpostZero.Player.PlayerRegistry.Current.GetComponent<OutpostZero.Player.StatusEffectController>();
+                var effects = OutpostZero.Core.PlayerRegistry.Current.GetComponent<OutpostZero.Player.StatusEffectController>();
                 if (effects != null)
                 {
                     data.bleed = OutpostZero.Player.BodyState.PackBleed(effects.IsBleeding);
@@ -332,13 +332,13 @@ namespace OutpostZero.Shell
             SurvivorRoster.Instance?.RestoreStory(data.memorial, data.corpses);
             TutorialDirector.Instance?.SetFinished(data.tutorialDone);
             CodexDirector.Instance?.Restore(data.codex);
-            OutpostZero.Player.PlayerRegistry.Current?.RestoreMods(data.weaponMods);
-            OutpostZero.Player.PlayerRegistry.Current?.RestoreLamp(data.lampSpent);
-            OutpostZero.Player.PlayerRegistry.Current?.GetComponent<OutpostZero.Player.PlayerInventory>()?.SetPackTier(data.packTier);
+            OutpostZero.Core.PlayerRegistry.Current?.RestoreMods(data.weaponMods);
+            OutpostZero.Core.PlayerRegistry.Current?.RestoreLamp(data.lampSpent);
+            OutpostZero.Core.PlayerRegistry.Current?.GetComponent<OutpostZero.Player.PlayerInventory>()?.SetPackTier(data.packTier);
             float keptFatigue = OutpostZero.Player.BodyState.UnpackFatigue(data.fatigue, data.fatigueSet);
             if (keptFatigue >= 0f)
-                OutpostZero.Player.PlayerRegistry.Current?.GetComponent<OutpostZero.Player.SurvivalNeeds>()?.SetFatigue(keptFatigue);
-            OutpostZero.Player.PlayerRegistry.Current?.GetComponent<OutpostZero.Player.StatusEffectController>()?.RestoreCondition(
+                OutpostZero.Core.PlayerRegistry.Current?.GetComponent<OutpostZero.Player.SurvivalNeeds>()?.SetFatigue(keptFatigue);
+            OutpostZero.Core.PlayerRegistry.Current?.GetComponent<OutpostZero.Player.StatusEffectController>()?.RestoreCondition(
                 OutpostZero.Player.BodyState.UnpackBleed(data.bleed),
                 OutpostZero.Player.BodyState.UnpackInfection(data.infection));
             WorldMapService.Instance?.RestoreCleared(data.districtsCleared);

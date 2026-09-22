@@ -1,5 +1,6 @@
 using UnityEngine;
 using OutpostZero.Player;
+using OutpostZero.Core;
 
 namespace OutpostZero.Graphics
 {

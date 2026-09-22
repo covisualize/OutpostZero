@@ -28,4 +28,6 @@ MonoBehaviour:
   noiseType: 3
   staminaCost: 0
   isMelee: 1
+  automatic: 0
+  useProjectile: 0
   modelPath: Assets/Models/Weapons/Weapon_Machete.fbx
