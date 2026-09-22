@@ -3,6 +3,7 @@ using UnityEngine;
 using UnityEngine.AI;
 using OutpostZero.Sensory;
 using OutpostZero.Core;
+using OutpostZero.Colony;
 
 namespace OutpostZero.AI
 {
@@ -18,6 +19,7 @@ namespace OutpostZero.AI
 
         [Header("Continuous Spawning")]
         [SerializeField] private bool periodicSpawn = true;
+        [SerializeField] private bool directorOwnsSpawns;
         [SerializeField] private float spawnInterval = 8f;
         [SerializeField] private int spawnBatchSize = 2;
 
@@ -25,6 +27,25 @@ namespace OutpostZero.AI
         private float nextSpawnTime;
         private Transform playerTransform;
         private ZombiePool pool;
+        private string preferredName = "";
+
+        public void Prefer(string nameFragment)
+        {
+            preferredName = nameFragment ?? "";
+        }
+
+        public void UseDirectorForSpawns()
+        {
+            periodicSpawn = false;
+            directorOwnsSpawns = true;
+        }
+
+        public int MaxAlive => maxAliveZombies;
+
+        public void ApplyCap(int max)
+        {
+            maxAliveZombies = Mathf.Max(4, max);
+        }
 
         public void Configure(GameObject prefab, GameObject[] variants, int initial, int maxAlive)
         {
@@ -105,6 +126,39 @@ namespace OutpostZero.AI
             SpawnZombies(initialCount);
         }
 
+        public void SpawnRaid(int count, string approach)
+        {
+            GameObject defaultPrefab = zombiePrefab;
+            if (defaultPrefab == null && zombiePrefabVariants != null && zombiePrefabVariants.Length > 0)
+            {
+                defaultPrefab = zombiePrefabVariants[0];
+            }
+            if (defaultPrefab == null) return;
+            if (count < 1) count = 1;
+
+            for (int i = 0; i < count; i++)
+            {
+                if (activeZombies.Count >= maxAliveZombies) break;
+                RaidDrop.Point(approach, i, count, out float dropX, out float dropZ);
+                Vector3 candidate = new Vector3(dropX, 0f, dropZ);
+                Vector3 pos = candidate;
+                if (NavMesh.SamplePosition(candidate, out NavMeshHit hit, 6f, NavMesh.AllAreas)) pos = hit.position;
+                GameObject chosenPrefab = ChoosePrefab(defaultPrefab);
+                Quaternion rotation = Quaternion.Euler(0f, Random.Range(0f, 360f), 0f);
+                GameObject zombie = pool != null
+                    ? pool.Rent(chosenPrefab, pos, rotation)
+                    : Instantiate(chosenPrefab, pos, rotation);
+                if (zombie == null) continue;
+                zombie.SetActive(true);
+                activeZombies.Add(zombie);
+                var ai = zombie.GetComponent<ZombieAI>();
+                if (ai == null) continue;
+                ai.MarkRaid();
+                if (GridBuilder.Instance != null && GridBuilder.Instance.BoardFor(approach, i, out float boardX, out float boardZ))
+                    ai.PostAt(boardX, boardZ);
+            }
+        }
+
         public void SpawnZombies(int count)
         {
             GameObject defaultPrefab = zombiePrefab;
@@ -116,21 +170,36 @@ namespace OutpostZero.AI
 
             Vector3 center = playerTransform != null ? playerTransform.position : transform.position;
 
+            var camera = Camera.main;
             for (int i = 0; i < count; i++)
             {
                 if (activeZombies.Count >= maxAliveZombies) break;
 
-                GameObject chosenPrefab = defaultPrefab;
-                if (zombiePrefabVariants != null && zombiePrefabVariants.Length > 0)
+                GameObject chosenPrefab = ChoosePrefab(defaultPrefab);
+                bool placed = false;
+                for (int attempt = 0; attempt < 8 && !placed; attempt++)
                 {
-                    chosenPrefab = zombiePrefabVariants[Random.Range(0, zombiePrefabVariants.Length)];
-                }
+                    float reach = Mathf.Max(SpawnRing.MinDistance, minDistanceFromPlayer);
+                    Vector2 randomCircle = Random.insideUnitCircle.normalized * Random.Range(reach, spawnRadius);
+                    Vector3 candidatePos = center + new Vector3(randomCircle.x, 0f, randomCircle.y);
+                    if (!NavMesh.SamplePosition(candidatePos, out NavMeshHit hit, 5f, NavMesh.AllAreas)) continue;
+                    if (!SpawnRing.Allowed(hit.position.x, hit.position.z, center.x, center.z)) continue;
+                    if (camera != null)
+                    {
+                        Vector3 forward = camera.transform.forward;
+                        Vector3 right = camera.transform.right;
+                        Vector3 up = camera.transform.up;
+                        Vector3 origin = camera.transform.position;
+                        if (ViewVolume.Seen(
+                            origin.x, origin.y, origin.z,
+                            forward.x, forward.y, forward.z,
+                            right.x, right.y, right.z,
+                            up.x, up.y, up.z,
+                            camera.fieldOfView, camera.aspect, camera.nearClipPlane, camera.farClipPlane,
+                            hit.position.x, hit.position.y + 1f, hit.position.z,
+                            0.4f, 0.9f, 0.4f)) continue;
+                    }
 
-                Vector2 randomCircle = Random.insideUnitCircle.normalized * Random.Range(minDistanceFromPlayer, spawnRadius);
-                Vector3 candidatePos = center + new Vector3(randomCircle.x, 0f, randomCircle.y);
-
-                if (NavMesh.SamplePosition(candidatePos, out NavMeshHit hit, 5f, NavMesh.AllAreas))
-                {
                     Quaternion rotation = Quaternion.Euler(0f, Random.Range(0f, 360f), 0f);
                     GameObject zombie = pool != null
                         ? pool.Rent(chosenPrefab, hit.position, rotation)
@@ -138,13 +207,36 @@ namespace OutpostZero.AI
                     if (zombie == null) continue;
                     zombie.SetActive(true);
                     activeZombies.Add(zombie);
+                    placed = true;
                 }
             }
+        }
+
+        private GameObject ChoosePrefab(GameObject fallback)
+        {
+            if (zombiePrefabVariants == null || zombiePrefabVariants.Length == 0) return fallback;
+            if (!string.IsNullOrEmpty(preferredName) && Random.value < 0.72f)
+            {
+                int matches = 0;
+                GameObject pick = null;
+                for (int i = 0; i < zombiePrefabVariants.Length; i++)
+                {
+                    var candidate = zombiePrefabVariants[i];
+                    if (candidate == null || candidate.name.IndexOf(preferredName, System.StringComparison.Ordinal) < 0) continue;
+                    matches++;
+                    if (Random.Range(0, matches) == 0) pick = candidate;
+                }
+                if (pick != null) return pick;
+            }
+
+            var chosen = zombiePrefabVariants[Random.Range(0, zombiePrefabVariants.Length)];
+            return chosen != null ? chosen : fallback;
         }
 
         private void HandleLoudNoiseAlert(Vector3 origin, float radius, NoiseType type)
         {
             // Loud gunshots or explosions attract additional roving zombies
+            if (directorOwnsSpawns) return;
             if (type == NoiseType.GunshotLoud || type == NoiseType.Explosion)
             {
                 if (activeZombies.Count < maxAliveZombies)

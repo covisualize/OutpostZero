@@ -1,0 +1,3022 @@
+{
+  "grid": 2.0,
+  "doorClear": 1.2,
+  "anchor": {
+    "x": 12,
+    "y": 0,
+    "z": 5
+  },
+  "pieces": [
+    {
+      "id": "wall_plain",
+      "category": "building",
+      "w": 2.0,
+      "h": 3.0,
+      "d": 0.2,
+      "surface": "concrete",
+      "door": 0,
+      "lod": 24,
+      "variants": [
+        "brick",
+        "concrete",
+        "plaster"
+      ],
+      "colliders": [
+        {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 2.0,
+          "h": 3.0,
+          "d": 0.2
+        }
+      ]
+    },
+    {
+      "id": "wall_window",
+      "category": "building",
+      "w": 2.0,
+      "h": 3.0,
+      "d": 0.2,
+      "surface": "concrete",
+      "door": 0,
+      "lod": 24,
+      "variants": [
+        "brick",
+        "concrete",
+        "plaster"
+      ],
+      "colliders": [
+        {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 0.5,
+          "h": 3.0,
+          "d": 0.2
+        },
+        {
+          "x": 1.5,
+          "y": 0,
+          "z": 0,
+          "w": 0.5,
+          "h": 3.0,
+          "d": 0.2
+        },
+        {
+          "x": 0.5,
+          "y": 0,
+          "z": 0,
+          "w": 1.0,
+          "h": 0.9,
+          "d": 0.2
+        },
+        {
+          "x": 0.5,
+          "y": 2.1,
+          "z": 0,
+          "w": 1.0,
+          "h": 0.9,
+          "d": 0.2
+        },
+        {
+          "x": 0.5,
+          "y": 0.9,
+          "z": 0,
+          "w": 1.0,
+          "h": 1.2,
+          "d": 0.2
+        }
+      ]
+    },
+    {
+      "id": "wall_window_broken",
+      "category": "building",
+      "w": 2.0,
+      "h": 3.0,
+      "d": 0.2,
+      "surface": "concrete",
+      "door": 0,
+      "lod": 24,
+      "variants": [
+        "brick",
+        "concrete",
+        "plaster"
+      ],
+      "colliders": [
+        {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 0.5,
+          "h": 3.0,
+          "d": 0.2
+        },
+        {
+          "x": 1.5,
+          "y": 0,
+          "z": 0,
+          "w": 0.5,
+          "h": 3.0,
+          "d": 0.2
+        },
+        {
+          "x": 0.5,
+          "y": 0,
+          "z": 0,
+          "w": 1.0,
+          "h": 0.9,
+          "d": 0.2
+        },
+        {
+          "x": 0.5,
+          "y": 2.1,
+          "z": 0,
+          "w": 1.0,
+          "h": 0.9,
+          "d": 0.2
+        }
+      ]
+    },
+    {
+      "id": "wall_door",
+      "category": "building",
+      "w": 2,
+      "h": 3,
+      "d": 0.2,
+      "surface": "concrete",
+      "door": 1.2,
+      "lod": 24,
+      "variants": [
+        "brick",
+        "concrete",
+        "plaster"
+      ],
+      "colliders": [
+        {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 0.4,
+          "h": 3,
+          "d": 0.2
+        },
+        {
+          "x": 1.6,
+          "y": 0,
+          "z": 0,
+          "w": 0.4,
+          "h": 3,
+          "d": 0.2
+        },
+        {
+          "x": 0.4,
+          "y": 2.1,
+          "z": 0,
+          "w": 1.2,
+          "h": 0.9,
+          "d": 0.2
+        }
+      ]
+    },
+    {
+      "id": "wall_double_door",
+      "category": "building",
+      "w": 2,
+      "h": 3,
+      "d": 0.2,
+      "surface": "concrete",
+      "door": 1.6,
+      "lod": 24,
+      "variants": [
+        "brick",
+        "concrete",
+        "plaster"
+      ],
+      "colliders": [
+        {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 0.2,
+          "h": 3,
+          "d": 0.2
+        },
+        {
+          "x": 1.8,
+          "y": 0,
+          "z": 0,
+          "w": 0.2,
+          "h": 3,
+          "d": 0.2
+        },
+        {
+          "x": 0.2,
+          "y": 2.15,
+          "z": 0,
+          "w": 1.6,
+          "h": 0.85,
+          "d": 0.2
+        }
+      ]
+    },
+    {
+      "id": "wall_garage",
+      "category": "building",
+      "w": 4,
+      "h": 3,
+      "d": 0.2,
+      "surface": "concrete",
+      "door": 2.4,
+      "lod": 24,
+      "variants": [
+        "brick",
+        "concrete",
+        "plaster"
+      ],
+      "colliders": [
+        {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 0.8,
+          "h": 3,
+          "d": 0.2
+        },
+        {
+          "x": 3.2,
+          "y": 0,
+          "z": 0,
+          "w": 0.8,
+          "h": 3,
+          "d": 0.2
+        },
+        {
+          "x": 0.8,
+          "y": 2.4,
+          "z": 0,
+          "w": 2.4,
+          "h": 0.6,
+          "d": 0.2
+        }
+      ]
+    },
+    {
+      "id": "corner",
+      "category": "building",
+      "w": 0.2,
+      "h": 3,
+      "d": 0.2,
+      "surface": "concrete",
+      "door": 0,
+      "lod": 24,
+      "variants": [
+        "brick",
+        "concrete",
+        "plaster"
+      ],
+      "colliders": [
+        {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 0.2,
+          "h": 3,
+          "d": 0.2
+        }
+      ]
+    },
+    {
+      "id": "wall_half",
+      "category": "building",
+      "w": 2,
+      "h": 1.5,
+      "d": 0.2,
+      "surface": "concrete",
+      "door": 0,
+      "lod": 24,
+      "variants": [
+        "brick",
+        "concrete",
+        "plaster"
+      ],
+      "colliders": [
+        {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 2,
+          "h": 1.5,
+          "d": 0.2
+        }
+      ]
+    },
+    {
+      "id": "floor",
+      "category": "building",
+      "w": 2,
+      "h": 0.1,
+      "d": 2,
+      "surface": "concrete",
+      "door": 0,
+      "lod": 32,
+      "variants": [
+        "concrete"
+      ],
+      "colliders": [
+        {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 2,
+          "h": 0.1,
+          "d": 2
+        }
+      ]
+    },
+    {
+      "id": "ceiling",
+      "category": "building",
+      "w": 2,
+      "h": 0.1,
+      "d": 2,
+      "surface": "concrete",
+      "door": 0,
+      "lod": 32,
+      "variants": [
+        "concrete"
+      ],
+      "colliders": [
+        {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 2,
+          "h": 0.1,
+          "d": 2
+        }
+      ]
+    },
+    {
+      "id": "roof",
+      "category": "building",
+      "w": 2,
+      "h": 0.16,
+      "d": 2,
+      "surface": "concrete",
+      "door": 0,
+      "lod": 40,
+      "variants": [
+        "concrete"
+      ],
+      "colliders": [
+        {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 2,
+          "h": 0.16,
+          "d": 2
+        }
+      ]
+    },
+    {
+      "id": "parapet",
+      "category": "building",
+      "w": 2,
+      "h": 0.4,
+      "d": 0.2,
+      "surface": "concrete",
+      "door": 0,
+      "lod": 24,
+      "variants": [
+        "brick",
+        "concrete",
+        "plaster"
+      ],
+      "colliders": [
+        {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 2,
+          "h": 0.4,
+          "d": 0.2
+        }
+      ]
+    },
+    {
+      "id": "stairs",
+      "category": "building",
+      "w": 2,
+      "h": 3,
+      "d": 4.08,
+      "surface": "concrete",
+      "door": 0,
+      "lod": 20,
+      "variants": [
+        "concrete"
+      ],
+      "colliders": [
+        {
+          "x": 0,
+          "y": 0.0,
+          "z": 0.0,
+          "w": 2.0,
+          "h": 0.25,
+          "d": 0.34
+        },
+        {
+          "x": 0,
+          "y": 0.25,
+          "z": 0.34,
+          "w": 2.0,
+          "h": 0.25,
+          "d": 0.34
+        },
+        {
+          "x": 0,
+          "y": 0.5,
+          "z": 0.68,
+          "w": 2.0,
+          "h": 0.25,
+          "d": 0.34
+        },
+        {
+          "x": 0,
+          "y": 0.75,
+          "z": 1.02,
+          "w": 2.0,
+          "h": 0.25,
+          "d": 0.34
+        },
+        {
+          "x": 0,
+          "y": 1.0,
+          "z": 1.36,
+          "w": 2.0,
+          "h": 0.25,
+          "d": 0.34
+        },
+        {
+          "x": 0,
+          "y": 1.25,
+          "z": 1.7,
+          "w": 2.0,
+          "h": 0.25,
+          "d": 0.34
+        },
+        {
+          "x": 0,
+          "y": 1.5,
+          "z": 2.04,
+          "w": 2.0,
+          "h": 0.25,
+          "d": 0.34
+        },
+        {
+          "x": 0,
+          "y": 1.75,
+          "z": 2.38,
+          "w": 2.0,
+          "h": 0.25,
+          "d": 0.34
+        },
+        {
+          "x": 0,
+          "y": 2.0,
+          "z": 2.72,
+          "w": 2.0,
+          "h": 0.25,
+          "d": 0.34
+        },
+        {
+          "x": 0,
+          "y": 2.25,
+          "z": 3.06,
+          "w": 2.0,
+          "h": 0.25,
+          "d": 0.34
+        },
+        {
+          "x": 0,
+          "y": 2.5,
+          "z": 3.4,
+          "w": 2.0,
+          "h": 0.25,
+          "d": 0.34
+        },
+        {
+          "x": 0,
+          "y": 2.75,
+          "z": 3.74,
+          "w": 2.0,
+          "h": 0.25,
+          "d": 0.34
+        }
+      ]
+    },
+    {
+      "id": "balcony",
+      "category": "building",
+      "w": 2,
+      "h": 1.1,
+      "d": 1.2,
+      "surface": "metal",
+      "door": 0,
+      "lod": 24,
+      "variants": [
+        "metal"
+      ],
+      "colliders": [
+        {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 2,
+          "h": 0.1,
+          "d": 1.2
+        },
+        {
+          "x": 0,
+          "y": 0.1,
+          "z": 1.05,
+          "w": 2,
+          "h": 1.0,
+          "d": 0.08
+        }
+      ]
+    },
+    {
+      "id": "fire_escape",
+      "category": "building",
+      "w": 1.2,
+      "h": 3,
+      "d": 2.2,
+      "surface": "metal",
+      "door": 0,
+      "lod": 24,
+      "variants": [
+        "metal"
+      ],
+      "colliders": [
+        {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1.2,
+          "h": 0.08,
+          "d": 2.2
+        },
+        {
+          "x": 0,
+          "y": 1.4,
+          "z": 0,
+          "w": 1.2,
+          "h": 0.08,
+          "d": 2.2
+        },
+        {
+          "x": 0,
+          "y": 0,
+          "z": 2.05,
+          "w": 1.2,
+          "h": 3,
+          "d": 0.08
+        }
+      ]
+    },
+    {
+      "id": "wall_boarded",
+      "category": "building",
+      "w": 2.0,
+      "h": 3.0,
+      "d": 0.2,
+      "surface": "wood",
+      "door": 0,
+      "lod": 24,
+      "variants": [
+        "brick",
+        "concrete",
+        "plaster"
+      ],
+      "colliders": [
+        {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 2.0,
+          "h": 3.0,
+          "d": 0.2
+        }
+      ]
+    },
+    {
+      "id": "road_straight",
+      "category": "road",
+      "w": 2,
+      "h": 0.08,
+      "d": 2,
+      "surface": "concrete",
+      "door": 0,
+      "lod": 36,
+      "variants": [
+        "concrete"
+      ],
+      "colliders": [
+        {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 2,
+          "h": 0.08,
+          "d": 2
+        }
+      ]
+    },
+    {
+      "id": "road_curve",
+      "category": "road",
+      "w": 2,
+      "h": 0.08,
+      "d": 2,
+      "surface": "concrete",
+      "door": 0,
+      "lod": 36,
+      "variants": [
+        "concrete"
+      ],
+      "colliders": [
+        {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 2,
+          "h": 0.08,
+          "d": 2
+        }
+      ]
+    },
+    {
+      "id": "road_t",
+      "category": "road",
+      "w": 2,
+      "h": 0.08,
+      "d": 2,
+      "surface": "concrete",
+      "door": 0,
+      "lod": 36,
+      "variants": [
+        "concrete"
+      ],
+      "colliders": [
+        {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 2,
+          "h": 0.08,
+          "d": 2
+        }
+      ]
+    },
+    {
+      "id": "road_cross",
+      "category": "road",
+      "w": 2,
+      "h": 0.08,
+      "d": 2,
+      "surface": "concrete",
+      "door": 0,
+      "lod": 36,
+      "variants": [
+        "concrete"
+      ],
+      "colliders": [
+        {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 2,
+          "h": 0.08,
+          "d": 2
+        }
+      ]
+    },
+    {
+      "id": "road_deadend",
+      "category": "road",
+      "w": 2,
+      "h": 0.08,
+      "d": 2,
+      "surface": "concrete",
+      "door": 0,
+      "lod": 36,
+      "variants": [
+        "concrete"
+      ],
+      "colliders": [
+        {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 2,
+          "h": 0.08,
+          "d": 2
+        }
+      ]
+    },
+    {
+      "id": "sidewalk_straight",
+      "category": "road",
+      "w": 2,
+      "h": 0.15,
+      "d": 2,
+      "surface": "concrete",
+      "door": 0,
+      "lod": 30,
+      "variants": [
+        "concrete"
+      ],
+      "colliders": [
+        {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 2,
+          "h": 0.15,
+          "d": 2
+        }
+      ]
+    },
+    {
+      "id": "sidewalk_corner",
+      "category": "road",
+      "w": 2,
+      "h": 0.15,
+      "d": 2,
+      "surface": "concrete",
+      "door": 0,
+      "lod": 30,
+      "variants": [
+        "concrete"
+      ],
+      "colliders": [
+        {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 2,
+          "h": 0.15,
+          "d": 2
+        }
+      ]
+    },
+    {
+      "id": "curb_ramp",
+      "category": "road",
+      "w": 2,
+      "h": 0.15,
+      "d": 1,
+      "surface": "concrete",
+      "door": 0,
+      "lod": 24,
+      "variants": [
+        "concrete"
+      ],
+      "colliders": [
+        {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 2,
+          "h": 0.08,
+          "d": 1
+        }
+      ]
+    },
+    {
+      "id": "crosswalk",
+      "category": "road",
+      "w": 2,
+      "h": 0.02,
+      "d": 2,
+      "surface": "concrete",
+      "door": 0,
+      "lod": 28,
+      "variants": [
+        "concrete"
+      ],
+      "colliders": [
+        {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 2,
+          "h": 0.02,
+          "d": 2
+        }
+      ]
+    },
+    {
+      "id": "parking",
+      "category": "road",
+      "w": 2,
+      "h": 0.08,
+      "d": 2,
+      "surface": "concrete",
+      "door": 0,
+      "lod": 36,
+      "variants": [
+        "concrete"
+      ],
+      "colliders": [
+        {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 2,
+          "h": 0.08,
+          "d": 2
+        }
+      ]
+    },
+    {
+      "id": "alley",
+      "category": "road",
+      "w": 2,
+      "h": 0.08,
+      "d": 2,
+      "surface": "concrete",
+      "door": 0,
+      "lod": 30,
+      "variants": [
+        "concrete"
+      ],
+      "colliders": [
+        {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 2,
+          "h": 0.08,
+          "d": 2
+        }
+      ]
+    },
+    {
+      "id": "manhole",
+      "category": "road",
+      "w": 1,
+      "h": 0.04,
+      "d": 1,
+      "surface": "metal",
+      "door": 0,
+      "lod": 24,
+      "variants": [
+        "metal"
+      ],
+      "colliders": [
+        {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1,
+          "h": 0.04,
+          "d": 1
+        }
+      ]
+    },
+    {
+      "id": "drain",
+      "category": "road",
+      "w": 0.4,
+      "h": 0.08,
+      "d": 2,
+      "surface": "metal",
+      "door": 0,
+      "lod": 24,
+      "variants": [
+        "metal"
+      ],
+      "colliders": [
+        {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 0.4,
+          "h": 0.08,
+          "d": 2
+        }
+      ]
+    },
+    {
+      "id": "shelf",
+      "category": "interior",
+      "w": 0.9,
+      "h": 1.8,
+      "d": 0.4,
+      "surface": "wood",
+      "door": 0,
+      "lod": 24,
+      "variants": [
+        "wood"
+      ],
+      "colliders": [
+        {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 0.9,
+          "h": 1.8,
+          "d": 0.4
+        }
+      ]
+    },
+    {
+      "id": "counter",
+      "category": "interior",
+      "w": 1.6,
+      "h": 0.9,
+      "d": 0.6,
+      "surface": "wood",
+      "door": 0,
+      "lod": 24,
+      "variants": [
+        "wood"
+      ],
+      "colliders": [
+        {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1.6,
+          "h": 0.9,
+          "d": 0.6
+        }
+      ]
+    },
+    {
+      "id": "fridge",
+      "category": "interior",
+      "w": 0.7,
+      "h": 1.8,
+      "d": 0.7,
+      "surface": "metal",
+      "door": 0,
+      "lod": 24,
+      "variants": [
+        "metal"
+      ],
+      "colliders": [
+        {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 0.7,
+          "h": 1.8,
+          "d": 0.7
+        }
+      ]
+    },
+    {
+      "id": "pallet",
+      "category": "interior",
+      "w": 1.2,
+      "h": 0.8,
+      "d": 1.0,
+      "surface": "wood",
+      "door": 0,
+      "lod": 24,
+      "variants": [
+        "wood"
+      ],
+      "colliders": [
+        {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1.2,
+          "h": 0.8,
+          "d": 1.0
+        }
+      ]
+    },
+    {
+      "id": "desk",
+      "category": "interior",
+      "w": 1.4,
+      "h": 0.75,
+      "d": 0.7,
+      "surface": "wood",
+      "door": 0,
+      "lod": 24,
+      "variants": [
+        "wood"
+      ],
+      "colliders": [
+        {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1.4,
+          "h": 0.75,
+          "d": 0.7
+        }
+      ]
+    },
+    {
+      "id": "chair",
+      "category": "interior",
+      "w": 0.5,
+      "h": 0.9,
+      "d": 0.5,
+      "surface": "wood",
+      "door": 0,
+      "lod": 24,
+      "variants": [
+        "wood"
+      ],
+      "colliders": [
+        {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 0.5,
+          "h": 0.9,
+          "d": 0.5
+        }
+      ]
+    },
+    {
+      "id": "filing",
+      "category": "interior",
+      "w": 0.5,
+      "h": 1.3,
+      "d": 0.6,
+      "surface": "metal",
+      "door": 0,
+      "lod": 24,
+      "variants": [
+        "metal"
+      ],
+      "colliders": [
+        {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 0.5,
+          "h": 1.3,
+          "d": 0.6
+        }
+      ]
+    },
+    {
+      "id": "vending",
+      "category": "interior",
+      "w": 0.9,
+      "h": 1.8,
+      "d": 0.7,
+      "surface": "metal",
+      "door": 0,
+      "lod": 24,
+      "variants": [
+        "metal"
+      ],
+      "colliders": [
+        {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 0.9,
+          "h": 1.8,
+          "d": 0.7
+        }
+      ]
+    },
+    {
+      "id": "hospital_bed",
+      "category": "interior",
+      "w": 2.0,
+      "h": 0.7,
+      "d": 0.9,
+      "surface": "metal",
+      "door": 0,
+      "lod": 24,
+      "variants": [
+        "metal"
+      ],
+      "colliders": [
+        {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 2.0,
+          "h": 0.7,
+          "d": 0.9
+        }
+      ]
+    },
+    {
+      "id": "lockers",
+      "category": "interior",
+      "w": 1.5,
+      "h": 1.9,
+      "d": 0.5,
+      "surface": "metal",
+      "door": 0,
+      "lod": 24,
+      "variants": [
+        "metal"
+      ],
+      "colliders": [
+        {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1.5,
+          "h": 1.9,
+          "d": 0.5
+        }
+      ]
+    },
+    {
+      "id": "toilet",
+      "category": "interior",
+      "w": 0.8,
+      "h": 1.2,
+      "d": 1.2,
+      "surface": "concrete",
+      "door": 0,
+      "lod": 24,
+      "variants": [
+        "concrete"
+      ],
+      "colliders": [
+        {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 0.08,
+          "h": 1.2,
+          "d": 1.2
+        },
+        {
+          "x": 0.72,
+          "y": 0,
+          "z": 0,
+          "w": 0.08,
+          "h": 1.2,
+          "d": 1.2
+        },
+        {
+          "x": 0,
+          "y": 0,
+          "z": 1.12,
+          "w": 0.8,
+          "h": 1.2,
+          "d": 0.08
+        },
+        {
+          "x": 0.15,
+          "y": 0,
+          "z": 0.3,
+          "w": 0.5,
+          "h": 0.4,
+          "d": 0.6
+        }
+      ]
+    },
+    {
+      "id": "workbench",
+      "category": "interior",
+      "w": 1.6,
+      "h": 0.9,
+      "d": 0.7,
+      "surface": "wood",
+      "door": 0,
+      "lod": 24,
+      "variants": [
+        "wood"
+      ],
+      "colliders": [
+        {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1.6,
+          "h": 0.9,
+          "d": 0.7
+        }
+      ]
+    },
+    {
+      "id": "generator",
+      "category": "interior",
+      "w": 1.1,
+      "h": 0.8,
+      "d": 0.7,
+      "surface": "metal",
+      "door": 0,
+      "lod": 24,
+      "variants": [
+        "metal"
+      ],
+      "colliders": [
+        {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1.1,
+          "h": 0.8,
+          "d": 0.7
+        }
+      ]
+    },
+    {
+      "id": "pipes",
+      "category": "interior",
+      "w": 2,
+      "h": 0.2,
+      "d": 0.2,
+      "surface": "metal",
+      "door": 0,
+      "lod": 24,
+      "variants": [
+        "metal"
+      ],
+      "colliders": [
+        {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 2,
+          "h": 0.2,
+          "d": 0.2
+        }
+      ]
+    },
+    {
+      "id": "ceiling_light",
+      "category": "interior",
+      "w": 0.4,
+      "h": 0.15,
+      "d": 0.8,
+      "surface": "metal",
+      "door": 0,
+      "lod": 16,
+      "variants": [
+        "metal"
+      ],
+      "colliders": [
+        {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 0.4,
+          "h": 0.15,
+          "d": 0.8
+        }
+      ]
+    },
+    {
+      "id": "sandbag_straight",
+      "category": "fort",
+      "w": 2,
+      "h": 0.6,
+      "d": 0.5,
+      "surface": "concrete",
+      "door": 0,
+      "lod": 24,
+      "variants": [
+        "concrete"
+      ],
+      "colliders": [
+        {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 2,
+          "h": 0.6,
+          "d": 0.5
+        }
+      ]
+    },
+    {
+      "id": "sandbag_corner",
+      "category": "fort",
+      "w": 0.6,
+      "h": 0.6,
+      "d": 0.6,
+      "surface": "concrete",
+      "door": 0,
+      "lod": 24,
+      "variants": [
+        "concrete"
+      ],
+      "colliders": [
+        {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 0.6,
+          "h": 0.6,
+          "d": 0.6
+        }
+      ]
+    },
+    {
+      "id": "wood_barricade",
+      "category": "fort",
+      "w": 2,
+      "h": 1.2,
+      "d": 0.2,
+      "surface": "wood",
+      "door": 0,
+      "lod": 24,
+      "variants": [
+        "wood"
+      ],
+      "colliders": [
+        {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 2,
+          "h": 1.2,
+          "d": 0.2
+        }
+      ]
+    },
+    {
+      "id": "wire",
+      "category": "fort",
+      "w": 2,
+      "h": 1.1,
+      "d": 0.4,
+      "surface": "metal",
+      "door": 0,
+      "lod": 24,
+      "variants": [
+        "metal"
+      ],
+      "colliders": [
+        {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 2,
+          "h": 1.1,
+          "d": 0.4
+        }
+      ]
+    },
+    {
+      "id": "jersey",
+      "category": "fort",
+      "w": 2,
+      "h": 0.8,
+      "d": 0.6,
+      "surface": "concrete",
+      "door": 0,
+      "lod": 24,
+      "variants": [
+        "concrete"
+      ],
+      "colliders": [
+        {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 2,
+          "h": 0.8,
+          "d": 0.6
+        }
+      ]
+    },
+    {
+      "id": "fence",
+      "category": "fort",
+      "w": 2,
+      "h": 2,
+      "d": 0.08,
+      "surface": "metal",
+      "door": 0,
+      "lod": 24,
+      "variants": [
+        "metal"
+      ],
+      "colliders": [
+        {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 2,
+          "h": 2,
+          "d": 0.08
+        }
+      ]
+    },
+    {
+      "id": "fence_gate",
+      "category": "fort",
+      "w": 2,
+      "h": 2,
+      "d": 0.08,
+      "surface": "metal",
+      "door": 1.2,
+      "lod": 24,
+      "variants": [
+        "metal"
+      ],
+      "colliders": [
+        {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 0.4,
+          "h": 2,
+          "d": 0.08
+        },
+        {
+          "x": 1.6,
+          "y": 0,
+          "z": 0,
+          "w": 0.4,
+          "h": 2,
+          "d": 0.08
+        },
+        {
+          "x": 0.4,
+          "y": 1.9,
+          "z": 0,
+          "w": 1.2,
+          "h": 0.1,
+          "d": 0.08
+        }
+      ]
+    },
+    {
+      "id": "tower_segment",
+      "category": "fort",
+      "w": 2,
+      "h": 2,
+      "d": 2,
+      "surface": "wood",
+      "door": 0,
+      "lod": 24,
+      "variants": [
+        "wood"
+      ],
+      "colliders": [
+        {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 0.15,
+          "h": 2,
+          "d": 0.15
+        },
+        {
+          "x": 1.85,
+          "y": 0,
+          "z": 0,
+          "w": 0.15,
+          "h": 2,
+          "d": 0.15
+        },
+        {
+          "x": 0,
+          "y": 0,
+          "z": 1.85,
+          "w": 0.15,
+          "h": 2,
+          "d": 0.15
+        },
+        {
+          "x": 1.85,
+          "y": 0,
+          "z": 1.85,
+          "w": 0.15,
+          "h": 2,
+          "d": 0.15
+        },
+        {
+          "x": 0,
+          "y": 1.85,
+          "z": 0,
+          "w": 2,
+          "h": 0.15,
+          "d": 2
+        }
+      ]
+    },
+    {
+      "id": "spike",
+      "category": "fort",
+      "w": 2,
+      "h": 0.25,
+      "d": 0.4,
+      "surface": "metal",
+      "door": 0,
+      "lod": 24,
+      "variants": [
+        "metal"
+      ],
+      "colliders": [
+        {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 2,
+          "h": 0.25,
+          "d": 0.4
+        }
+      ]
+    },
+    {
+      "id": "plywood_door",
+      "category": "fort",
+      "w": 2,
+      "h": 2.2,
+      "d": 0.08,
+      "surface": "wood",
+      "door": 1.2,
+      "lod": 24,
+      "variants": [
+        "wood"
+      ],
+      "colliders": [
+        {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 0.4,
+          "h": 2.2,
+          "d": 0.08
+        },
+        {
+          "x": 1.6,
+          "y": 0,
+          "z": 0,
+          "w": 0.4,
+          "h": 2.2,
+          "d": 0.08
+        },
+        {
+          "x": 0.4,
+          "y": 2.0,
+          "z": 0,
+          "w": 1.2,
+          "h": 0.2,
+          "d": 0.08
+        }
+      ]
+    }
+  ],
+  "storefront": [
+    {
+      "id": "floor",
+      "x": 0,
+      "y": 0,
+      "z": 0,
+      "yaw": 0
+    },
+    {
+      "id": "floor",
+      "x": 0,
+      "y": 0,
+      "z": 2,
+      "yaw": 0
+    },
+    {
+      "id": "floor",
+      "x": 2,
+      "y": 0,
+      "z": 0,
+      "yaw": 0
+    },
+    {
+      "id": "floor",
+      "x": 2,
+      "y": 0,
+      "z": 2,
+      "yaw": 0
+    },
+    {
+      "id": "wall_plain",
+      "x": 0,
+      "y": 0,
+      "z": 0,
+      "yaw": 0
+    },
+    {
+      "id": "wall_door",
+      "x": 2,
+      "y": 0,
+      "z": 0,
+      "yaw": 0
+    },
+    {
+      "id": "wall_window",
+      "x": 0,
+      "y": 0,
+      "z": 3.8,
+      "yaw": 0
+    },
+    {
+      "id": "wall_window_broken",
+      "x": 2,
+      "y": 0,
+      "z": 3.8,
+      "yaw": 0
+    },
+    {
+      "id": "wall_plain",
+      "x": 0,
+      "y": 0,
+      "z": 0,
+      "yaw": 270
+    },
+    {
+      "id": "wall_boarded",
+      "x": 0,
+      "y": 0,
+      "z": 2,
+      "yaw": 270
+    },
+    {
+      "id": "wall_window",
+      "x": 4.2,
+      "y": 0,
+      "z": 2,
+      "yaw": 90
+    },
+    {
+      "id": "wall_window",
+      "x": 4.2,
+      "y": 0,
+      "z": 4,
+      "yaw": 90
+    },
+    {
+      "id": "roof",
+      "x": 0,
+      "y": 3,
+      "z": 0,
+      "yaw": 0
+    },
+    {
+      "id": "roof",
+      "x": 0,
+      "y": 3,
+      "z": 2,
+      "yaw": 0
+    },
+    {
+      "id": "roof",
+      "x": 2,
+      "y": 3,
+      "z": 0,
+      "yaw": 0
+    },
+    {
+      "id": "roof",
+      "x": 2,
+      "y": 3,
+      "z": 2,
+      "yaw": 0
+    },
+    {
+      "id": "shelf",
+      "x": 0.35,
+      "y": 0,
+      "z": 1.4,
+      "yaw": 0
+    },
+    {
+      "id": "counter",
+      "x": 2.1,
+      "y": 0,
+      "z": 2.8,
+      "yaw": 0
+    },
+    {
+      "id": "vending",
+      "x": 0.3,
+      "y": 0,
+      "z": 2.9,
+      "yaw": 0
+    },
+    {
+      "id": "ceiling_light",
+      "x": 1.6,
+      "y": 2.7,
+      "z": 1.6,
+      "yaw": 0
+    },
+    {
+      "id": "sidewalk_straight",
+      "x": 0,
+      "y": 0,
+      "z": -2,
+      "yaw": 0
+    },
+    {
+      "id": "sidewalk_straight",
+      "x": 2,
+      "y": 0,
+      "z": -2,
+      "yaw": 0
+    },
+    {
+      "id": "crosswalk",
+      "x": 2,
+      "y": 0,
+      "z": -4,
+      "yaw": 0
+    }
+  ],
+  "warehouse": [
+    {
+      "id": "floor",
+      "x": 0,
+      "y": 0,
+      "z": 0,
+      "yaw": 0
+    },
+    {
+      "id": "floor",
+      "x": 0,
+      "y": 0,
+      "z": 2,
+      "yaw": 0
+    },
+    {
+      "id": "floor",
+      "x": 0,
+      "y": 0,
+      "z": 4,
+      "yaw": 0
+    },
+    {
+      "id": "floor",
+      "x": 2,
+      "y": 0,
+      "z": 0,
+      "yaw": 0
+    },
+    {
+      "id": "floor",
+      "x": 2,
+      "y": 0,
+      "z": 2,
+      "yaw": 0
+    },
+    {
+      "id": "floor",
+      "x": 2,
+      "y": 0,
+      "z": 4,
+      "yaw": 0
+    },
+    {
+      "id": "floor",
+      "x": 4,
+      "y": 0,
+      "z": 0,
+      "yaw": 0
+    },
+    {
+      "id": "floor",
+      "x": 4,
+      "y": 0,
+      "z": 2,
+      "yaw": 0
+    },
+    {
+      "id": "floor",
+      "x": 4,
+      "y": 0,
+      "z": 4,
+      "yaw": 0
+    },
+    {
+      "id": "floor",
+      "x": 6,
+      "y": 0,
+      "z": 0,
+      "yaw": 0
+    },
+    {
+      "id": "floor",
+      "x": 6,
+      "y": 0,
+      "z": 2,
+      "yaw": 0
+    },
+    {
+      "id": "floor",
+      "x": 6,
+      "y": 0,
+      "z": 4,
+      "yaw": 0
+    },
+    {
+      "id": "wall_plain",
+      "x": 0,
+      "y": 0,
+      "z": 0,
+      "yaw": 0
+    },
+    {
+      "id": "wall_garage",
+      "x": 2,
+      "y": 0,
+      "z": 0,
+      "yaw": 0
+    },
+    {
+      "id": "wall_plain",
+      "x": 6,
+      "y": 0,
+      "z": 0,
+      "yaw": 0
+    },
+    {
+      "id": "wall_plain",
+      "x": 0,
+      "y": 0,
+      "z": 5.8,
+      "yaw": 0
+    },
+    {
+      "id": "wall_plain",
+      "x": 2,
+      "y": 0,
+      "z": 5.8,
+      "yaw": 0
+    },
+    {
+      "id": "wall_plain",
+      "x": 4,
+      "y": 0,
+      "z": 5.8,
+      "yaw": 0
+    },
+    {
+      "id": "wall_plain",
+      "x": 6,
+      "y": 0,
+      "z": 5.8,
+      "yaw": 0
+    },
+    {
+      "id": "wall_plain",
+      "x": 0,
+      "y": 0,
+      "z": 0,
+      "yaw": 270
+    },
+    {
+      "id": "wall_window",
+      "x": 8.2,
+      "y": 0,
+      "z": 2,
+      "yaw": 90
+    },
+    {
+      "id": "wall_plain",
+      "x": 0,
+      "y": 0,
+      "z": 2,
+      "yaw": 270
+    },
+    {
+      "id": "wall_window",
+      "x": 8.2,
+      "y": 0,
+      "z": 4,
+      "yaw": 90
+    },
+    {
+      "id": "wall_plain",
+      "x": 0,
+      "y": 0,
+      "z": 4,
+      "yaw": 270
+    },
+    {
+      "id": "wall_window",
+      "x": 8.2,
+      "y": 0,
+      "z": 6,
+      "yaw": 90
+    },
+    {
+      "id": "roof",
+      "x": 0,
+      "y": 3,
+      "z": 0,
+      "yaw": 0
+    },
+    {
+      "id": "roof",
+      "x": 0,
+      "y": 3,
+      "z": 2,
+      "yaw": 0
+    },
+    {
+      "id": "roof",
+      "x": 0,
+      "y": 3,
+      "z": 4,
+      "yaw": 0
+    },
+    {
+      "id": "roof",
+      "x": 2,
+      "y": 3,
+      "z": 0,
+      "yaw": 0
+    },
+    {
+      "id": "roof",
+      "x": 2,
+      "y": 3,
+      "z": 2,
+      "yaw": 0
+    },
+    {
+      "id": "roof",
+      "x": 2,
+      "y": 3,
+      "z": 4,
+      "yaw": 0
+    },
+    {
+      "id": "roof",
+      "x": 4,
+      "y": 3,
+      "z": 0,
+      "yaw": 0
+    },
+    {
+      "id": "roof",
+      "x": 4,
+      "y": 3,
+      "z": 2,
+      "yaw": 0
+    },
+    {
+      "id": "roof",
+      "x": 4,
+      "y": 3,
+      "z": 4,
+      "yaw": 0
+    },
+    {
+      "id": "roof",
+      "x": 6,
+      "y": 3,
+      "z": 0,
+      "yaw": 0
+    },
+    {
+      "id": "roof",
+      "x": 6,
+      "y": 3,
+      "z": 2,
+      "yaw": 0
+    },
+    {
+      "id": "roof",
+      "x": 6,
+      "y": 3,
+      "z": 4,
+      "yaw": 0
+    },
+    {
+      "id": "pallet",
+      "x": 0.8,
+      "y": 0,
+      "z": 2.0,
+      "yaw": 0
+    },
+    {
+      "id": "pallet",
+      "x": 0.8,
+      "y": 0,
+      "z": 3.3,
+      "yaw": 0
+    },
+    {
+      "id": "generator",
+      "x": 5.4,
+      "y": 0,
+      "z": 4.0,
+      "yaw": 0
+    },
+    {
+      "id": "pipes",
+      "x": 4.2,
+      "y": 2.2,
+      "z": 4.6,
+      "yaw": 0
+    },
+    {
+      "id": "workbench",
+      "x": 5.0,
+      "y": 0,
+      "z": 1.2,
+      "yaw": 0
+    },
+    {
+      "id": "sidewalk_straight",
+      "x": 2,
+      "y": 0,
+      "z": -2,
+      "yaw": 0
+    },
+    {
+      "id": "sidewalk_straight",
+      "x": 4,
+      "y": 0,
+      "z": -2,
+      "yaw": 0
+    }
+  ],
+  "hospital": [
+    {
+      "id": "floor",
+      "x": 0,
+      "y": 0,
+      "z": 0,
+      "yaw": 0
+    },
+    {
+      "id": "floor",
+      "x": 0,
+      "y": 0,
+      "z": 2,
+      "yaw": 0
+    },
+    {
+      "id": "floor",
+      "x": 0,
+      "y": 0,
+      "z": 4,
+      "yaw": 0
+    },
+    {
+      "id": "floor",
+      "x": 2,
+      "y": 0,
+      "z": 0,
+      "yaw": 0
+    },
+    {
+      "id": "floor",
+      "x": 2,
+      "y": 0,
+      "z": 2,
+      "yaw": 0
+    },
+    {
+      "id": "floor",
+      "x": 2,
+      "y": 0,
+      "z": 4,
+      "yaw": 0
+    },
+    {
+      "id": "floor",
+      "x": 4,
+      "y": 0,
+      "z": 0,
+      "yaw": 0
+    },
+    {
+      "id": "floor",
+      "x": 4,
+      "y": 0,
+      "z": 2,
+      "yaw": 0
+    },
+    {
+      "id": "floor",
+      "x": 4,
+      "y": 0,
+      "z": 4,
+      "yaw": 0
+    },
+    {
+      "id": "wall_door",
+      "x": 0,
+      "y": 0,
+      "z": 0,
+      "yaw": 0
+    },
+    {
+      "id": "wall_window",
+      "x": 2,
+      "y": 0,
+      "z": 0,
+      "yaw": 0
+    },
+    {
+      "id": "wall_plain",
+      "x": 4,
+      "y": 0,
+      "z": 0,
+      "yaw": 0
+    },
+    {
+      "id": "wall_window",
+      "x": 0,
+      "y": 0,
+      "z": 5.8,
+      "yaw": 0
+    },
+    {
+      "id": "wall_plain",
+      "x": 0,
+      "y": 0,
+      "z": 0,
+      "yaw": 270
+    },
+    {
+      "id": "wall_plain",
+      "x": 6.2,
+      "y": 0,
+      "z": 2,
+      "yaw": 90
+    },
+    {
+      "id": "wall_window",
+      "x": 2,
+      "y": 0,
+      "z": 5.8,
+      "yaw": 0
+    },
+    {
+      "id": "wall_plain",
+      "x": 0,
+      "y": 0,
+      "z": 2,
+      "yaw": 270
+    },
+    {
+      "id": "wall_plain",
+      "x": 6.2,
+      "y": 0,
+      "z": 4,
+      "yaw": 90
+    },
+    {
+      "id": "wall_window",
+      "x": 4,
+      "y": 0,
+      "z": 5.8,
+      "yaw": 0
+    },
+    {
+      "id": "wall_plain",
+      "x": 0,
+      "y": 0,
+      "z": 4,
+      "yaw": 270
+    },
+    {
+      "id": "wall_plain",
+      "x": 6.2,
+      "y": 0,
+      "z": 6,
+      "yaw": 90
+    },
+    {
+      "id": "roof",
+      "x": 0,
+      "y": 3,
+      "z": 0,
+      "yaw": 0
+    },
+    {
+      "id": "roof",
+      "x": 0,
+      "y": 3,
+      "z": 2,
+      "yaw": 0
+    },
+    {
+      "id": "roof",
+      "x": 0,
+      "y": 3,
+      "z": 4,
+      "yaw": 0
+    },
+    {
+      "id": "roof",
+      "x": 2,
+      "y": 3,
+      "z": 0,
+      "yaw": 0
+    },
+    {
+      "id": "roof",
+      "x": 2,
+      "y": 3,
+      "z": 2,
+      "yaw": 0
+    },
+    {
+      "id": "roof",
+      "x": 2,
+      "y": 3,
+      "z": 4,
+      "yaw": 0
+    },
+    {
+      "id": "roof",
+      "x": 4,
+      "y": 3,
+      "z": 0,
+      "yaw": 0
+    },
+    {
+      "id": "roof",
+      "x": 4,
+      "y": 3,
+      "z": 2,
+      "yaw": 0
+    },
+    {
+      "id": "roof",
+      "x": 4,
+      "y": 3,
+      "z": 4,
+      "yaw": 0
+    },
+    {
+      "id": "hospital_bed",
+      "x": 0.4,
+      "y": 0,
+      "z": 2.2,
+      "yaw": 0
+    },
+    {
+      "id": "hospital_bed",
+      "x": 0.4,
+      "y": 0,
+      "z": 3.6,
+      "yaw": 0
+    },
+    {
+      "id": "lockers",
+      "x": 3.6,
+      "y": 0,
+      "z": 4.4,
+      "yaw": 0
+    },
+    {
+      "id": "filing",
+      "x": 4.4,
+      "y": 0,
+      "z": 1.2,
+      "yaw": 0
+    },
+    {
+      "id": "toilet",
+      "x": 4.2,
+      "y": 0,
+      "z": 2.6,
+      "yaw": 0
+    },
+    {
+      "id": "ceiling_light",
+      "x": 2.2,
+      "y": 2.7,
+      "z": 2.2,
+      "yaw": 0
+    },
+    {
+      "id": "sidewalk_straight",
+      "x": 0,
+      "y": 0,
+      "z": -2,
+      "yaw": 0
+    },
+    {
+      "id": "sidewalk_straight",
+      "x": 2,
+      "y": 0,
+      "z": -2,
+      "yaw": 0
+    }
+  ],
+  "apartment": [
+    {
+      "id": "floor",
+      "x": 0,
+      "y": 0,
+      "z": 0,
+      "yaw": 0
+    },
+    {
+      "id": "floor",
+      "x": 0,
+      "y": 0,
+      "z": 2,
+      "yaw": 0
+    },
+    {
+      "id": "floor",
+      "x": 0,
+      "y": 0,
+      "z": 4,
+      "yaw": 0
+    },
+    {
+      "id": "floor",
+      "x": 2,
+      "y": 0,
+      "z": 0,
+      "yaw": 0
+    },
+    {
+      "id": "floor",
+      "x": 2,
+      "y": 0,
+      "z": 2,
+      "yaw": 0
+    },
+    {
+      "id": "floor",
+      "x": 2,
+      "y": 0,
+      "z": 4,
+      "yaw": 0
+    },
+    {
+      "id": "floor",
+      "x": 4,
+      "y": 0,
+      "z": 0,
+      "yaw": 0
+    },
+    {
+      "id": "floor",
+      "x": 4,
+      "y": 0,
+      "z": 2,
+      "yaw": 0
+    },
+    {
+      "id": "floor",
+      "x": 4,
+      "y": 0,
+      "z": 4,
+      "yaw": 0
+    },
+    {
+      "id": "wall_door",
+      "x": 0,
+      "y": 0,
+      "z": 0,
+      "yaw": 0
+    },
+    {
+      "id": "wall_window",
+      "x": 0,
+      "y": 0,
+      "z": 5.8,
+      "yaw": 0
+    },
+    {
+      "id": "wall_plain",
+      "x": 0,
+      "y": 0,
+      "z": 0,
+      "yaw": 270
+    },
+    {
+      "id": "wall_plain",
+      "x": 6.2,
+      "y": 0,
+      "z": 2,
+      "yaw": 90
+    },
+    {
+      "id": "wall_plain",
+      "x": 2,
+      "y": 0,
+      "z": 0,
+      "yaw": 0
+    },
+    {
+      "id": "wall_window",
+      "x": 2,
+      "y": 0,
+      "z": 5.8,
+      "yaw": 0
+    },
+    {
+      "id": "wall_plain",
+      "x": 0,
+      "y": 0,
+      "z": 2,
+      "yaw": 270
+    },
+    {
+      "id": "wall_plain",
+      "x": 6.2,
+      "y": 0,
+      "z": 4,
+      "yaw": 90
+    },
+    {
+      "id": "wall_window",
+      "x": 4,
+      "y": 0,
+      "z": 0,
+      "yaw": 0
+    },
+    {
+      "id": "wall_window",
+      "x": 4,
+      "y": 0,
+      "z": 5.8,
+      "yaw": 0
+    },
+    {
+      "id": "wall_plain",
+      "x": 0,
+      "y": 0,
+      "z": 4,
+      "yaw": 270
+    },
+    {
+      "id": "wall_plain",
+      "x": 6.2,
+      "y": 0,
+      "z": 6,
+      "yaw": 90
+    },
+    {
+      "id": "stairs",
+      "x": 2.0,
+      "y": 0,
+      "z": 0.8,
+      "yaw": 0
+    },
+    {
+      "id": "fire_escape",
+      "x": -1.3,
+      "y": 0,
+      "z": 2.0,
+      "yaw": 0
+    },
+    {
+      "id": "floor",
+      "x": 0,
+      "y": 3,
+      "z": 0,
+      "yaw": 0
+    },
+    {
+      "id": "floor",
+      "x": 0,
+      "y": 3,
+      "z": 2,
+      "yaw": 0
+    },
+    {
+      "id": "floor",
+      "x": 0,
+      "y": 3,
+      "z": 4,
+      "yaw": 0
+    },
+    {
+      "id": "floor",
+      "x": 2,
+      "y": 3,
+      "z": 0,
+      "yaw": 0
+    },
+    {
+      "id": "floor",
+      "x": 2,
+      "y": 3,
+      "z": 2,
+      "yaw": 0
+    },
+    {
+      "id": "floor",
+      "x": 2,
+      "y": 3,
+      "z": 4,
+      "yaw": 0
+    },
+    {
+      "id": "floor",
+      "x": 4,
+      "y": 3,
+      "z": 0,
+      "yaw": 0
+    },
+    {
+      "id": "floor",
+      "x": 4,
+      "y": 3,
+      "z": 2,
+      "yaw": 0
+    },
+    {
+      "id": "floor",
+      "x": 4,
+      "y": 3,
+      "z": 4,
+      "yaw": 0
+    },
+    {
+      "id": "wall_plain",
+      "x": 0,
+      "y": 3,
+      "z": 0,
+      "yaw": 0
+    },
+    {
+      "id": "wall_window",
+      "x": 0,
+      "y": 3,
+      "z": 5.8,
+      "yaw": 0
+    },
+    {
+      "id": "wall_plain",
+      "x": 0,
+      "y": 3,
+      "z": 0,
+      "yaw": 270
+    },
+    {
+      "id": "wall_plain",
+      "x": 6.2,
+      "y": 3,
+      "z": 2,
+      "yaw": 90
+    },
+    {
+      "id": "wall_window",
+      "x": 2,
+      "y": 3,
+      "z": 0,
+      "yaw": 0
+    },
+    {
+      "id": "wall_window",
+      "x": 2,
+      "y": 3,
+      "z": 5.8,
+      "yaw": 0
+    },
+    {
+      "id": "wall_plain",
+      "x": 0,
+      "y": 3,
+      "z": 2,
+      "yaw": 270
+    },
+    {
+      "id": "wall_plain",
+      "x": 6.2,
+      "y": 3,
+      "z": 4,
+      "yaw": 90
+    },
+    {
+      "id": "wall_boarded",
+      "x": 4,
+      "y": 3,
+      "z": 0,
+      "yaw": 0
+    },
+    {
+      "id": "wall_window",
+      "x": 4,
+      "y": 3,
+      "z": 5.8,
+      "yaw": 0
+    },
+    {
+      "id": "wall_plain",
+      "x": 0,
+      "y": 3,
+      "z": 4,
+      "yaw": 270
+    },
+    {
+      "id": "wall_plain",
+      "x": 6.2,
+      "y": 3,
+      "z": 6,
+      "yaw": 90
+    },
+    {
+      "id": "stairs",
+      "x": 2.0,
+      "y": 3,
+      "z": 0.8,
+      "yaw": 0
+    },
+    {
+      "id": "fire_escape",
+      "x": -1.3,
+      "y": 3,
+      "z": 2.0,
+      "yaw": 0
+    },
+    {
+      "id": "floor",
+      "x": 0,
+      "y": 6,
+      "z": 0,
+      "yaw": 0
+    },
+    {
+      "id": "floor",
+      "x": 0,
+      "y": 6,
+      "z": 2,
+      "yaw": 0
+    },
+    {
+      "id": "floor",
+      "x": 0,
+      "y": 6,
+      "z": 4,
+      "yaw": 0
+    },
+    {
+      "id": "floor",
+      "x": 2,
+      "y": 6,
+      "z": 0,
+      "yaw": 0
+    },
+    {
+      "id": "floor",
+      "x": 2,
+      "y": 6,
+      "z": 2,
+      "yaw": 0
+    },
+    {
+      "id": "floor",
+      "x": 2,
+      "y": 6,
+      "z": 4,
+      "yaw": 0
+    },
+    {
+      "id": "floor",
+      "x": 4,
+      "y": 6,
+      "z": 0,
+      "yaw": 0
+    },
+    {
+      "id": "floor",
+      "x": 4,
+      "y": 6,
+      "z": 2,
+      "yaw": 0
+    },
+    {
+      "id": "floor",
+      "x": 4,
+      "y": 6,
+      "z": 4,
+      "yaw": 0
+    },
+    {
+      "id": "wall_plain",
+      "x": 0,
+      "y": 6,
+      "z": 0,
+      "yaw": 0
+    },
+    {
+      "id": "wall_window",
+      "x": 0,
+      "y": 6,
+      "z": 5.8,
+      "yaw": 0
+    },
+    {
+      "id": "wall_plain",
+      "x": 0,
+      "y": 6,
+      "z": 0,
+      "yaw": 270
+    },
+    {
+      "id": "wall_plain",
+      "x": 6.2,
+      "y": 6,
+      "z": 2,
+      "yaw": 90
+    },
+    {
+      "id": "wall_window",
+      "x": 2,
+      "y": 6,
+      "z": 0,
+      "yaw": 0
+    },
+    {
+      "id": "wall_window",
+      "x": 2,
+      "y": 6,
+      "z": 5.8,
+      "yaw": 0
+    },
+    {
+      "id": "wall_plain",
+      "x": 0,
+      "y": 6,
+      "z": 2,
+      "yaw": 270
+    },
+    {
+      "id": "wall_plain",
+      "x": 6.2,
+      "y": 6,
+      "z": 4,
+      "yaw": 90
+    },
+    {
+      "id": "wall_boarded",
+      "x": 4,
+      "y": 6,
+      "z": 0,
+      "yaw": 0
+    },
+    {
+      "id": "wall_window",
+      "x": 4,
+      "y": 6,
+      "z": 5.8,
+      "yaw": 0
+    },
+    {
+      "id": "wall_plain",
+      "x": 0,
+      "y": 6,
+      "z": 4,
+      "yaw": 270
+    },
+    {
+      "id": "wall_plain",
+      "x": 6.2,
+      "y": 6,
+      "z": 6,
+      "yaw": 90
+    },
+    {
+      "id": "fire_escape",
+      "x": -1.3,
+      "y": 6,
+      "z": 2.0,
+      "yaw": 0
+    },
+    {
+      "id": "roof",
+      "x": 0,
+      "y": 9,
+      "z": 0,
+      "yaw": 0
+    },
+    {
+      "id": "roof",
+      "x": 0,
+      "y": 9,
+      "z": 2,
+      "yaw": 0
+    },
+    {
+      "id": "roof",
+      "x": 0,
+      "y": 9,
+      "z": 4,
+      "yaw": 0
+    },
+    {
+      "id": "roof",
+      "x": 2,
+      "y": 9,
+      "z": 0,
+      "yaw": 0
+    },
+    {
+      "id": "roof",
+      "x": 2,
+      "y": 9,
+      "z": 2,
+      "yaw": 0
+    },
+    {
+      "id": "roof",
+      "x": 2,
+      "y": 9,
+      "z": 4,
+      "yaw": 0
+    },
+    {
+      "id": "roof",
+      "x": 4,
+      "y": 9,
+      "z": 0,
+      "yaw": 0
+    },
+    {
+      "id": "roof",
+      "x": 4,
+      "y": 9,
+      "z": 2,
+      "yaw": 0
+    },
+    {
+      "id": "roof",
+      "x": 4,
+      "y": 9,
+      "z": 4,
+      "yaw": 0
+    },
+    {
+      "id": "parapet",
+      "x": 0,
+      "y": 9.16,
+      "z": 0,
+      "yaw": 0
+    },
+    {
+      "id": "parapet",
+      "x": 2,
+      "y": 9.16,
+      "z": 0,
+      "yaw": 0
+    },
+    {
+      "id": "parapet",
+      "x": 4,
+      "y": 9.16,
+      "z": 0,
+      "yaw": 0
+    },
+    {
+      "id": "shelf",
+      "x": 0.4,
+      "y": 0,
+      "z": 4.4,
+      "yaw": 0
+    },
+    {
+      "id": "desk",
+      "x": 0.4,
+      "y": 3,
+      "z": 4.2,
+      "yaw": 0
+    },
+    {
+      "id": "chair",
+      "x": 1.6,
+      "y": 3,
+      "z": 4.3,
+      "yaw": 0
+    },
+    {
+      "id": "hospital_bed",
+      "x": 0.4,
+      "y": 6,
+      "z": 4.0,
+      "yaw": 0
+    },
+    {
+      "id": "ceiling_light",
+      "x": 1.2,
+      "y": 2.7,
+      "z": 2.2,
+      "yaw": 0
+    },
+    {
+      "id": "sidewalk_straight",
+      "x": 0,
+      "y": 0,
+      "z": -2,
+      "yaw": 0
+    },
+    {
+      "id": "sidewalk_straight",
+      "x": 2,
+      "y": 0,
+      "z": -2,
+      "yaw": 0
+    }
+  ],
+  "edge": [
+    {
+      "id": "fence",
+      "x": -8.0,
+      "y": 0,
+      "z": 22,
+      "yaw": 0
+    },
+    {
+      "id": "fence",
+      "x": -6.0,
+      "y": 0,
+      "z": 22,
+      "yaw": 0
+    },
+    {
+      "id": "fence",
+      "x": -4.0,
+      "y": 0,
+      "z": 22,
+      "yaw": 0
+    },
+    {
+      "id": "fence",
+      "x": -2.0,
+      "y": 0,
+      "z": 22,
+      "yaw": 0
+    },
+    {
+      "id": "fence_gate",
+      "x": 0.0,
+      "y": 0,
+      "z": 22,
+      "yaw": 0
+    },
+    {
+      "id": "fence",
+      "x": 2.0,
+      "y": 0,
+      "z": 22,
+      "yaw": 0
+    },
+    {
+      "id": "fence",
+      "x": 4.0,
+      "y": 0,
+      "z": 22,
+      "yaw": 0
+    },
+    {
+      "id": "fence",
+      "x": 6.0,
+      "y": 0,
+      "z": 22,
+      "yaw": 0
+    },
+    {
+      "id": "fence",
+      "x": 8.0,
+      "y": 0,
+      "z": 22,
+      "yaw": 0
+    },
+    {
+      "id": "fence",
+      "x": 10.0,
+      "y": 0,
+      "z": 22,
+      "yaw": 0
+    },
+    {
+      "id": "fence",
+      "x": 12.0,
+      "y": 0,
+      "z": 22,
+      "yaw": 0
+    },
+    {
+      "id": "fence",
+      "x": 14.0,
+      "y": 0,
+      "z": 22,
+      "yaw": 0
+    },
+    {
+      "id": "fence",
+      "x": 16.0,
+      "y": 0,
+      "z": 22,
+      "yaw": 0
+    }
+  ]
+}

@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using UnityEngine;
+using OutpostZero.Colony;
 using OutpostZero.Core;
 
 namespace OutpostZero.Combat
@@ -29,13 +30,34 @@ namespace OutpostZero.Combat
         [SerializeField] private AudioClip emptyClickSound;
 
         public int CurrentAmmo => currentAmmo;
-        public int MaxMagazine => maxMagazine;
+        public int MaxMagazine => MagazineCapacity;
+
+        private int MagazineCapacity
+        {
+            get
+            {
+                var mod = GetComponent<WeaponMod>();
+                return maxMagazine + (mod != null ? mod.magazineBonus : 0);
+            }
+        }
         public int ReserveAmmo => reserveAmmo;
         public bool IsReloading => isReloading;
+        public float ReloadFill => isReloading ? MagPulse.Fill(reloadElapsed, reloadWait > 0f ? reloadWait : reloadDuration) : 0f;
+        private float reloadElapsed;
+        private float reloadWait;
 
         public event Action<int, int> OnAmmoChanged; // current, reserve
         public event Action OnReloadStarted;
         public event Action OnReloadCompleted;
+
+        private float heat;
+        private bool automatic;
+        private bool useProjectile;
+        private string cardId = "";
+
+        public bool Automatic => automatic;
+        public bool Projectile => useProjectile;
+        public string CardId => string.IsNullOrEmpty(cardId) ? WeaponCard.IdFor(weaponType) : cardId;
 
         private void Reset()
         {
@@ -64,6 +86,36 @@ namespace OutpostZero.Combat
             spreadAngle = definition.spreadAngle;
             projectilesPerShot = Mathf.Max(1, definition.projectilesPerShot);
             hitMask = GameLayers.WeaponHitMask;
+            automatic = WeaponCard.FiresAutomatic(weaponType, definition.automatic);
+            useProjectile = WeaponCard.FiresProjectile(weaponType, definition.useProjectile);
+            if (!string.IsNullOrEmpty(definition.id)) cardId = definition.id;
+        }
+
+        public void SetFireMode(bool fullAuto, bool projectile)
+        {
+            automatic = fullAuto;
+            useProjectile = projectile;
+        }
+
+        public void LoadCard(WeaponCard.Spec spec, int magazine, int spare)
+        {
+            cardId = spec.Id;
+            weaponName = spec.Name;
+            weaponType = spec.Type;
+            baseDamage = spec.Damage;
+            attackRate = Mathf.Max(0.1f, spec.Rate);
+            range = spec.Range;
+            spreadAngle = spec.Spread;
+            projectilesPerShot = Mathf.Max(1, spec.Pellets);
+            maxMagazine = Mathf.Max(1, spec.Magazine);
+            reloadDuration = spec.Reload;
+            noiseRadius = spec.Noise;
+            noiseType = spec.NoiseKind;
+            automatic = spec.Automatic;
+            useProjectile = spec.Projectile;
+            currentAmmo = Mathf.Clamp(magazine, 0, MagazineCapacity);
+            reserveAmmo = Mathf.Max(0, spare);
+            OnAmmoChanged?.Invoke(currentAmmo, reserveAmmo);
         }
 
         private void Start()
@@ -74,6 +126,11 @@ namespace OutpostZero.Combat
                 muzzlePoint = transform;
             }
             OnAmmoChanged?.Invoke(currentAmmo, reserveAmmo);
+        }
+
+        private void Update()
+        {
+            heat = RecoilBloom.Cool(heat, Time.deltaTime);
         }
 
         public override bool CanAttack()
@@ -88,6 +145,7 @@ namespace OutpostZero.Combat
             if (currentAmmo <= 0)
             {
                 PlaySound(emptyClickSound);
+                Cue(GunCue.Click(currentAmmo, isReloading));
                 nextAttackTime = Time.time + (1f / attackRate);
                 TryStartReload();
                 return false;
@@ -99,15 +157,18 @@ namespace OutpostZero.Combat
 
             // Audio & Visual Effects
             PlaySound(fireSound);
-            if (muzzleFlash != null) muzzleFlash.Play();
+            bool quietFlash = Core.SettingsService.Instance != null && Core.SettingsService.Instance.QuietFlash;
+            if (muzzleFlash != null && FlashCap.Allow(FlashCap.Stamp, Time.time, quietFlash)) muzzleFlash.Play();
 
             // Emit gunshot noise event into the environment
             EmitWeaponNoise();
 
             // Fire projectiles
+            heat = RecoilBloom.AfterShot(heat);
+            float spread = RecoilBloom.Spread(spreadAngle, SpreadMultiplier * FieldHand.Spread(SurvivorRoster.LeaderPractice("Guard")), heat);
             for (int i = 0; i < projectilesPerShot; i++)
             {
-                Vector3 shootDir = ApplySpread(targetDirection, spreadAngle);
+                Vector3 shootDir = ApplySpread(targetDirection, spread);
                 FireSingleProjectile(shootDir);
             }
 
@@ -119,27 +180,43 @@ namespace OutpostZero.Combat
         {
             Vector3 spawnPos = muzzlePoint != null ? muzzlePoint.position : transform.position;
 
-            if (bulletPrefab != null)
+            if (useProjectile || bulletPrefab != null)
             {
-                GameObject projObj = Instantiate(bulletPrefab, spawnPos, Quaternion.LookRotation(direction));
-                var bullet = projObj.GetComponent<BulletProjectile>();
-                if (bullet != null)
-                {
-                    bullet.Setup(direction, baseDamage, ownerGameObject, hitMask);
-                }
+                GameObject projObj = bulletPrefab != null
+                    ? Instantiate(bulletPrefab, spawnPos, Quaternion.LookRotation(direction))
+                    : CreateBullet(spawnPos, direction);
+                var bullet = projObj.GetComponent<BulletProjectile>() ?? projObj.AddComponent<BulletProjectile>();
+                bullet.Setup(direction, ModifiedDamage, ownerGameObject, hitMask, weaponType);
+                Vector3 eject = muzzlePoint != null ? muzzlePoint.right : transform.right;
+                CombatVfx.Shot(spawnPos, direction, spawnPos + direction * Mathf.Min(range, 8f), eject);
             }
             else
             {
-                // Instant Raycast Fallback
-                if (Physics.Raycast(spawnPos, direction, out RaycastHit hit, range, hitMask))
+                Vector3 end = spawnPos + direction * range;
+                if (Physics.Raycast(spawnPos, direction, out RaycastHit hit, range, hitMask, QueryTriggerInteraction.Ignore))
                 {
-                    var target = hit.collider.GetComponentInParent<IDamageable>();
-                    if (target != null)
-                    {
-                        target.TakeDamage(baseDamage, hit.point, direction, ownerGameObject);
-                    }
+                    end = hit.point;
+                    DamageResolver.Resolve(hit, ModifiedDamage, ownerGameObject, true, weaponType);
                 }
+                Vector3 eject = muzzlePoint != null ? muzzlePoint.right : transform.right;
+                CombatVfx.Shot(spawnPos, direction, end, eject);
             }
+        }
+
+        private static GameObject CreateBullet(Vector3 spawnPos, Vector3 direction)
+        {
+            var bullet = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            bullet.name = "Bullet";
+            bullet.transform.position = spawnPos;
+            bullet.transform.rotation = Quaternion.LookRotation(direction.sqrMagnitude > 0.001f ? direction : Vector3.forward);
+            bullet.transform.localScale = Vector3.one * 0.06f;
+            bullet.layer = GameLayers.Projectile;
+            var collider = bullet.GetComponent<Collider>();
+            if (collider != null) Destroy(collider);
+            var renderer = bullet.GetComponent<Renderer>();
+            if (renderer != null) renderer.enabled = false;
+            bullet.AddComponent<BulletProjectile>();
+            return bullet;
         }
 
         private Vector3 ApplySpread(Vector3 forward, float angle)
@@ -153,7 +230,7 @@ namespace OutpostZero.Combat
 
         public void TryStartReload()
         {
-            if (isReloading || currentAmmo >= maxMagazine || reserveAmmo <= 0) return;
+            if (isReloading || currentAmmo >= MagazineCapacity || reserveAmmo <= 0) return;
 
             StartCoroutine(ReloadRoutine());
         }
@@ -161,12 +238,29 @@ namespace OutpostZero.Combat
         private IEnumerator ReloadRoutine()
         {
             isReloading = true;
+            reloadElapsed = 0f;
+            reloadWait = reloadDuration * FieldHand.Reload(SurvivorRoster.LeaderPractice("Guard"));
             OnReloadStarted?.Invoke();
             PlaySound(reloadSound);
+            int stage = 0;
+            string open = GunCue.Stage(0f, stage);
+            stage = GunCue.Mark(open);
+            Cue(open);
 
-            yield return new WaitForSeconds(reloadDuration);
+            while (reloadElapsed < reloadWait)
+            {
+                reloadElapsed += Time.deltaTime;
+                string beat = GunCue.Stage(MagPulse.Fill(reloadElapsed, reloadWait), stage);
+                if (beat.Length > 0)
+                {
+                    stage = GunCue.Mark(beat);
+                    Cue(beat);
+                }
+                yield return null;
+            }
+            reloadElapsed = reloadWait;
 
-            int needed = maxMagazine - currentAmmo;
+            int needed = MagazineCapacity - currentAmmo;
             int loaded = Mathf.Min(needed, reserveAmmo);
 
             currentAmmo += loaded;
@@ -183,12 +277,30 @@ namespace OutpostZero.Combat
             OnAmmoChanged?.Invoke(currentAmmo, reserveAmmo);
         }
 
+        public bool TrySpendRound()
+        {
+            if (reserveAmmo > 0) reserveAmmo--;
+            else if (currentAmmo > 0) currentAmmo--;
+            else return false;
+            OnAmmoChanged?.Invoke(currentAmmo, reserveAmmo);
+            return true;
+        }
+
         private void PlaySound(AudioClip clip)
         {
             if (audioSource != null && clip != null)
             {
                 audioSource.PlayOneShot(clip);
             }
+        }
+
+        private void Cue(string id)
+        {
+            if (string.IsNullOrEmpty(id)) return;
+            var ear = OutpostZero.Shell.AudioManager.Instance;
+            if (ear == null) return;
+            Vector3 at = muzzlePoint != null ? muzzlePoint.position : transform.position;
+            ear.PlayAt(id, at, id == "dry" ? 0.32f : 0.4f);
         }
     }
 }

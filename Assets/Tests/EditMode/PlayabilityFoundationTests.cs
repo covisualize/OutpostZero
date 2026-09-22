@@ -57,6 +57,7 @@ namespace OutpostZero.Tests.EditMode
             var pistol = DefaultDataGenerator.LoadWeapon("Pistol_9mm");
             var shotgun = DefaultDataGenerator.LoadWeapon("Shotgun_Pump");
             var machete = DefaultDataGenerator.LoadWeapon("Machete");
+            var rifle = DefaultDataGenerator.LoadWeapon("Rifle_Assault");
             var walker = DefaultDataGenerator.LoadZombie("Walker");
             var runner = DefaultDataGenerator.LoadZombie("Runner");
             var brute = DefaultDataGenerator.LoadZombie("Brute");
@@ -69,13 +70,17 @@ namespace OutpostZero.Tests.EditMode
             Assert.AreEqual(8.5f, shotgun.spreadAngle);
             Assert.IsTrue(machete.isMelee);
             Assert.Greater(machete.baseDamage, 0f);
+            Assert.AreEqual(26f, rifle.baseDamage);
+            Assert.AreEqual(30, rifle.maxMagazine);
+            Assert.AreEqual(WeaponType.Rifle, rifle.weaponType);
+            Assert.AreEqual(NoiseType.GunshotLoud, rifle.noiseType);
 
             Assert.AreEqual(65f, walker.maxHealth);
             Assert.AreEqual(5.6f, runner.chaseSpeed);
             Assert.AreEqual(180f, brute.maxHealth);
             Assert.AreEqual(ZombieSpecialAbility.Charge, brute.specialAbility);
 
-            foreach (var weapon in new[] { pistol, shotgun, machete })
+            foreach (var weapon in new[] { pistol, shotgun, machete, rifle })
             {
                 Assert.IsFalse(string.IsNullOrEmpty(weapon.modelPath));
                 Assert.IsNotNull(AssetDatabase.LoadAssetAtPath<GameObject>(weapon.modelPath), weapon.modelPath);

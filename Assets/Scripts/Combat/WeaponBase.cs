@@ -30,7 +30,33 @@ namespace OutpostZero.Combat
         public string WeaponName => weaponName;
         public WeaponType Type => weaponType;
         public Sprite Icon => icon;
-        public float NoiseRadius => noiseRadius;
+        public float NoiseRadius => ModifiedNoiseRadius;
+        public float ModifiedDamage
+        {
+            get
+            {
+                var mod = GetComponent<WeaponMod>();
+                return baseDamage * (mod != null ? mod.damageMultiplier : 1f);
+            }
+        }
+
+        public float ModifiedNoiseRadius
+        {
+            get
+            {
+                var mod = GetComponent<WeaponMod>();
+                return noiseRadius * (mod != null ? mod.noiseMultiplier : 1f);
+            }
+        }
+
+        public float SpreadMultiplier
+        {
+            get
+            {
+                var mod = GetComponent<WeaponMod>();
+                return mod != null ? mod.spreadMultiplier : 1f;
+            }
+        }
 
         public event Action OnAttackFired;
 
@@ -67,13 +93,17 @@ namespace OutpostZero.Combat
             if (NoiseManager.Instance != null && noiseRadius > 0f)
             {
                 Vector3 origin = ownerTransform != null ? ownerTransform.position : transform.position;
-                NoiseManager.Instance.EmitNoise(origin, noiseRadius, noiseIntensity, noiseType, ownerGameObject);
+                var mod = GetComponent<WeaponMod>();
+                NoiseType kind = WeaponMod.Report(noiseType, mod != null && mod.HasSuppressor);
+                NoiseManager.Instance.EmitNoise(origin, ModifiedNoiseRadius, noiseIntensity, kind, ownerGameObject);
             }
         }
 
         protected void TriggerAttackEvent()
         {
             OnAttackFired?.Invoke();
+            Vector3 muzzle = ownerTransform != null ? ownerTransform.position : transform.position;
+            CombatEvents.RaiseShot(muzzle, this);
         }
     }
 }

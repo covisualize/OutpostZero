@@ -10,10 +10,32 @@ if script_dir not in sys.path:
 from blender_paths import models_dir
 from blender_utils import (
     reset_scene, get_or_create_material, create_box, create_cylinder, 
-    create_sphere, create_cone, join_objects, set_origin_to_bottom, export_fbx
+    create_sphere, create_cone, join_objects, set_origin_to_bottom, export_fbx, prepare_character
 )
 
 MODELS_DIR = models_dir("Characters")
+
+def attach_readability(parts, head, hands, role):
+    from character_detail import eye_color, eye_strength, face_parts, thumb_box
+    label = role[:1].upper() + role[1:]
+    color = eye_color(role) + (1.0,)
+    eye_mat = get_or_create_material(
+        "Mat_Eye_" + label,
+        color,
+        roughness=0.25,
+        emission=eye_strength(role),
+        emission_color=color,
+    )
+    face_mat = get_or_create_material("Mat_Face_" + label, (0.82, 0.66, 0.54, 1.0), roughness=0.7)
+    thumb_mat = get_or_create_material("Mat_Thumb_" + label, (0.74, 0.58, 0.48, 1.0), roughness=0.65)
+    for name, loc, size, kind in face_parts(head):
+        if kind == "sphere":
+            parts.append(create_sphere(name, loc, size, segments=8, rings=6, material=eye_mat))
+        else:
+            parts.append(create_box(name, loc, size, face_mat))
+    for hand, side in hands:
+        loc, size = thumb_box(hand, side)
+        parts.append(create_box("Thumb" + side, loc, size, thumb_mat, bevel_radius=0.004))
 
 def generate_player_leader():
     reset_scene()
@@ -33,7 +55,7 @@ def generate_player_leader():
     torso = create_box("Torso", (0, 0, 1.15), (0.46, 0.28, 0.55), mat_jacket)
     parts.append(torso)
     
-    vest_plate = create_box("VestFront", (0, 0.04, 1.18), (0.42, 0.25, 0.44), mat_vest)
+    vest_plate = create_box("VestFront", (0, 0.04, 1.18), (0.42, 0.25, 0.44), mat_vest, bevel_radius=0.012)
     parts.append(vest_plate)
     
     # Pouches on chest
@@ -81,10 +103,12 @@ def generate_player_leader():
     bedroll = create_cylinder("Bedroll", (0, -0.22, 1.44), 0.10, 0.42, vertices=12, material=mat_jacket, rotation=(0, math.radians(90), 0))
     antenna = create_cylinder("Antenna", (0.14, -0.26, 1.62), 0.012, 0.48, vertices=8, material=mat_metal)
     parts.extend([pack_body, bedroll, antenna])
+    attach_readability(parts, (0, 0.02, 1.62), [((-0.38, 0.08, 0.90), "L"), ((0.36, 0.28, 1.02), "R")], "survivor")
 
     final_mesh = join_objects(parts, "Survivor_Leader")
     set_origin_to_bottom(final_mesh)
-    export_fbx(os.path.join(MODELS_DIR, "Survivor_Leader.fbx"))
+    prepare_character(final_mesh)
+    export_fbx(os.path.join(MODELS_DIR, "Survivor_Leader.fbx"), animated=True)
 
 def generate_zombie_walker():
     reset_scene()
@@ -127,10 +151,12 @@ def generate_zombie_walker():
     foot_l = create_box("ZombieFootL", (-0.14, 0.14, 0.10), (0.12, 0.24, 0.16), mat_torn_pants)
     foot_r = create_box("ZombieFootR", (0.14, -0.12, 0.10), (0.12, 0.22, 0.16), mat_rot_flesh) # Bare ruined foot
     parts.extend([leg_l, leg_r, foot_l, foot_r])
+    attach_readability(parts, (0.05, 0.16, 1.54), [((-0.30, 0.48, 1.35), "L"), ((0.32, -0.04, 0.78), "R")], "walker")
 
     final_mesh = join_objects(parts, "Zombie_Walker")
     set_origin_to_bottom(final_mesh)
-    export_fbx(os.path.join(MODELS_DIR, "Zombie_Walker.fbx"))
+    prepare_character(final_mesh)
+    export_fbx(os.path.join(MODELS_DIR, "Zombie_Walker.fbx"), animated=True)
 
 def generate_zombie_runner():
     reset_scene()
@@ -163,10 +189,12 @@ def generate_zombie_runner():
     foot_l = create_box("RunnerFootL", (-0.15, 0.28, 0.10), (0.10, 0.22, 0.14), mat_trackpants)
     foot_r = create_box("RunnerFootR", (0.15, -0.28, 0.10), (0.10, 0.22, 0.14), mat_trackpants)
     parts.extend([leg_l, leg_r, foot_l, foot_r])
+    attach_readability(parts, (0, 0.48, 1.10), [((-0.42, 0.56, 0.62), "L"), ((0.38, -0.05, 0.60), "R")], "runner")
 
     final_mesh = join_objects(parts, "Zombie_Runner")
     set_origin_to_bottom(final_mesh)
-    export_fbx(os.path.join(MODELS_DIR, "Zombie_Runner.fbx"))
+    prepare_character(final_mesh)
+    export_fbx(os.path.join(MODELS_DIR, "Zombie_Runner.fbx"), animated=True)
 
 def generate_zombie_brute():
     reset_scene()
@@ -208,10 +236,12 @@ def generate_zombie_brute():
     foot_l = create_box("BruteFootL", (-0.26, 0.08, 0.14), (0.24, 0.38, 0.24), mat_ripped_overalls)
     foot_r = create_box("BruteFootR", (0.26, 0.08, 0.14), (0.24, 0.38, 0.24), mat_ripped_overalls)
     parts.extend([leg_l, leg_r, foot_l, foot_r])
+    attach_readability(parts, (0, 0.10, 1.95), [((-0.58, 0.06, 0.96), "L"), ((0.66, 0.26, 0.72), "R")], "brute")
 
     final_mesh = join_objects(parts, "Zombie_Brute")
     set_origin_to_bottom(final_mesh)
-    export_fbx(os.path.join(MODELS_DIR, "Zombie_Brute.fbx"))
+    prepare_character(final_mesh)
+    export_fbx(os.path.join(MODELS_DIR, "Zombie_Brute.fbx"), animated=True)
 
 def generate_npc_merchant():
     reset_scene()
@@ -252,10 +282,12 @@ def generate_npc_merchant():
     boot_l = create_box("BootL", (-0.14, 0.04, 0.12), (0.13, 0.25, 0.22), mat_hat)
     boot_r = create_box("BootR", (0.14, 0.04, 0.12), (0.13, 0.25, 0.22), mat_hat)
     parts.extend([boot_l, boot_r])
+    attach_readability(parts, (0, 0.02, 1.58), [((-0.30, 0.04, 1.15), "L"), ((0.30, 0.04, 1.15), "R")], "merchant")
 
     final_mesh = join_objects(parts, "NPC_Merchant")
     set_origin_to_bottom(final_mesh)
-    export_fbx(os.path.join(MODELS_DIR, "NPC_Merchant.fbx"))
+    prepare_character(final_mesh)
+    export_fbx(os.path.join(MODELS_DIR, "NPC_Merchant.fbx"), animated=True)
 
 def generate_colonist():
     reset_scene()
@@ -279,10 +311,12 @@ def generate_colonist():
     boot_l = create_box("BootL", (-0.14, 0.03, 0.12), (0.13, 0.24, 0.22), mat_boots)
     boot_r = create_box("BootR", (0.14, 0.03, 0.12), (0.13, 0.24, 0.22), mat_boots)
     parts.extend([arm_l, arm_r, leg_l, leg_r, boot_l, boot_r])
+    attach_readability(parts, (0, 0.02, 1.58), [((-0.28, 0, 1.15), "L"), ((0.28, 0, 1.15), "R")], "colonist")
 
     final_mesh = join_objects(parts, "Colonist_Survivor")
     set_origin_to_bottom(final_mesh)
-    export_fbx(os.path.join(MODELS_DIR, "Colonist_Survivor.fbx"))
+    prepare_character(final_mesh)
+    export_fbx(os.path.join(MODELS_DIR, "Colonist_Survivor.fbx"), animated=True)
 
 if __name__ == "__main__":
     print("[CharacterGenerator] Generating characters...")

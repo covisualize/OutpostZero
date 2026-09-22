@@ -13,13 +13,15 @@ namespace OutpostZero.Combat
         private Vector3 direction;
         private GameObject shooter;
         private float spawnTime;
+        private Core.WeaponType weapon = Core.WeaponType.Pistol;
 
-        public void Setup(Vector3 dir, float dmg, GameObject attacker, LayerMask targetLayers)
+        public void Setup(Vector3 dir, float dmg, GameObject attacker, LayerMask targetLayers, Core.WeaponType type = Core.WeaponType.Pistol)
         {
             direction = dir.normalized;
             damage = dmg;
             shooter = attacker;
             hitLayers = targetLayers;
+            weapon = type;
             spawnTime = Time.time;
 
             transform.forward = direction;
@@ -51,13 +53,8 @@ namespace OutpostZero.Combat
 
         private void OnHit(RaycastHit hit)
         {
-            var damageable = hit.collider.GetComponentInParent<IDamageable>();
-            if (damageable != null)
-            {
-                damageable.TakeDamage(damage, hit.point, direction, shooter);
-            }
-
-            // Spawn simple impact particle or decal here if available
+            DamageResolver.Resolve(hit, damage, shooter, true, weapon);
+            CombatVfx.Tracer(transform.position, hit.point);
             Destroy(gameObject);
         }
     }

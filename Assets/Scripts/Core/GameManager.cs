@@ -1,5 +1,10 @@
 using System;
 using UnityEngine;
+using UnityEngine.SceneManagement;
+using OutpostZero.Colony;
+using OutpostZero.Expedition;
+using OutpostZero.Player;
+using OutpostZero.Shell;
 
 namespace OutpostZero.Core
 {
@@ -14,7 +19,19 @@ namespace OutpostZero.Core
         [Header("Expedition Stats")]
         [SerializeField] private float expeditionTimer = 0f;
         [SerializeField] private int zombiesKilled = 0;
+        [SerializeField] private int lifetimeKills = 0;
         [SerializeField] private int scrapLooted = 0;
+
+        private GameState resumeState = GameState.ExpeditionActive;
+        private Scene gameplayScene;
+        private KillTape killTape;
+
+        public string KillFeed => killTape.Text();
+
+        public float ExpeditionTime => expeditionTimer;
+        public int ZombiesKilled => zombiesKilled;
+        public int LifetimeKills => lifetimeKills;
+        public int ScrapLooted => scrapLooted;
 
         public event Action<GameState> OnGameStateChanged;
         public event Action<int> OnZombiesKilledChanged;
@@ -28,21 +45,40 @@ namespace OutpostZero.Core
                 return;
             }
 
-            var gameplayScene = gameObject.scene;
+            gameplayScene = gameObject.scene;
             Instance = this;
             DontDestroyOnLoad(gameObject);
             PlayabilityBootstrap.Apply(gameplayScene);
+            GameSystemsInstaller.Install(gameplayScene);
+        }
+
+        private void OnEnable()
+        {
+            SceneManager.sceneLoaded += HandleSceneLoaded;
+        }
+
+        private void OnDisable()
+        {
+            SceneManager.sceneLoaded -= HandleSceneLoaded;
+        }
+
+        private void HandleSceneLoaded(Scene scene, LoadSceneMode mode)
+        {
+            if (!scene.IsValid() || scene.name == "DontDestroyOnLoad") return;
+            if (Instance != this) return;
+            gameplayScene = scene;
+            PlayabilityBootstrap.Apply(scene);
+            GameSystemsInstaller.Install(scene);
         }
 
         private void Update()
         {
-            if (currentState == GameState.ExpeditionActive)
+            if (currentState == GameState.ExpeditionActive || currentState == GameState.RaidActive)
             {
                 expeditionTimer += Time.deltaTime;
             }
 
-            // Global pause toggle with Escape
-            if (Input.GetKeyDown(KeyCode.Escape))
+            if (ExpeditionInput.PausePressed)
             {
                 TogglePause();
             }
@@ -53,28 +89,72 @@ namespace OutpostZero.Core
             if (currentState == newState) return;
 
             currentState = newState;
-            Time.timeScale = (currentState == GameState.Paused) ? 0f : 1f;
+            if (newState == GameState.Victory || newState == GameState.GameOver) RunArchive.NoteCurrent(newState == GameState.Victory);
+            bool frozen = newState == GameState.Paused
+                || newState == GameState.SuccessionScreen
+                || newState == GameState.GameOver
+                || newState == GameState.MainMenu
+                || newState == GameState.ExpeditionResults
+                || newState == GameState.Victory;
+            Time.timeScale = frozen ? 0f : 1f;
             OnGameStateChanged?.Invoke(currentState);
-
-            Debug.Log($"[GameManager] Game State changed to: {newState}");
         }
 
         public void TogglePause()
         {
-            if (currentState == GameState.ExpeditionActive)
+            if (currentState == GameState.Paused)
             {
-                SetState(GameState.Paused);
+                SetState(resumeState);
+                return;
             }
-            else if (currentState == GameState.Paused)
+
+            if (currentState == GameState.ExpeditionActive || currentState == GameState.RaidActive || currentState == GameState.CampManagement)
             {
-                SetState(GameState.ExpeditionActive);
+                resumeState = currentState;
+                SetState(GameState.Paused);
             }
         }
 
-        public void RecordZombieKill()
+        public void EnterCamp()
+        {
+            var needs = PlayerRegistry.Current != null ? PlayerRegistry.Current.GetComponent<SurvivalNeeds>() : null;
+            if (needs != null) SurvivorRoster.Instance?.CopyLeaderNeeds(needs.Hunger, needs.Thirst);
+            SetState(GameState.CampManagement);
+            SaveSystem.Instance?.Save(false);
+        }
+
+        public void BeginExpedition()
+        {
+            if (WorldMapService.Instance != null && WorldMapService.Instance.Current != null && WorldMapService.Instance.Current.cleared && !WorldMapService.Instance.Endless)
+            {
+                GameplayFeedback.Toast("Pick an open district");
+                return;
+            }
+            if (currentState == GameState.CampManagement) WorldMapService.Instance?.SpendTravel();
+            var needs = PlayerRegistry.Current != null ? PlayerRegistry.Current.GetComponent<SurvivalNeeds>() : null;
+            if (needs != null && SurvivorRoster.Instance != null && SurvivorRoster.Instance.ReadLeaderNeeds(out float hunger, out float thirst))
+            {
+                needs.Apply(hunger, thirst, needs.Fatigue);
+            }
+            zombiesKilled = 0;
+            scrapLooted = 0;
+            expeditionTimer = 0f;
+            killTape = default;
+            OnZombiesKilledChanged?.Invoke(zombiesKilled);
+            OnScrapLootedChanged?.Invoke(scrapLooted);
+            ObjectiveTracker.Instance?.ResetProgress();
+            WorldMapService.Instance?.ApplyOpening();
+            SetState(GameState.ExpeditionActive);
+        }
+
+        public void RecordZombieKill(string archetypeId = null)
         {
             zombiesKilled++;
+            lifetimeKills++;
+            killTape.Note(KillTape.Name(archetypeId));
+            PlayerRegistry.Current?.GetComponent<StatusEffectController>()?.ApplyAdrenaline(Affliction.AdrenalineSeconds);
             OnZombiesKilledChanged?.Invoke(zombiesKilled);
+            if (!string.IsNullOrEmpty(archetypeId)) CodexDirector.Instance?.Unlock("zombie." + archetypeId);
         }
 
         public void AddScrap(int amount)
@@ -83,18 +163,127 @@ namespace OutpostZero.Core
             OnScrapLootedChanged?.Invoke(scrapLooted);
         }
 
+        public void CompleteExpedition()
+        {
+            var inventory = PlayerRegistry.Current != null ? PlayerRegistry.Current.GetComponent<PlayerInventory>() : null;
+            inventory?.DepositScrapToColony();
+            WorldMapService.Instance?.ClearCurrent();
+            ObjectiveTracker.Instance?.MarkExtracted();
+            bool won = WorldMapService.Instance != null && WorldMapService.Instance.CampaignWon && !WorldMapService.Instance.Endless;
+            SurvivorRoster.Instance?.RewardReturn();
+            FactionTrade.Instance?.NoteExtracted();
+            SetState(won ? GameState.Victory : GameState.ExpeditionResults);
+            SaveSystem.Instance?.Save(false);
+            AudioManager.Instance?.Sting("extract");
+            GameplayFeedback.Toast(won ? "The broadcast is already out" : "Extracted");
+        }
+
         public void TriggerPlayerDeath()
         {
-            Debug.LogWarning("[GameManager] Active Leader Died!");
-            SetState(GameState.SuccessionScreen);
+            bool merciful = SettingsService.Instance != null && SettingsService.Instance.Merciful;
+            if (merciful && SurvivorRoster.Instance != null && SurvivorRoster.Instance.WoundLeader())
+            {
+                BringToCamp(false);
+                GameplayFeedback.Toast("Dragged back to the gate");
+                SaveSystem.Instance?.Save(false);
+                return;
+            }
+            Vector3 corpse = PlayerRegistry.Current != null ? PlayerRegistry.Current.transform.position : Vector3.zero;
+            var effects = PlayerRegistry.Current != null ? PlayerRegistry.Current.GetComponent<StatusEffectController>() : null;
+            string cause = effects != null && effects.IsInfected ? "infection" : "killed";
+            bool successor = SurvivorRoster.Instance == null || SurvivorRoster.Instance.MarkLeaderDead(corpse, cause);
+            AudioManager.Instance?.Sting("death");
+            SetState(successor ? GameState.SuccessionScreen : GameState.GameOver);
+            SaveSystem.Instance?.Save(false);
+        }
+
+        public void AcceptSuccessor(string survivorId)
+        {
+            var next = SurvivorRoster.Instance != null ? SurvivorRoster.Instance.Promote(survivorId) : null;
+            BringToCamp(true);
+            GameplayFeedback.Toast(next != null ? next.displayName + " takes the gate" : "Back inside the gate");
+            SaveSystem.Instance?.Save(false);
+        }
+
+        private void BringToCamp(bool clearInjury)
+        {
+            int day = WorldClock.Instance != null ? WorldClock.Instance.Day : 1;
+            SuccessionLedger.NextMorning(day, out int nextDay, out float nextHour);
+            WorldClock.Instance?.Set(nextDay, nextHour);
+            var player = PlayerRegistry.Current;
+            if (player != null)
+            {
+                var health = player.GetComponent<Combat.HealthSystem>();
+                health?.ResetHealth();
+                if (clearInjury) player.GetComponent<StatusEffectController>()?.ClearInjury();
+                var body = player.GetComponent<CharacterController>();
+                if (body != null) body.enabled = false;
+                player.transform.position = new Vector3(-12f, 0.1f, -12f);
+                if (body != null) body.enabled = true;
+            }
+            EnterCamp();
+        }
+
+        public void BeginNewOutpost()
+        {
+            ObjectiveTracker.Instance?.ResetProgress();
+            int next = SettingsService.Instance != null ? SettingsService.Instance.NextDifficulty : 2;
+            WorldMapService.Instance?.ResetMap(next);
+            int camp = System.Environment.TickCount;
+            if (camp == 0) camp = DistrictGenerator.DefaultSeed + 3;
+            if (WorldMapService.Instance != null)
+            {
+                WorldMapService.Instance.RerollSeed();
+                camp = WorldMapService.Instance.WorldSeed ^ camp;
+            }
+            SurvivorRoster.Instance?.ResetRoster(camp);
+            ColonyStorage.Instance?.ResetStores();
+            GridBuilder.Instance?.ClearAll();
+            TutorialDirector.Instance?.SetFinished(false);
+            CodexDirector.Instance?.Restore("");
+            PlayerRegistry.Current?.RestoreMods("");
+            zombiesKilled = 0;
+            lifetimeKills = 0;
+            scrapLooted = 0;
+            expeditionTimer = 0f;
+            killTape = default;
+            OnZombiesKilledChanged?.Invoke(zombiesKilled);
+            OnScrapLootedChanged?.Invoke(scrapLooted);
+            var player = PlayerRegistry.Current;
+            if (player != null)
+            {
+                player.GetComponent<Combat.HealthSystem>()?.ResetHealth();
+                player.GetComponent<StatusEffectController>()?.ClearInjury();
+                var body = player.GetComponent<CharacterController>();
+                if (body != null) body.enabled = false;
+                player.transform.position = new Vector3(-12f, 0.1f, -12f);
+                if (body != null) body.enabled = true;
+            }
+            SetState(GameState.CampManagement);
+        }
+
+        public void SetLifetimeKills(int kills)
+        {
+            lifetimeKills = kills < 0 ? 0 : kills;
         }
 
         public void RestartCurrentScene()
         {
             Time.timeScale = 1f;
-            UnityEngine.SceneManagement.SceneManager.LoadScene(
-                UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex
-            );
+            ObjectiveTracker.Instance?.ResetProgress();
+            WorldMapService.Instance?.ResetMap();
+            SurvivorRoster.Instance?.ResetRoster();
+            ColonyStorage.Instance?.ResetStores();
+            GridBuilder.Instance?.ClearAll();
+            TutorialDirector.Instance?.SetFinished(false);
+            CodexDirector.Instance?.Restore("");
+            zombiesKilled = 0;
+            lifetimeKills = 0;
+            scrapLooted = 0;
+            expeditionTimer = 0f;
+            killTape = default;
+            currentState = GameState.ExpeditionActive;
+            SceneManager.LoadScene(gameplayScene.buildIndex >= 0 ? gameplayScene.buildIndex : SceneManager.GetActiveScene().buildIndex);
         }
     }
 }

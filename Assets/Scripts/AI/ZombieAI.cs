@@ -1,10 +1,14 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 using OutpostZero.Core;
 using OutpostZero.Sensory;
 using OutpostZero.Combat;
+using OutpostZero.Graphics;
 using OutpostZero.Player;
+using OutpostZero.Expedition;
+using OutpostZero.Colony;
 
 namespace OutpostZero.AI
 {
@@ -20,12 +24,30 @@ namespace OutpostZero.AI
             Chase,
             Attack,
             Stunned,
-            Dead
+            Dead,
+            Searching
         }
 
         [Header("State")]
         [SerializeField] private ZombieState currentState = ZombieState.Wander;
         public ZombieState CurrentState => currentState;
+
+        public static void CountAlerts(float x, float z, out int bangs, out int questions)
+        {
+            bangs = 0;
+            questions = 0;
+            for (int i = 0; i < aliveCrowd.Count; i++)
+            {
+                var zombie = aliveCrowd[i];
+                if (zombie == null || zombie.currentState == ZombieState.Dead) continue;
+                float dx = zombie.transform.position.x - x;
+                float dz = zombie.transform.position.z - z;
+                if (!ThreatMark.Near((float)System.Math.Sqrt(dx * dx + dz * dz))) continue;
+                string glyph = ThreatMark.Glyph(zombie.currentState);
+                if (glyph == "!") bangs++;
+                else if (glyph == "?") questions++;
+            }
+        }
 
         [Header("Sensory Perception")]
         [SerializeField] private float sightRange = 14f;
@@ -48,6 +70,7 @@ namespace OutpostZero.AI
 
         [Header("Target & Memory")]
         [SerializeField] private Transform currentTarget;
+        private int doorGen = -1;
         [SerializeField] private Vector3 lastKnownPosition;
         [SerializeField] private float investigationDuration = 6f;
 
@@ -56,11 +79,112 @@ namespace OutpostZero.AI
         private HealthSystem healthSystem;
 
         private float nextAttackTime = 0f;
+        private float swing = -1f;
         private float stateTimer = 0f;
+        private float pendingStun = 0.8f;
+        private SpecialBeat.Clock abilityClock;
+        private float lostSight;
+        private SearchMemory.Sweep searchSweep;
+        private float dashX;
+        private float dashZ = 1f;
         private Vector3 spawnOrigin;
+        private bool posted;
+        private float postX;
+        private float postZ;
+        private float nextBite;
+        private bool fromRaid;
+        private bool leaving;
+        private static readonly List<ZombieAI> aliveCrowd = new List<ZombieAI>();
+        private static readonly float[] crowdX = new float[48];
+        private static readonly float[] crowdZ = new float[48];
+        [SerializeField] private ZombieSpecialAbility specialAbility;
+        private string archetypeId = "";
+        private int sightToken;
 
         public Vector3 Position => transform.position;
         public float HearingSensitivity => hearingSensitivity;
+
+        public string WatchTarget => currentTarget != null ? currentTarget.name : "";
+        public bool Posted => posted;
+
+        public static int PostedCount()
+        {
+            int count = 0;
+            for (int i = 0; i < aliveCrowd.Count; i++)
+            {
+                var zombie = aliveCrowd[i];
+                if (zombie == null || !zombie.posted) continue;
+                if (zombie.currentState == ZombieState.Dead) continue;
+                if (zombie.healthSystem != null && zombie.healthSystem.IsDead) continue;
+                count++;
+            }
+            return count;
+        }
+
+        public void PostAt(float x, float z)
+        {
+            posted = true;
+            postX = x;
+            postZ = z;
+            nextBite = 0f;
+        }
+
+        public void MarkRaid()
+        {
+            fromRaid = true;
+            leaving = false;
+        }
+
+        public static int RecallRaid()
+        {
+            int left = 0;
+            for (int i = 0; i < aliveCrowd.Count; i++)
+            {
+                var zombie = aliveCrowd[i];
+                if (zombie == null) continue;
+                bool dead = zombie.currentState == ZombieState.Dead || (zombie.healthSystem != null && zombie.healthSystem.IsDead);
+                if (!RaidRecall.Leaves(zombie.fromRaid, dead)) continue;
+                zombie.SendOff();
+                left++;
+            }
+            return left;
+        }
+
+        private void SendOff()
+        {
+            fromRaid = false;
+            leaving = true;
+            posted = false;
+            if (agent != null) agent.enabled = false;
+            var pool = ZombiePool.Instance;
+            if (pool != null) pool.Release(gameObject, 0.4f);
+            else Destroy(gameObject);
+        }
+
+        private void ClearPost()
+        {
+            posted = false;
+            if (agent != null && agent.enabled) agent.isStopped = false;
+        }
+
+        public float AbilityWait(float now)
+        {
+            float left = abilityClock.Ready - now;
+            return left > 0f ? left : 0f;
+        }
+
+        public static int CopyWatch(string[] into, float now)
+        {
+            if (into == null) return 0;
+            int n = 0;
+            for (int i = 0; i < aliveCrowd.Count && n < into.Length; i++)
+            {
+                var zombie = aliveCrowd[i];
+                if (zombie == null || zombie.currentState == ZombieState.Dead) continue;
+                into[n++] = AiWatch.Line(zombie.currentState.ToString(), zombie.WatchTarget, zombie.AbilityWait(now));
+            }
+            return n;
+        }
 
         private void Reset()
         {
@@ -82,6 +206,7 @@ namespace OutpostZero.AI
             healthSystem.OnDeath += HandleDeath;
             healthSystem.OnDamaged += HandleDamaged;
             GameLayers.ApplyRecursively(gameObject, GameLayers.Enemy);
+            sightToken = QualityProfile.NextToken();
         }
 
         public void Configure(ZombieArchetype archetype)
@@ -97,6 +222,8 @@ namespace OutpostZero.AI
             sightAngle = archetype.sightAngle;
             hearingSensitivity = archetype.hearingSensitivity;
             hordeAlertRadius = archetype.hordeAlertRadius;
+            specialAbility = archetype.specialAbility;
+            archetypeId = archetype.id;
             visionMask = GameLayers.VisionOcclusionMask;
 
             if (agent == null) agent = GetComponent<NavMeshAgent>();
@@ -110,6 +237,7 @@ namespace OutpostZero.AI
             {
                 healthSystem.Configure(archetype.maxHealth, archetype.armor);
             }
+            CharacterVariety.Ensure(gameObject).Bind(archetypeId, false);
         }
 
         public void ResetForSpawn()
@@ -126,11 +254,45 @@ namespace OutpostZero.AI
                 agent.isStopped = false;
             }
             currentState = ZombieState.Idle;
+            posted = false;
+            fromRaid = false;
+            leaving = false;
+            abilityClock = new SpecialBeat.Clock();
+            lostSight = 0f;
+            searchSweep = new SearchMemory.Sweep();
+            dashX = 0f;
+            dashZ = 1f;
             SetState(ZombieState.Wander);
+            CharacterVariety.Ensure(gameObject).Bind(string.IsNullOrEmpty(archetypeId) ? name : archetypeId, true);
+        }
+
+        public void SetAbility(ZombieSpecialAbility ability)
+        {
+            specialAbility = ability;
+        }
+
+        public void ApplyImpulse(Vector3 direction, float force, float stun)
+        {
+            if (currentState == ZombieState.Dead || healthSystem != null && healthSystem.IsDead) return;
+            stun = HitStun.Resist(stun, specialAbility == ZombieSpecialAbility.Charge);
+            direction.y = 0f;
+            if (direction.sqrMagnitude < 0.001f) direction = -transform.forward;
+            if (agent != null && agent.enabled && agent.isOnNavMesh)
+            {
+                agent.Warp(transform.position + direction.normalized * Mathf.Clamp(force, 0.25f, 2.2f));
+            }
+            pendingStun = stun;
+            if (currentState == ZombieState.Stunned)
+            {
+                stateTimer = pendingStun;
+                return;
+            }
+            SetState(ZombieState.Stunned);
         }
 
         private void OnEnable()
         {
+            if (!aliveCrowd.Contains(this)) aliveCrowd.Add(this);
             if (NoiseManager.Instance != null)
             {
                 NoiseManager.Instance.RegisterListener(this);
@@ -139,11 +301,13 @@ namespace OutpostZero.AI
 
         private void Start()
         {
+            CharacterVariety.Ensure(gameObject).Bind(string.IsNullOrEmpty(archetypeId) ? name : archetypeId, false);
             SetState(ZombieState.Wander);
         }
 
         private void OnDisable()
         {
+            aliveCrowd.Remove(this);
             if (NoiseManager.Instance != null)
             {
                 NoiseManager.Instance.UnregisterListener(this);
@@ -152,10 +316,34 @@ namespace OutpostZero.AI
 
         private void Update()
         {
+            if (leaving) return;
             if (currentState == ZombieState.Dead || healthSystem.IsDead) return;
+            if (GameManager.Instance != null)
+            {
+                var gameState = GameManager.Instance.CurrentState;
+                if (gameState != GameState.ExpeditionActive && gameState != GameState.RaidActive) return;
+            }
 
-            // Continually check visual cone for player/survivors
-            CheckSight();
+            if (posted)
+            {
+                if (GameManager.Instance == null || GameManager.Instance.CurrentState != GameState.RaidActive || !Gnaw())
+                    ClearPost();
+                else
+                    return;
+            }
+            if (currentState != ZombieState.Chase && currentState != ZombieState.Attack && QualityProfile.SightDue(sightToken, Time.frameCount))
+            {
+                CheckSight();
+            }
+            if (agent != null && PlayerRegistry.Current != null)
+            {
+                float reach = Vector3.Distance(transform.position, PlayerRegistry.Current.transform.position);
+                agent.obstacleAvoidanceType = reach > 18f
+                    ? ObstacleAvoidanceType.LowQualityObstacleAvoidance
+                    : ObstacleAvoidanceType.HighQualityObstacleAvoidance;
+            }
+
+            FollowDoor();
 
             switch (currentState)
             {
@@ -177,7 +365,31 @@ namespace OutpostZero.AI
                 case ZombieState.Stunned:
                     UpdateStunned();
                     break;
+                case ZombieState.Searching:
+                    UpdateSearching();
+                    break;
             }
+
+            Separate();
+        }
+
+        private void Separate()
+        {
+            if (agent == null || !agent.isOnNavMesh) return;
+            if (abilityClock.Phase == 2 || currentState == ZombieState.Attack) return;
+            int count = 0;
+            for (int i = 0; i < aliveCrowd.Count && count < crowdX.Length; i++)
+            {
+                var other = aliveCrowd[i];
+                if (other == null || other == this || other.currentState == ZombieState.Dead) continue;
+                crowdX[count] = other.transform.position.x;
+                crowdZ[count] = other.transform.position.z;
+                count++;
+            }
+            agent.avoidancePriority = CrowdSpace.Priority(CrowdSpace.Neighbors(transform.position.x, transform.position.z, crowdX, crowdZ, count));
+            CrowdSpace.Push(transform.position.x, transform.position.z, crowdX, crowdZ, count, out float pushX, out float pushZ);
+            if (pushX * pushX + pushZ * pushZ < 0.0001f) return;
+            agent.Move(new Vector3(pushX, 0f, pushZ) * CrowdSpace.Slide * Time.deltaTime);
         }
 
         private void SetState(ZombieState newState)
@@ -214,11 +426,23 @@ namespace OutpostZero.AI
 
                 case ZombieState.Attack:
                     agent.isStopped = true;
+                    abilityClock.Phase = 0;
+                    abilityClock.Left = 0f;
+                    swing = -1f;
                     break;
 
                 case ZombieState.Stunned:
                     agent.isStopped = true;
-                    stateTimer = 0.8f;
+                    stateTimer = pendingStun;
+                    abilityClock.Phase = 0;
+                    abilityClock.Left = 0f;
+                    break;
+
+                case ZombieState.Searching:
+                    agent.isStopped = false;
+                    agent.speed = wanderSpeed;
+                    searchSweep = SearchMemory.Start();
+                    GoToSearchPoint();
                     break;
 
                 case ZombieState.Dead:
@@ -248,14 +472,68 @@ namespace OutpostZero.AI
         private void UpdateInvestigate()
         {
             stateTimer -= Time.deltaTime;
-
-            if (!agent.pathPending && agent.remainingDistance <= agent.stoppingDistance + 0.3f)
+            bool arrived = !agent.pathPending && agent.remainingDistance <= agent.stoppingDistance + 0.3f;
+            if (arrived || stateTimer <= 0f)
             {
-                if (stateTimer <= 0f)
+                SetState(ZombieState.Searching);
+            }
+        }
+
+        private void FollowDoor()
+        {
+            if (currentState != ZombieState.Chase && currentState != ZombieState.Attack) return;
+            if (!DoorCross.ShouldFollow(doorGen, transform.position.x, transform.position.z, Time.time, out int generation)) return;
+            doorGen = generation;
+            DoorCross.Slot(GetInstanceID() & 0x7fffffff, out float ox, out float oz);
+            var dest = new Vector3(DoorCross.ToX + ox, transform.position.y, DoorCross.ToZ + oz);
+            bool placed = agent != null && agent.isOnNavMesh && agent.Warp(dest);
+            if (!placed)
+            {
+                if (agent != null) agent.enabled = false;
+                transform.position = dest;
+                if (agent != null)
                 {
-                    SetState(ZombieState.Wander);
+                    agent.enabled = true;
+                    if (agent.isOnNavMesh) agent.Warp(dest);
                 }
             }
+            lastKnownPosition = dest;
+        }
+
+        private bool Gnaw()
+        {
+            if (GridBuilder.Instance == null || !GridBuilder.Instance.BoardStands(postX, postZ))
+            {
+                ClearPost();
+                return false;
+            }
+            Vector3 spot = new Vector3(postX, transform.position.y, postZ);
+            if (!BoardBite.InReach(transform.position.x, transform.position.z, postX, postZ))
+            {
+                if (agent != null && agent.enabled && agent.isOnNavMesh)
+                {
+                    agent.isStopped = false;
+                    agent.SetDestination(spot);
+                }
+                else
+                {
+                    Vector3 step = spot - transform.position;
+                    step.y = 0f;
+                    if (step.sqrMagnitude > 0.01f)
+                        transform.position += step.normalized * chaseSpeed * Time.deltaTime;
+                }
+                return true;
+            }
+            if (agent != null && agent.enabled) agent.isStopped = true;
+            if (Time.time < nextBite) return true;
+            nextBite = Time.time + BoardBite.Gap;
+            if (GridBuilder.Instance.StrikeAt(postX, postZ, BoardBite.Chip))
+            {
+                SurvivorRoster.Instance?.WoundFromRaid(Mathf.RoundToInt(postX + postZ));
+                ClearPost();
+                return false;
+            }
+            return posted;
         }
 
         private void UpdateChase()
@@ -274,14 +552,144 @@ namespace OutpostZero.AI
                 return;
             }
 
-            lastKnownPosition = currentTarget.position;
-            agent.SetDestination(currentTarget.position);
+            bool seen = StillSees(currentTarget);
+            lostSight = SearchMemory.Lose(lostSight, seen, Time.deltaTime);
+            if (SearchMemory.Forgotten(lostSight))
+            {
+                currentTarget = null;
+                lostSight = 0f;
+                SetState(ZombieState.InvestigateNoise);
+                return;
+            }
+            if (seen) lastKnownPosition = currentTarget.position;
 
             float distToTarget = Vector3.Distance(transform.position, currentTarget.position);
-            if (distToTarget <= attackRange)
+            Vector3 aim = (seen ? currentTarget.position : lastKnownPosition) - transform.position;
+            aim.y = 0f;
+            bool charging = specialAbility == ZombieSpecialAbility.Charge;
+            bool lunging = specialAbility == ZombieSpecialAbility.Lunge;
+            int phaseBefore = abilityClock.Phase;
+            if (charging || lunging)
+            {
+                abilityClock = SpecialBeat.Advance(abilityClock, SpecialBeat.InReach(distToTarget, charging), Time.time, Time.deltaTime, charging);
+                if (phaseBefore != 2 && abilityClock.Phase == 2)
+                {
+                    SpecialBeat.Commit(aim.x, aim.z, out dashX, out dashZ);
+                }
+                if (abilityClock.Phase == 1)
+                {
+                    agent.isStopped = true;
+                    if (aim.sqrMagnitude > 0.01f) transform.rotation = Quaternion.LookRotation(aim.normalized);
+                }
+                else if (abilityClock.Phase == 2)
+                {
+                    agent.isStopped = false;
+                    agent.speed = 0f;
+                    var dash = new Vector3(dashX, 0f, dashZ);
+                    if (agent.isOnNavMesh && dash.sqrMagnitude > 0.01f)
+                    {
+                        agent.Move(dash * SpecialBeat.Speed(charging) * Time.deltaTime);
+                    }
+                    if (charging)
+                    {
+                        BraceCharge(dash);
+                        if (currentState != ZombieState.Chase) return;
+                    }
+                }
+                else
+                {
+                    agent.isStopped = false;
+                    agent.speed = chaseSpeed;
+                }
+
+                if (SpecialBeat.Hits(abilityClock, distToTarget, attackRange + 0.35f))
+                {
+                    abilityClock.Struck = true;
+                    abilityClock.Phase = 0;
+                    abilityClock.Left = 0f;
+                    abilityClock.Ready = Time.time + SpecialBeat.Cooldown;
+                    ConnectDash(charging);
+                }
+            }
+
+            if (abilityClock.Phase != 2)
+            {
+                agent.SetDestination(seen ? currentTarget.position : lastKnownPosition);
+            }
+
+            if (distToTarget <= attackRange && abilityClock.Phase != 1)
             {
                 SetState(ZombieState.Attack);
             }
+        }
+
+        private void ConnectDash(bool charge)
+        {
+            if (currentTarget == null) return;
+            var damageable = currentTarget.GetComponent<IDamageable>();
+            if (damageable == null || damageable.IsDead) return;
+            float amount = charge ? attackDamage + 8f : SpecialBeat.LungeDamage;
+            damageable.TakeDamage(amount, currentTarget.position, transform.forward, gameObject);
+            if (charge) currentTarget.GetComponent<StatusEffectController>()?.Knockdown(0.7f);
+        }
+
+        private void UpdateSearching()
+        {
+            bool arrived = agent != null && !agent.pathPending && agent.remainingDistance <= agent.stoppingDistance + 0.45f;
+            int before = searchSweep.Index;
+            searchSweep = SearchMemory.Tick(searchSweep, arrived, Time.deltaTime);
+            if (SearchMemory.Done(searchSweep))
+            {
+                SetState(ZombieState.Wander);
+                return;
+            }
+            if (searchSweep.Index != before) GoToSearchPoint();
+        }
+
+        private void GoToSearchPoint()
+        {
+            SearchMemory.Offset(searchSweep.Index, out float ox, out float oz);
+            Vector3 spot = lastKnownPosition + new Vector3(ox, 0f, oz);
+            if (NavMesh.SamplePosition(spot, out NavMeshHit navHit, SearchMemory.Radius, NavMesh.AllAreas))
+            {
+                agent.SetDestination(navHit.position);
+                return;
+            }
+            agent.SetDestination(spot);
+        }
+
+        private bool StillSees(Transform target)
+        {
+            if (target == null) return false;
+            Vector3 eye = transform.position + Vector3.up * 1.5f;
+            Vector3 head = target.position + Vector3.up * 1.5f;
+            Vector3 toHead = head - eye;
+            float dist = toHead.magnitude;
+            if (dist > sightRange * 1.25f) return false;
+            if (dist < 0.05f) return true;
+            bool headBlocked = Physics.Raycast(eye, toHead.normalized, dist, visionMask);
+            Vector3 chest = target.position + Vector3.up * 1.0f;
+            Vector3 toChest = chest - eye;
+            bool chestBlocked = toChest.sqrMagnitude < 0.01f || Physics.Raycast(eye, toChest.normalized, toChest.magnitude, visionMask);
+            return !headBlocked || !chestBlocked;
+        }
+
+        private void BraceCharge(Vector3 dash)
+        {
+            if (dash.sqrMagnitude < 0.01f) return;
+            Vector3 origin = transform.position + Vector3.up * 0.9f;
+            float reach = SpecialBeat.Speed(true) * Time.deltaTime + 0.5f;
+            if (!Physics.Raycast(origin, dash.normalized, out RaycastHit wall, reach, GameLayers.EnvironmentMask)) return;
+            var board = wall.collider.GetComponentInParent<StreetBoard>();
+            if (board != null)
+            {
+                board.Strike(BoardBreak.ChargeHit);
+                if (board.Broken) return;
+            }
+            abilityClock.Phase = 0;
+            abilityClock.Left = 0f;
+            abilityClock.Ready = Time.time + SpecialBeat.Cooldown;
+            ApplyImpulse(-dash, 0.4f, SpecialBeat.WallStun);
         }
 
         private void UpdateAttack()
@@ -307,20 +715,33 @@ namespace OutpostZero.AI
                 return;
             }
 
-            if (Time.time >= nextAttackTime)
+            if (swing < 0f)
             {
-                PerformBiteAttack();
+                if (Time.time < nextAttackTime) return;
+                swing = 0f;
+                nextAttackTime = Time.time + attackCooldown;
             }
+
+            float before = swing;
+            swing = SwingClock.Advance(swing, Time.deltaTime, attackCooldown);
+            if (SwingClock.Connects(before, swing)) PerformBiteAttack();
+            if (swing >= 1f) swing = -1f;
         }
 
         private void PerformBiteAttack()
         {
-            nextAttackTime = Time.time + attackCooldown;
 
             var damageable = currentTarget.GetComponent<IDamageable>();
             if (damageable != null && !damageable.IsDead)
             {
                 damageable.TakeDamage(attackDamage, currentTarget.position, transform.forward, gameObject);
+                var effects = currentTarget.GetComponent<StatusEffectController>();
+                if (effects != null)
+                {
+                    if (Random.value < 0.35f) effects.ApplyBleed(5f);
+                    if (Random.value < 0.2f) effects.ApplyInfection(8f);
+                    if (specialAbility == ZombieSpecialAbility.Charge) effects.Knockdown(0.7f);
+                }
             }
         }
 
@@ -347,20 +768,27 @@ namespace OutpostZero.AI
             float dist = dirToTarget.magnitude;
 
             // Player crouching reduces effective detection distance
-            float effectiveSightRange = player.IsCrouching ? sightRange * 0.55f : sightRange;
-
-            if (dist <= effectiveSightRange)
+            var visibility = player.GetComponent<PlayerVisibility>();
+            float exposure = visibility != null
+                ? visibility.Exposure
+                : SpotRange.Exposure(player.IsCrouching, player.IsSprinting, player.FlashlightOn, 0f, 0f);
+            float cover = OutpostZero.Expedition.CoverPost.ScaleFor(player.transform.position, transform.position, player.IsCrouching);
+            float angle = Vector3.Angle(transform.forward, dirToTarget.normalized);
+            Vector3 fromPlayer = transform.position - player.transform.position;
+            fromPlayer.y = 0f;
+            float beamAngle = Vector3.Angle(player.transform.forward, fromPlayer.sqrMagnitude > 0.001f ? fromPlayer.normalized : player.transform.forward);
+            bool inBeam = SpotRange.Beam(dist, beamAngle, player.FlashlightOn);
+            bool inCone = SpotRange.Notices(dist, sightRange, exposure, player.IsCrouching, WeatherController.SightMultiplier, cover, angle, sightAngle);
+            if (inCone || inBeam)
             {
-                float angle = Vector3.Angle(transform.forward, dirToTarget.normalized);
-                if (angle <= sightAngle * 0.5f)
+                Vector3 chest = player.transform.position + Vector3.up * 1.0f;
+                bool headBlocked = Physics.Raycast(eyePos, dirToTarget.normalized, dist, visionMask);
+                Vector3 toChest = chest - eyePos;
+                bool chestBlocked = Physics.Raycast(eyePos, toChest.normalized, toChest.magnitude, visionMask);
+                if (!headBlocked || !chestBlocked)
                 {
-                    // Line of sight raycast
-                    if (!Physics.Raycast(eyePos, dirToTarget.normalized, dist, visionMask))
-                    {
-                        // Target acquired visually!
-                        currentTarget = player.transform;
-                        SetState(ZombieState.Chase);
-                    }
+                    currentTarget = player.transform;
+                    SetState(ZombieState.Chase);
                 }
             }
         }
@@ -398,16 +826,8 @@ namespace OutpostZero.AI
 
         private void AlertNearbyZombies()
         {
-            Collider[] hits = Physics.OverlapSphere(transform.position, hordeAlertRadius);
-            foreach (var hit in hits)
-            {
-                var otherZombie = hit.GetComponent<ZombieAI>();
-                if (otherZombie != null && otherZombie != this && otherZombie.CurrentState == ZombieState.Wander)
-                {
-                    otherZombie.currentTarget = this.currentTarget;
-                    otherZombie.SetState(ZombieState.Chase);
-                }
-            }
+            if (NoiseManager.Instance == null || currentTarget == null) return;
+            NoiseManager.Instance.EmitNoise(transform.position, hordeAlertRadius, 1f, NoiseType.ZombieScream, currentTarget.gameObject);
         }
 
         private void HandleDamaged(float amount, Vector3 hitPoint)
@@ -430,7 +850,7 @@ namespace OutpostZero.AI
 
             if (GameManager.Instance != null)
             {
-                GameManager.Instance.RecordZombieKill();
+                GameManager.Instance.RecordZombieKill(archetypeId);
             }
 
             if (Random.value < 0.45f)

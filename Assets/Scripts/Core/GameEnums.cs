@@ -6,7 +6,11 @@ namespace OutpostZero.Core
         ExpeditionActive,
         Paused,
         GameOver,
-        SuccessionScreen
+        SuccessionScreen,
+        ExpeditionResults,
+        RaidActive,
+        MainMenu,
+        Victory
     }
 
     public enum NoiseType

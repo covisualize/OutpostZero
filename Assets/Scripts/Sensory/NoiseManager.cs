@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using OutpostZero.Colony;
 using OutpostZero.Core;
 
 namespace OutpostZero.Sensory
@@ -53,6 +54,15 @@ namespace OutpostZero.Sensory
 
         public void EmitNoise(Vector3 origin, float radius, float intensity, NoiseType noiseType, GameObject source = null)
         {
+            if ((noiseType == NoiseType.GunshotLoud || noiseType == NoiseType.GunshotQuiet) && ColonyStorage.Instance != null)
+            {
+                ColonyStorage.Instance.SetShots(RaidCall.Hear(
+                    ColonyStorage.Instance.Shots,
+                    origin.x,
+                    origin.z,
+                    true,
+                    noiseType == NoiseType.GunshotLoud));
+            }
             OnNoiseEmitted?.Invoke(origin, radius, noiseType);
 
             if (showDebugGizmos)
@@ -82,20 +92,17 @@ namespace OutpostZero.Sensory
 
                 if (dist <= effectiveRadius)
                 {
-                    // Check obstacle occlusion: sound attenuates through solid walls
-                    float occlusionMultiplier = 1.0f;
+                    bool wall = false;
                     Vector3 from = origin + Vector3.up * 1.2f;
                     Vector3 to = listener.Position + Vector3.up * 1.2f;
                     if (Physics.Linecast(from, to, out RaycastHit hit, GameLayers.EnvironmentMask))
                     {
                         if (hit.collider.gameObject != source && hit.collider.gameObject != (listener as Component)?.gameObject)
-                        {
-                            occlusionMultiplier = 0.45f;
-                        }
+                            wall = true;
                     }
 
-                    float perceivedIntensity = (1.0f - (dist / effectiveRadius)) * intensity * occlusionMultiplier;
-                    if (perceivedIntensity > 0.05f)
+                    float perceivedIntensity = HearGate.Perceived(dist, effectiveRadius, intensity, wall, noiseType);
+                    if (perceivedIntensity > 0f)
                     {
                         listener.OnHearNoise(origin, radius, perceivedIntensity, noiseType, source);
                     }
