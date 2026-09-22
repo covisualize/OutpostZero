@@ -362,6 +362,7 @@ namespace OutpostZero.Core
             QualitySettings.vSyncCount = vsync;
             Application.targetFrameRate = PlayOptions.FrameTarget(FrameCap, vsync != 0);
             QualitySettings.shadowDistance = tier.ShadowDistance;
+            QualitySettings.shadowCascades = ShadowRig.Cascades;
             QualitySettings.antiAliasing = tier.Msaa;
             if (GraphicsSettings.currentRenderPipeline is UniversalRenderPipelineAsset pipeline)
             {

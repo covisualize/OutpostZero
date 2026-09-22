@@ -48,6 +48,7 @@ namespace OutpostZero.Player
         [SerializeField] private float lampCell = LampCell.Full;
         private Light railLight;
         private Texture2D lampCookie;
+        private GameObject lampShaft;
 
         // Components
         private CharacterController characterController;
@@ -256,9 +257,12 @@ namespace OutpostZero.Player
             flashlight.spotAngle = LampCookie.Outer;
             flashlight.innerSpotAngle = LampCookie.Inner;
             flashlight.shadows = LightShadows.Soft;
+            flashlight.shadowNearPlane = OutpostZero.Graphics.ShadowRig.Near;
             bool shine = flashlightOn && LampCell.Live(lampCell);
             flashlight.enabled = shine;
             if (shine) flashlight.intensity = LampCell.Intensity(lampCell);
+            if (lampShaft == null) lampShaft = OutpostZero.Graphics.LampShaft.Raise(flashlight.transform);
+            if (lampShaft != null) lampShaft.SetActive(shine);
         }
 
         private void ApplyRail()

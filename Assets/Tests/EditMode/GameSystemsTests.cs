@@ -3698,6 +3698,29 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void TheFlashlightShowsAConeAndWallsKeepTheirShadow()
+        {
+            float rim = 8f * Mathf.Tan(31f * Mathf.Deg2Rad);
+            Assert.AreEqual(rim, LampShaft.Radius(LampShaft.Length, LampCookie.Outer), 0.0001f);
+            Assert.AreEqual(0f, LampShaft.Radius(0f, 62f), 0.001f);
+            Assert.AreEqual(0f, LampShaft.Radius(8f, 0f), 0.001f);
+            Assert.AreEqual(13, LampShaft.VertexCount(LampShaft.Sides));
+            Assert.AreEqual(36, LampShaft.IndexCount(LampShaft.Sides));
+            Assert.AreEqual(1f, LampShaft.Fade(0f), 0.001f);
+            Assert.AreEqual(0.25f, LampShaft.Fade(0.5f), 0.001f);
+            Assert.AreEqual(0f, LampShaft.Fade(1f), 0.001f);
+            Assert.AreEqual(0.22f, LampShaft.Alpha, 0.001f);
+            Assert.AreEqual(2, ShadowRig.Cascades);
+            Assert.AreEqual(0.2f, ShadowRig.Near, 0.001f);
+            Assert.IsTrue(WallSeal.Casts("Building_Storefront_NW"));
+            Assert.IsTrue(WallSeal.Casts("Building_Warehouse_NE"));
+            Assert.IsFalse(WallSeal.Casts("StreetLamp_NW"));
+            Assert.IsFalse(WallSeal.Casts(""));
+            Assert.AreEqual(18f, QualityProfile.For(0).ShadowDistance, 0.001f);
+            Assert.AreEqual(40f, QualityProfile.For(1).ShadowDistance, 0.001f);
+        }
+
+        [Test]
         public void ADeepBuilderRaisesExtraAndAFourthShiftDoesNot()
         {
             Assert.AreEqual(0, BuildDepth.Raise(4));
