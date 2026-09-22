@@ -568,6 +568,28 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void MistSitsOnTheStreetWhenTheAirIsThick()
+        {
+            Assert.IsTrue(MistBank.Shows(WeatherKind.Fog, 0f));
+            Assert.IsTrue(MistBank.Shows(WeatherKind.Storm, 0f));
+            Assert.IsFalse(MistBank.Shows(WeatherKind.Clear, 0f));
+            Assert.IsFalse(MistBank.Shows(WeatherKind.Clear, 0.69f));
+            Assert.IsTrue(MistBank.Shows(WeatherKind.Clear, 0.7f));
+            Assert.IsTrue(MistBank.Shows(WeatherKind.Clear, 1.4f));
+            Assert.IsFalse(MistBank.Shows(WeatherKind.Rain, 0f));
+            Assert.IsFalse(MistBank.Shows(WeatherKind.Overcast, 0.49f));
+            Assert.IsTrue(MistBank.Shows(WeatherKind.Overcast, 0.5f));
+            Assert.AreEqual(3, MistBank.Count);
+            Assert.AreEqual(0.8f, MistBank.Top, 0.001f);
+            Assert.Less(MistBank.Top, 1.6f);
+            for (int i = 0; i < MistBank.Count; i++)
+            {
+                var spot = MistBank.At(i);
+                Assert.IsTrue(DressingPlan.OnTheStreet(spot.X, spot.Z), i.ToString());
+            }
+        }
+
+        [Test]
         public void RainWetsTheGroundAndShotsSitInTheWorld()
         {
             Assert.AreEqual(0.65f, WeatherSurface.Wetness(WeatherKind.Rain));

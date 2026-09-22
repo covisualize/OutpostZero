@@ -64,6 +64,45 @@ namespace OutpostZero.Graphics
         }
     }
 
+    /// <summary>
+    /// Three low banks of mist on the avenue. They sit under the eye line.
+    /// Fog, a storm, a dark overcast, and deep night raise them. A clear day leaves the street open.
+    /// </summary>
+    public static class MistBank
+    {
+        public const int Count = 3;
+        public const float Y = 0.45f;
+        public const float Tall = 0.7f;
+        public const float NightAt = 0.7f;
+        public const float OvercastAt = 0.5f;
+
+        public struct Spot
+        {
+            public float X;
+            public float Z;
+            public float W;
+            public float D;
+        }
+
+        public static float Top => Y + Tall * 0.5f;
+
+        public static bool Shows(WeatherKind kind, float night)
+        {
+            if (night < 0f) night = 0f;
+            if (night > 1f) night = 1f;
+            if (kind == WeatherKind.Fog || kind == WeatherKind.Storm) return true;
+            if (kind == WeatherKind.Overcast) return night >= OvercastAt;
+            return night >= NightAt;
+        }
+
+        public static Spot At(int index)
+        {
+            if (index == 1) return new Spot { X = 1.2f, Z = 11f, W = 4.2f, D = 2.4f };
+            if (index == 2) return new Spot { X = -2.8f, Z = 15.5f, W = 3.6f, D = 2.1f };
+            return new Spot { X = -3.4f, Z = 4.5f, W = 3.8f, D = 2.2f };
+        }
+    }
+
     public class WeatherController : MonoBehaviour
     {
         public static WeatherController Instance { get; private set; }
@@ -75,6 +114,8 @@ namespace OutpostZero.Graphics
         private ParticleSystem debris;
         private ParticleSystem ash;
         private GameObject puddles;
+        private GameObject mist;
+        private Material mistMat;
         private string district = "";
         private WeatherKind applied = (WeatherKind)(-1);
         private float nextShift;
@@ -153,6 +194,7 @@ namespace OutpostZero.Graphics
             Shader.SetGlobalFloat("_WindStrength", GroundMist.Wind(kind));
             Shader.SetGlobalFloat("_OutpostWet", WeatherSurface.Wetness(kind));
             HoldPuddles(WeatherSurface.Wetness(kind));
+            HoldMist(kind, night);
             multiplier = WeatherSurface.Sight(kind);
             if (SkyBand.Rains(kind)) EnsureRain();
             if (rain != null)
@@ -224,6 +266,45 @@ namespace OutpostZero.Graphics
                 }
             }
             puddles.SetActive(RainPuddle.Shows(wetness));
+        }
+
+        private void HoldMist(WeatherKind weather, float night)
+        {
+            if (mist == null)
+            {
+                mist = new GameObject("StreetMist");
+                mist.transform.SetParent(transform, false);
+                var source = Resources.Load<Material>("OutpostMist");
+                if (source == null)
+                {
+                    var shader = Shader.Find("OutpostZero/Mist");
+                    if (shader != null) source = new Material(shader);
+                }
+                if (source != null) mistMat = new Material(source);
+                for (int i = 0; i < MistBank.Count; i++)
+                {
+                    var spot = MistBank.At(i);
+                    var body = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                    body.name = "Mist";
+                    body.transform.SetParent(mist.transform, false);
+                    body.transform.position = new Vector3(spot.X, MistBank.Y, spot.Z);
+                    body.transform.localScale = new Vector3(spot.W, MistBank.Tall, spot.D);
+                    var collider = body.GetComponent<Collider>();
+                    if (collider != null) Destroy(collider);
+                    var renderer = body.GetComponent<Renderer>();
+                    if (renderer == null) continue;
+                    renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                    renderer.receiveShadows = false;
+                    if (mistMat != null) renderer.sharedMaterial = mistMat;
+                }
+            }
+            if (mistMat != null)
+            {
+                Color tint = GroundMist.Tint(weather, night);
+                tint.a = 0.22f;
+                mistMat.color = tint;
+            }
+            mist.SetActive(MistBank.Shows(weather, night));
         }
 
         private void EnsureRain()
