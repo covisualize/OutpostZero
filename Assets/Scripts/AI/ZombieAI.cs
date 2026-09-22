@@ -183,7 +183,7 @@ namespace OutpostZero.AI
             {
                 var zombie = aliveCrowd[i];
                 if (zombie == null || zombie.currentState == ZombieState.Dead) continue;
-                into[n++] = AiWatch.Line(zombie.currentState.ToString(), zombie.WatchTarget, zombie.AbilityWait(now));
+                into[n++] = AiWatch.Line(zombie.currentState.ToString(), zombie.WatchTarget, zombie.AbilityWait(now), null);
             }
             return n;
         }

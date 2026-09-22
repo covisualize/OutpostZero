@@ -436,7 +436,7 @@ namespace OutpostZero.UI
                     int count = ZombieAI.CopyWatch(rows, Time.time);
                     var shown = new string[count];
                     for (int i = 0; i < count; i++) shown[i] = rows[i];
-                    watch.text = AiWatch.Page(shown, 6) + "\n" + VfxLedger.Line();
+                    watch.text = AiWatch.Page(shown, 6, null) + "\n" + VfxLedger.Line(null);
                     watch.style.display = DisplayStyle.Flex;
                 }
             }

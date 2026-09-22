@@ -33,7 +33,14 @@ namespace OutpostZero.Combat
 
         public static string Line()
         {
-            return "vfx " + Live + "  peak " + Peak;
+            return Line("en");
+        }
+
+        public static string Line(string language)
+        {
+            string live = string.IsNullOrEmpty(language) ? OutpostZero.Shell.Loc.T("watch.vfx") : OutpostZero.Shell.Loc.T("watch.vfx", language);
+            string peak = string.IsNullOrEmpty(language) ? OutpostZero.Shell.Loc.T("watch.peak") : OutpostZero.Shell.Loc.T("watch.peak", language);
+            return live + " " + Live + "  " + peak + " " + Peak;
         }
     }
 

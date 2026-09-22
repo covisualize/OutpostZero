@@ -4609,6 +4609,27 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void AWatchPageFollowsTheLanguage()
+        {
+            Assert.AreEqual("Chase  Player  1.3", AiWatch.Line("Chase", "Player", 1.26f));
+            Assert.AreEqual("Chase  -  0.0", AiWatch.Line("Chase", "", -1f, "en"));
+            Assert.AreEqual("Persecución  Jugador  1.3", AiWatch.Line("Chase", "Player", 1.26f, "es"));
+            Assert.AreEqual("Investiga  Mara  0.0", AiWatch.Line("InvestigateNoise", "Mara", 0f, "es"));
+            Assert.AreEqual("Ataque  -  2.0", AiWatch.Line("Attack", "", 2f, "es"));
+            bool wasOpen = AiWatch.Open;
+            if (!AiWatch.Open) AiWatch.Toggle();
+            Assert.AreEqual("watch", AiWatch.Page(null, 6));
+            Assert.AreEqual("vigía", AiWatch.Page(null, 6, "es"));
+            Assert.AreEqual("watch\nChase  Player  1.3", AiWatch.Page(new[] { "Chase  Player  1.3" }, 6, "en"));
+            if (AiWatch.Open != wasOpen) AiWatch.Toggle();
+            VfxLedger.Reset();
+            VfxLedger.Borrow();
+            Assert.AreEqual("vfx 1  peak 1", VfxLedger.Line());
+            Assert.AreEqual("efectos 1  pico 1", VfxLedger.Line("es"));
+            VfxLedger.Reset();
+        }
+
+        [Test]
         public void StreetLampsFollowTheDarkAndNoonStaysOut()
         {
             Assert.AreEqual(0f, DayNightCycle.HourToNight(12f), 0.001f);
