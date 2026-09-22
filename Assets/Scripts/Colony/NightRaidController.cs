@@ -18,6 +18,8 @@ namespace OutpostZero.Colony
         private int pressure = 6;
         private string approach = "gate";
         private bool running;
+        private bool warning;
+        private float warningEnds;
         private bool broadcast;
         private int phase;
         private int raidDay = 1;
@@ -27,6 +29,8 @@ namespace OutpostZero.Colony
         private float nextGuard;
 
         public bool Running => running;
+        public bool Warning => warning;
+        public float WarningLeft => warning ? UnityEngine.Mathf.Max(0f, warningEnds - UnityEngine.Time.time) : 0f;
         public float Remaining => running ? Mathf.Max(0f, endsAt - Time.time) : 0f;
 
         private void Awake()
@@ -41,7 +45,16 @@ namespace OutpostZero.Colony
 
         public void Begin()
         {
-            Open(false);
+            if (running || warning) return;
+            float hold = RaidWarn.Seconds(TowerCount(), GuardCount());
+            if (hold <= 0f)
+            {
+                Open(false);
+                return;
+            }
+            warning = true;
+            warningEnds = Time.time + hold;
+            GameplayFeedback.Toast(Loc.T("camp.warn") + " " + Mathf.CeilToInt(hold));
         }
 
         public void BeginBroadcast()
@@ -79,6 +92,18 @@ namespace OutpostZero.Colony
 
         private void Update()
         {
+            if (warning)
+            {
+                if (GameManager.Instance != null && GameManager.Instance.CurrentState != GameState.CampManagement)
+                {
+                    warning = false;
+                    return;
+                }
+                if (Time.time < warningEnds) return;
+                warning = false;
+                Open(false);
+                return;
+            }
             if (!running) return;
             if (GameManager.Instance != null && GameManager.Instance.CurrentState != GameState.RaidActive)
             {
@@ -297,6 +322,24 @@ namespace OutpostZero.Colony
                 }
             }
             return new Vector3(-12f, 1.2f, -12f);
+        }
+
+        private static int TowerCount()
+        {
+            int placed = GridBuilder.Instance != null ? GridBuilder.Instance.CountKind("Watchtower") : 0;
+            int sceneTower = CampServices.Instance != null && CampServices.Instance.WatchtowerOnline ? 1 : 0;
+            return placed > sceneTower ? placed : sceneTower;
+        }
+
+        private static int GuardCount()
+        {
+            int guards = 0;
+            if (SurvivorRoster.Instance == null) return 0;
+            foreach (var survivor in SurvivorRoster.Instance.Survivors)
+            {
+                if (survivor.alive && survivor.task == "Guard") guards++;
+            }
+            return guards;
         }
 
         private static int LampsOn(string approach)

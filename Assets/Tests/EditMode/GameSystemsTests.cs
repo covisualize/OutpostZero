@@ -2352,6 +2352,21 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void AWatchtowerWarnsBeforeTheRaidStarts()
+        {
+            Assert.AreEqual(0f, RaidWarn.Seconds(0, 3));
+            Assert.AreEqual(0f, RaidWarn.Seconds(-1, 1));
+            Assert.AreEqual(8f, RaidWarn.Seconds(1, 0));
+            Assert.AreEqual(8f, RaidWarn.Seconds(1, -2));
+            Assert.AreEqual(14f, RaidWarn.Seconds(1, 1));
+            Assert.AreEqual(16f, RaidWarn.Seconds(1, 2));
+            Assert.AreEqual(22f, RaidWarn.Seconds(2, 1));
+            Assert.AreEqual(28f, RaidWarn.Seconds(3, 1));
+            Assert.AreEqual(28f, RaidWarn.Seconds(5, 4));
+            Assert.AreEqual("La torre los ve", Loc.T("camp.warn", "es"));
+        }
+
+        [Test]
         public void AFarmFeedsTheCampAfterThreeMornings()
         {
             var plots = new[]
