@@ -465,6 +465,7 @@ namespace OutpostZero.Colony
                         {
                             survivor.engineering = Practice.Gain(survivor.engineering);
                             pace += Practice.Bonus(survivor.engineering);
+                            pace += BuildDepth.Raise(survivor.engineering);
                         }
                         if (pace > 0 && GridBuilder.Instance != null && (GridBuilder.Instance.Raise(pace) || GridBuilder.Instance.Patch(pace) || GridBuilder.Instance.Lift(pace)))
                             survivor.morale = Mathf.Max(0f, survivor.morale - 2f);

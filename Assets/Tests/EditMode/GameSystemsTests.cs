@@ -3566,6 +3566,53 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void ADeepBuilderRaisesExtraAndAFourthShiftDoesNot()
+        {
+            Assert.AreEqual(0, BuildDepth.Raise(4));
+            Assert.AreEqual(0, BuildDepth.Raise(0));
+            Assert.AreEqual(0, BuildDepth.Raise(-1));
+            Assert.AreEqual(1, BuildDepth.Raise(5));
+            Assert.AreEqual(4, BuildDepth.Raise(8));
+            Assert.AreEqual(4, BuildDepth.Raise(12));
+            Assert.AreEqual(1, Practice.Bonus(4));
+            Assert.AreEqual(1, Practice.Bonus(8));
+            Assert.AreEqual(2, BuildSite.Shift("Field Engineer", 40f));
+            Assert.AreEqual(1, BuildSite.Shift("Steady Hands", 40f));
+            Assert.AreEqual(0, BuildSite.Shift("Steady Hands", 5f));
+            int trained = BuildSite.Shift("Steady Hands", 40f) + Practice.Bonus(4) + BuildDepth.Raise(4);
+            int deep = BuildSite.Shift("Steady Hands", 40f) + Practice.Bonus(8) + BuildDepth.Raise(8);
+            Assert.AreEqual(2, trained);
+            Assert.AreEqual(6, deep);
+            BuildSite.Work(1, 0, 4, trained, out int site, out int hours, out bool done);
+            Assert.AreEqual(1, site);
+            Assert.AreEqual(2, hours);
+            Assert.IsFalse(done);
+            BuildSite.Work(1, 0, 4, deep, out site, out hours, out done);
+            Assert.AreEqual(0, site);
+            Assert.AreEqual(4, hours);
+            Assert.IsTrue(done);
+        }
+
+        [Test]
+        public void ACampMateSquatsAtRestAndSwingsAtTheWall()
+        {
+            Assert.AreEqual(22f, YardPose.Lean("Rest", 1f), 0.001f);
+            Assert.AreEqual(0.72f, YardPose.Scale("Rest"), 0.001f);
+            Assert.AreEqual(1f, YardPose.Scale("Guard"), 0.001f);
+            Assert.AreEqual(-8f, YardPose.Lean("Guard", 0.4f), 0.001f);
+            Assert.AreEqual(0f, YardPose.Stir(0f), 0.001f);
+            Assert.AreEqual(0.5f, YardPose.Stir(0.2f), 0.001f);
+            Assert.AreEqual(1f, YardPose.Stir(0.4f), 0.001f);
+            Assert.AreEqual(28f, YardPose.Lean("Build", 0.4f), 0.001f);
+            Assert.AreEqual(14f, YardPose.Lean("Cook", 0.4f), 0.001f);
+            Assert.AreEqual(18f, YardPose.Lean("Clear", 0.4f), 0.001f);
+            Assert.AreEqual(16f, YardPose.Lean("Medic", 0.2f), 0.001f);
+            Assert.AreEqual(10f, YardPose.Lean("Scavenge", 0.2f), 0.001f);
+            Assert.AreEqual(0f, YardPose.Lean("Lead", 0.4f), 0.001f);
+            Assert.AreEqual(0f, YardPose.Lean(null, 0.4f), 0.001f);
+        }
+
+        [Test]
         public void AZombieWithoutARigStillAttacksAndFalls()
         {
             Assert.AreEqual(14f, PoseSheet.Lean(ZombieAI.ZombieState.Chase, 0f), 0.001f);

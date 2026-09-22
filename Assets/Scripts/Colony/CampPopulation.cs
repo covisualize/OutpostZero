@@ -79,7 +79,13 @@ namespace OutpostZero.Colony
                 body.position = Vector3.MoveTowards(body.position, goal, pace * Time.deltaTime);
                 Vector3 face = goal - body.position;
                 face.y = 0f;
-                if (face.sqrMagnitude > 0.01f) body.rotation = Quaternion.LookRotation(face);
+                var beat = body.GetComponent<YardBeat>();
+                if (beat == null) beat = body.gameObject.AddComponent<YardBeat>();
+                float lean = YardPose.Lean(action, beat.Age);
+                float yaw = face.sqrMagnitude > 0.01f ? Quaternion.LookRotation(face).eulerAngles.y : body.eulerAngles.y;
+                body.rotation = Quaternion.Euler(lean, yaw, 0f);
+                float squat = YardPose.Scale(action);
+                body.localScale = new Vector3(0.45f, 0.9f * squat, 0.45f);
             }
         }
 
