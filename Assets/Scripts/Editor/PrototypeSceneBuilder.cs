@@ -22,7 +22,6 @@ namespace OutpostZero.EditorTools
     {
         private const string ScenePath = "Assets/Scenes/PrototypeArena.unity";
         private const string BootPath = "Assets/Scenes/Boot.unity";
-        private static readonly string[] PlayerScenes = { BootPath, ScenePath };
         private const string SettingsDir = "Assets/Settings";
         private const string MaterialsDir = "Assets/Materials";
         private const string ModelsDir = "Assets/Models";
@@ -128,69 +127,7 @@ namespace OutpostZero.EditorTools
 
         public static void CiBuildLinuxPlayer()
         {
-            try
-            {
-                BuildAndSaveSceneBatch();
-                string location = Path.Combine("Builds", "Linux", "OutpostZero.x86_64");
-                var report = BuildPipeline.BuildPlayer(new BuildPlayerOptions
-                {
-                    scenes = PlayerScenes,
-                    locationPathName = location,
-                    target = BuildTarget.StandaloneLinux64,
-                    options = BuildOptions.None
-                });
-                if (report.summary.result != UnityEditor.Build.Reporting.BuildResult.Succeeded)
-                {
-                    EditorApplication.Exit(1);
-                }
-            }
-            catch (System.Exception exception)
-            {
-                Debug.LogException(exception);
-                EditorApplication.Exit(1);
-            }
-        }
-
-        public static void BuildGameExecutable()
-        {
-            try
-            {
-                BuildAndSaveSceneBatch();
-            }
-            catch (System.Exception exception)
-            {
-                Debug.LogException(exception);
-                if (Application.isBatchMode)
-                {
-                    EditorApplication.Exit(1);
-                }
-                return;
-            }
-
-            string buildDir = "Builds";
-            if (!Directory.Exists(buildDir))
-            {
-                Directory.CreateDirectory(buildDir);
-            }
-
-            string exePath = Path.Combine(buildDir, "OutpostZero.exe");
-            Debug.Log($"[Outpost Zero] Building Windows Standalone player to: {exePath}...");
-
-            BuildPlayerOptions buildOptions = new BuildPlayerOptions
-            {
-                scenes = PlayerScenes,
-                locationPathName = exePath,
-                target = BuildTarget.StandaloneWindows64,
-                options = BuildOptions.None
-            };
-
-            var report = BuildPipeline.BuildPlayer(buildOptions);
-            Debug.Log($"[Outpost Zero] Build result: {report.summary.result} (Errors: {report.summary.totalErrors})");
-
-            if (report.summary.result != UnityEditor.Build.Reporting.BuildResult.Succeeded)
-            {
-                EditorApplication.Exit(1);
-            }
+            BuildScript.Run(BuildArgs.Parse(new[] { "-targets", "linux" }), true);
         }
 
         public static UniversalRenderPipelineAsset EnsureURPPipelineConfigured()
