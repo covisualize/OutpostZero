@@ -53,6 +53,16 @@ namespace OutpostZero.Colony
             }
         }
 
+        public static int LeaderPractice(string task)
+        {
+            var leader = Instance != null ? Instance.Leader : null;
+            if (leader == null) return 0;
+            if (task == "Guard") return leader.combat;
+            if (task == "Medic") return leader.medicine;
+            if (task == "Scavenge") return leader.scavenge;
+            return 0;
+        }
+
         public void CopyLeaderNeeds(float hunger, float thirst)
         {
             var leader = Leader;

@@ -2925,6 +2925,25 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void APracticedLeaderChangesTheStreetAndANewOneDoesNot()
+        {
+            Assert.AreEqual(1f, FieldHand.Spread(0), 0.001f);
+            Assert.AreEqual(1f, FieldHand.Spread(3), 0.001f);
+            Assert.AreEqual(0.85f, FieldHand.Spread(4), 0.001f);
+            Assert.AreEqual(1f, FieldHand.Reload(0), 0.001f);
+            Assert.AreEqual(0.8f, FieldHand.Reload(8), 0.001f);
+            Assert.AreEqual(0, FieldHand.Scrap(3));
+            Assert.AreEqual(1, FieldHand.Scrap(4));
+            Assert.AreEqual(50, FieldHand.Medkit(0));
+            Assert.AreEqual(50, FieldHand.Medkit(3));
+            Assert.AreEqual(56, FieldHand.Medkit(4));
+            Assert.AreEqual("Medkit used  +50 HP", FieldHand.Dose(0));
+            Assert.AreEqual("Medkit used  +56 HP", FieldHand.Dose(8));
+            Assert.AreEqual(2.5f, RecoilBloom.Spread(2.5f, FieldHand.Spread(0), 0f), 0.001f);
+            Assert.AreEqual(2.125f, RecoilBloom.Spread(2.5f, FieldHand.Spread(4), 0f), 0.001f);
+        }
+
+        [Test]
         public void DemolishingAModuleReturnsHalfTheScrap()
         {
             Assert.AreEqual(3, ScrapRefund.Half(6));

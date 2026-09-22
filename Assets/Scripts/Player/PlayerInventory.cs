@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using OutpostZero.Colony;
 using OutpostZero.Core;
 using OutpostZero.Items;
 
@@ -71,7 +72,7 @@ namespace OutpostZero.Player
             string id = ItemBelt.IdAt(belt, index);
             if (string.IsNullOrEmpty(id)) return false;
             bool used = TryUse(id);
-            if (used && id == "medkit") GameplayFeedback.Toast("Medkit used  +50 HP");
+            if (used && id == "medkit") GameplayFeedback.Toast(FieldHand.Dose(LastDoseSkill));
             if (!StillCarrying(id)) belt[index] = "";
             return used;
         }
@@ -403,6 +404,8 @@ namespace OutpostZero.Player
             return true;
         }
 
+        public int LastDoseSkill { get; private set; }
+
         public bool UseMedkit()
         {
             if (medicalKits <= 0) return false;
@@ -413,7 +416,8 @@ namespace OutpostZero.Player
             if (health != null && health.CurrentHealth >= health.MaxHealth && !wounded) return false;
 
             medicalKits--;
-            health?.Heal(50f);
+            LastDoseSkill = SurvivorRoster.LeaderPractice("Medic");
+            health?.Heal(FieldHand.Medkit(LastDoseSkill));
             effects?.StopBleed();
             effects?.CureInfection();
             RecalculateWeight();

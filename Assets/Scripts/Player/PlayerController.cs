@@ -2,6 +2,7 @@ using System;
 using System.Text;
 using UnityEngine;
 using OutpostZero.AI;
+using OutpostZero.Colony;
 using OutpostZero.Core;
 using OutpostZero.Sensory;
 using OutpostZero.Combat;
@@ -251,7 +252,7 @@ namespace OutpostZero.Player
             {
                 if (inventory != null && inventory.UseMedkit())
                 {
-                    GameplayFeedback.Toast("Medkit used  +50 HP");
+                    GameplayFeedback.Toast(FieldHand.Dose(inventory.LastDoseSkill));
                     CodexDirector.Hear("medkit");
                 }
             }

@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using UnityEngine;
+using OutpostZero.Colony;
 using OutpostZero.Core;
 
 namespace OutpostZero.Combat
@@ -41,8 +42,9 @@ namespace OutpostZero.Combat
         }
         public int ReserveAmmo => reserveAmmo;
         public bool IsReloading => isReloading;
-        public float ReloadFill => isReloading ? MagPulse.Fill(reloadElapsed, reloadDuration) : 0f;
+        public float ReloadFill => isReloading ? MagPulse.Fill(reloadElapsed, reloadWait > 0f ? reloadWait : reloadDuration) : 0f;
         private float reloadElapsed;
+        private float reloadWait;
 
         public event Action<int, int> OnAmmoChanged; // current, reserve
         public event Action OnReloadStarted;
@@ -161,7 +163,7 @@ namespace OutpostZero.Combat
 
             // Fire projectiles
             heat = RecoilBloom.AfterShot(heat);
-            float spread = RecoilBloom.Spread(spreadAngle, SpreadMultiplier, heat);
+            float spread = RecoilBloom.Spread(spreadAngle, SpreadMultiplier * FieldHand.Spread(SurvivorRoster.LeaderPractice("Guard")), heat);
             for (int i = 0; i < projectilesPerShot; i++)
             {
                 Vector3 shootDir = ApplySpread(targetDirection, spread);
@@ -235,15 +237,16 @@ namespace OutpostZero.Combat
         {
             isReloading = true;
             reloadElapsed = 0f;
+            reloadWait = reloadDuration * FieldHand.Reload(SurvivorRoster.LeaderPractice("Guard"));
             OnReloadStarted?.Invoke();
             PlaySound(reloadSound);
 
-            while (reloadElapsed < reloadDuration)
+            while (reloadElapsed < reloadWait)
             {
                 reloadElapsed += Time.deltaTime;
                 yield return null;
             }
-            reloadElapsed = reloadDuration;
+            reloadElapsed = reloadWait;
 
             int needed = MagazineCapacity - currentAmmo;
             int loaded = Mathf.Min(needed, reserveAmmo);

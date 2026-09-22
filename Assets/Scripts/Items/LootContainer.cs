@@ -1,4 +1,5 @@
 using UnityEngine;
+using OutpostZero.Colony;
 using OutpostZero.Core;
 using OutpostZero.Player;
 
@@ -101,6 +102,25 @@ namespace OutpostZero.Items
                 if (ItemCatalog.Find(grants[i].ItemId) == null) continue;
                 stacks[write++] = new ContainerHold.Stack { Id = grants[i].ItemId, Count = grants[i].Count };
             }
+            int extra = FieldHand.Scrap(SurvivorRoster.LeaderPractice("Scavenge"));
+            if (extra > 0) stacks = Pile(stacks, "scrap", extra);
+        }
+
+        private static ContainerHold.Stack[] Pile(ContainerHold.Stack[] held, string id, int extra)
+        {
+            if (held == null) held = new ContainerHold.Stack[0];
+            for (int i = 0; i < held.Length; i++)
+            {
+                if (held[i].Id == id)
+                {
+                    held[i].Count += extra;
+                    return held;
+                }
+            }
+            var next = new ContainerHold.Stack[held.Length + 1];
+            for (int i = 0; i < held.Length; i++) next[i] = held[i];
+            next[held.Length] = new ContainerHold.Stack { Id = id, Count = extra };
+            return next;
         }
 
         private static bool Give(PlayerInventory inventory, string id, int count)
