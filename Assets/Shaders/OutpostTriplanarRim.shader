@@ -51,17 +51,9 @@ Shader "OutpostZero/TriplanarRim"
             };
 
             CBUFFER_START(UnityPerMaterial)
-                float4 _BaseColor;
-                float4 _RimColor;
-                float _RimPower;
                 float _Tile;
-                float _Dissolve;
                 float _Wetness;
                 float _Sway;
-                float _Metallic;
-                float _HasMaps;
-                float4 _Tint;
-                float4 _Emission;
             CBUFFER_END
 
             TEXTURE2D(_BaseMap);
@@ -74,6 +66,14 @@ Shader "OutpostZero/TriplanarRim"
             SAMPLER(sampler_MaskMap);
             float _OutpostWet;
             float _WindStrength;
+            float4 _BaseColor;
+            float4 _RimColor;
+            float _RimPower;
+            float _Dissolve;
+            float _Metallic;
+            float _HasMaps;
+            float4 _Tint;
+            float4 _Emission;
 
             float Hash(float3 p)
             {
