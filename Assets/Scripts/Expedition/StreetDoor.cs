@@ -36,6 +36,29 @@ namespace OutpostZero.Expedition
             bar = DoorBar.After(bar);
             bool open = !DoorBar.Holds(bar);
             GameplayFeedback.Toast(open ? DoorBar.Gives(null) : DoorBar.Hold(null));
+            Ring(open, attacker);
+        }
+
+        public void Rake(GameObject attacker)
+        {
+            if (!DoorBar.Holds(bar)) return;
+            bar = BarClaw.Rake(bar);
+            bool open = !DoorBar.Holds(bar);
+            GameplayFeedback.Toast(open ? DoorBar.Gives(null) : BarClaw.Rattle(null));
+            Ring(open, attacker);
+        }
+
+        public void Rip(GameObject attacker)
+        {
+            if (!DoorBar.Holds(bar)) return;
+            bar = BarClaw.Rush(bar);
+            bool open = !DoorBar.Holds(bar);
+            GameplayFeedback.Toast(open ? DoorBar.Gives(null) : DoorBar.Hold(null));
+            Ring(open, attacker);
+        }
+
+        private void Ring(bool open, GameObject attacker)
+        {
             if (Sensory.NoiseManager.Instance != null)
                 Sensory.NoiseManager.Instance.EmitNoise(transform.position, open ? DoorBar.BreakNoise : DoorBar.Noise, 0.85f, NoiseType.ObjectBroken, attacker);
         }

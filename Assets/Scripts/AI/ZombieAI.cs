@@ -776,11 +776,23 @@ namespace OutpostZero.AI
         {
             if (aim.sqrMagnitude < 0.01f || Time.time < nextPane) return;
             Vector3 origin = transform.position + Vector3.up * 1.1f;
-            if (!Physics.Raycast(origin, aim.normalized, out RaycastHit wall, PaneClaw.Reach, GameLayers.EnvironmentMask)) return;
-            var pane = wall.collider.GetComponent<GlassPane>();
-            if (pane == null) return;
-            nextPane = Time.time + PaneClaw.Gap;
-            pane.TakeDamage(PaneClaw.Hit, wall.point, aim, gameObject);
+            bool blocked = Physics.Raycast(origin, aim.normalized, out RaycastHit wall, PaneClaw.Reach, GameLayers.EnvironmentMask);
+            if (blocked)
+            {
+                var pane = wall.collider.GetComponent<GlassPane>();
+                if (pane != null)
+                {
+                    nextPane = Time.time + PaneClaw.Gap;
+                    pane.TakeDamage(PaneClaw.Hit, wall.point, aim, gameObject);
+                    return;
+                }
+            }
+            if (!Physics.Raycast(origin, aim.normalized, out RaycastHit slab, BarClaw.Reach, GameLayers.InteractableMask)) return;
+            if (blocked && wall.distance < slab.distance) return;
+            var door = slab.collider.GetComponent<StreetDoor>();
+            if (door == null || !door.Barred) return;
+            nextPane = Time.time + BarClaw.Gap;
+            door.Rake(gameObject);
         }
 
         private void ConnectDash(bool charge)
@@ -852,7 +864,9 @@ namespace OutpostZero.AI
             if (dash.sqrMagnitude < 0.01f) return;
             Vector3 origin = transform.position + Vector3.up * 0.9f;
             float reach = SpecialBeat.Speed(true) * Time.deltaTime + 0.5f;
-            if (!Physics.Raycast(origin, dash.normalized, out RaycastHit wall, reach, GameLayers.EnvironmentMask)) return;
+            bool wallHit = Physics.Raycast(origin, dash.normalized, out RaycastHit wall, reach, GameLayers.EnvironmentMask);
+            if (RipBar(origin, dash, reach, wallHit, wall)) return;
+            if (!wallHit) return;
             var board = wall.collider.GetComponentInParent<StreetBoard>();
             if (board != null)
             {
@@ -870,6 +884,21 @@ namespace OutpostZero.AI
             abilityClock.Left = 0f;
             abilityClock.Ready = Time.time + SpecialBeat.Cooldown;
             ApplyImpulse(-dash, 0.4f, SpecialBeat.WallStun);
+        }
+
+        private bool RipBar(Vector3 origin, Vector3 dash, float reach, bool wallHit, RaycastHit wall)
+        {
+            if (!Physics.Raycast(origin, dash.normalized, out RaycastHit slab, reach, GameLayers.InteractableMask)) return false;
+            if (wallHit && wall.distance < slab.distance) return false;
+            var door = slab.collider.GetComponent<StreetDoor>();
+            if (door == null || !door.Barred) return false;
+            door.Rip(gameObject);
+            if (!door.Barred) return true;
+            abilityClock.Phase = 0;
+            abilityClock.Left = 0f;
+            abilityClock.Ready = Time.time + SpecialBeat.Cooldown;
+            ApplyImpulse(-dash, 0.4f, SpecialBeat.WallStun);
+            return true;
         }
 
         private void UpdateAttack()

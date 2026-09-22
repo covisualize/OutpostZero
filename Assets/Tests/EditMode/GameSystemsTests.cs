@@ -6208,6 +6208,37 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void AClawWorksTheBarAndAChargeRipsItOpen()
+        {
+            Assert.AreEqual(1.1f, BarClaw.Reach, 0.001f);
+            Assert.AreEqual(0.8f, BarClaw.Gap, 0.001f);
+            Assert.AreEqual(3, BarClaw.Charge);
+            Assert.AreEqual(2, BarClaw.Rake(3));
+            Assert.AreEqual(1, BarClaw.Rake(2));
+            Assert.AreEqual(0, BarClaw.Rake(1));
+            Assert.AreEqual(0, BarClaw.Rake(0));
+            Assert.AreEqual(0, BarClaw.Rake(-1));
+            Assert.AreEqual(0, BarClaw.Rush(3));
+            Assert.AreEqual(0, BarClaw.Rush(1));
+            Assert.AreEqual(0, BarClaw.Rush(0));
+            Assert.AreEqual(0, BarClaw.Rush(-2));
+            Assert.IsFalse(BarClaw.Opens(3, false));
+            Assert.IsTrue(BarClaw.Opens(1, false));
+            Assert.IsTrue(BarClaw.Opens(3, true));
+            Assert.IsFalse(BarClaw.Opens(0, true));
+            Assert.IsFalse(BarClaw.Opens(0, false));
+            Assert.AreEqual("The bar rattles", BarClaw.Rattle("en"));
+            Assert.AreEqual("La tranca vibra", BarClaw.Rattle("es"));
+            Assert.AreEqual(3, DoorBar.Hits);
+            Assert.AreEqual(8f, DoorBar.Noise, 0.001f);
+            Assert.AreEqual(12f, DoorBar.BreakNoise, 0.001f);
+            Assert.AreEqual(4f, PaneClaw.Hit, 0.001f);
+            Assert.AreEqual(18f, PaneCharge.Hit, 0.001f);
+            Assert.AreEqual(1.1f, PaneClaw.Reach, 0.001f);
+            Assert.AreEqual("Step inside", DoorMap.Prompt(false));
+        }
+
+        [Test]
         public void AZombieWithoutARigStillAttacksAndFalls()
         {
             Assert.AreEqual(14f, PoseSheet.Lean(ZombieAI.ZombieState.Chase, 0f), 0.001f);
