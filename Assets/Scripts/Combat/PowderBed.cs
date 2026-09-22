@@ -70,7 +70,7 @@ namespace OutpostZero.Combat
 
         private void Update()
         {
-            float next = age < 0f ? 0f : age + Time.deltaTime;
+            float next = age < 0f ? 0f : age + OutpostZero.Graphics.RainQuench.Now(Time.deltaTime);
             if (PowderBed.TickDue(age, next)) Scorch();
             age = next;
             if (!PowderBed.Hot(age)) Destroy(gameObject);

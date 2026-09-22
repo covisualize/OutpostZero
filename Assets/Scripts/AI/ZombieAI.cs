@@ -334,7 +334,7 @@ namespace OutpostZero.AI
         private void TickEmber()
         {
             float before = burnLeft;
-            burnLeft = Ember.Tick(burnLeft, Time.deltaTime);
+            burnLeft = Ember.Tick(burnLeft, OutpostZero.Graphics.RainQuench.Now(Time.deltaTime));
             ShowEmber();
             if (!Ember.Due(before, burnLeft) || healthSystem == null || healthSystem.IsDead) return;
             healthSystem.TakeDamage(Ember.Damage, transform.position + Vector3.up, Vector3.up, gameObject);

@@ -159,7 +159,7 @@ namespace OutpostZero.Player
             if (knockdownRemaining > 0f) knockdownRemaining -= dt;
             if (adrenaline > 0f) adrenaline -= dt;
             float beforeBurn = burnLeft;
-            burnLeft = Ember.Tick(burnLeft, dt);
+            burnLeft = Ember.Tick(burnLeft, OutpostZero.Graphics.RainQuench.Now(dt));
             ShowBurn();
             if (Ember.Due(beforeBurn, burnLeft) && health != null && !health.IsDead)
             {

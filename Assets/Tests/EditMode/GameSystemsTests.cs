@@ -5373,6 +5373,26 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void RainEatsAFireFasterThanAClearStreet()
+        {
+            Assert.AreEqual(1f, RainQuench.Pace(WeatherKind.Clear), 0.001f);
+            Assert.AreEqual(1f, RainQuench.Pace(WeatherKind.Fog), 0.001f);
+            Assert.AreEqual(1f, RainQuench.Pace(WeatherKind.Overcast), 0.001f);
+            Assert.AreEqual(2.5f, RainQuench.Pace(WeatherKind.Rain), 0.001f);
+            Assert.AreEqual(3.5f, RainQuench.Pace(WeatherKind.Storm), 0.001f);
+            Assert.AreEqual(1f, RainQuench.Step(0.4f, WeatherKind.Rain), 0.001f);
+            Assert.AreEqual(1.4f, RainQuench.Step(0.4f, WeatherKind.Storm), 0.001f);
+            Assert.AreEqual(0.4f, RainQuench.Step(0.4f, WeatherKind.Clear), 0.001f);
+            Assert.AreEqual(0f, RainQuench.Step(-1f, WeatherKind.Storm), 0.001f);
+            Assert.AreEqual(0.4f, RainQuench.Now(0.4f), 0.001f);
+            Assert.AreEqual(4f, FirePatch.Life, 0.001f);
+            Assert.AreEqual(10f, PowderBed.Life, 0.001f);
+            Assert.AreEqual(3.5f, Ember.Seconds, 0.001f);
+            Assert.AreEqual(0.65f, WeatherSurface.Wetness(WeatherKind.Rain), 0.001f);
+            Assert.AreEqual(0.85f, WeatherSurface.Wetness(WeatherKind.Storm), 0.001f);
+        }
+
+        [Test]
         public void AZombieWithoutARigStillAttacksAndFalls()
         {
             Assert.AreEqual(14f, PoseSheet.Lean(ZombieAI.ZombieState.Chase, 0f), 0.001f);

@@ -66,7 +66,7 @@ namespace OutpostZero.Combat
 
         private void Update()
         {
-            float next = age < 0f ? 0f : age + Time.deltaTime;
+            float next = age < 0f ? 0f : age + OutpostZero.Graphics.RainQuench.Now(Time.deltaTime);
             if (FirePatch.TickDue(age, next)) Scorch();
             age = next;
             if (!FirePatch.Hot(age)) Destroy(gameObject);
