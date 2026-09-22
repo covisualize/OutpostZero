@@ -5523,6 +5523,17 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void AUsableThingWearsARimUntilYouStepAway()
+        {
+            Assert.AreEqual(0.035f, HoverMark.Width, 0.001f);
+            Assert.AreEqual(0.35f, HoverMark.Red, 0.001f);
+            Assert.AreEqual(0.85f, HoverMark.Green, 0.001f);
+            Assert.AreEqual(0.95f, HoverMark.Blue, 0.001f);
+            Assert.IsTrue(HoverMark.Live(true));
+            Assert.IsFalse(HoverMark.Live(false));
+        }
+
+        [Test]
         public void AZombieWithoutARigStillAttacksAndFalls()
         {
             Assert.AreEqual(14f, PoseSheet.Lean(ZombieAI.ZombieState.Chase, 0f), 0.001f);

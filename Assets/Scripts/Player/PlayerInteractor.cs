@@ -2,6 +2,7 @@ using UnityEngine;
 using OutpostZero.AI;
 using OutpostZero.Combat;
 using OutpostZero.Core;
+using OutpostZero.Graphics;
 using OutpostZero.Items;
 using OutpostZero.Shell;
 
@@ -12,6 +13,7 @@ namespace OutpostZero.Player
         [SerializeField] private float reach = 2.2f;
         private PlayerInventory inventory;
         private PlayerController controller;
+        private HoverShell shell;
         private IInteractable current;
         private ZombieAI marked;
         private float windup = -1f;
@@ -23,6 +25,8 @@ namespace OutpostZero.Player
         {
             inventory = GetComponent<PlayerInventory>();
             controller = GetComponent<PlayerController>();
+            shell = GetComponent<HoverShell>();
+            if (shell == null) shell = gameObject.AddComponent<HoverShell>();
         }
 
         private void Update()
@@ -30,10 +34,12 @@ namespace OutpostZero.Player
             if (!CanAct())
             {
                 current = null;
+                shell?.Hold(null);
                 return;
             }
 
             current = FindInteractable();
+            shell?.Hold(current as Component);
             if (ExpeditionInput.InteractPressed && current != null)
             {
                 current.Interact(inventory);
