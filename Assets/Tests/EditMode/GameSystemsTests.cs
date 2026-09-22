@@ -1405,5 +1405,24 @@ namespace OutpostZero.Tests.EditMode
             Assert.IsFalse(SwingClock.Connects(0.2f, 0.5f));
             Assert.AreEqual(SwingClock.HitAt, 0.6f, 0.001f);
         }
+
+        [Test]
+        public void AResolutionChoiceCyclesAndNativeLeavesTheWindowAlone()
+        {
+            Assert.AreEqual(1, DisplayModes.Next(0));
+            Assert.AreEqual(0, DisplayModes.Next(5));
+            Assert.AreEqual(1, DisplayModes.Next(-1));
+            Assert.AreEqual("Native", DisplayModes.Name(0));
+            Assert.AreEqual("1920 x 1080", DisplayModes.Name(3));
+            Assert.IsFalse(DisplayModes.Size(0, out int nativeW, out int nativeH));
+            Assert.AreEqual(0, nativeW);
+            Assert.AreEqual(0, nativeH);
+            Assert.IsTrue(DisplayModes.Size(3, out int width, out int height));
+            Assert.AreEqual(1920, width);
+            Assert.AreEqual(1080, height);
+            Assert.IsTrue(DisplayModes.Size(5, out int ultraW, out int ultraH));
+            Assert.AreEqual(3840, ultraW);
+            Assert.AreEqual(2160, ultraH);
+        }
     }
 }

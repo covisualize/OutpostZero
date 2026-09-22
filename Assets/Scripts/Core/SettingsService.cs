@@ -39,6 +39,7 @@ namespace OutpostZero.Core
         [SerializeField] private int crouchMode;
         [SerializeField] private int sprintMode;
         [SerializeField] private int frameCap;
+        [SerializeField] private int resolution;
 
         public float ScreenShake => screenShake;
         public float MasterVolume => masterVolume;
@@ -67,7 +68,8 @@ namespace OutpostZero.Core
         public int CrouchMode => crouchMode == 1 ? 1 : 0;
         public int SprintMode => sprintMode == 1 ? 1 : 0;
         public int FrameCap => frameCap < 0 || frameCap > 4 ? 0 : frameCap;
-        public string DiscreteKey => (subtitles ? "1" : "0") + colorblindMode + quality + vsync + (merciful ? "1" : "0") + NextDifficulty + goreLevel + hitStop + damageNumbers + motionBlur + windowMode + AimAssist + (InvertLook ? 1 : 0) + CrouchMode + SprintMode + FrameCap;
+        public int Resolution => resolution < 0 || resolution >= DisplayModes.Count ? 0 : resolution;
+        public string DiscreteKey => (subtitles ? "1" : "0") + colorblindMode + quality + vsync + (merciful ? "1" : "0") + NextDifficulty + goreLevel + hitStop + damageNumbers + motionBlur + windowMode + AimAssist + (InvertLook ? 1 : 0) + CrouchMode + SprintMode + FrameCap + Resolution;
         public bool ShowSettings { get; private set; }
 
         public event Action OnChanged;
@@ -83,6 +85,17 @@ namespace OutpostZero.Core
             ApplyVolume();
             ApplyDisplay();
             ApplyWindow();
+            Application.focusChanged += OnFocus;
+        }
+
+        private void OnDestroy()
+        {
+            Application.focusChanged -= OnFocus;
+        }
+
+        private void OnFocus(bool focused)
+        {
+            AudioListener.volume = focused ? masterVolume : 0f;
         }
 
         public void SetShake(float value)
@@ -225,6 +238,14 @@ namespace OutpostZero.Core
         {
             windowMode = windowMode == 2 ? 1 : 2;
             ApplyWindow();
+            ApplyResolution();
+            OnChanged?.Invoke();
+        }
+
+        public void CycleResolution()
+        {
+            resolution = DisplayModes.Next(Resolution);
+            ApplyResolution();
             OnChanged?.Invoke();
         }
 
@@ -272,13 +293,14 @@ namespace OutpostZero.Core
             OnChanged?.Invoke();
         }
 
-        public void ApplyPlay(int assist, int invert, int crouch, int sprint, int cap)
+        public void ApplyPlay(int assist, int invert, int crouch, int sprint, int cap, int display = 0)
         {
             aimAssist = assist <= 0 ? 0 : assist >= 2 ? 2 : 1;
             invertLook = invert == 1 ? 1 : 0;
             crouchMode = crouch == 1 ? 1 : 0;
             sprintMode = sprint == 1 ? 1 : 0;
             frameCap = cap < 0 || cap > 4 ? 0 : cap;
+            resolution = display < 0 || display >= DisplayModes.Count ? 0 : display;
             ApplyDisplay();
             OnChanged?.Invoke();
         }
@@ -338,6 +360,16 @@ namespace OutpostZero.Core
             var spawners = FindObjectsByType<ZombieSpawner>(FindObjectsSortMode.None);
             for (int i = 0; i < spawners.Length; i++) spawners[i].ApplyCap(tier.Zombies);
             WeatherController.Instance?.ApplyBudget(tier.Particles);
+            ApplyResolution();
+        }
+
+        private void ApplyResolution()
+        {
+            if (!DisplayModes.Size(Resolution, out int width, out int height)) return;
+            var mode = windowMode == 1
+                ? FullScreenMode.Windowed
+                : windowMode == 2 ? FullScreenMode.ExclusiveFullScreen : Screen.fullScreenMode;
+            Screen.SetResolution(width, height, mode);
         }
 
         private void ApplyWindow()

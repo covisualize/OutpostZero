@@ -61,6 +61,7 @@ namespace OutpostZero.Shell
         public int crouchMode;
         public int sprintMode;
         public int frameCap;
+        public int resolution;
         public int slot;
         public string seal = "";
         public float sfxVolume = 1f;

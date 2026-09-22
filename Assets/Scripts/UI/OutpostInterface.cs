@@ -475,6 +475,7 @@ namespace OutpostZero.UI
             parent.Add(Button("Quality: " + tiers[Mathf.Clamp(settings.Quality, 0, 3)], settings.CycleQuality));
             parent.Add(Button(settings.VSync ? "VSync on" : "VSync off", settings.ToggleVSync));
             parent.Add(Button("Frame cap: " + PlayOptions.FrameName(settings.FrameCap), settings.CycleFrameCap));
+            parent.Add(Button("Resolution: " + DisplayModes.Name(settings.Resolution), settings.CycleResolution));
             parent.Add(Button(settings.AimAssist == 0 ? "Aim assist off" : settings.AimAssist == 2 ? "Aim assist strong" : "Aim assist light", settings.CycleAim));
             parent.Add(Button(settings.InvertLook ? "Invert look" : "Look: normal", settings.ToggleInvert));
             parent.Add(Button(settings.CrouchMode == 1 ? "Crouch: toggle" : "Crouch: hold", settings.ToggleCrouchMode));
