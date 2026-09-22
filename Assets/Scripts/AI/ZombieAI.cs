@@ -85,6 +85,7 @@ namespace OutpostZero.AI
         private SpecialBeat.Clock abilityClock;
         private float lostSight;
         private float lastDrip;
+        private float limpLeft;
         private SearchMemory.Sweep searchSweep;
         private float dashX;
         private float dashZ = 1f;
@@ -263,6 +264,7 @@ namespace OutpostZero.AI
             lostSight = 0f;
             lastDrip = 0f;
             searchSweep = new SearchMemory.Sweep();
+            limpLeft = 0f;
             dashX = 0f;
             dashZ = 1f;
             SetState(ZombieState.Wander);
@@ -326,6 +328,7 @@ namespace OutpostZero.AI
                 var gameState = GameManager.Instance.CurrentState;
                 if (gameState != GameState.ExpeditionActive && gameState != GameState.RaidActive) return;
             }
+            limpLeft = LimbCut.Tick(limpLeft, Time.deltaTime);
             Drip();
 
             if (posted)
@@ -375,6 +378,23 @@ namespace OutpostZero.AI
             }
 
             Separate();
+            ApplyLimp();
+        }
+
+        private void ApplyLimp()
+        {
+            if (agent == null || abilityClock.Phase == 2) return;
+            float speed = GaitSpeed();
+            if (speed <= 0f) return;
+            agent.speed = LimbCut.Speed(speed, limpLeft > 0f, specialAbility == ZombieSpecialAbility.Charge);
+        }
+
+        private float GaitSpeed()
+        {
+            if (currentState == ZombieState.Chase) return chaseSpeed;
+            if (currentState == ZombieState.InvestigateNoise) return wanderSpeed * 1.3f;
+            if (currentState == ZombieState.Wander || currentState == ZombieState.Searching) return wanderSpeed;
+            return 0f;
         }
 
         private void Separate()
@@ -526,7 +546,7 @@ namespace OutpostZero.AI
                     Vector3 step = spot - transform.position;
                     step.y = 0f;
                     if (step.sqrMagnitude > 0.01f)
-                        transform.position += step.normalized * chaseSpeed * Time.deltaTime;
+                        transform.position += step.normalized * LimbCut.Speed(chaseSpeed, limpLeft > 0f, specialAbility == ZombieSpecialAbility.Charge) * Time.deltaTime;
                 }
                 return true;
             }
@@ -844,6 +864,7 @@ namespace OutpostZero.AI
 
         private void HandleDamaged(float amount, Vector3 hitPoint)
         {
+            if (LimbCut.Leg(hitPoint.y, transform.position.y)) limpLeft = LimbCut.Seconds;
             Voice("hurt");
             if (currentState != ZombieState.Chase && currentState != ZombieState.Attack)
             {

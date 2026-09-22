@@ -5199,6 +5199,29 @@ namespace OutpostZero.Tests.EditMode
             Assert.AreEqual(6.65f, PelletDrop.Damage(19f, 16f, 16f, WeaponType.Shotgun), 0.001f);
             Assert.AreEqual(26f, PelletDrop.Damage(26f, 16f, 32f, WeaponType.Rifle), 0.001f);
             Assert.AreEqual(2f, DamageResolver.HeadshotMultiplier, 0.001f);
+            Assert.AreEqual(1.45f, DamageResolver.HeadshotHeight, 0.001f);
+        }
+
+        [Test]
+        public void AShotInTheLegSlowsTheChase()
+        {
+            Assert.IsTrue(LimbCut.Leg(0.4f, 0f));
+            Assert.IsTrue(LimbCut.Leg(0.05f, 0f));
+            Assert.IsTrue(LimbCut.Leg(0.62f, 0f));
+            Assert.IsFalse(LimbCut.Leg(0.04f, 0f));
+            Assert.IsFalse(LimbCut.Leg(0.63f, 0f));
+            Assert.IsFalse(LimbCut.Leg(1.0f, 0f));
+            Assert.IsFalse(LimbCut.Leg(1.5f, 0f));
+            Assert.AreEqual(4f, LimbCut.Seconds, 0.001f);
+            Assert.AreEqual(4.6f, LimbCut.Speed(4.6f, false, false), 0.001f);
+            Assert.AreEqual(2.53f, LimbCut.Speed(4.6f, true, false), 0.001f);
+            Assert.AreEqual(3.588f, LimbCut.Speed(4.6f, true, true), 0.001f);
+            Assert.AreEqual(0.99f, LimbCut.Speed(1.8f, true, false), 0.001f);
+            Assert.AreEqual(0f, LimbCut.Speed(-2f, true, false), 0.001f);
+            Assert.AreEqual(3f, LimbCut.Tick(4f, 1f), 0.001f);
+            Assert.AreEqual(0f, LimbCut.Tick(0.2f, 1f), 0.001f);
+            Assert.AreEqual(0f, LimbCut.Tick(-1f, 1f), 0.001f);
+            Assert.AreEqual(4f, LimbCut.Tick(4f, 0f), 0.001f);
         }
 
         [Test]
