@@ -174,6 +174,10 @@ namespace OutpostZero.Combat
             float spread = RecoilBloom.Spread(spreadAngle, SpreadMultiplier * FieldHand.Spread(guard) * HandDepth.Spread(guard) * TraitHook.Aim(SurvivorRoster.LeaderTrait(), SurvivorRoster.LeaderAside(), SurvivorRoster.LeaderMark()), heat);
             var sights = ownerGameObject != null ? ownerGameObject.GetComponent<OutpostZero.Player.PlayerController>() : null;
             spread = SightGroup.Angle(spread, sights != null && sights.IsAimingDownSights);
+            int wound = SurvivorRoster.Instance != null && SurvivorRoster.Instance.Leader != null
+                ? SurvivorRoster.Instance.Leader.injury
+                : 0;
+            spread = OutpostZero.Player.WoundSway.Angle(spread, wound);
             for (int i = 0; i < projectilesPerShot; i++)
             {
                 Vector3 shootDir = ApplySpread(targetDirection, spread);

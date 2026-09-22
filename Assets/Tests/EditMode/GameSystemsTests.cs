@@ -5947,6 +5947,27 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void ACampWoundOpensTheShotAndAClearLeaderKeepsTheSights()
+        {
+            Assert.AreEqual(1.12f, WoundSway.Bite, 0.001f);
+            Assert.AreEqual(1.35f, WoundSway.Fever, 0.001f);
+            Assert.AreEqual(1.6f, WoundSway.Critical, 0.001f);
+            Assert.AreEqual(5.5f, WoundSway.Angle(5.5f, 0), 0.001f);
+            Assert.AreEqual(6.16f, WoundSway.Angle(5.5f, 1), 0.001f);
+            Assert.AreEqual(7.425f, WoundSway.Angle(5.5f, 2), 0.001f);
+            Assert.AreEqual(8.8f, WoundSway.Angle(5.5f, 3), 0.001f);
+            Assert.AreEqual(8.8f, WoundSway.Angle(5.5f, 9), 0.001f);
+            Assert.AreEqual(0f, WoundSway.Angle(-1f, 2), 0.001f);
+            Assert.AreEqual(0.62f, SightGroup.Tight, 0.001f);
+            Assert.AreEqual(3.41f, SightGroup.Angle(5.5f, true), 0.001f);
+            Assert.AreEqual(5.5f, SightGroup.Angle(5.5f, false), 0.001f);
+            Assert.AreEqual(4.6035f, WoundSway.Angle(SightGroup.Angle(5.5f, true), 2), 0.001f);
+            Assert.AreEqual(0.8f, TraitHook.Aim("Sharpshooter"), 0.001f);
+            Assert.AreEqual(1f, TraitHook.Aim("Brave"), 0.001f);
+            Assert.AreEqual(0.92f, StreetLimp.Bite, 0.001f);
+        }
+
+        [Test]
         public void AZombieWithoutARigStillAttacksAndFalls()
         {
             Assert.AreEqual(14f, PoseSheet.Lean(ZombieAI.ZombieState.Chase, 0f), 0.001f);
