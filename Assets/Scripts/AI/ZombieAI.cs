@@ -7,6 +7,7 @@ using OutpostZero.Sensory;
 using OutpostZero.Combat;
 using OutpostZero.Graphics;
 using OutpostZero.Player;
+using OutpostZero.Expedition;
 
 namespace OutpostZero.AI
 {
@@ -68,6 +69,7 @@ namespace OutpostZero.AI
 
         [Header("Target & Memory")]
         [SerializeField] private Transform currentTarget;
+        private int doorGen = -1;
         [SerializeField] private Vector3 lastKnownPosition;
         [SerializeField] private float investigationDuration = 6f;
 
@@ -241,6 +243,8 @@ namespace OutpostZero.AI
                     : ObstacleAvoidanceType.HighQualityObstacleAvoidance;
             }
 
+            FollowDoor();
+
             switch (currentState)
             {
                 case ZombieState.Idle:
@@ -373,6 +377,27 @@ namespace OutpostZero.AI
             {
                 SetState(ZombieState.Searching);
             }
+        }
+
+        private void FollowDoor()
+        {
+            if (currentState != ZombieState.Chase && currentState != ZombieState.Attack) return;
+            if (!DoorCross.ShouldFollow(doorGen, transform.position.x, transform.position.z, Time.time, out int generation)) return;
+            doorGen = generation;
+            DoorCross.Slot(GetInstanceID() & 0x7fffffff, out float ox, out float oz);
+            var dest = new Vector3(DoorCross.ToX + ox, transform.position.y, DoorCross.ToZ + oz);
+            bool placed = agent != null && agent.isOnNavMesh && agent.Warp(dest);
+            if (!placed)
+            {
+                if (agent != null) agent.enabled = false;
+                transform.position = dest;
+                if (agent != null)
+                {
+                    agent.enabled = true;
+                    if (agent.isOnNavMesh) agent.Warp(dest);
+                }
+            }
+            lastKnownPosition = dest;
         }
 
         private void UpdateChase()

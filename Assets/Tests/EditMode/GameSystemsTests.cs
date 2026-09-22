@@ -1797,6 +1797,18 @@ namespace OutpostZero.Tests.EditMode
             Assert.IsTrue(DoorMap.IsInside(insideX));
             Assert.AreEqual("Step inside", DoorMap.Prompt(false));
             Assert.AreEqual("Step outside", DoorMap.Prompt(true));
+
+            DoorCross.Clear();
+            DoorCross.Note(-7.8f, 4f, 82.2f, 4f, 10f);
+            Assert.IsTrue(DoorCross.ShouldFollow(-1, -7.8f, 4f, 10f, out int crossed));
+            Assert.IsFalse(DoorCross.ShouldFollow(crossed, -7.8f, 4f, 10.2f, out _));
+            Assert.IsTrue(DoorCross.ShouldFollow(-1, 0.2f, 4f, 12.5f, out _));
+            Assert.IsFalse(DoorCross.ShouldFollow(-1, 0.3f, 4f, 10f, out _));
+            Assert.IsFalse(DoorCross.ShouldFollow(-1, -7.8f, 4f, 12.51f, out _));
+            DoorCross.Slot(0, out float slotX, out float slotZ);
+            Assert.AreEqual(-0.7f, slotX, 0.001f);
+            Assert.AreEqual(0f, slotZ, 0.001f);
+            DoorCross.Clear();
         }
 
         [Test]

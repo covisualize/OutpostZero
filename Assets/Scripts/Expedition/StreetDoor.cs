@@ -30,7 +30,9 @@ namespace OutpostZero.Expedition
             if (player == null) return;
 
             var body = player.GetComponent<CharacterController>();
-            var dest = new Vector3(destination.x, player.transform.position.y, destination.z);
+            var from = player.transform.position;
+            var dest = new Vector3(destination.x, from.y, destination.z);
+            DoorCross.Note(from.x, from.z, dest.x, dest.z, Time.time);
             if (body != null) body.enabled = false;
             player.transform.position = dest;
             if (body != null) body.enabled = true;
