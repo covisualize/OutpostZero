@@ -2,8 +2,8 @@
   "id": "Kit_roof",
   "category": "Kit",
   "generator": "generate_kit.build_piece",
-  "generatorHash": "21ce9e632aed5021732c2e371410f2a1546471be33bbfc9f00edb53aa9a1224b",
-  "gitSha": "1b175c271e07e37618f23d05ed76737f316f5c42",
+  "generatorHash": "9a0b90a9a38d6371b05b3bd8398d10a84b41d8ff739c40822a81bd6a23efea5c",
+  "gitSha": "8db3f1cd9f7ef7df289a8b9b4d6ba8500d8db5f7",
   "blender": "4.2.11",
   "tags": [
     "kit",

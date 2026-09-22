@@ -2,8 +2,8 @@
   "id": "Kit_sandbag_corner",
   "category": "Kit",
   "generator": "generate_kit.build_piece",
-  "generatorHash": "4ece85da400b3ee2a0873e95866cfd528f8ca8b503b10558ea094599b941c93c",
-  "gitSha": "1b175c271e07e37618f23d05ed76737f316f5c42",
+  "generatorHash": "2ab46914c15b368f5a00b30b0e4d5e9b0b629756eb27636e58c175172c51e6cd",
+  "gitSha": "8db3f1cd9f7ef7df289a8b9b4d6ba8500d8db5f7",
   "blender": "4.2.11",
   "tags": [
     "kit",

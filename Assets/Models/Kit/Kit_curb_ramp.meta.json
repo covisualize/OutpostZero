@@ -2,8 +2,8 @@
   "id": "Kit_curb_ramp",
   "category": "Kit",
   "generator": "generate_kit.build_piece",
-  "generatorHash": "2e3e673d3a0e1f084bf4dde17d28e5d800fe14e63d5536e1d2b0a835da30f314",
-  "gitSha": "1b175c271e07e37618f23d05ed76737f316f5c42",
+  "generatorHash": "2f50beeeec22c0d816db39e5cc18360fc522cba44feee98976f5704d651ad945",
+  "gitSha": "8db3f1cd9f7ef7df289a8b9b4d6ba8500d8db5f7",
   "blender": "4.2.11",
   "tags": [
     "kit",

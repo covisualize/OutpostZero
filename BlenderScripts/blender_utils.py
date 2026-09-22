@@ -41,6 +41,11 @@ def scene_stats():
     materials = set()
     lows = [float("inf")] * 3
     highs = [float("-inf")] * 3
+    # bound_box follows the armature's current action frame; size and floor describe the bind pose.
+    posed = [obj for obj in bpy.context.scene.objects if obj.type == 'ARMATURE' and obj.data.pose_position != 'REST']
+    for armature in posed:
+        armature.data.pose_position = 'REST'
+    bpy.context.view_layer.update()
     for obj in bpy.context.scene.objects:
         if obj.type != 'MESH':
             continue
@@ -55,6 +60,9 @@ def scene_stats():
             for axis in range(3):
                 lows[axis] = min(lows[axis], point[axis])
                 highs[axis] = max(highs[axis], point[axis])
+    for armature in posed:
+        armature.data.pose_position = 'POSE'
+    bpy.context.view_layer.update()
     if tris == 0:
         lows = highs = [0.0, 0.0, 0.0]
     return {

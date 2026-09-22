@@ -2,8 +2,8 @@
   "id": "Loot_Antibiotics",
   "category": "Weapons",
   "generator": "generate_items.build_antibiotics",
-  "generatorHash": "5c65f1af941b56fa425078e349d4e1a4ded995ea44aeeab8b4a231667492f59f",
-  "gitSha": "1b175c271e07e37618f23d05ed76737f316f5c42",
+  "generatorHash": "31873faa134283c56664c35da348846df9b90d1a5bb49ed27bc3296cc04950ee",
+  "gitSha": "8db3f1cd9f7ef7df289a8b9b4d6ba8500d8db5f7",
   "blender": "4.2.11",
   "tags": [
     "loot",

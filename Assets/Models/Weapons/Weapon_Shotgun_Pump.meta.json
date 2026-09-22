@@ -2,8 +2,8 @@
   "id": "Weapon_Shotgun_Pump",
   "category": "Weapons",
   "generator": "generate_weapons.build_shotgun",
-  "generatorHash": "a68706c1e7dac816c12c8be224824b810dbe303368684855198bf19218c979d2",
-  "gitSha": "1b175c271e07e37618f23d05ed76737f316f5c42",
+  "generatorHash": "112b1ef2b6795f9130a9e97f6a37b9c7a59dd3d19774d1a7e22fa16b89355968",
+  "gitSha": "8db3f1cd9f7ef7df289a8b9b4d6ba8500d8db5f7",
   "blender": "4.2.11",
   "tags": [
     "weapon",

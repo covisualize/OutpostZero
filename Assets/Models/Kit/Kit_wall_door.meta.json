@@ -2,8 +2,8 @@
   "id": "Kit_wall_door",
   "category": "Kit",
   "generator": "generate_kit.build_piece",
-  "generatorHash": "9f58a989c4eb72494e0bd32e6c999553f07e866ea38dc9fa4ef6de9856fcf58c",
-  "gitSha": "1b175c271e07e37618f23d05ed76737f316f5c42",
+  "generatorHash": "be4e6d2fe83de54653b2b8d0c66980ba3d4e983952ae130ad25dd603eb350643",
+  "gitSha": "8db3f1cd9f7ef7df289a8b9b4d6ba8500d8db5f7",
   "blender": "4.2.11",
   "tags": [
     "kit",

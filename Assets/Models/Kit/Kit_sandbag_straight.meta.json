@@ -2,8 +2,8 @@
   "id": "Kit_sandbag_straight",
   "category": "Kit",
   "generator": "generate_kit.build_piece",
-  "generatorHash": "4d12109d9132460f2a92535296a7eca21d6c1cc6ec1099b0a802a4f6f47da715",
-  "gitSha": "1b175c271e07e37618f23d05ed76737f316f5c42",
+  "generatorHash": "18f56c1d4981e55fff3b8a5493c72e6dfdffd0bc3044f8d8b158e9e35fb76a62",
+  "gitSha": "8db3f1cd9f7ef7df289a8b9b4d6ba8500d8db5f7",
   "blender": "4.2.11",
   "tags": [
     "kit",

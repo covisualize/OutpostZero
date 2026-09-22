@@ -2,8 +2,8 @@
   "id": "Loot_ScrapPile",
   "category": "Weapons",
   "generator": "generate_weapons.build_scrap_pile",
-  "generatorHash": "ab24739d79cc51889d7d9309f7025e79ed995f095c804800534016a931a7afda",
-  "gitSha": "1b175c271e07e37618f23d05ed76737f316f5c42",
+  "generatorHash": "232394dfca956ccc8c8d319f59cb08f74afa24697140811c44de2a9e2b898490",
+  "gitSha": "8db3f1cd9f7ef7df289a8b9b4d6ba8500d8db5f7",
   "blender": "4.2.11",
   "tags": [
     "loot",

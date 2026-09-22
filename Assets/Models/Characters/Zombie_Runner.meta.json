@@ -2,8 +2,8 @@
   "id": "Zombie_Runner",
   "category": "Characters",
   "generator": "generate_characters.build_zombie_runner",
-  "generatorHash": "fc695bc6703e6542ea84c11fc9fd4846b64f4b307b054e173e6c8b7207d7426c",
-  "gitSha": "1b175c271e07e37618f23d05ed76737f316f5c42",
+  "generatorHash": "cf206060089db3cb2b63ec03362312ec1b997351b08ef1986ba9a4192deb2ec4",
+  "gitSha": "8db3f1cd9f7ef7df289a8b9b4d6ba8500d8db5f7",
   "blender": "4.2.11",
   "tags": [
     "character",
@@ -20,11 +20,11 @@
     820
   ],
   "size": {
-    "width": 0.6343,
-    "depth": 1.9724,
-    "height": 2.0136
+    "width": 0.935,
+    "depth": 1.8066,
+    "height": 1.7008
   },
-  "floor": 0.0935,
+  "floor": -0.0,
   "materials": [
     "Mat_Eye_Runner",
     "Mat_Face_Runner",

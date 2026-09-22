@@ -2,8 +2,8 @@
   "id": "Kit_pallet",
   "category": "Kit",
   "generator": "generate_kit.build_piece",
-  "generatorHash": "5cd42e76e230d83d06f0929daa4d4c6657c47e0aaae2a8e1e658d4d0f135f40d",
-  "gitSha": "1b175c271e07e37618f23d05ed76737f316f5c42",
+  "generatorHash": "157dbb3d6a0dd8f5b89566d2a9d81cb14854c71f57fac512cff9d30b2db84c9e",
+  "gitSha": "8db3f1cd9f7ef7df289a8b9b4d6ba8500d8db5f7",
   "blender": "4.2.11",
   "tags": [
     "kit",

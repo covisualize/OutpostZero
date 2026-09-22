@@ -2,8 +2,8 @@
   "id": "Kit_sidewalk_corner",
   "category": "Kit",
   "generator": "generate_kit.build_piece",
-  "generatorHash": "54c108afc31c19064bed29255b089fa6d36fe6dd0b0b9cb7ad984fda54c4e83c",
-  "gitSha": "1b175c271e07e37618f23d05ed76737f316f5c42",
+  "generatorHash": "a990c0d90d6fcf36cf95bc1f96c48358fa30bb3e6bf815cc1cece52d05ecc411",
+  "gitSha": "8db3f1cd9f7ef7df289a8b9b4d6ba8500d8db5f7",
   "blender": "4.2.11",
   "tags": [
     "kit",

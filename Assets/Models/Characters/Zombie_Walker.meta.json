@@ -2,8 +2,8 @@
   "id": "Zombie_Walker",
   "category": "Characters",
   "generator": "generate_characters.build_zombie_walker",
-  "generatorHash": "8fe46e6c8cc1d1ae49476808e079ab8d227ff12c054299e505032c46030d66b7",
-  "gitSha": "1b175c271e07e37618f23d05ed76737f316f5c42",
+  "generatorHash": "942828909f9333f14f861e232da67bb22999782a107556bcc1b7c701dac260f8",
+  "gitSha": "8db3f1cd9f7ef7df289a8b9b4d6ba8500d8db5f7",
   "blender": "4.2.11",
   "tags": [
     "character",

@@ -2,8 +2,8 @@
   "id": "Colonist_Survivor",
   "category": "Characters",
   "generator": "generate_characters.build_colonist",
-  "generatorHash": "9e35052f66412e57d18b49c641985d127c255a03ec4049b62e5b4d07b8e743e5",
-  "gitSha": "1b175c271e07e37618f23d05ed76737f316f5c42",
+  "generatorHash": "03f5202c5a634c8649d4e861b1d68505a5c819a67a9d8449f3f6a71ba06f79f4",
+  "gitSha": "8db3f1cd9f7ef7df289a8b9b4d6ba8500d8db5f7",
   "blender": "4.2.11",
   "tags": [
     "character",
@@ -20,11 +20,11 @@
     796
   ],
   "size": {
-    "width": 0.8835,
-    "depth": 1.6982,
-    "height": 0.7814
+    "width": 0.695,
+    "depth": 0.333,
+    "height": 1.72
   },
-  "floor": 0.4125,
+  "floor": -0.0,
   "materials": [
     "Mat_Boots_Work",
     "Mat_Dungarees_Denim",
