@@ -301,7 +301,7 @@ namespace OutpostZero.Colony
                         break;
                     case "Build":
                         int pace = BuildSite.Shift(survivor.trait, survivor.morale);
-                        if (pace > 0 && GridBuilder.Instance != null && GridBuilder.Instance.Raise(pace))
+                        if (pace > 0 && GridBuilder.Instance != null && (GridBuilder.Instance.Raise(pace) || GridBuilder.Instance.Patch(pace)))
                             survivor.morale = Mathf.Max(0f, survivor.morale - 2f);
                         break;
                 }

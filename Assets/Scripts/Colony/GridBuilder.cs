@@ -203,6 +203,27 @@ namespace OutpostZero.Colony
             return false;
         }
 
+        public bool Patch(int pace)
+        {
+            int best = -1;
+            int lowest = 100;
+            for (int i = 0; i < placed.Count; i++)
+            {
+                if (!MendBoard.Needs(placed[i].site, placed[i].integrity)) continue;
+                if (placed[i].integrity >= lowest) continue;
+                lowest = placed[i].integrity;
+                best = i;
+            }
+            if (best < 0) return false;
+            var module = placed[best];
+            int next = MendBoard.Mend(module.integrity, pace);
+            bool whole = next >= 100;
+            module.integrity = next;
+            RefreshViews();
+            GameplayFeedback.Toast((whole ? "Patched " : "Mended ") + module.kind);
+            return true;
+        }
+
         public void Restore(PlacedModule[] modules)
         {
             ClearViews();

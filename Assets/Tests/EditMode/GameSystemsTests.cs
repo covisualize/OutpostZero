@@ -2087,6 +2087,26 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void ABuilderMendsTheWorstBoardBeforeAWholeOne()
+        {
+            Assert.IsTrue(MendBoard.Needs(0, 40));
+            Assert.IsFalse(MendBoard.Needs(1, 40));
+            Assert.IsFalse(MendBoard.Needs(0, 0));
+            Assert.IsFalse(MendBoard.Needs(0, 100));
+            Assert.AreEqual(65, MendBoard.Mend(40, 1));
+            Assert.AreEqual(100, MendBoard.Mend(80, 1));
+            Assert.AreEqual(100, MendBoard.Mend(90, 2));
+            Assert.AreEqual(0, MendBoard.Mend(0, 1));
+            Assert.AreEqual(40, MendBoard.Mend(40, 0));
+            Assert.AreEqual(0, MendBoard.Mend(-5, 1));
+            Assert.AreEqual(1, MendBoard.Pick(new[] { 0, 0 }, new[] { 80, 40 }));
+            Assert.AreEqual(1, MendBoard.Pick(new[] { 1, 0 }, new[] { 20, 90 }));
+            Assert.AreEqual(-1, MendBoard.Pick(new[] { 0 }, new[] { 100 }));
+            Assert.AreEqual(-1, MendBoard.Pick(null, new[] { 40 }));
+            Assert.AreEqual("Reparar", Loc.T("camp.mend", "es"));
+        }
+
+        [Test]
         public void AFarmFeedsTheCampAfterThreeMornings()
         {
             var plots = new[]

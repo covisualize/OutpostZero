@@ -843,6 +843,11 @@ namespace OutpostZero.UI
                     if (module.site == 0 || module.integrity <= 0) continue;
                     camp.Add(Body(Loc.T("camp.raising") + " " + module.kind + " " + module.hours + "/" + BuildSite.Need(module.kind)));
                 }
+                foreach (var module in GridBuilder.Instance.Placed)
+                {
+                    if (!MendBoard.Needs(module.site, module.integrity)) continue;
+                    camp.Add(Body(Loc.T("camp.mend") + " " + module.kind + " " + module.integrity));
+                }
             }
             camp.Add(build);
             camp.Add(Body(Loc.T("camp.craft")));
