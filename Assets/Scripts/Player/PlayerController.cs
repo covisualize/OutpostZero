@@ -386,6 +386,14 @@ namespace OutpostZero.Player
                 return;
             }
 
+            var hands = GetComponent<PlayerInteractor>();
+            if (hands != null && hands.TakingDown)
+            {
+                IsSprinting = false;
+                characterController.Move(Vector3.down * Time.deltaTime);
+                return;
+            }
+
             if (Time.time < dodgeUntil)
             {
                 IsSprinting = false;
@@ -569,9 +577,15 @@ namespace OutpostZero.Player
             }
         }
 
+        private bool TakingDown()
+        {
+            var hands = GetComponent<PlayerInteractor>();
+            return hands != null && hands.TakingDown;
+        }
+
         private void HandleWeapons()
         {
-            if (WheelOpen || Time.time < dodgeUntil || ActiveWeapon == null) return;
+            if (WheelOpen || Time.time < dodgeUntil || TakingDown() || ActiveWeapon == null) return;
 
             bool automatic = ActiveWeapon is FirearmWeapon gun && gun.Automatic;
             bool fire = ActiveWeapon is FirearmWeapon

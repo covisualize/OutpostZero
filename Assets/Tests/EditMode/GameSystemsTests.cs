@@ -2009,6 +2009,28 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void ATakedownReachesJustPastAnArmAndThenMakesASmallNoise()
+        {
+            Assert.AreEqual(1.2f, QuietKill.Reach, 0.001f);
+            Assert.AreEqual(1.5f, QuietKill.Noise, 0.001f);
+            Assert.AreEqual(1.1f, QuietKill.Windup, 0.001f);
+            Assert.IsTrue(QuietKill.InReach(1.2f));
+            Assert.IsFalse(QuietKill.InReach(1.21f));
+            Assert.IsTrue(QuietKill.InReach(-0.2f));
+            Assert.IsTrue(QuietKill.FromBehind(0.35f));
+            Assert.IsFalse(QuietKill.FromBehind(0.34f));
+            Assert.IsFalse(QuietKill.Lands(1.09f));
+            Assert.IsTrue(QuietKill.Lands(1.1f));
+            Assert.IsFalse(QuietKill.Lands(-1f));
+            Assert.IsTrue(QuietKill.Victim(true, false, false, 1.2f, 0.35f));
+            Assert.IsFalse(QuietKill.Victim(false, false, false, 1f, 1f));
+            Assert.IsFalse(QuietKill.Victim(true, true, false, 1f, 1f));
+            Assert.IsFalse(QuietKill.Victim(true, false, true, 1f, 1f));
+            Assert.IsFalse(QuietKill.Victim(true, false, false, 1.21f, 1f));
+            Assert.IsFalse(QuietKill.Victim(true, false, false, 1f, 0.34f));
+        }
+
+        [Test]
         public void AFarmFeedsTheCampAfterThreeMornings()
         {
             var plots = new[]

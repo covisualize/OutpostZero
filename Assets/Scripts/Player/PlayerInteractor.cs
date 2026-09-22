@@ -12,8 +12,11 @@ namespace OutpostZero.Player
         private PlayerInventory inventory;
         private PlayerController controller;
         private IInteractable current;
+        private ZombieAI marked;
+        private float windup = -1f;
 
         public string Prompt => current != null ? current.Prompt : string.Empty;
+        public bool TakingDown => windup >= 0f;
 
         private void Awake()
         {
@@ -35,10 +38,8 @@ namespace OutpostZero.Player
                 current.Interact(inventory);
             }
 
-            if (ExpeditionInput.TakedownPressed)
-            {
-                TryTakedown();
-            }
+            if (TakingDown) AdvanceTakedown();
+            else if (ExpeditionInput.TakedownPressed) TryTakedown();
 
             if (ExpeditionInput.ThrowPressed)
             {
@@ -75,22 +76,50 @@ namespace OutpostZero.Player
         private void TryTakedown()
         {
             if (controller != null && !controller.IsCrouching) return;
-            Collider[] hits = Physics.OverlapSphere(transform.position, 1.5f, GameLayers.EnemyMask);
+            Collider[] hits = Physics.OverlapSphere(transform.position, QuietKill.Reach, GameLayers.EnemyMask);
             foreach (var hit in hits)
             {
                 var zombie = hit.GetComponentInParent<ZombieAI>();
-                if (zombie == null || zombie.CurrentState == ZombieAI.ZombieState.Dead) continue;
-                if (zombie.CurrentState == ZombieAI.ZombieState.Chase || zombie.CurrentState == ZombieAI.ZombieState.Attack) continue;
-                Vector3 toZombie = zombie.transform.position - transform.position;
-                toZombie.y = 0f;
-                if (Vector3.Dot(zombie.transform.forward, toZombie.normalized) < 0.35f) continue;
-                var health = zombie.GetComponent<HealthSystem>();
-                if (health == null) continue;
-                health.TakeDamage(999f, zombie.transform.position, transform.forward, gameObject);
-                CombatEvents.RaiseKill(zombie.gameObject, gameObject);
-                GameplayFeedback.Toast("Silent takedown");
+                if (!Eligible(zombie)) continue;
+                marked = zombie;
+                windup = 0f;
+                GameplayFeedback.Toast("Takedown");
                 return;
             }
+        }
+
+        private void AdvanceTakedown()
+        {
+            if (!Eligible(marked))
+            {
+                marked = null;
+                windup = -1f;
+                GameplayFeedback.Toast("Takedown slipped");
+                return;
+            }
+            windup += Time.deltaTime;
+            if (!QuietKill.Lands(windup)) return;
+            var health = marked.GetComponent<HealthSystem>();
+            if (health != null) health.TakeDamage(999f, marked.transform.position, transform.forward, gameObject);
+            if (Sensory.NoiseManager.Instance != null)
+                Sensory.NoiseManager.Instance.EmitNoise(marked.transform.position, QuietKill.Noise, 0.45f, NoiseType.MeleeSwing, gameObject);
+            CombatEvents.RaiseKill(marked.gameObject, gameObject);
+            marked = null;
+            windup = -1f;
+            GameplayFeedback.Toast("Down");
+        }
+
+        private bool Eligible(ZombieAI zombie)
+        {
+            if (zombie == null) return false;
+            bool alert = zombie.CurrentState == ZombieAI.ZombieState.Chase || zombie.CurrentState == ZombieAI.ZombieState.Attack;
+            bool dead = zombie.CurrentState == ZombieAI.ZombieState.Dead;
+            Vector3 toZombie = zombie.transform.position - transform.position;
+            toZombie.y = 0f;
+            float distance = toZombie.magnitude;
+            float dot = distance > 0.001f ? Vector3.Dot(zombie.transform.forward, toZombie / distance) : 0f;
+            bool crouched = controller == null || controller.IsCrouching;
+            return QuietKill.Victim(crouched, dead, alert, distance, dot);
         }
 
         private void ThrowHeldItem()
