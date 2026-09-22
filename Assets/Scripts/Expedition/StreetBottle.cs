@@ -1,6 +1,7 @@
 using UnityEngine;
 using OutpostZero.Core;
 using OutpostZero.Items;
+using OutpostZero.Player;
 using OutpostZero.Shell;
 
 namespace OutpostZero.Expedition

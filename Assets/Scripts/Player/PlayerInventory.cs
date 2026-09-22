@@ -202,9 +202,9 @@ namespace OutpostZero.Player
                 }
                 if (!TryConsume(id)) return false;
                 if (street) fever.CureInfection();
-                bool eased = SurvivorRoster.Instance != null && SurvivorRoster.Instance.EaseLeader();
-                if (eased && !street) GameplayFeedback.Toast(WoundEase.Line(null));
-                else GameplayFeedback.Toast(WoundEase.Note(FieldHand.Breaks(null), eased, null));
+                bool leaderEased = SurvivorRoster.Instance != null && SurvivorRoster.Instance.EaseLeader();
+                if (leaderEased && !street) GameplayFeedback.Toast(WoundEase.Line(null));
+                else GameplayFeedback.Toast(WoundEase.Note(FieldHand.Breaks(null), leaderEased, null));
                 return true;
             }
             if (record.Id == "painkillers")

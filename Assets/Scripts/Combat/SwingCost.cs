@@ -1,3 +1,5 @@
+using OutpostZero.Core;
+
 namespace OutpostZero.Combat
 {
     /// <summary>

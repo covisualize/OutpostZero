@@ -83,7 +83,7 @@ namespace OutpostZero.Graphics
             var shaft = new GameObject("Lamp_Shaft");
             shaft.transform.SetParent(light, false);
             var filter = shaft.AddComponent<MeshFilter>();
-            filter.sharedMesh = Build(LampCookie.Outer);
+            filter.sharedMesh = Build(OutpostZero.Player.LampCookie.Outer);
             var renderer = shaft.AddComponent<MeshRenderer>();
             renderer.shadowCastingMode = ShadowCastingMode.Off;
             renderer.receiveShadows = false;

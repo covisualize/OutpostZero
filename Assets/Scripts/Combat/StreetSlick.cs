@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using OutpostZero.Core;
 
 namespace OutpostZero.Combat
 {
