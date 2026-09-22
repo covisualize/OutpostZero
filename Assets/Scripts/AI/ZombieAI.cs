@@ -492,6 +492,7 @@ namespace OutpostZero.AI
             nextBite = Time.time + BoardBite.Gap;
             if (GridBuilder.Instance.StrikeAt(postX, postZ, BoardBite.Chip))
             {
+                SurvivorRoster.Instance?.WoundFromRaid(Mathf.RoundToInt(postX + postZ));
                 ClearPost();
                 return false;
             }
