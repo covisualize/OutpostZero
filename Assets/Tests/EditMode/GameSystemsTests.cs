@@ -5793,6 +5793,20 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void AWalkerClawsAPaneUntilItFails()
+        {
+            Assert.AreEqual(4f, PaneClaw.Hit, 0.001f);
+            Assert.AreEqual(1.1f, PaneClaw.Reach, 0.001f);
+            Assert.AreEqual(0.8f, PaneClaw.Gap, 0.001f);
+            Assert.AreEqual(3, PaneClaw.Strikes(12f, 4f));
+            Assert.AreEqual(1, PaneClaw.Strikes(12f, 18f));
+            Assert.AreEqual(0, PaneClaw.Strikes(0f, 4f));
+            Assert.AreEqual(0, PaneClaw.Strikes(12f, 0f));
+            Assert.AreEqual(12f, PaneGlass.Hp, 0.001f);
+            Assert.AreEqual(18f, PaneCharge.Hit, 0.001f);
+        }
+
+        [Test]
         public void AZombieWithoutARigStillAttacksAndFalls()
         {
             Assert.AreEqual(14f, PoseSheet.Lean(ZombieAI.ZombieState.Chase, 0f), 0.001f);

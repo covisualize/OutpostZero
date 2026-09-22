@@ -105,4 +105,27 @@ namespace OutpostZero.Expedition
             return PaneGlass.Gone(PaneGlass.After(hp, hit));
         }
     }
+
+    /// <summary>
+    /// A walker claws a pane until it fails. Three rakes break a fresh sheet.
+    /// </summary>
+    public static class PaneClaw
+    {
+        public const float Hit = 4f;
+        public const float Reach = 1.1f;
+        public const float Gap = 0.8f;
+
+        public static int Strikes(float hp, float hit)
+        {
+            if (hp <= 0f || hit <= 0f) return 0;
+            int count = 0;
+            float left = hp;
+            while (left > 0f && count < 12)
+            {
+                left = PaneGlass.After(left, hit);
+                count++;
+            }
+            return count;
+        }
+    }
 }

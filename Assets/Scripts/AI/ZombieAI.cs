@@ -98,6 +98,7 @@ namespace OutpostZero.AI
         private float postZ;
         private float nextBite;
         private float nextGroan;
+        private float nextPane;
         private bool fromRaid;
         private bool leaving;
         private static readonly List<ZombieAI> aliveCrowd = new List<ZombieAI>();
@@ -762,12 +763,24 @@ namespace OutpostZero.AI
             if (abilityClock.Phase != 2)
             {
                 agent.SetDestination(seen ? currentTarget.position : lastKnownPosition);
+                RakeGlass(aim);
             }
 
             if (distToTarget <= attackRange && abilityClock.Phase != 1)
             {
                 SetState(ZombieState.Attack);
             }
+        }
+
+        private void RakeGlass(Vector3 aim)
+        {
+            if (aim.sqrMagnitude < 0.01f || Time.time < nextPane) return;
+            Vector3 origin = transform.position + Vector3.up * 1.1f;
+            if (!Physics.Raycast(origin, aim.normalized, out RaycastHit wall, PaneClaw.Reach, GameLayers.EnvironmentMask)) return;
+            var pane = wall.collider.GetComponent<GlassPane>();
+            if (pane == null) return;
+            nextPane = Time.time + PaneClaw.Gap;
+            pane.TakeDamage(PaneClaw.Hit, wall.point, aim, gameObject);
         }
 
         private void ConnectDash(bool charge)
