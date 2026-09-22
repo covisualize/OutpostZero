@@ -373,8 +373,7 @@ namespace OutpostZero.Player
             lastStaminaDrainTime = Time.time;
             IsAimingDownSights = false;
             IsSprinting = false;
-            var needs = GetComponent<SurvivalNeeds>();
-            float cap = needs != null ? needs.StaminaCap(maxStamina) : maxStamina;
+            float cap = StaminaPool();
             OnStaminaChanged?.Invoke(currentStamina, cap);
         }
 
@@ -563,10 +562,17 @@ namespace OutpostZero.Player
             return best;
         }
 
+        private float StaminaPool()
+        {
+            float pool = NeedsPressure.Pool(SurvivorRoster.LeaderPractice("Guard"), maxStamina);
+            var needs = GetComponent<SurvivalNeeds>();
+            return needs != null ? needs.StaminaCap(pool) : pool;
+        }
+
         private void HandleStamina()
         {
             var needs = GetComponent<SurvivalNeeds>();
-            float cap = needs != null ? needs.StaminaCap(maxStamina) : maxStamina;
+            float cap = StaminaPool();
             if (currentStamina > cap) currentStamina = cap;
             if (IsSprinting)
             {

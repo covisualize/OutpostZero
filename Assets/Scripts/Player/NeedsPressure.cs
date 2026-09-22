@@ -30,6 +30,14 @@ namespace OutpostZero.Player
             return Dry(thirst) ? max * DryStamina : max;
         }
 
+        public static float Pool(int skill, float max)
+        {
+            if (max < 1f) max = 1f;
+            if (skill < 0) skill = 0;
+            if (skill > 8) skill = 8;
+            return max + skill * 4f;
+        }
+
         public static float Aim(float fatigue) => Tired(fatigue) ? TiredAim : 1f;
     }
 }

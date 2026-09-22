@@ -1635,6 +1635,11 @@ namespace OutpostZero.Tests.EditMode
             Assert.AreEqual(1f, NeedsPressure.Regen(25f), 0.001f);
             Assert.AreEqual(80f, NeedsPressure.StaminaCap(24f, 100f), 0.01f);
             Assert.AreEqual(100f, NeedsPressure.StaminaCap(25f, 100f), 0.01f);
+            Assert.AreEqual(100f, NeedsPressure.Pool(0, 100f), 0.01f);
+            Assert.AreEqual(116f, NeedsPressure.Pool(4, 100f), 0.01f);
+            Assert.AreEqual(132f, NeedsPressure.Pool(8, 100f), 0.01f);
+            Assert.AreEqual(132f, NeedsPressure.Pool(12, 100f), 0.01f);
+            Assert.AreEqual(105.6f, NeedsPressure.StaminaCap(24f, NeedsPressure.Pool(8, 100f)), 0.01f);
             Assert.AreEqual(0.62f, NeedsPressure.Aim(76f), 0.001f);
             Assert.AreEqual(1f, NeedsPressure.Aim(75f), 0.001f);
             Assert.IsTrue(NeedsPressure.Hungry(24f));
