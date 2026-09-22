@@ -23,7 +23,8 @@ namespace OutpostZero.Colony
         Turret,
         Spikes,
         Oil,
-        Crate
+        Crate,
+        Lamp
     }
 
     [Serializable]
@@ -70,6 +71,7 @@ namespace OutpostZero.Colony
         private void Update()
         {
             TickOil(Time.time);
+            TickLamps();
             if (GameManager.Instance == null || GameManager.Instance.CurrentState != GameState.CampManagement) return;
             if (Player.ExpeditionInput.BuildPressed)
             {
@@ -212,12 +214,28 @@ namespace OutpostZero.Colony
             ClearViews();
         }
 
+        private void TickLamps()
+        {
+            bool powered = CampServices.Instance != null && CampServices.Instance.GeneratorOnline;
+            int count = placed.Count < views.Count ? placed.Count : views.Count;
+            for (int i = 0; i < count; i++)
+            {
+                if (placed[i].kind != "Lamp" || views[i] == null) continue;
+                bool on = powered && BuildSite.Ready(placed[i].site, placed[i].integrity);
+                var bulb = views[i].GetComponent<Light>();
+                if (bulb != null) bulb.enabled = on;
+                var source = views[i].GetComponent<LightSource>();
+                if (source != null) source.enabled = on;
+            }
+        }
+
         private void SpawnView(PlacedModule module)
         {
             var view = GameObject.CreatePrimitive(PrimitiveType.Cube);
             view.name = "Module_" + module.kind;
             bool flat = module.kind == "Spikes" || module.kind == "Oil";
-            view.transform.position = new Vector3(module.x, flat ? 0.04f : 0.6f, module.z);
+            float y = flat ? 0.04f : module.kind == "Lamp" ? 1.2f : 0.6f;
+            view.transform.position = new Vector3(module.x, y, module.z);
             view.transform.rotation = Quaternion.Euler(0f, module.rotation, 0f);
             view.transform.localScale = Scale(module.kind, module.integrity);
             if (module.site != 0)
@@ -252,6 +270,18 @@ namespace OutpostZero.Colony
             {
                 view.layer = GameLayers.Environment;
                 view.AddComponent<Combat.StreetBoard>().LinkToCamp();
+            }
+            if (module.kind == "Lamp")
+            {
+                var bulb = view.AddComponent<Light>();
+                bulb.type = LightType.Point;
+                bulb.range = FloodBeam.Radius;
+                bulb.intensity = 3.4f;
+                bulb.color = new Color(1f, 0.93f, 0.75f);
+                bulb.enabled = false;
+                var source = view.AddComponent<LightSource>();
+                source.Configure(FloodBeam.Radius);
+                source.enabled = false;
             }
             views.Add(view);
         }
@@ -486,6 +516,7 @@ namespace OutpostZero.Colony
                 case ModuleKind.Spikes: return 8;
                 case ModuleKind.Oil: return 9;
                 case ModuleKind.Crate: return 10;
+                case ModuleKind.Lamp: return 13;
                 default: return 6;
             }
         }
@@ -507,6 +538,7 @@ namespace OutpostZero.Colony
                 case "Spikes": return new Vector3(1.6f, 0.08f, 1.6f);
                 case "Oil": return new Vector3(2.4f, 0.06f, 2.4f);
                 case "Crate": return new Vector3(1.1f, 0.9f, 0.8f);
+                case "Lamp": return new Vector3(0.35f, 2.2f, 0.35f);
                 default: return new Vector3(1.8f * health, 1.1f * Mathf.Lerp(0.35f, 1f, health), 0.4f);
             }
         }
@@ -527,6 +559,7 @@ namespace OutpostZero.Colony
                 case "Spikes": return new Color(0.35f, 0.36f, 0.38f);
                 case "Oil": return new Color(0.12f, 0.1f, 0.08f);
                 case "Crate": return new Color(0.42f, 0.3f, 0.18f);
+                case "Lamp": return new Color(0.85f, 0.8f, 0.55f);
                 default: return new Color(0.48f, 0.42f, 0.32f);
             }
         }

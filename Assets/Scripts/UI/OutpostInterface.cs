@@ -827,6 +827,7 @@ namespace OutpostZero.UI
             build.Add(Button(Loc.T("camp.spikes"), () => GridBuilder.Instance?.Select(ModuleKind.Spikes)));
             build.Add(Button(Loc.T("camp.oil"), () => GridBuilder.Instance?.Select(ModuleKind.Oil)));
             build.Add(Button(Loc.T("camp.crate"), () => GridBuilder.Instance?.Select(ModuleKind.Crate)));
+            build.Add(Button(Loc.T("camp.lamp"), () => GridBuilder.Instance?.Select(ModuleKind.Lamp)));
             if (GridBuilder.Instance != null)
             {
                 int sprout = -1;

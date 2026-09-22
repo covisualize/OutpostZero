@@ -127,6 +127,7 @@ namespace OutpostZero.Colony
             {
                 if (light.type == LightType.Directional) continue;
                 if (player != null && light.transform.IsChildOf(player.transform)) continue;
+                if (light.gameObject.name.StartsWith("Module_Lamp")) continue;
                 light.enabled = powered;
             }
         }

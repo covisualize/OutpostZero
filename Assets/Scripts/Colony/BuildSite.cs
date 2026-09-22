@@ -17,6 +17,7 @@ namespace OutpostZero.Colony
                 case "Cot":
                 case "Water":
                 case "Crate":
+                case "Lamp":
                     return 2;
                 case "Workbench":
                 case "Generator":

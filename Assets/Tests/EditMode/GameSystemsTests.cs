@@ -2031,6 +2031,26 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void AFloodlightBreaksACrouchInsideItsCircle()
+        {
+            Assert.AreEqual(1f, FloodBeam.Strength(0f, true), 0.001f);
+            Assert.AreEqual(0.5f, FloodBeam.Strength(7f, true), 0.001f);
+            Assert.AreEqual(0f, FloodBeam.Strength(14f, true), 0.001f);
+            Assert.AreEqual(0f, FloodBeam.Strength(14.1f, true), 0.001f);
+            Assert.AreEqual(0f, FloodBeam.Strength(0f, false), 0.001f);
+            Assert.AreEqual(1f, FloodBeam.Strength(-2f, true), 0.001f);
+            float lit = SpotRange.Exposure(true, false, false, 1f, FloodBeam.Strength(0f, true));
+            Assert.IsTrue(SpotRange.Notices(5f, 16f, lit, true, 1f, 1f, 0f, 110f));
+            Assert.IsTrue(SpotRange.Notices(12f, 16f, lit, true, 1f, 1f, 0f, 110f));
+            Assert.IsFalse(SpotRange.Notices(13f, 16f, lit, true, 1f, 1f, 0f, 110f));
+            float edge = SpotRange.Exposure(true, false, false, 1f, FloodBeam.Strength(14f, true));
+            Assert.IsFalse(SpotRange.Notices(5f, 16f, edge, true, 1f, 1f, 0f, 110f));
+            Assert.AreEqual(2, BuildSite.Need("Lamp"));
+            Assert.AreEqual(13, GridBuilder.Cost(ModuleKind.Lamp));
+            Assert.AreEqual("Foco", Loc.T("camp.lamp", "es"));
+        }
+
+        [Test]
         public void AFarmFeedsTheCampAfterThreeMornings()
         {
             var plots = new[]
