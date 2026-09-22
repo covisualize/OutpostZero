@@ -117,7 +117,7 @@ namespace OutpostZero.Colony
                     if (share > 0) HordeDirector.Instance.BeginRaid(share, RaidPlan.Side(day, towers, i));
                 }
             }
-            string openLine = tower ? "Broadcast night — hold the tower" : "Night raid from the " + approach;
+            string openLine = RaidSay.Open(tower, approach, null);
             if (fronts > 1) openLine += "  " + fronts + " " + Loc.T("camp.sides");
             openLine += "  " + Loc.T("camp.dark");
             if (GridBuilder.Instance != null && GridBuilder.Instance.BarricadeCount() > 0)
@@ -252,7 +252,7 @@ namespace OutpostZero.Colony
                     }
                 }
                 int left = ColonyStorage.Instance != null ? ColonyStorage.Instance.Bodies : dropped;
-                string heldLine = broadcast ? "The broadcast went out" : "The gate held";
+                string heldLine = RaidSay.Held(broadcast, null);
                 if (left > 0) heldLine += "  " + Loc.T("camp.bodies") + " " + left;
                 GameplayFeedback.Toast(heldLine);
                 if (broadcast && WorldMapService.Instance != null && WorldMapService.Instance.GeneratorBuilt)
@@ -272,7 +272,7 @@ namespace OutpostZero.Colony
                 int lostFood = breached ? RaidSpoil.Meals(true, food) : 0;
                 if (lostScrap > 0) ColonyStorage.Instance?.AddScrap(-lostScrap);
                 if (lostFood > 0) ColonyStorage.Instance?.AddFood(-lostFood);
-                string broke = breached ? Loc.T("camp.spoiled") : "The raid broke the stores";
+                string broke = breached ? Loc.T("camp.spoiled") : RaidSay.Broke(null);
                 if (breached && lostScrap > 0) broke += "  " + Loc.T("camp.scrap") + " -" + lostScrap;
                 if (breached && lostFood > 0) broke += "  " + Loc.T("camp.food") + " -" + lostFood;
                 if (dropped > 0) broke += "  " + Loc.T("camp.bodies") + " " + dropped;
@@ -534,7 +534,7 @@ namespace OutpostZero.Colony
             phase = index;
             breached = false;
             if (!announce) return;
-            string line = "They come from the " + approach;
+            string line = RaidSay.Coming(approach, null);
             if (RaidBreach.Brute(index)) line += "  " + Loc.T("camp.brute");
             if (lamps > 0) line += "  " + Loc.T("camp.lamps");
             GameplayFeedback.Toast(line);

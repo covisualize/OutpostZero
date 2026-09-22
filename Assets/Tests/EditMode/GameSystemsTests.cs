@@ -5734,6 +5734,30 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void ARaidSpeaksTheLanguageAndKeepsTheApproach()
+        {
+            Assert.AreEqual("Broadcast night — hold the tower", RaidSay.Open(true, "gate", "en"));
+            Assert.AreEqual("Night raid from the gate", RaidSay.Open(false, "gate", "en"));
+            Assert.AreEqual("Night raid from the alley", RaidSay.Open(false, "alley", "en"));
+            Assert.AreEqual("Night raid from the yard", RaidSay.Open(false, "yard", "en"));
+            Assert.AreEqual("Night raid from the fence", RaidSay.Open(false, "fence", "en"));
+            Assert.AreEqual("The gate held", RaidSay.Held(false, "en"));
+            Assert.AreEqual("The broadcast went out", RaidSay.Held(true, "en"));
+            Assert.AreEqual("The raid broke the stores", RaidSay.Broke("en"));
+            Assert.AreEqual("They come from the yard", RaidSay.Coming("yard", "en"));
+            Assert.AreEqual("Noche de emisión — aguanta la torre", RaidSay.Open(true, "alley", "es"));
+            Assert.AreEqual("Incursión nocturna desde la puerta", RaidSay.Open(false, "gate", "es"));
+            Assert.AreEqual("Incursión nocturna desde el callejón", RaidSay.Open(false, "alley", "es"));
+            Assert.AreEqual("La puerta aguantó", RaidSay.Held(false, "es"));
+            Assert.AreEqual("La emisión salió", RaidSay.Held(true, "es"));
+            Assert.AreEqual("La incursión rompió las reservas", RaidSay.Broke("es"));
+            Assert.AreEqual("Vienen desde el callejón", RaidSay.Coming("alley", "es"));
+            Assert.AreEqual("Vienen desde el patio", RaidSay.Coming("yard", "es"));
+            Assert.AreEqual("Vienen desde la valla", RaidSay.Coming("fence", "es"));
+            Assert.AreEqual("gate", RaidPlan.Side(1, 0, 0) == "gate" || RaidPlan.Side(1, 0, 0) == "alley" || RaidPlan.Side(1, 0, 0) == "yard" || RaidPlan.Side(1, 0, 0) == "fence" ? RaidPlan.Side(1, 0, 0) : "gate");
+        }
+
+        [Test]
         public void AZombieWithoutARigStillAttacksAndFalls()
         {
             Assert.AreEqual(14f, PoseSheet.Lean(ZombieAI.ZombieState.Chase, 0f), 0.001f);
