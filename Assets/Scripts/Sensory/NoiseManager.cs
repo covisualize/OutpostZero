@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using OutpostZero.Colony;
 using OutpostZero.Core;
 
 namespace OutpostZero.Sensory
@@ -53,6 +54,15 @@ namespace OutpostZero.Sensory
 
         public void EmitNoise(Vector3 origin, float radius, float intensity, NoiseType noiseType, GameObject source = null)
         {
+            if ((noiseType == NoiseType.GunshotLoud || noiseType == NoiseType.GunshotQuiet) && ColonyStorage.Instance != null)
+            {
+                ColonyStorage.Instance.SetShots(RaidCall.Hear(
+                    ColonyStorage.Instance.Shots,
+                    origin.x,
+                    origin.z,
+                    true,
+                    noiseType == NoiseType.GunshotLoud));
+            }
             OnNoiseEmitted?.Invoke(origin, radius, noiseType);
 
             if (showDebugGizmos)

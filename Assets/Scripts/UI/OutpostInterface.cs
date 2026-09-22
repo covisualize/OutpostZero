@@ -812,8 +812,13 @@ namespace OutpostZero.UI
             }));
             int raidDay = WorldClock.Instance != null ? WorldClock.Instance.Day : 1;
             int raidSecurity = ColonyStorage.Instance != null ? ColonyStorage.Instance.Security : 0;
+            int raidShots = ColonyStorage.Instance != null ? ColonyStorage.Instance.Shots : 0;
             bool endlessNights = WorldMapService.Instance != null && WorldMapService.Instance.Endless;
-            camp.Add(Body(RaidPlan.Due(raidDay, raidSecurity, endlessNights) ? Loc.T("camp.raid_yes") : Loc.T("camp.raid_no")));
+            bool generatorRunning = CampServices.Instance != null && CampServices.Instance.GeneratorOnline;
+            int walls = GridBuilder.Instance != null ? GridBuilder.Instance.BarricadeCount() : 0;
+            int difficulty = WorldMapService.Instance != null ? WorldMapService.Instance.Difficulty : 2;
+            bool raidLikely = RaidCall.Likely(raidDay, raidSecurity, endlessNights, raidShots, generatorRunning, walls, difficulty);
+            camp.Add(Body((raidLikely ? Loc.T("camp.raid_yes") : Loc.T("camp.raid_no")) + "  " + Loc.T("camp.shots") + " " + raidShots));
             camp.Add(Button(Loc.T("camp.endure"), () => NightRaidController.Instance?.Begin()));
             if (NightRaidController.Instance != null && NightRaidController.Instance.Warning)
                 camp.Add(Body(Loc.T("camp.warn") + " " + Mathf.CeilToInt(NightRaidController.Instance.WarningLeft)));

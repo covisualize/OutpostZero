@@ -35,19 +35,25 @@ namespace OutpostZero.Colony
 
         public void Advance(float hours)
         {
+            int from = day;
             hour += hours;
             while (hour >= 24f)
             {
                 hour -= 24f;
                 day++;
             }
+            if (day != from && ColonyStorage.Instance != null)
+                ColonyStorage.Instance.SetShots(RaidCall.Carry(ColonyStorage.Instance.Shots, from, day));
             OnClockChanged?.Invoke();
         }
 
         public void SleepUntilMorning()
         {
+            int from = day;
             day++;
             hour = 6.5f;
+            if (ColonyStorage.Instance != null)
+                ColonyStorage.Instance.SetShots(RaidCall.Carry(ColonyStorage.Instance.Shots, from, day));
             OnClockChanged?.Invoke();
             GameplayFeedback.Toast("Day " + day + "  morning watch");
         }

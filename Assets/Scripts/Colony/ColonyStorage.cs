@@ -18,6 +18,7 @@ namespace OutpostZero.Colony
         [SerializeField] private int raw;
         [SerializeField] private int bodies;
         [SerializeField] private int rounds;
+        [SerializeField] private int shots;
         [SerializeField] private string prints = "";
 
         public int Scrap => scrap;
@@ -30,6 +31,7 @@ namespace OutpostZero.Colony
         public int Raw => raw;
         public int Bodies => bodies;
         public int Rounds => rounds;
+        public int Shots => shots;
         public string Prints => prints ?? "";
         public int Used => CampRoom.Bulk(scrap, food, water, cloth, chemicals, tape, raw);
         public int Room => CampRoom.Room(GridBuilder.Instance != null ? GridBuilder.Instance.CountKind("Crate") : 0);
@@ -138,6 +140,12 @@ namespace OutpostZero.Colony
             OnStorageChanged?.Invoke();
         }
 
+        public void SetShots(int nextShots)
+        {
+            shots = nextShots < 0 ? 0 : nextShots;
+            OnStorageChanged?.Invoke();
+        }
+
         public void LearnPrint(string id)
         {
             string next = CraftGate.Learn(prints, id);
@@ -180,6 +188,7 @@ namespace OutpostZero.Colony
             raw = 0;
             bodies = 0;
             rounds = 0;
+            shots = 0;
             prints = "";
             OnStorageChanged?.Invoke();
         }

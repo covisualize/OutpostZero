@@ -2523,6 +2523,46 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void ALoudDayOrARunningGeneratorPullsAnOddNight()
+        {
+            Assert.IsTrue(RaidCall.Likely(2, 0, false, 0, false, 0, 2));
+            Assert.IsFalse(RaidCall.Likely(2, 8, false, 9, true, 0, 3));
+            Assert.IsFalse(RaidCall.Likely(1, 0, false, 9, true, 0, 3));
+            Assert.IsTrue(RaidCall.Likely(1, 0, true, 0, false, 5, 1));
+            Assert.IsFalse(RaidCall.Likely(3, 0, false, 0, false, 0, 2));
+            Assert.IsTrue(RaidCall.Likely(3, 0, false, 3, false, 0, 2));
+            Assert.IsFalse(RaidCall.Likely(3, 0, false, 3, false, 2, 2));
+            Assert.IsTrue(RaidCall.Likely(3, 0, false, 0, true, 0, 2));
+            Assert.IsFalse(RaidCall.Likely(3, 0, false, 0, true, 2, 2));
+            Assert.IsTrue(RaidCall.Likely(3, 0, false, 1, false, 0, 3));
+            Assert.IsFalse(RaidCall.Likely(3, 0, false, 5, false, 0, 1));
+            Assert.IsTrue(RaidCall.Likely(3, 0, false, 6, false, 0, 1));
+            Assert.IsFalse(RaidCall.Likely(3, 0, false, 0, true, 0, 1));
+            Assert.IsTrue(RaidCall.Likely(3, 0, false, 3, false, 2, 3));
+            Assert.IsFalse(RaidCall.Likely(3, 0, false, 3, false, 3, 3));
+            Assert.IsTrue(RaidCall.Likely(3, 0, false, 0, true, 2, 3));
+            Assert.IsTrue(RaidCall.Likely(3, 0, false, 3, false, 0, 0));
+            Assert.IsTrue(RaidCall.Likely(3, 0, true, 0, false, 9, 1));
+
+            RaidPlan.AnchorOf("gate", out float gx, out float gz);
+            Assert.AreEqual(2, RaidCall.Hear(0, gx, gz, true, true));
+            Assert.AreEqual(1, RaidCall.Hear(0, gx + 10f, gz, true, false));
+            Assert.AreEqual(0, RaidCall.Hear(0, gx + 18.1f, gz, true, true));
+            Assert.AreEqual(4, RaidCall.Hear(4, gx + 40f, gz, false, true));
+            Assert.AreEqual(24, RaidCall.Hear(23, gx, gz, true, true));
+            Assert.AreEqual(0, RaidCall.Carry(6, 2, 3));
+            Assert.AreEqual(6, RaidCall.Carry(6, 2, 2));
+            Assert.AreEqual(0, RaidCall.Carry(-2, 1, 1));
+
+            var data = new SaveGameData { shots = 4 };
+            Assert.IsTrue(SaveCodec.TryDeserialize(SaveCodec.Serialize(data), out var loaded, out var error), error);
+            Assert.AreEqual(4, loaded.shots);
+            Assert.IsTrue(SaveCodec.TryDeserialize("{\"schemaVersion\":1}", out var legacy, out var legacyError), legacyError);
+            Assert.AreEqual(0, legacy.shots);
+            Assert.AreEqual("Disparos", Loc.T("camp.shots", "es"));
+        }
+
+        [Test]
         public void DemolishingAModuleReturnsHalfTheScrap()
         {
             Assert.AreEqual(3, ScrapRefund.Half(6));

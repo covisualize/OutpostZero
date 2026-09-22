@@ -176,6 +176,7 @@ namespace OutpostZero.Shell
                 data.raw = ColonyStorage.Instance.Raw;
                 data.bodies = ColonyStorage.Instance.Bodies;
                 data.rounds = ColonyStorage.Instance.Rounds;
+                data.shots = ColonyStorage.Instance.Shots;
                 data.prints = ColonyStorage.Instance.Prints;
             }
             if (CampServices.Instance != null)
@@ -289,6 +290,7 @@ namespace OutpostZero.Shell
             ColonyStorage.Instance?.SetRaw(data.raw);
             ColonyStorage.Instance?.SetBodies(data.bodies);
             ColonyStorage.Instance?.SetRounds(data.rounds);
+            ColonyStorage.Instance?.SetShots(data.shots);
             CampServices.Instance?.SetFuel(FuelTank.Unpack(data.fuel, data.fuelSet));
             ColonyStorage.Instance?.SetPrints(data.prints);
             FactionTrade.Instance?.Restore(data.factionStanding, data.factions, data.quests);
