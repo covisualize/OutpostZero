@@ -139,7 +139,7 @@ namespace OutpostZero.Shell
                 if (districts[i].cleared && !endless) continue;
                 if (!CampaignBoard.Reachable(id, ClearedIds()))
                 {
-                    GameplayFeedback.Toast("That road is still closed");
+                    GameplayFeedback.Toast(GateLine.Road(null));
                     return false;
                 }
                 currentIndex = i;
@@ -194,7 +194,7 @@ namespace OutpostZero.Shell
             district.cleared = true;
             string before = parts;
             parts = CampaignBoard.AddPart(parts, CampaignBoard.PartFor(district.id));
-            if (parts != before) GameplayFeedback.Toast("Radio part recovered");
+            if (parts != before) GameplayFeedback.Toast(GateLine.Radio(null));
             string print = CraftGate.Sheet(district.id);
             if (!string.IsNullOrEmpty(print) && ColonyStorage.Instance != null)
             {

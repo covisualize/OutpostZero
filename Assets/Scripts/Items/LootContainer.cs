@@ -2,6 +2,7 @@ using UnityEngine;
 using OutpostZero.Colony;
 using OutpostZero.Core;
 using OutpostZero.Player;
+using OutpostZero.Shell;
 
 namespace OutpostZero.Items
 {
@@ -80,7 +81,7 @@ namespace OutpostZero.Items
             if (!rolled) Roll();
             Open = this;
             PackView.AskOpen();
-            GameplayFeedback.Toast(stacks.Length > 0 ? "Container open" : "Empty");
+            GameplayFeedback.Toast(stacks.Length > 0 ? GateLine.Open(null) : GateLine.Empty(null));
             if (stacks.Length == 0) Finish();
             else Remember();
         }
@@ -93,7 +94,7 @@ namespace OutpostZero.Items
             if (!Give(inventory, id, moved))
             {
                 stacks = PutBack(stacks, id, moved);
-                GameplayFeedback.Toast("Pack is too heavy");
+                GameplayFeedback.Toast(GateLine.Heavy(null));
                 return false;
             }
             if (stacks.Length == 0) Finish();
@@ -118,7 +119,7 @@ namespace OutpostZero.Items
                 var kept = new ContainerHold.Stack[remain];
                 for (int i = 0; i < remain; i++) kept[i] = left[i];
                 stacks = kept;
-                GameplayFeedback.Toast("Left some loot behind");
+                GameplayFeedback.Toast(GateLine.Left(null));
             }
             if (stacks.Length == 0) Finish();
             else Remember();

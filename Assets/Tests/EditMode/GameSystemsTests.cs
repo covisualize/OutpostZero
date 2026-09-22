@@ -4339,6 +4339,47 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void AGateAndACrateFollowTheLanguage()
+        {
+            Assert.AreEqual("Pack is too heavy", GateLine.Heavy("en"));
+            Assert.AreEqual("La mochila pesa demasiado", GateLine.Heavy("es"));
+            Assert.AreEqual("Left some loot behind", GateLine.Left("en"));
+            Assert.AreEqual("Quedó botín atrás", GateLine.Left("es"));
+            Assert.AreEqual("Container open", GateLine.Open("en"));
+            Assert.AreEqual("Contenedor abierto", GateLine.Open("es"));
+            Assert.AreEqual("Empty", GateLine.Empty("en"));
+            Assert.AreEqual("Vacío", GateLine.Empty("es"));
+            Assert.AreEqual("Pick an open district", GateLine.District("en"));
+            Assert.AreEqual("Elige un distrito abierto", GateLine.District("es"));
+            Assert.AreEqual("Dragged back to the gate", GateLine.Drag("en"));
+            Assert.AreEqual("Arrastrado a la puerta", GateLine.Drag("es"));
+            Assert.AreEqual("Objectives unfinished", GateLine.Quota("en"));
+            Assert.AreEqual("Objetivos sin cumplir", GateLine.Quota("es"));
+            Assert.AreEqual("They're too close", GateLine.Close("en"));
+            Assert.AreEqual("Están demasiado cerca", GateLine.Close("es"));
+            Assert.AreEqual("That road is still closed", GateLine.Road("en"));
+            Assert.AreEqual("Ese camino sigue cerrado", GateLine.Road("es"));
+            Assert.AreEqual("Radio part recovered", GateLine.Radio("en"));
+            Assert.AreEqual("Pieza de radio recuperada", GateLine.Radio("es"));
+            Assert.AreEqual("The broadcast is already out", GateLine.Broadcast("en"));
+            Assert.AreEqual("La emisión ya salió", GateLine.Broadcast("es"));
+            Assert.AreEqual("Extracted", GateLine.Extracted("en"));
+            Assert.AreEqual("Extraído", GateLine.Extracted("es"));
+            Assert.AreEqual("Save failed", GateLine.SaveFail("en"));
+            Assert.AreEqual("No se pudo guardar", GateLine.SaveFail("es"));
+            Assert.AreEqual("Game saved", GateLine.Saved("en"));
+            Assert.AreEqual("Partida guardada", GateLine.Saved("es"));
+            Assert.AreEqual("No save file", GateLine.NoFile("en"));
+            Assert.AreEqual("No hay partida", GateLine.NoFile("es"));
+            Assert.AreEqual("Save could not be read", GateLine.Unread("en"));
+            Assert.AreEqual("No se pudo leer la partida", GateLine.Unread("es"));
+            Assert.AreEqual("Save loaded", GateLine.Loaded("en"));
+            Assert.AreEqual("Partida cargada", GateLine.Loaded("es"));
+            Assert.AreEqual("Autosave loaded", GateLine.AutoLoaded("en"));
+            Assert.AreEqual("Autoguardado cargado", GateLine.AutoLoaded("es"));
+        }
+
+        [Test]
         public void StreetLampsFollowTheDarkAndNoonStaysOut()
         {
             Assert.AreEqual(0f, DayNightCycle.HourToNight(12f), 0.001f);

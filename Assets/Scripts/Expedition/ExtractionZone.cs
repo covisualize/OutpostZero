@@ -1,6 +1,7 @@
 using UnityEngine;
 using OutpostZero.AI;
 using OutpostZero.Core;
+using OutpostZero.Shell;
 
 namespace OutpostZero.Expedition
 {
@@ -50,7 +51,7 @@ namespace OutpostZero.Expedition
             inside = true;
             if (GameManager.Instance == null || GameManager.Instance.CurrentState != GameState.ExpeditionActive) return;
             var tracker = ObjectiveTracker.Instance;
-            if (tracker != null && !tracker.ReadyToExtract) GameplayFeedback.Toast("Objectives unfinished");
+            if (tracker != null && !tracker.ReadyToExtract) GameplayFeedback.Toast(GateLine.Quota(null));
         }
 
         private void OnTriggerExit(Collider other)
@@ -68,7 +69,7 @@ namespace OutpostZero.Expedition
             bool ready = tracker != null && tracker.ReadyToExtract;
             bool threatened = inside && live && ZombiesNear();
             float next = ExtractWatch.Advance(held, Time.deltaTime, inside && live && ready, threatened);
-            if (threatened && held > 0.2f) GameplayFeedback.Toast("They're too close");
+            if (threatened && held > 0.2f) GameplayFeedback.Toast(GateLine.Close(null));
             held = next;
             if (!ExtractWatch.Ready(held) || GameManager.Instance == null) return;
             finished = true;

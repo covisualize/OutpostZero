@@ -45,10 +45,10 @@ namespace OutpostZero.Shell
             int target = announce ? slot : SaveSlots.AutoSlot;
             if (!Write(PathFor(target), data))
             {
-                GameplayFeedback.Toast("Save failed");
+                GameplayFeedback.Toast(GateLine.SaveFail(null));
                 return false;
             }
-            if (announce) GameplayFeedback.Toast("Game saved");
+            if (announce) GameplayFeedback.Toast(GateLine.Saved(null));
             return true;
         }
 
@@ -58,7 +58,7 @@ namespace OutpostZero.Shell
             int best = SaveSlots.Newest(cards);
             if (best < 0)
             {
-                GameplayFeedback.Toast("No save file");
+                GameplayFeedback.Toast(GateLine.NoFile(null));
                 return false;
             }
             return LoadCard(cards[best]);
@@ -87,13 +87,13 @@ namespace OutpostZero.Shell
         {
             if (!TryRead(PathFor(card.Slot), out var data))
             {
-                GameplayFeedback.Toast(card.Occupied ? "Save could not be read" : "No save file");
+                GameplayFeedback.Toast(card.Occupied ? GateLine.Unread(null) : GateLine.NoFile(null));
                 return false;
             }
             if (SaveSlots.Manual(data.slot) == data.slot) UseSlot(data.slot);
             else if (card.Slot >= 0 && card.Slot < SaveSlots.ManualCount) UseSlot(card.Slot);
             Apply(data);
-            GameplayFeedback.Toast(card.Auto ? "Autosave loaded" : "Save loaded");
+            GameplayFeedback.Toast(card.Auto ? GateLine.AutoLoaded(null) : GateLine.Loaded(null));
             return true;
         }
 

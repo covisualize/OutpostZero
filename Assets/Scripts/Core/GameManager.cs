@@ -130,7 +130,7 @@ namespace OutpostZero.Core
         {
             if (WorldMapService.Instance != null && WorldMapService.Instance.Current != null && WorldMapService.Instance.Current.cleared && !WorldMapService.Instance.Endless)
             {
-                GameplayFeedback.Toast("Pick an open district");
+                GameplayFeedback.Toast(GateLine.District(null));
                 return;
             }
             if (currentState == GameState.CampManagement) WorldMapService.Instance?.SpendTravel();
@@ -183,7 +183,7 @@ namespace OutpostZero.Core
             SetState(won ? GameState.Victory : GameState.ExpeditionResults);
             SaveSystem.Instance?.Save(false);
             AudioManager.Instance?.Sting("extract");
-            GameplayFeedback.Toast(won ? "The broadcast is already out" : "Extracted");
+            GameplayFeedback.Toast(won ? GateLine.Broadcast(null) : GateLine.Extracted(null));
         }
 
         public void TriggerPlayerDeath()
@@ -192,7 +192,7 @@ namespace OutpostZero.Core
             if (merciful && SurvivorRoster.Instance != null && SurvivorRoster.Instance.WoundLeader())
             {
                 BringToCamp(false);
-                GameplayFeedback.Toast("Dragged back to the gate");
+                GameplayFeedback.Toast(GateLine.Drag(null));
                 SaveSystem.Instance?.Save(false);
                 return;
             }
