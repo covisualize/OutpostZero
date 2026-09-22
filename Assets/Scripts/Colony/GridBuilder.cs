@@ -252,6 +252,18 @@ namespace OutpostZero.Colony
                 if (bulb != null) bulb.enabled = on;
                 var source = views[i].GetComponent<LightSource>();
                 if (source != null) source.enabled = on;
+                var mote = views[i].GetComponent<YardMote>();
+                if (mote == null) mote = views[i].AddComponent<YardMote>();
+                if (YardGlow.SparksDue(placed[i].site, placed[i].integrity, Time.time, mote.Last))
+                {
+                    mote.Last = Time.time;
+                    CombatVfx.Sparks(views[i].transform.position);
+                    AudioManager.Instance?.PlayAt("spit", views[i].transform.position, YardGlow.Spit);
+                }
+                else if (!MendBoard.Needs(placed[i].site, placed[i].integrity))
+                {
+                    mote.Last = 0f;
+                }
             }
         }
 
@@ -261,8 +273,20 @@ namespace OutpostZero.Colony
             for (int i = 0; i < count; i++)
             {
                 if (placed[i].kind != "Campfire" || views[i] == null) continue;
+                bool ready = BuildSite.Ready(placed[i].site, placed[i].integrity);
                 var ember = views[i].GetComponent<Light>();
-                if (ember != null) ember.enabled = BuildSite.Ready(placed[i].site, placed[i].integrity);
+                if (ember != null) ember.enabled = ready;
+                var mote = views[i].GetComponent<YardMote>();
+                if (mote == null) mote = views[i].AddComponent<YardMote>();
+                if (YardGlow.EmbersDue(ready, Time.time, mote.Last))
+                {
+                    mote.Last = Time.time;
+                    CombatVfx.Embers(views[i].transform.position);
+                }
+                else if (!ready)
+                {
+                    mote.Last = 0f;
+                }
             }
         }
 

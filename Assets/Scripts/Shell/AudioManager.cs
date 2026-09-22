@@ -39,6 +39,7 @@ namespace OutpostZero.Shell
             if (id == "burn") return 14f;
             if (id == "cloud") return 12f;
             if (id == "splash") return 8f;
+            if (id == "spit") return 8f;
             return 18f;
         }
     }
@@ -560,6 +561,7 @@ namespace OutpostZero.Shell
             if (id == "splash") return noise * Mathf.Sin(t * 30f);
             if (id == "burn") return noise * Mathf.Sin(t * 11f);
             if (id == "cloud") return noise * Mathf.Sin(t * 4f);
+            if (id == "spit") return Mathf.Sin(t * 160f);
             return noise;
         }
 
@@ -568,7 +570,7 @@ namespace OutpostZero.Shell
             if (clips.TryGetValue(id, out var clip)) return clip;
             int rate = 22050;
             bool loop = id == "ambient" || id == "rain" || id == "wind" || id == "stem_perc" || id == "stem_combat" || id == "hum" || id == "crackle" || id == "buzz" || id == "flies";
-            float seconds = loop ? 2f : id == "boom_far" ? 0.7f : id == "roar" || id == "stomp" ? 0.5f : id == "boom" ? 0.45f : id == "gun_far" ? 0.42f : id == "breath" || id == "groan" ? 0.5f : id == "shriek" ? 0.28f : id == "heart" || id == "hiss" ? 0.22f : id == "dry" || id == "take_soft" || id == "take_box" || id == "take_metal" || id == "clink" || id == "clack" ? 0.08f : id == "burn" || id == "cloud" ? 0.5f : 0.18f;
+            float seconds = loop ? 2f : id == "boom_far" ? 0.7f : id == "roar" || id == "stomp" ? 0.5f : id == "boom" ? 0.45f : id == "gun_far" ? 0.42f : id == "breath" || id == "groan" ? 0.5f : id == "shriek" ? 0.28f : id == "heart" || id == "hiss" ? 0.22f : id == "dry" || id == "take_soft" || id == "take_box" || id == "take_metal" || id == "clink" || id == "clack" || id == "spit" ? 0.08f : id == "burn" || id == "cloud" ? 0.5f : 0.18f;
             int samples = Mathf.CeilToInt(rate * seconds);
             var data = new float[samples];
             var random = new System.Random(id.GetHashCode());

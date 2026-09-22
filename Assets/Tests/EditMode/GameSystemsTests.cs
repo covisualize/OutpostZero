@@ -3251,6 +3251,30 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void AFireDriftsEmbersAndABrokenLampSpitsSparks()
+        {
+            Assert.IsFalse(YardGlow.EmbersDue(false, 10f, 0f));
+            Assert.IsTrue(YardGlow.EmbersDue(true, 1f, 0f));
+            Assert.IsFalse(YardGlow.EmbersDue(true, 1.3f, 1f));
+            Assert.IsTrue(YardGlow.EmbersDue(true, 1.6f, 1f));
+            Assert.IsTrue(YardGlow.EmbersDue(true, 0.4f, 1f));
+            Assert.IsFalse(YardGlow.SparksDue(1, 40, 10f, 0f));
+            Assert.IsFalse(YardGlow.SparksDue(0, 0, 10f, 0f));
+            Assert.IsFalse(YardGlow.SparksDue(0, 100, 10f, 0f));
+            Assert.IsTrue(YardGlow.SparksDue(0, 40, 1f, 0f));
+            Assert.IsFalse(YardGlow.SparksDue(0, 40, 1.3f, 1f));
+            Assert.IsTrue(YardGlow.SparksDue(0, 40, 1.6f, 1f));
+            Assert.AreEqual(8, YardGlow.Embers);
+            Assert.AreEqual(5, YardGlow.Sparks);
+            Assert.AreEqual(0.18f, YardGlow.Spit, 0.001f);
+            Assert.AreEqual(8f, AudioSpace.MaxDistance("spit"), 0.001f);
+            Assert.IsTrue(MendBoard.Needs(0, 40));
+            Assert.IsFalse(MendBoard.Needs(0, 100));
+            Assert.IsTrue(BuildSite.Ready(0, 40));
+            Assert.IsFalse(BuildSite.Ready(1, 40));
+        }
+
+        [Test]
         public void TheGeneratorHumsAndTheFireCrackles()
         {
             YardBed.Mix(false, false, false, out float hum, out float crackle, out float buzz);

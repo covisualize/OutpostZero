@@ -1,4 +1,5 @@
 using UnityEngine;
+using OutpostZero.Colony;
 using OutpostZero.Core;
 
 namespace OutpostZero.Combat
@@ -228,6 +229,38 @@ namespace OutpostZero.Combat
             var renderer = mark.GetComponent<Renderer>();
             if (renderer != null) renderer.material.color = new Color(0.4f, 0.04f, 0.03f, 0.9f);
             Object.Destroy(mark, 6f);
+        }
+
+        public static void Embers(Vector3 origin)
+        {
+            var go = new GameObject("FireEmbers");
+            go.transform.position = origin + Vector3.up * 0.2f;
+            var particles = go.AddComponent<ParticleSystem>();
+            var main = particles.main;
+            main.startLifetime = 1.1f;
+            main.startSpeed = 0.7f;
+            main.startSize = 0.05f;
+            main.startColor = new Color(1f, 0.45f, 0.1f, 0.9f);
+            main.gravityModifier = -0.2f;
+            main.maxParticles = YardGlow.Embers;
+            particles.Emit(YardGlow.Embers);
+            Object.Destroy(go, 1.2f);
+        }
+
+        public static void Sparks(Vector3 origin)
+        {
+            var go = new GameObject("LampSparks");
+            go.transform.position = origin;
+            var particles = go.AddComponent<ParticleSystem>();
+            var main = particles.main;
+            main.startLifetime = 0.22f;
+            main.startSpeed = 2.4f;
+            main.startSize = 0.03f;
+            main.startColor = new Color(1f, 0.9f, 0.45f, 1f);
+            main.gravityModifier = 1.2f;
+            main.maxParticles = YardGlow.Sparks;
+            particles.Emit(YardGlow.Sparks);
+            Object.Destroy(go, 0.4f);
         }
 
         public static void Puff(Vector3 feet, int count, bool wet)
