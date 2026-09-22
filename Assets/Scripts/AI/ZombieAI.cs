@@ -59,6 +59,7 @@ namespace OutpostZero.AI
         private HealthSystem healthSystem;
 
         private float nextAttackTime = 0f;
+        private float swing = -1f;
         private float stateTimer = 0f;
         private float pendingStun = 0.8f;
         private SpecialBeat.Clock abilityClock;
@@ -306,6 +307,7 @@ namespace OutpostZero.AI
                     agent.isStopped = true;
                     abilityClock.Phase = 0;
                     abilityClock.Left = 0f;
+                    swing = -1f;
                     break;
 
                 case ZombieState.Stunned:
@@ -535,15 +537,21 @@ namespace OutpostZero.AI
                 return;
             }
 
-            if (Time.time >= nextAttackTime)
+            if (swing < 0f)
             {
-                PerformBiteAttack();
+                if (Time.time < nextAttackTime) return;
+                swing = 0f;
+                nextAttackTime = Time.time + attackCooldown;
             }
+
+            float before = swing;
+            swing = SwingClock.Advance(swing, Time.deltaTime, attackCooldown);
+            if (SwingClock.Connects(before, swing)) PerformBiteAttack();
+            if (swing >= 1f) swing = -1f;
         }
 
         private void PerformBiteAttack()
         {
-            nextAttackTime = Time.time + attackCooldown;
 
             var damageable = currentTarget.GetComponent<IDamageable>();
             if (damageable != null && !damageable.IsDead)

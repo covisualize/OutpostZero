@@ -1393,5 +1393,17 @@ namespace OutpostZero.Tests.EditMode
             Assert.AreEqual(30, CrowdSpace.Priority(0));
             Assert.AreEqual(99, CrowdSpace.Priority(10));
         }
+
+        [Test]
+        public void ABiteConnectsPartwayThroughTheSwing()
+        {
+            Assert.AreEqual(0.5f, SwingClock.Advance(0f, 0.5f, 1f), 0.001f);
+            Assert.AreEqual(0.7f, SwingClock.Advance(0.5f, 0.2f, 1f), 0.001f);
+            Assert.AreEqual(1f, SwingClock.Advance(0.9f, 0.5f, 1f), 0.001f);
+            Assert.IsTrue(SwingClock.Connects(0.5f, 0.7f));
+            Assert.IsFalse(SwingClock.Connects(0.6f, 0.9f));
+            Assert.IsFalse(SwingClock.Connects(0.2f, 0.5f));
+            Assert.AreEqual(SwingClock.HitAt, 0.6f, 0.001f);
+        }
     }
 }
