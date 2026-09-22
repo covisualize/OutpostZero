@@ -5713,6 +5713,27 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void AFollowerCriesOutWhenTheDeadComeClose()
+        {
+            Assert.AreEqual(7f, StraggleCall.Near, 0.001f);
+            Assert.AreEqual(6f, StraggleCall.Gap, 0.001f);
+            Assert.AreEqual(16f, StraggleCall.Radius, 0.001f);
+            Assert.IsFalse(StraggleCall.Due(0f, 10f, -1f));
+            Assert.IsFalse(StraggleCall.Due(0f, 10f, 7.1f));
+            Assert.IsTrue(StraggleCall.Due(0f, 10f, 7f));
+            Assert.IsTrue(StraggleCall.Due(0f, 10f, 0f));
+            Assert.IsFalse(StraggleCall.Due(10f, 15.9f, 3f));
+            Assert.IsTrue(StraggleCall.Due(10f, 16f, 3f));
+            Assert.IsFalse(StraggleCall.Due(10f, 9f, 3f));
+            Assert.AreEqual("Imani Cole cries out", StreetAsk.Cry("Imani Cole", "en"));
+            Assert.AreEqual("Imani Cole grita", StreetAsk.Cry("Imani Cole", "es"));
+            Assert.AreEqual(1.6f, RescueBook.FollowGap, 0.001f);
+            RescueBook.Step(0f, 0f, 0f, 6f, 4f, 1f, out float stepX, out float stepZ);
+            Assert.AreEqual(0f, stepX, 0.001f);
+            Assert.AreEqual(4f, stepZ, 0.001f);
+        }
+
+        [Test]
         public void AZombieWithoutARigStillAttacksAndFalls()
         {
             Assert.AreEqual(14f, PoseSheet.Lean(ZombieAI.ZombieState.Chase, 0f), 0.001f);

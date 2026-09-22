@@ -1,9 +1,11 @@
 using UnityEngine;
+using OutpostZero.AI;
 using OutpostZero.Colony;
 using OutpostZero.Combat;
 using OutpostZero.Core;
 using OutpostZero.Items;
 using OutpostZero.Player;
+using OutpostZero.Sensory;
 using OutpostZero.Shell;
 
 namespace OutpostZero.Expedition
@@ -19,6 +21,7 @@ namespace OutpostZero.Expedition
         private string personName = "";
         private bool following;
         private bool joined;
+        private float lastCry;
 
         public string Name => personName;
         public bool Following => following;
@@ -65,6 +68,14 @@ namespace OutpostZero.Expedition
             var lead = player.transform.position;
             RescueBook.Step(transform.position.x, transform.position.z, lead.x, lead.z, 4.2f, Time.deltaTime, out float nextX, out float nextZ);
             transform.position = new Vector3(nextX, transform.position.y, nextZ);
+            if (StraggleCall.Due(lastCry, Time.time, ZombieAI.Nearest(nextX, nextZ)))
+            {
+                lastCry = Time.time;
+                GameplayFeedback.Toast(StreetAsk.Cry(personName, null));
+                AudioManager.Instance?.PlayAt("scream", transform.position, 0.45f);
+                if (NoiseManager.Instance != null)
+                    NoiseManager.Instance.EmitNoise(transform.position, StraggleCall.Radius, 0.8f, NoiseType.ZombieScream, gameObject);
+            }
 
             var gate = ExtractionZone.Current;
             if (gate == null) return;
