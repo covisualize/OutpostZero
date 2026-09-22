@@ -791,6 +791,20 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void AimingDownSightsShortensAStep()
+        {
+            Assert.AreEqual(4.5f, AimPace.Pace(4.5f, false), 0.001f);
+            Assert.AreEqual(2.475f, AimPace.Pace(4.5f, true), 0.001f);
+            Assert.AreEqual(1.21f, AimPace.Pace(2.2f, true), 0.001f);
+            Assert.AreEqual(2.2275f, AimPace.Pace(4.05f, true), 0.001f);
+            Assert.AreEqual(4.125f, AimPace.Pace(7.5f, true), 0.001f);
+            Assert.AreEqual(0f, AimPace.Pace(-1f, true), 0.001f);
+            Assert.AreEqual(0.55f, AimPace.Fraction, 0.001f);
+            Assert.IsTrue(AimPace.AllowsSprint(false));
+            Assert.IsFalse(AimPace.AllowsSprint(true));
+        }
+
+        [Test]
         public void MistSitsOnTheStreetWhenTheAirIsThick()
         {
             Assert.IsTrue(MistBank.Shows(WeatherKind.Fog, 0f));

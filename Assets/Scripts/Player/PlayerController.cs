@@ -537,7 +537,7 @@ namespace OutpostZero.Player
             sprintLatch = PlayOptions.Stance(ExpeditionInput.SprintHeld, ExpeditionInput.SprintPressed, sprintLatch, sprintMode);
             if (IsCrouching) CodexDirector.Hear("crouch");
             if (IsSprinting) CodexDirector.Hear("sprint");
-            bool wantsToSprint = sprintLatch && !IsCrouching && currentStamina > 5f;
+            bool wantsToSprint = AimPace.AllowsSprint(IsAimingDownSights) && sprintLatch && !IsCrouching && currentStamina > 5f;
 
             IsSprinting = isMoving && wantsToSprint;
             if (IsSprinting && ActiveWeapon is FirearmWeapon sprintGun) sprintGun.TryAbortReload(true, false);
@@ -553,6 +553,7 @@ namespace OutpostZero.Player
             if (sky != null) groundWet = OutpostZero.Graphics.WeatherSurface.Wetness(sky.Kind);
             bool inPuddle = OutpostZero.Graphics.PuddleStep.Inside(transform.position.x, transform.position.z, groundWet);
             currentSpeed = OutpostZero.Graphics.WetStride.Pace(currentSpeed, groundWet, inPuddle);
+            currentSpeed = AimPace.Pace(currentSpeed, IsAimingDownSights);
 
             Vector3 moveVector = inputDirection * currentSpeed;
 
