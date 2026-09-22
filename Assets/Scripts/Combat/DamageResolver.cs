@@ -10,6 +10,16 @@ namespace OutpostZero.Combat
 
         public static void Resolve(RaycastHit hit, float damage, GameObject attacker, bool allowHeadshot, WeaponType weapon = WeaponType.Pistol)
         {
+            if (hit.collider != null)
+            {
+                var pane = hit.collider.GetComponent<OutpostZero.Expedition.GlassPane>();
+                if (pane != null)
+                {
+                    pane.TakeDamage(damage, hit.point, hit.normal, attacker);
+                    return;
+                }
+            }
+
             var hazard = hit.collider.GetComponentInParent<DestructibleHazard>();
             if (hazard != null)
             {
@@ -47,6 +57,13 @@ namespace OutpostZero.Combat
         public static void ResolveBody(Collider col, Vector3 point, Vector3 direction, float damage, GameObject attacker, bool allowHeadshot, WeaponType weapon = WeaponType.Pistol)
         {
             if (col == null) return;
+            var pane = col.GetComponent<OutpostZero.Expedition.GlassPane>();
+            if (pane != null)
+            {
+                pane.TakeDamage(damage, point, direction, attacker);
+                return;
+            }
+
             var hazard = col.GetComponentInParent<DestructibleHazard>();
             if (hazard != null)
             {

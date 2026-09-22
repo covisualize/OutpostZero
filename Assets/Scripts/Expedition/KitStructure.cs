@@ -186,7 +186,15 @@ namespace OutpostZero.Expedition
                     block.transform.localPosition = new Vector3(box.x + box.w * 0.5f, box.y + box.h * 0.5f, box.z + box.d * 0.5f);
                     block.transform.localScale = new Vector3(Mathf.Max(0.02f, box.w), Mathf.Max(0.02f, box.h), Mathf.Max(0.02f, box.d));
                     block.layer = GameLayers.Environment;
-                    Paint(block.GetComponent<Renderer>(), tint);
+                    bool pane = PaneGlass.Opening(piece.id, box.y, box.h, box.w, piece.w);
+                    var renderer = block.GetComponent<Renderer>();
+                    if (pane)
+                    {
+                        block.name = PaneGlass.Name;
+                        block.AddComponent<GlassPane>();
+                        if (!PaneGlass.Coat(renderer)) Paint(renderer, PaneGlass.Tint);
+                    }
+                    else Paint(renderer, tint);
                 }
                 if (piece.id == "ceiling_light")
                 {

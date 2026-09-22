@@ -5655,6 +5655,38 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void AWindowPaneLetsALookThroughAndAShotBreaksIt()
+        {
+            Assert.IsTrue(PaneGlass.Opening("wall_window", 0.9f, 1.2f, 1f, 2f));
+            Assert.IsFalse(PaneGlass.Opening("wall_window", 0f, 0.9f, 1f, 2f));
+            Assert.IsFalse(PaneGlass.Opening("wall_window", 2.1f, 0.9f, 1f, 2f));
+            Assert.IsFalse(PaneGlass.Opening("wall_window", 0f, 3f, 0.5f, 2f));
+            Assert.IsFalse(PaneGlass.Opening("wall_window_broken", 0.9f, 1.2f, 1f, 2f));
+            Assert.IsFalse(PaneGlass.Opening("wall_plain", 0f, 3f, 2f, 2f));
+            Assert.IsTrue(PaneGlass.SeeThrough("KitGlass"));
+            Assert.IsFalse(PaneGlass.SeeThrough("KitBlock"));
+            Assert.IsFalse(PaneGlass.SeeThrough(""));
+            Assert.IsFalse(PaneGlass.Occluded(null));
+            Assert.IsFalse(PaneGlass.Occluded(new string[0]));
+            Assert.IsFalse(PaneGlass.Occluded(new[] { "KitGlass" }));
+            Assert.IsFalse(PaneGlass.Occluded(new[] { "KitGlass", "KitGlass" }));
+            Assert.IsTrue(PaneGlass.Occluded(new[] { "KitGlass", "KitBlock" }));
+            Assert.IsTrue(PaneGlass.Occluded(new[] { "KitBlock" }));
+            Assert.AreEqual(12f, PaneGlass.Hp, 0.001f);
+            Assert.AreEqual(9f, PaneGlass.Noise, 0.001f);
+            Assert.AreEqual(8f, PaneGlass.After(12f, 4f), 0.001f);
+            Assert.AreEqual(0f, PaneGlass.After(12f, 12f), 0.001f);
+            Assert.AreEqual(0f, PaneGlass.After(12f, 34f), 0.001f);
+            Assert.AreEqual(12f, PaneGlass.After(12f, 0f), 0.001f);
+            Assert.IsFalse(PaneGlass.Gone(8f));
+            Assert.IsTrue(PaneGlass.Gone(0f));
+            Assert.AreEqual(0.38f, PaneGlass.Tint.a, 0.001f);
+            Assert.AreEqual("The pane shatters", Loc.T("pane.break", "en"));
+            Assert.AreEqual("El cristal se rompe", Loc.T("pane.break", "es"));
+            Assert.AreEqual(34f, WeaponCard.Find("pistol_9mm").Damage, 0.001f);
+        }
+
+        [Test]
         public void AZombieWithoutARigStillAttacksAndFalls()
         {
             Assert.AreEqual(14f, PoseSheet.Lean(ZombieAI.ZombieState.Chase, 0f), 0.001f);

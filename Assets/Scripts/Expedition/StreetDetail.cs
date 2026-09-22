@@ -64,7 +64,9 @@ namespace OutpostZero.Expedition
                     trigger.radius = 1.2f;
                     body.AddComponent<StreetBottle>();
                 }
-                Paint(body.GetComponent<Renderer>(), ColorFor(mark.Role));
+                var renderer = body.GetComponent<Renderer>();
+                if (mark.Role == "glass" && PaneGlass.Coat(renderer)) { }
+                else Paint(renderer, ColorFor(mark.Role));
                 if (mark.Role == "bulb")
                 {
                     var lamp = body.AddComponent<Light>();

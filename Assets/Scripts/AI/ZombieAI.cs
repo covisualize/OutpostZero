@@ -789,6 +789,17 @@ namespace OutpostZero.AI
             agent.SetDestination(spot);
         }
 
+        private static bool SightBlocked(Vector3 origin, Vector3 direction, float distance, LayerMask mask)
+        {
+            if (distance <= 0.05f) return false;
+            var hits = Physics.RaycastAll(origin, direction, distance, mask, QueryTriggerInteraction.Ignore);
+            if (hits == null || hits.Length == 0) return false;
+            var names = new string[hits.Length];
+            for (int i = 0; i < hits.Length; i++)
+                names[i] = hits[i].collider != null ? hits[i].collider.name : "";
+            return PaneGlass.Occluded(names);
+        }
+
         private bool StillSees(Transform target)
         {
             if (target == null) return false;
@@ -800,10 +811,10 @@ namespace OutpostZero.AI
             if (dist < 0.05f) return true;
             if (SmokeMark.Hides(transform.position.x, transform.position.z, target.position.x, target.position.z))
                 return false;
-            bool headBlocked = Physics.Raycast(eye, toHead.normalized, dist, visionMask);
+            bool headBlocked = SightBlocked(eye, toHead.normalized, dist, visionMask);
             Vector3 chest = target.position + Vector3.up * 1.0f;
             Vector3 toChest = chest - eye;
-            bool chestBlocked = toChest.sqrMagnitude < 0.01f || Physics.Raycast(eye, toChest.normalized, toChest.magnitude, visionMask);
+            bool chestBlocked = toChest.sqrMagnitude < 0.01f || SightBlocked(eye, toChest.normalized, toChest.magnitude, visionMask);
             return !headBlocked || !chestBlocked;
         }
 
@@ -923,9 +934,9 @@ namespace OutpostZero.AI
                 if (SmokeMark.Hides(transform.position.x, transform.position.z, player.transform.position.x, player.transform.position.z))
                     return;
                 Vector3 chest = player.transform.position + Vector3.up * 1.0f;
-                bool headBlocked = Physics.Raycast(eyePos, dirToTarget.normalized, dist, visionMask);
+                bool headBlocked = SightBlocked(eyePos, dirToTarget.normalized, dist, visionMask);
                 Vector3 toChest = chest - eyePos;
-                bool chestBlocked = Physics.Raycast(eyePos, toChest.normalized, toChest.magnitude, visionMask);
+                bool chestBlocked = SightBlocked(eyePos, toChest.normalized, toChest.magnitude, visionMask);
                 if (!headBlocked || !chestBlocked)
                 {
                     currentTarget = player.transform;
