@@ -156,7 +156,8 @@ namespace OutpostZero.Combat
 
             // Audio & Visual Effects
             PlaySound(fireSound);
-            if (muzzleFlash != null) muzzleFlash.Play();
+            bool quietFlash = Core.SettingsService.Instance != null && Core.SettingsService.Instance.QuietFlash;
+            if (muzzleFlash != null && FlashCap.Allow(FlashCap.Stamp, Time.time, quietFlash)) muzzleFlash.Play();
 
             // Emit gunshot noise event into the environment
             EmitWeaponNoise();

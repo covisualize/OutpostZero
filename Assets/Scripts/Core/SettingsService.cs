@@ -17,6 +17,7 @@ namespace OutpostZero.Core
         [SerializeField] private float masterVolume = 1f;
         [SerializeField] private float textScale = 1f;
         [SerializeField] private bool subtitles = true;
+        [SerializeField] private bool quietFlash;
         [SerializeField] private int colorblindMode;
         [SerializeField] private string language = "en";
         [SerializeField] private float sfxVolume = 1f;
@@ -50,6 +51,7 @@ namespace OutpostZero.Core
         public float UiVolume => uiVolume;
         public float TextScale => textScale;
         public bool Subtitles => subtitles;
+        public bool QuietFlash => quietFlash;
         public int ColorblindMode => colorblindMode;
         public string Language => language;
         public int Quality => quality;
@@ -70,7 +72,7 @@ namespace OutpostZero.Core
         public int SprintMode => sprintMode == 1 ? 1 : 0;
         public int FrameCap => frameCap < 0 || frameCap > 4 ? 0 : frameCap;
         public int Resolution => resolution < 0 || resolution >= DisplayModes.Count ? 0 : resolution;
-        public string DiscreteKey => (subtitles ? "1" : "0") + colorblindMode + quality + vsync + (merciful ? "1" : "0") + NextDifficulty + goreLevel + hitStop + damageNumbers + motionBlur + windowMode + AimAssist + (InvertLook ? 1 : 0) + CrouchMode + SprintMode + FrameCap + Resolution;
+        public string DiscreteKey => (subtitles ? "1" : "0") + colorblindMode + quality + vsync + (merciful ? "1" : "0") + NextDifficulty + goreLevel + hitStop + damageNumbers + motionBlur + windowMode + AimAssist + (InvertLook ? 1 : 0) + CrouchMode + SprintMode + FrameCap + Resolution + (quietFlash ? "1" : "0");
         public bool ShowSettings { get; private set; }
 
         public event Action OnChanged;
@@ -123,6 +125,12 @@ namespace OutpostZero.Core
         public void SetSubtitles(bool value)
         {
             subtitles = value;
+            Raise();
+        }
+
+        public void ToggleQuietFlash()
+        {
+            quietFlash = !quietFlash;
             Raise();
         }
 
@@ -463,6 +471,7 @@ namespace OutpostZero.Core
                 resolution = Resolution,
                 subtitles = subtitles,
                 merciful = merciful,
+                quietFlash = quietFlash,
                 language = string.IsNullOrEmpty(language) ? "en" : language,
                 keys = OutpostZero.Player.ControlBindings.Pack(),
                 pad = OutpostZero.Player.PadBindings.Pack()
@@ -498,6 +507,7 @@ namespace OutpostZero.Core
             resolution = snap.resolution < 0 || snap.resolution >= DisplayModes.Count ? 0 : snap.resolution;
             subtitles = snap.subtitles;
             merciful = snap.merciful;
+            quietFlash = snap.quietFlash;
             language = string.IsNullOrEmpty(snap.language) ? "en" : snap.language;
             OutpostZero.Player.ControlBindings.Unpack(snap.keys);
             OutpostZero.Player.PadBindings.Unpack(snap.pad);

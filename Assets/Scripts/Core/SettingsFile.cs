@@ -41,6 +41,7 @@ namespace OutpostZero.Core
             public int resolution;
             public bool subtitles;
             public bool merciful;
+            public bool quietFlash;
             public string language;
             public string keys;
             public string pad;
@@ -77,6 +78,7 @@ namespace OutpostZero.Core
                 resolution = 0,
                 subtitles = true,
                 merciful = false,
+                quietFlash = false,
                 language = "en",
                 keys = "",
                 pad = ""
@@ -114,6 +116,7 @@ namespace OutpostZero.Core
             Int(builder, "resolution", snap.resolution);
             Int(builder, "subtitles", snap.subtitles ? 1 : 0);
             Int(builder, "merciful", snap.merciful ? 1 : 0);
+            Int(builder, "flash", snap.quietFlash ? 1 : 0);
             Str(builder, "language", snap.language);
             Str(builder, "keys", snap.keys);
             Str(builder, "pad", snap.pad);
@@ -152,6 +155,7 @@ namespace OutpostZero.Core
             snap.resolution = (int)Num(json, "resolution", snap.resolution);
             snap.subtitles = Num(json, "subtitles", 1f) != 0f;
             snap.merciful = Num(json, "merciful", 0f) != 0f;
+            snap.quietFlash = Num(json, "flash", 0f) != 0f;
             snap.language = Str(json, "language", snap.language);
             snap.keys = Str(json, "keys", snap.keys);
             snap.pad = Str(json, "pad", snap.pad);

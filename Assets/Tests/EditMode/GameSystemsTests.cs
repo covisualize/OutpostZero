@@ -3084,6 +3084,21 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void BrightFlashesStayUnderThreeASecond()
+        {
+            Assert.IsTrue(FlashCap.Allow(0f, 0.34f, false));
+            Assert.IsFalse(FlashCap.Allow(1f, 1.2f, false));
+            Assert.IsFalse(FlashCap.Allow(0f, 5f, true));
+            Assert.IsFalse(FlashCap.Due(false, 0f, 20f));
+            Assert.IsFalse(FlashCap.Due(true, 0f, 7.9f));
+            Assert.IsTrue(FlashCap.Due(true, 0f, 8f));
+            Assert.IsTrue(FlashCap.Due(true, 8f, 16f));
+            Assert.IsFalse(FlashCap.Due(true, 8f, 15.9f));
+            Assert.AreEqual("Sin destellos", Loc.T("set.flash_off", "es"));
+            Assert.AreEqual("Destellos sí", Loc.T("set.flash_on", "es"));
+        }
+
+        [Test]
         public void DemolishingAModuleReturnsHalfTheScrap()
         {
             Assert.AreEqual(3, ScrapRefund.Half(6));

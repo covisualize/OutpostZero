@@ -13,9 +13,28 @@ namespace OutpostZero.Combat
         public static void Shot(Vector3 muzzle, Vector3 direction, Vector3 end, Vector3 eject)
         {
             direction = direction.sqrMagnitude > 0.001f ? direction.normalized : Vector3.forward;
-            Muzzle(muzzle, direction);
+            if (FlashCap.Take(Time.time, Quiet())) Muzzle(muzzle, direction);
             Tracer(muzzle, end);
             Shell(muzzle, eject);
+        }
+
+        public static bool Bolt(Vector3 position)
+        {
+            if (!FlashCap.Take(Time.time, Quiet())) return false;
+            var flash = new GameObject("Lightning");
+            flash.transform.position = position;
+            var light = flash.AddComponent<Light>();
+            light.type = LightType.Point;
+            light.range = 40f;
+            light.intensity = 2.2f;
+            light.color = new Color(0.75f, 0.82f, 1f);
+            flash.AddComponent<BurstFade>().Arm(1f, 0.08f);
+            return true;
+        }
+
+        private static bool Quiet()
+        {
+            return Core.SettingsService.Instance != null && Core.SettingsService.Instance.QuietFlash;
         }
 
         public static void Burst(Vector3 origin, HazardKind kind)

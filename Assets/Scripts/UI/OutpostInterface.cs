@@ -676,6 +676,7 @@ namespace OutpostZero.UI
             parent.Add(SliderRow(Loc.T("set.hud"), settings.HudOpacity, 0.45f, 1f, settings.SetHudOpacity));
             parent.Add(SliderRow(Loc.T("set.bright"), settings.Brightness, 0.6f, 1.4f, settings.SetBrightness));
             parent.Add(Button(settings.Subtitles ? Loc.T("set.subs_on") : Loc.T("set.subs_off"), () => settings.SetSubtitles(!settings.Subtitles)));
+            parent.Add(Button(settings.QuietFlash ? Loc.T("set.flash_off") : Loc.T("set.flash_on"), settings.ToggleQuietFlash));
             parent.Add(Button(Loc.T("set.color") + " " + settings.ColorblindMode, settings.CycleColorblind));
             parent.Add(Button(settings.Language == "es" ? "Idioma: ES" : "Language: EN", () => settings.SetLanguage(settings.Language == "es" ? "en" : "es")));
             int tier = Mathf.Clamp(settings.Quality, 0, 3);

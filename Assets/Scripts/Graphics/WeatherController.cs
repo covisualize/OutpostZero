@@ -1,4 +1,5 @@
 using UnityEngine;
+using OutpostZero.Combat;
 using OutpostZero.Core;
 
 namespace OutpostZero.Graphics
@@ -38,6 +39,7 @@ namespace OutpostZero.Graphics
         private ParticleSystem debris;
         private WeatherKind applied = (WeatherKind)(-1);
         private float nextShift;
+        private float lastBolt;
 
         public WeatherKind Kind => kind;
 
@@ -60,6 +62,8 @@ namespace OutpostZero.Graphics
                 kind = (WeatherKind)(((int)kind + 1) % 3);
             }
             Apply();
+            if (FlashCap.Due(kind == WeatherKind.Rain, lastBolt, Time.time) && CombatVfx.Bolt(transform.position + Vector3.up * 18f))
+                lastBolt = Time.time;
         }
 
         public void Set(WeatherKind weather)
