@@ -51,6 +51,14 @@ namespace OutpostZero.Colony
             fuelHours = FuelTank.Clamp(hours);
         }
 
+        public float BurnTrip(float travel)
+        {
+            float before = fuelHours;
+            fuelHours = FuelTank.Trip(fuelHours, travel);
+            float burned = before - fuelHours;
+            return burned < 0f ? 0f : burned;
+        }
+
         private void Update()
         {
             if (Time.time >= scanIn)

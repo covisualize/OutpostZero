@@ -42,6 +42,12 @@ namespace OutpostZero.Shell
             return kind.ToString().ToLowerInvariant();
         }
 
+        public static string Site(string id, string[] cleared)
+        {
+            if (!Seen(id, cleared)) return "";
+            return DistrictBlocks.PoiRole(id);
+        }
+
         private static bool OnBoard(string id)
         {
             if (string.IsNullOrEmpty(id)) return false;

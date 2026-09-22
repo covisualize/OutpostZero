@@ -120,6 +120,8 @@ namespace OutpostZero.Shell
         {
             float hours = CampaignBoard.TravelHours(Current != null ? Current.id : "ash_market");
             WorldClock.Instance?.Advance(hours);
+            float burned = CampServices.Instance != null ? CampServices.Instance.BurnTrip(hours) : 0f;
+            if (burned > 0.05f) GameplayFeedback.Toast(Loc.T("camp.trip") + " " + FuelTank.Label(burned));
         }
 
         public void ApplyOpening()

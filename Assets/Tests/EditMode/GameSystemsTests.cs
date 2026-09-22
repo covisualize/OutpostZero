@@ -1095,6 +1095,28 @@ namespace OutpostZero.Tests.EditMode
             Assert.AreEqual("Caminos sin mapa", Loc.T("camp.fog", "es"));
             Assert.AreEqual("Niebla", Loc.T("sky.fog", "es"));
             Assert.AreEqual("Tormenta", Loc.T("sky.storm", "es"));
+            Assert.AreEqual("cache", MapVeil.Site("ash_market", new string[0]));
+            Assert.AreEqual("cache", MapVeil.Site("rail_yard", null));
+            Assert.AreEqual("", MapVeil.Site("old_hospital", new string[0]));
+            Assert.AreEqual("", MapVeil.Site("downtown_core", null));
+            Assert.AreEqual("radio", MapVeil.Site("old_hospital", new[] { "commercial_strip" }));
+            Assert.AreEqual("radio", MapVeil.Site("police_station", new[] { "rail_yard" }));
+            Assert.AreEqual("cache", MapVeil.Site("north_gate", new[] { "water_plant" }));
+            Assert.AreEqual("", MapVeil.Site("nowhere", new[] { "ash_market" }));
+            Assert.AreEqual(0.5f, FuelTank.TripRate, 0.001f);
+            Assert.AreEqual(1f, FuelTank.TripCost(2f), 0.001f);
+            Assert.AreEqual(4f, FuelTank.TripCost(8f), 0.001f);
+            Assert.AreEqual(0f, FuelTank.TripCost(0f), 0.001f);
+            Assert.AreEqual(0f, FuelTank.TripCost(-1f), 0.001f);
+            Assert.AreEqual(9f, FuelTank.Trip(10f, 2f), 0.001f);
+            Assert.AreEqual(6f, FuelTank.Trip(10f, 8f), 0.001f);
+            Assert.AreEqual(0f, FuelTank.Trip(1f, 8f), 0.001f);
+            Assert.AreEqual(10f, FuelTank.Trip(10f, 0f), 0.001f);
+            Assert.AreEqual(0f, FuelTank.Trip(-2f, 2f), 0.001f);
+            Assert.AreEqual("Fuel burned", Loc.T("camp.trip"));
+            Assert.AreEqual("Combustible gastado", Loc.T("camp.trip", "es"));
+            Assert.AreEqual("Pieza de radio", Loc.T("poi.radio", "es"));
+            Assert.AreEqual("Alijo", Loc.T("poi.cache", "es"));
         }
 
         [Test]

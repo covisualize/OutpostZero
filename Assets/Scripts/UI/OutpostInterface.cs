@@ -992,7 +992,7 @@ namespace OutpostZero.UI
                 foreach (var district in map.Districts)
                 {
                     if (!MapVeil.Seen(district.id, charted)) continue;
-                    string cast = SkyCast(district.id, charted, day);
+                    string cast = SkyCast(district.id, charted, day) + SiteCast(district.id, charted);
                     if (district.cleared && !map.Endless)
                     {
                         string part = CampaignBoard.PartFor(district.id);
@@ -1007,7 +1007,8 @@ namespace OutpostZero.UI
                     }
                     string mark = map.Current != null && map.Current.id == id ? "> " : "";
                     string hours = CampaignBoard.TravelHours(id).ToString("0");
-                    camp.Add(Button(mark + Loc.District(id) + "  " + hours + "h" + cast, () => map.Select(id)));
+                    string burn = FuelTank.Label(FuelTank.TripCost(CampaignBoard.TravelHours(id)));
+                    camp.Add(Button(mark + Loc.District(id) + "  " + hours + "h  " + Loc.T("camp.fuel") + " " + burn + cast, () => map.Select(id)));
                 }
                 if (hidden > 0) camp.Add(Body(Loc.T("camp.fog") + "  " + hidden));
             }
@@ -1192,6 +1193,13 @@ namespace OutpostZero.UI
             string sky = MapVeil.Forecast(id, charted, day);
             if (string.IsNullOrEmpty(sky)) return "";
             return "  " + Loc.T("sky." + sky);
+        }
+
+        private static string SiteCast(string id, string[] charted)
+        {
+            string site = MapVeil.Site(id, charted);
+            if (string.IsNullOrEmpty(site)) return "";
+            return "  " + Loc.T("poi." + site);
         }
 
         private static string[] ClearedDistricts(WorldMapService map)
