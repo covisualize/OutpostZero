@@ -57,7 +57,7 @@ Items, districts, recipes and strings are defined in code (`ItemCatalog`, `Campa
 
 ## Scenes and flow
 
-`Assets/Scenes/Boot.unity` is build index 0. `BootLoader` streams `PrototypeArena.unity` behind the loading card. When the arena loads, `GameManager.Awake` runs the installer and `SceneFlow` travels to the main menu. The menu, camp, expedition and results screens all run inside the arena as game states, and every change between them goes through `SceneFlow.Travel`, which plays the loading card. Restart calls `GameManager.ReturnToBoot`, which resets the run and loads Boot again.
+`Assets/Scenes/Boot.unity` is build index 0. `BootLoader` streams `PrototypeArena.unity` behind the loading card. When the arena loads, `GameManager.Awake` runs the installer and `SceneFlow` travels to the main menu. The menu, camp, expedition and results screens all run inside the arena as game states, and every change between them goes through `SceneFlow.Travel`, which plays the loading card. When the card lands, `SceneEntries` calls `OnExit` and then `OnEnter(FlowContext)` on each registered `ISceneEntry`. `GameManager` is one of them: a bare `Travel(step)` lets `FlowArrival` pick the state for that step (menu, camp or street). A caller that brings its own context, such as a new-game seed or a save slot, passes an arrival callback, and the hop is marked handled. `MenuBackdrop` is another entry, taking over the camera while the menu is up. Restart calls `GameManager.ReturnToBoot`, which resets the run and loads Boot again.
 
 ## Game state machine
 
