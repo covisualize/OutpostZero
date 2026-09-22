@@ -5994,6 +5994,26 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void ACampWoundCarriesTheStepAndAClearLeaderStaysQuiet()
+        {
+            Assert.AreEqual(1.15f, LimpStep.Bite, 0.001f);
+            Assert.AreEqual(1.4f, LimpStep.Fever, 0.001f);
+            Assert.AreEqual(1.7f, LimpStep.Critical, 0.001f);
+            Assert.AreEqual(6f, LimpStep.Radius(6f, 0), 0.001f);
+            Assert.AreEqual(6.9f, LimpStep.Radius(6f, 1), 0.001f);
+            Assert.AreEqual(8.4f, LimpStep.Radius(6f, 2), 0.001f);
+            Assert.AreEqual(10.2f, LimpStep.Radius(6f, 3), 0.001f);
+            Assert.AreEqual(10.2f, LimpStep.Radius(6f, 9), 0.001f);
+            Assert.AreEqual(0f, LimpStep.Radius(-1f, 2), 0.001f);
+            Assert.AreEqual(2.8f, LimpStep.Radius(2f, 2), 0.001f);
+            Assert.AreEqual(6f, StepReach.Radius(6f, "step"), 0.001f);
+            Assert.AreEqual(8.1f, StepReach.Radius(6f, "step_metal"), 0.001f);
+            Assert.AreEqual(9.315f, LimpStep.Radius(StepReach.Radius(6f, "step_metal"), 1), 0.001f);
+            Assert.AreEqual(0.92f, StreetLimp.Bite, 0.001f);
+            Assert.AreEqual("", Presentation.Caption(NoiseType.WalkFootstep, 1f, 0f, "en"));
+        }
+
+        [Test]
         public void AZombieWithoutARigStillAttacksAndFalls()
         {
             Assert.AreEqual(14f, PoseSheet.Lean(ZombieAI.ZombieState.Chase, 0f), 0.001f);

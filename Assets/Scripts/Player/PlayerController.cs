@@ -647,6 +647,7 @@ namespace OutpostZero.Player
             bool crunch = OutpostZero.Expedition.GlassShard.Covers(transform.position.x, transform.position.z);
             string stepId = crunch ? "step_glass" : AudioMix.StepId(surface);
             radius = StepReach.Radius(radius, stepId);
+            radius = LimpStep.Radius(radius, LeaderWound());
             if (crunch && OutpostZero.Expedition.GlassShard.BiteAt(transform.position.x, transform.position.z))
             {
                 var life = GetComponent<HealthSystem>();
