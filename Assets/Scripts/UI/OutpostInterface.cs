@@ -832,7 +832,7 @@ namespace OutpostZero.UI
             if (roster != null)
             {
                 camp.Add(Body(Loc.T("camp.morale") + " " + Mathf.RoundToInt(roster.AverageMorale())));
-                if (!string.IsNullOrEmpty(roster.DayNotes)) camp.Add(Body(roster.DayNotes));
+                if (!string.IsNullOrEmpty(roster.DayNotes)) camp.Add(Body(NoteSay.Read(roster.DayNotes, null)));
                 if (roster.Memorials.Count > 0)
                 {
                     camp.Add(Body(Loc.T("camp.memorial")));

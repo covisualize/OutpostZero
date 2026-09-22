@@ -664,7 +664,7 @@ namespace OutpostZero.Colony
         {
             DayNotes = notes == null || notes.Length == 0 ? "" : string.Join(", ", notes);
             OnRosterChanged?.Invoke();
-            if (DayNotes.Length > 0) GameplayFeedback.Toast(DayNotes);
+            if (DayNotes.Length > 0) GameplayFeedback.Toast(NoteSay.Read(DayNotes, null));
         }
 
         public float AverageMorale()

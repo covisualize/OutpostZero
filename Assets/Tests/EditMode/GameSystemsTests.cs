@@ -4643,6 +4643,27 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void ADayNoteFollowsTheLanguage()
+        {
+            Assert.AreEqual("A death in the camp", NoteSay.One("grief", "en"));
+            Assert.AreEqual("Una muerte en el campamento", NoteSay.One("grief", "es"));
+            Assert.AreEqual("A fever spread, The pot cooked", NoteSay.Read("fever, stew", "en"));
+            Assert.AreEqual("Una fiebre se extendió, La olla cocinó", NoteSay.Read("fever, stew", "es"));
+            Assert.AreEqual("Someone is on their feet", NoteSay.Read("recovery", "en"));
+            Assert.AreEqual("Alguien se levanta", NoteSay.Read("recovery", "es"));
+            Assert.AreEqual("A friendship formed", NoteSay.One("friendship", "en"));
+            Assert.AreEqual("Nació una amistad", NoteSay.One("friendship", "es"));
+            Assert.AreEqual("An argument at the table", NoteSay.One("argument", "en"));
+            Assert.AreEqual("Una discusión en la mesa", NoteSay.One("argument", "es"));
+            Assert.AreEqual("Someone broke", NoteSay.One("breakdown", "en"));
+            Assert.AreEqual("Alguien se quebró", NoteSay.One("breakdown", "es"));
+            Assert.AreEqual("The camp celebrated", NoteSay.One("celebration", "en"));
+            Assert.AreEqual("El campamento celebró", NoteSay.One("celebration", "es"));
+            Assert.AreEqual("", NoteSay.Read("", "en"));
+            Assert.AreEqual("relay", NoteSay.Read("relay", "es"));
+        }
+
+        [Test]
         public void StreetLampsFollowTheDarkAndNoonStaysOut()
         {
             Assert.AreEqual(0f, DayNightCycle.HourToNight(12f), 0.001f);
