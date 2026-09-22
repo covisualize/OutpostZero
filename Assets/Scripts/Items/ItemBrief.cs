@@ -1,4 +1,5 @@
 using System;
+using OutpostZero.Shell;
 
 namespace OutpostZero.Items
 {
@@ -10,7 +11,7 @@ namespace OutpostZero.Items
         public static string Text(ItemRecord record)
         {
             if (record == null || string.IsNullOrEmpty(record.Id)) return "";
-            string line = string.IsNullOrEmpty(record.DisplayName) ? record.Id : record.DisplayName;
+            string line = Loc.Item(record.Id);
             line += "   " + Weight(record.Weight);
             string effect = Effect(record);
             if (!string.IsNullOrEmpty(effect)) line += "   " + effect;
@@ -31,42 +32,27 @@ namespace OutpostZero.Items
         public static string Effect(ItemRecord record)
         {
             if (record == null) return "";
-            if (record.Heal > 0) return "+" + record.Heal + " health";
-            if (record.Hunger > 0f) return "+" + (int)record.Hunger + " hunger";
-            if (record.Thirst > 0f) return "+" + (int)record.Thirst + " thirst";
-            if (record.Use == ItemUse.Ammo) return record.AmmoAmount + " rounds";
-            if (record.Use == ItemUse.Cure) return "Clears infection";
-            if (record.Use == ItemUse.Relief) return "+20 health over 20s";
-            if (record.Use == ItemUse.Lure) return "Draws the dead";
-            if (record.Use == ItemUse.Molotov) return "Fire on impact";
-            if (record.Id == "cloth") return "Bandages and fire bottles";
-            if (record.Id == "chemicals") return "Ammo and medicine";
-            if (record.Id == "tape") return "Holds a medkit together";
-            if (record.Use == ItemUse.Material) return "Camp scrap";
+            if (record.Heal > 0) return "+" + record.Heal + " " + Loc.T("unit.health");
+            if (record.Hunger > 0f) return "+" + (int)record.Hunger + " " + Loc.T("unit.hunger");
+            if (record.Thirst > 0f) return "+" + (int)record.Thirst + " " + Loc.T("unit.thirst");
+            if (record.Use == ItemUse.Ammo) return record.AmmoAmount + " " + Loc.T("unit.rounds");
+            if (record.Use == ItemUse.Cure) return Loc.T("unit.cure");
+            if (record.Use == ItemUse.Relief) return Loc.T("unit.relief");
+            if (record.Use == ItemUse.Lure) return Loc.T("unit.lure");
+            if (record.Use == ItemUse.Molotov) return Loc.T("unit.molotov");
+            if (record.Id == "cloth") return Loc.T("unit.cloth");
+            if (record.Id == "chemicals") return Loc.T("unit.chemicals");
+            if (record.Id == "tape") return Loc.T("unit.tape");
+            if (record.Use == ItemUse.Material) return Loc.T("unit.material");
             return "";
         }
 
         public static string Blurb(string id)
         {
-            switch (id)
-            {
-                case "medkit": return "Stops bleeding and breaks a fever.";
-                case "bandage": return "Stops bleeding.";
-                case "antibiotics": return "Works before the fever turns lethal.";
-                case "painkillers": return "A slow mend, not a cure.";
-                case "canned_food": return "Heavy, and it keeps.";
-                case "water": return "One bottle covers about ten minutes.";
-                case "ammo_9mm": return "Fits the pistol.";
-                case "ammo_shells": return "Fits the shotgun.";
-                case "ammo_rifle": return "Fits the rifle.";
-                case "scrap": return "The camp spends this.";
-                case "cloth": return "Turns into bandages at the sanctuary.";
-                case "chemicals": return "The bench needs a measure for each batch of rounds.";
-                case "tape": return "One roll finishes a medkit.";
-                case "noise_lure": return "Throw it to pull a horde off a door.";
-                case "molotov": return "Breaks into fire.";
-                default: return "";
-            }
+            if (string.IsNullOrEmpty(id)) return "";
+            string key = "blurb." + id;
+            string line = Loc.T(key);
+            return line == key ? "" : line;
         }
     }
 }

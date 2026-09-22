@@ -442,20 +442,20 @@ namespace OutpostZero.UI
                 {
                     if (CodexBook.Entries[i].Id == codexId) selected = CodexBook.Entries[i];
                 }
-                parent.Add(Title(selected != null && CodexBook.Visible(selected, packed) ? selected.Title : "Unknown"));
-                parent.Add(Body(selected != null && CodexBook.Visible(selected, packed) ? selected.Body : "Not seen yet."));
-                parent.Add(Button("Back", () => codexId = ""));
+                parent.Add(Title(selected != null && CodexBook.Visible(selected, packed) ? Loc.EntryTitle(selected.Id, selected.Title) : Loc.T("camp.unknown")));
+                parent.Add(Body(selected != null && CodexBook.Visible(selected, packed) ? Loc.EntryBody(selected.Id, selected.Body) : Loc.T("camp.unseen")));
+                parent.Add(Button(Loc.T("menu.back"), () => codexId = ""));
                 return;
             }
-            parent.Add(Title("CODEX"));
+            parent.Add(Title(Loc.T("menu.codex")));
             for (int i = 0; i < CodexBook.Entries.Length; i++)
             {
                 var entry = CodexBook.Entries[i];
                 string id = entry.Id;
                 bool visible = CodexBook.Visible(entry, packed);
-                parent.Add(Button(visible ? entry.Title : "Unknown", () => codexId = id));
+                parent.Add(Button(visible ? Loc.EntryTitle(entry.Id, entry.Title) : Loc.T("camp.unknown"), () => codexId = id));
             }
-            parent.Add(Button("Close", () => codexOpen = false));
+            parent.Add(Button(Loc.T("set.close"), () => codexOpen = false));
         }
 
         private static void Go(FlowStep step, System.Action arrived)
@@ -716,18 +716,18 @@ namespace OutpostZero.UI
             var services = CampServices.Instance;
             if (storage != null)
             {
-                camp.Add(Body("Scrap " + storage.Scrap + "  Food " + storage.Food + "  Water " + storage.Water
-                    + "  Cloth " + storage.Cloth + "  Chem " + storage.Chemicals + "  Tape " + storage.Tape
-                    + (services != null && services.GeneratorOnline ? "  Generator on" : "  Generator dark")));
+                camp.Add(Body(Loc.T("camp.scrap") + " " + storage.Scrap + "  " + Loc.T("camp.food") + " " + storage.Food + "  " + Loc.T("camp.water") + " " + storage.Water
+                    + "  " + Loc.T("camp.cloth") + " " + storage.Cloth + "  " + Loc.T("camp.chem") + " " + storage.Chemicals + "  " + Loc.T("camp.tape") + " " + storage.Tape
+                    + "  " + (services != null && services.GeneratorOnline ? Loc.T("camp.gen_on") : Loc.T("camp.gen_off"))));
             }
             var roster = SurvivorRoster.Instance;
             if (roster != null)
             {
-                camp.Add(Body("Morale " + Mathf.RoundToInt(roster.AverageMorale())));
+                camp.Add(Body(Loc.T("camp.morale") + " " + Mathf.RoundToInt(roster.AverageMorale())));
                 if (!string.IsNullOrEmpty(roster.DayNotes)) camp.Add(Body(roster.DayNotes));
                 if (roster.Memorials.Count > 0)
                 {
-                    camp.Add(Body("Memorial wall"));
+                    camp.Add(Body(Loc.T("camp.memorial")));
                     for (int i = 0; i < roster.Memorials.Count; i++) camp.Add(Body(SuccessionLedger.Card(roster.Memorials[i])));
                 }
                 foreach (var survivor in roster.Survivors)
@@ -735,35 +735,35 @@ namespace OutpostZero.UI
                     string flag = survivor.leader ? "*" : survivor.alive ? "" : "x";
                     string mood = ColonyDay.Mood(survivor.morale);
                     string doing = CampRoutine.Choose(survivor.task, survivor.hunger, survivor.thirst, survivor.morale, survivor.injury);
-                    string post = doing == survivor.task ? survivor.task : survivor.task + " → " + doing;
-                    camp.Add(Body(flag + " " + survivor.displayName + " (" + survivor.trait + ") " + post
-                        + "  " + mood
-                        + "  food " + Mathf.RoundToInt(survivor.hunger)
-                        + " water " + Mathf.RoundToInt(survivor.thirst)
+                    string post = doing == survivor.task ? Loc.Task(survivor.task) : Loc.Task(survivor.task) + " → " + Loc.Task(doing);
+                    camp.Add(Body(flag + " " + survivor.displayName + " (" + Loc.Trait(survivor.trait) + ") " + post
+                        + "  " + Loc.Mood(mood)
+                        + "  " + Loc.T("camp.food") + " " + Mathf.RoundToInt(survivor.hunger)
+                        + " " + Loc.T("camp.water") + " " + Mathf.RoundToInt(survivor.thirst)
                         + "  " + survivor.bond
-                        + "  opinion " + survivor.opinion
-                        + "  \"" + CampRoutine.Bark(doing, survivor.morale) + "\""));
+                        + "  " + Loc.T("camp.opinion") + " " + survivor.opinion
+                        + "  \"" + Loc.Bark(doing, survivor.morale) + "\""));
                     if (!survivor.alive) continue;
                     string id = survivor.id;
                     var row = new VisualElement();
                     row.style.flexDirection = FlexDirection.Row;
-                    row.Add(Button("Rest", () => roster.Assign(id, "Rest")));
-                    row.Add(Button("Scavenge", () => roster.Assign(id, "Scavenge")));
-                    row.Add(Button("Guard", () => roster.Assign(id, "Guard")));
-                    row.Add(Button("Cook", () => roster.Assign(id, "Cook")));
-                    row.Add(Button("Medic", () => roster.Assign(id, "Medic")));
+                    row.Add(Button(Loc.Task("Rest"), () => roster.Assign(id, "Rest")));
+                    row.Add(Button(Loc.Task("Scavenge"), () => roster.Assign(id, "Scavenge")));
+                    row.Add(Button(Loc.Task("Guard"), () => roster.Assign(id, "Guard")));
+                    row.Add(Button(Loc.Task("Cook"), () => roster.Assign(id, "Cook")));
+                    row.Add(Button(Loc.Task("Medic"), () => roster.Assign(id, "Medic")));
                     camp.Add(row);
                 }
             }
             if (FactionTrade.Instance != null)
             {
                 var merchants = FactionTrade.Instance;
-                string who = string.IsNullOrEmpty(merchants.ActiveId) ? "caravan" : merchants.ActiveId;
-                string presence = string.IsNullOrEmpty(merchants.ActiveId) ? "away" : "at the gate";
+                string who = string.IsNullOrEmpty(merchants.ActiveId) ? Loc.T("camp.caravan") : merchants.ActiveId;
+                string presence = string.IsNullOrEmpty(merchants.ActiveId) ? Loc.T("camp.away") : Loc.T("camp.at_gate");
                 camp.Add(Body(CaravanBook.Display(who) + " — " + presence + "  " + merchants.StandingOf(who)));
             }
-            camp.Add(Button("Caravan", () => FactionTrade.Instance?.Toggle()));
-            camp.Add(Button("Advance watch", () =>
+            camp.Add(Button(Loc.T("camp.caravan"), () => FactionTrade.Instance?.Toggle()));
+            camp.Add(Button(Loc.T("camp.advance"), () =>
             {
                 WorldClock.Instance?.Advance(6f);
                 SurvivorRoster.Instance?.TickTasks();
@@ -771,57 +771,57 @@ namespace OutpostZero.UI
             int raidDay = WorldClock.Instance != null ? WorldClock.Instance.Day : 1;
             int raidSecurity = ColonyStorage.Instance != null ? ColonyStorage.Instance.Security : 0;
             bool endlessNights = WorldMapService.Instance != null && WorldMapService.Instance.Endless;
-            camp.Add(Body(RaidPlan.Due(raidDay, raidSecurity, endlessNights) ? "A raid is likely tonight." : "The street is quiet tonight."));
-            camp.Add(Button("Endure the night", () => NightRaidController.Instance?.Begin()));
-            camp.Add(Body("Build [B] then click. " + (GridBuilder.Instance != null ? GridBuilder.Instance.Selected.ToString() : "")));
+            camp.Add(Body(RaidPlan.Due(raidDay, raidSecurity, endlessNights) ? Loc.T("camp.raid_yes") : Loc.T("camp.raid_no")));
+            camp.Add(Button(Loc.T("camp.endure"), () => NightRaidController.Instance?.Begin()));
+            camp.Add(Body(Loc.T("camp.build") + " " + (GridBuilder.Instance != null ? GridBuilder.Instance.Selected.ToString() : "")));
             var build = new VisualElement { style = { flexDirection = FlexDirection.Row } };
-            build.Add(Button("Barricade", () => GridBuilder.Instance?.Select(ModuleKind.Barricade)));
-            build.Add(Button("Cot", () => GridBuilder.Instance?.Select(ModuleKind.Cot)));
-            build.Add(Button("Water", () => GridBuilder.Instance?.Select(ModuleKind.Water)));
-            build.Add(Button("Tower", () => GridBuilder.Instance?.Select(ModuleKind.Watchtower)));
-            build.Add(Button("Generator", () => GridBuilder.Instance?.Select(ModuleKind.Generator)));
-            build.Add(Button("Bench", () => GridBuilder.Instance?.Select(ModuleKind.Workbench)));
-            build.Add(Button("Post", () => GridBuilder.Instance?.Select(ModuleKind.TradingPost)));
+            build.Add(Button(Loc.T("camp.barricade"), () => GridBuilder.Instance?.Select(ModuleKind.Barricade)));
+            build.Add(Button(Loc.T("camp.cot"), () => GridBuilder.Instance?.Select(ModuleKind.Cot)));
+            build.Add(Button(Loc.T("camp.water"), () => GridBuilder.Instance?.Select(ModuleKind.Water)));
+            build.Add(Button(Loc.T("camp.tower"), () => GridBuilder.Instance?.Select(ModuleKind.Watchtower)));
+            build.Add(Button(Loc.T("camp.generator"), () => GridBuilder.Instance?.Select(ModuleKind.Generator)));
+            build.Add(Button(Loc.T("camp.bench"), () => GridBuilder.Instance?.Select(ModuleKind.Workbench)));
+            build.Add(Button(Loc.T("camp.post"), () => GridBuilder.Instance?.Select(ModuleKind.TradingPost)));
             camp.Add(build);
-            camp.Add(Body("Craft"));
+            camp.Add(Body(Loc.T("camp.craft")));
             bool bench = GridBuilder.Instance != null && GridBuilder.Instance.HasKind("Workbench");
             foreach (var recipe in CraftingBench.Recipes)
             {
                 string id = recipe.Id;
                 if (!CraftBill.TryOf(id, out var bill)) continue;
                 int due = CraftingBench.Priced(bill.Scrap, bench);
-                camp.Add(Button(CraftBill.Line(recipe.Label, due, bill.Cloth, bill.Chemicals, bill.Tape), () => CraftingBench.Instance?.Craft(id)));
+                camp.Add(Button(CraftBill.Line(Loc.Recipe(id, recipe.Label), due, bill.Cloth, bill.Chemicals, bill.Tape), () => CraftingBench.Instance?.Craft(id)));
             }
             var map = WorldMapService.Instance;
             if (map != null)
             {
-                camp.Add(Body("Radio " + CampaignBoard.PartCount(map.Parts) + "/3  " + DifficultyProfile.Name(map.Difficulty) + "  seed " + map.WorldSeed));
-                camp.Add(Button("Reroll street", () => map.RerollSeed()));
-                if (map.Endless) camp.Add(Body("The broadcast holds. The nights keep coming."));
-                else if (map.CampaignWon) camp.Add(Body("The tower is on the air."));
-                else if (map.ReadyToBroadcast) camp.Add(Button("Broadcast night", () => NightRaidController.Instance?.BeginBroadcast()));
-                else camp.Add(Body("The tower needs three radio parts and a built generator."));
-                camp.Add(Body("District"));
+                camp.Add(Body(Loc.T("camp.radio") + " " + CampaignBoard.PartCount(map.Parts) + "/3  " + Loc.Difficulty(map.Difficulty) + "  " + Loc.T("camp.seed") + " " + map.WorldSeed));
+                camp.Add(Button(Loc.T("camp.reroll"), () => map.RerollSeed()));
+                if (map.Endless) camp.Add(Body(Loc.T("camp.broadcast_holds")));
+                else if (map.CampaignWon) camp.Add(Body(Loc.T("camp.tower_air")));
+                else if (map.ReadyToBroadcast) camp.Add(Button(Loc.T("camp.broadcast"), () => NightRaidController.Instance?.BeginBroadcast()));
+                else camp.Add(Body(Loc.T("camp.tower_needs")));
+                camp.Add(Body(Loc.T("camp.district")));
                 foreach (var district in map.Districts)
                 {
                     if (district.cleared && !map.Endless)
                     {
                         string part = CampaignBoard.PartFor(district.id);
-                        camp.Add(Body(district.displayName + " — clear" + (string.IsNullOrEmpty(part) ? "" : "  part")));
+                        camp.Add(Body(Loc.District(district.id) + " — " + Loc.T("camp.clear") + (string.IsNullOrEmpty(part) ? "" : "  " + Loc.T("camp.part"))));
                         continue;
                     }
                     string id = district.id;
                     if (!CampaignBoard.Reachable(id, ClearedDistricts(map)))
                     {
-                        camp.Add(Body(district.displayName + " — road closed"));
+                        camp.Add(Body(Loc.District(id) + " — " + Loc.T("camp.closed")));
                         continue;
                     }
                     string mark = map.Current != null && map.Current.id == id ? "> " : "";
                     string hours = CampaignBoard.TravelHours(id).ToString("0");
-                    camp.Add(Button(mark + district.displayName + "  " + hours + "h", () => map.Select(id)));
+                    camp.Add(Button(mark + Loc.District(id) + "  " + hours + "h", () => map.Select(id)));
                 }
             }
-            camp.Add(Button("Leave for the district", () => Go(FlowStep.Expedition, () => GameManager.Instance.BeginExpedition())));
+            camp.Add(Button(Loc.T("camp.leave"), () => Go(FlowStep.Expedition, () => GameManager.Instance.BeginExpedition())));
         }
 
         private void RebuildPack(bool open)
@@ -830,9 +830,9 @@ namespace OutpostZero.UI
             pack.style.display = open ? DisplayStyle.Flex : DisplayStyle.None;
             if (!open) return;
             var inventory = PlayerRegistry.Current != null ? PlayerRegistry.Current.GetComponent<PlayerInventory>() : null;
-            pack.Add(Title("PACK"));
+            pack.Add(Title(Loc.T("camp.pack")));
             if (inventory == null) return;
-            pack.Add(Body("Weight " + inventory.CurrentWeight.ToString("0.0") + " / " + inventory.MaxWeightCapacity.ToString("0.0")));
+            pack.Add(Body(Loc.T("camp.weight") + " " + inventory.CurrentWeight.ToString("0.0") + " / " + inventory.MaxWeightCapacity.ToString("0.0")));
             var track = new VisualElement();
             track.style.height = 8;
             track.style.marginBottom = 8;
@@ -849,23 +849,23 @@ namespace OutpostZero.UI
             {
                 var medRow = new VisualElement { style = { flexDirection = FlexDirection.Row } };
                 var medLabel = Body();
-                medLabel.text = "Medkit x" + inventory.MedicalKits;
+                medLabel.text = Loc.Item("medkit") + " x" + inventory.MedicalKits;
                 medLabel.style.flexGrow = 1;
                 medRow.Add(medLabel);
-                medRow.Add(Button("Use", () => inventory.UseMedkit()));
-                medRow.Add(Button("Info", () => Inspect("medkit")));
+                medRow.Add(Button(Loc.T("camp.use"), () => inventory.UseMedkit()));
+                medRow.Add(Button(Loc.T("camp.info"), () => Inspect("medkit")));
                 string medMark = inventory.BeltMark("medkit");
-                medRow.Add(Button(string.IsNullOrEmpty(medMark) ? "Belt" : "Belt " + medMark, () => inventory.ToggleBelt("medkit")));
+                medRow.Add(Button(string.IsNullOrEmpty(medMark) ? Loc.T("camp.belt") : Loc.T("camp.belt") + " " + medMark, () => inventory.ToggleBelt("medkit")));
                 pack.Add(medRow);
             }
             if (inventory.ScrapCount > 0)
             {
                 var scrapRow = new VisualElement { style = { flexDirection = FlexDirection.Row } };
                 var scrapLabel = Body();
-                scrapLabel.text = "Scrap x" + inventory.ScrapCount;
+                scrapLabel.text = Loc.Item("scrap") + " x" + inventory.ScrapCount;
                 scrapLabel.style.flexGrow = 1;
                 scrapRow.Add(scrapLabel);
-                scrapRow.Add(Button("Info", () => Inspect("scrap")));
+                scrapRow.Add(Button(Loc.T("camp.info"), () => Inspect("scrap")));
                 pack.Add(scrapRow);
             }
             var scroll = new ScrollView();
@@ -875,17 +875,17 @@ namespace OutpostZero.UI
                 string id = item.ItemId;
                 var row = new VisualElement { style = { flexDirection = FlexDirection.Row } };
                 var label = Body();
-                label.text = item.ItemName + " x" + item.Quantity;
+                label.text = Loc.Item(id) + " x" + item.Quantity;
                 label.style.flexGrow = 1;
                 row.Add(label);
-                row.Add(Button("Use", () => inventory.TryUse(id)));
-                row.Add(Button("Info", () => Inspect(id)));
-                row.Add(Button("Drop", () => inventory.Drop(id, 1)));
-                row.Add(Button("Split", () => inventory.DropHalf(id)));
+                row.Add(Button(Loc.T("camp.use"), () => inventory.TryUse(id)));
+                row.Add(Button(Loc.T("camp.info"), () => Inspect(id)));
+                row.Add(Button(Loc.T("camp.drop"), () => inventory.Drop(id, 1)));
+                row.Add(Button(Loc.T("camp.split"), () => inventory.DropHalf(id)));
                 if (ItemBelt.Fits(id))
                 {
                     string mark = inventory.BeltMark(id);
-                    row.Add(Button(string.IsNullOrEmpty(mark) ? "Belt" : "Belt " + mark, () => inventory.ToggleBelt(id)));
+                    row.Add(Button(string.IsNullOrEmpty(mark) ? Loc.T("camp.belt") : Loc.T("camp.belt") + " " + mark, () => inventory.ToggleBelt(id)));
                 }
                 scroll.Add(row);
             }
@@ -893,13 +893,13 @@ namespace OutpostZero.UI
             var crate = LootContainer.Open;
             if (crate != null && crate.HeldCount > 0)
             {
-                pack.Add(Body("Container"));
+                pack.Add(Body(Loc.T("camp.container")));
                 for (int i = 0; i < crate.HeldCount; i++)
                 {
                     string id = crate.HeldId(i);
-                    pack.Add(Button("Take " + crate.HeldOffer(i), () => crate.Take(id, inventory)));
+                    pack.Add(Button(Loc.T("camp.take") + " " + crate.HeldOffer(i), () => crate.Take(id, inventory)));
                 }
-                pack.Add(Button("Take all", () => crate.TakeAll(inventory)));
+                pack.Add(Button(Loc.T("camp.take_all"), () => crate.TakeAll(inventory)));
             }
             if (!string.IsNullOrEmpty(inspected))
             {
@@ -908,7 +908,7 @@ namespace OutpostZero.UI
                 detail.text = ItemBrief.Text(ItemCatalog.Find(inspected));
                 pack.Add(detail);
             }
-            pack.Add(Button("Close", () => FindFirstObjectByType<GameShellUI>()?.CloseInventory()));
+            pack.Add(Button(Loc.T("set.close"), () => FindFirstObjectByType<GameShellUI>()?.CloseInventory()));
         }
 
         private void Inspect(string id)
@@ -1016,6 +1016,7 @@ namespace OutpostZero.UI
         private static string CampSignature()
         {
             var builder = new StringBuilder();
+            builder.Append(SettingsService.Instance != null ? SettingsService.Instance.Language : "en").Append('|');
             if (WorldClock.Instance != null) builder.Append(WorldClock.Instance.Day);
             if (ColonyStorage.Instance != null)
             {
@@ -1055,6 +1056,7 @@ namespace OutpostZero.UI
             var inventory = PlayerRegistry.Current != null ? PlayerRegistry.Current.GetComponent<PlayerInventory>() : null;
             if (inventory == null) return "";
             var builder = new StringBuilder();
+            builder.Append(SettingsService.Instance != null ? SettingsService.Instance.Language : "en").Append('|');
             foreach (var item in inventory.Items) builder.Append(item.ItemId).Append(item.Quantity);
             builder.Append(inventory.MedicalKits);
             builder.Append(inventory.ScrapCount);

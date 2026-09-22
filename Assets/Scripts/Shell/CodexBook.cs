@@ -77,7 +77,7 @@ namespace OutpostZero.Shell
                 if (Hints[i].Signal != signal) continue;
                 next = Remember(next, Hints[i].Id, out bool added);
                 if (!added) return false;
-                text = Hints[i].Text;
+                text = Loc.Hint(Hints[i].Id, Hints[i].Text);
                 return true;
             }
             return false;

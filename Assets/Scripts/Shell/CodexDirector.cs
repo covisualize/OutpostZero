@@ -47,7 +47,7 @@ namespace OutpostZero.Shell
             for (int i = 0; i < CodexBook.Entries.Length; i++)
             {
                 if (CodexBook.Entries[i].Id != id) continue;
-                GameplayFeedback.Toast("Codex: " + CodexBook.Entries[i].Title);
+                GameplayFeedback.Toast(Loc.T("camp.codex") + " " + Loc.EntryTitle(CodexBook.Entries[i].Id, CodexBook.Entries[i].Title));
                 return;
             }
         }

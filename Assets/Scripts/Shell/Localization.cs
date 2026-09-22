@@ -100,7 +100,189 @@ namespace OutpostZero.Shell
             { "set.pad", "Click a pad action, then press a button. Escape cancels." },
             { "set.reset_pad", "Reset pad" },
             { "set.revert", "Revert" },
-            { "set.close", "Close" }
+            { "set.close", "Close" },
+            { "task.rest", "Rest" },
+            { "task.scavenge", "Scavenge" },
+            { "task.guard", "Guard" },
+            { "task.cook", "Cook" },
+            { "task.medic", "Medic" },
+            { "task.lead", "Lead" },
+            { "task.fallen", "Fallen" },
+            { "task.quarantine", "Quarantine" },
+            { "camp.scrap", "Scrap" },
+            { "camp.food", "Food" },
+            { "camp.water", "Water" },
+            { "camp.cloth", "Cloth" },
+            { "camp.chem", "Chem" },
+            { "camp.tape", "Tape" },
+            { "camp.gen_on", "Generator on" },
+            { "camp.gen_off", "Generator dark" },
+            { "camp.morale", "Morale" },
+            { "camp.memorial", "Memorial wall" },
+            { "camp.caravan", "Caravan" },
+            { "camp.away", "away" },
+            { "camp.at_gate", "at the gate" },
+            { "camp.advance", "Advance watch" },
+            { "camp.raid_yes", "A raid is likely tonight." },
+            { "camp.raid_no", "The street is quiet tonight." },
+            { "camp.endure", "Endure the night" },
+            { "camp.build", "Build [B] then click." },
+            { "camp.barricade", "Barricade" },
+            { "camp.cot", "Cot" },
+            { "camp.tower", "Tower" },
+            { "camp.generator", "Generator" },
+            { "camp.bench", "Bench" },
+            { "camp.post", "Post" },
+            { "camp.craft", "Craft" },
+            { "camp.radio", "Radio" },
+            { "camp.reroll", "Reroll street" },
+            { "camp.broadcast_holds", "The broadcast holds. The nights keep coming." },
+            { "camp.tower_air", "The tower is on the air." },
+            { "camp.broadcast", "Broadcast night" },
+            { "camp.tower_needs", "The tower needs three radio parts and a built generator." },
+            { "camp.district", "District" },
+            { "camp.clear", "clear" },
+            { "camp.part", "part" },
+            { "camp.closed", "road closed" },
+            { "camp.leave", "Leave for the district" },
+            { "camp.pack", "PACK" },
+            { "camp.weight", "Weight" },
+            { "camp.use", "Use" },
+            { "camp.info", "Info" },
+            { "camp.belt", "Belt" },
+            { "camp.drop", "Drop" },
+            { "camp.split", "Split" },
+            { "camp.container", "Container" },
+            { "camp.take_all", "Take all" },
+            { "camp.take", "Take" },
+            { "camp.unknown", "Unknown" },
+            { "camp.unseen", "Not seen yet." },
+            { "camp.seed", "seed" },
+            { "camp.opinion", "opinion" },
+            { "camp.codex", "Codex:" },
+            { "camp.heavy", "Pack is too heavy" },
+            { "camp.picked", "Picked up" },
+            { "unit.health", "health" },
+            { "unit.hunger", "hunger" },
+            { "unit.thirst", "thirst" },
+            { "unit.rounds", "rounds" },
+            { "unit.cure", "Clears infection" },
+            { "unit.relief", "+20 health over 20s" },
+            { "unit.lure", "Draws the dead" },
+            { "unit.molotov", "Fire on impact" },
+            { "unit.cloth", "Bandages and fire bottles" },
+            { "unit.chemicals", "Ammo and medicine" },
+            { "unit.tape", "Holds a medkit together" },
+            { "unit.material", "Camp scrap" },
+            { "item.medkit", "Medkit" },
+            { "item.bandage", "Bandage" },
+            { "item.antibiotics", "Antibiotics" },
+            { "item.painkillers", "Painkillers" },
+            { "item.canned_food", "Canned Food" },
+            { "item.water", "Water Bottle" },
+            { "item.ammo_9mm", "9mm Rounds" },
+            { "item.ammo_shells", "Shotgun Shells" },
+            { "item.ammo_rifle", "Rifle Magazine" },
+            { "item.scrap", "Scrap" },
+            { "item.cloth", "Cloth" },
+            { "item.chemicals", "Chemicals" },
+            { "item.tape", "Duct Tape" },
+            { "item.noise_lure", "Noise Lure" },
+            { "item.molotov", "Molotov" },
+            { "blurb.medkit", "Stops bleeding and breaks a fever." },
+            { "blurb.bandage", "Stops bleeding." },
+            { "blurb.antibiotics", "Works before the fever turns lethal." },
+            { "blurb.painkillers", "A slow mend, not a cure." },
+            { "blurb.canned_food", "Heavy, and it keeps." },
+            { "blurb.water", "One bottle covers about ten minutes." },
+            { "blurb.ammo_9mm", "Fits the pistol." },
+            { "blurb.ammo_shells", "Fits the shotgun." },
+            { "blurb.ammo_rifle", "Fits the rifle." },
+            { "blurb.scrap", "The camp spends this." },
+            { "blurb.cloth", "Turns into bandages at the sanctuary." },
+            { "blurb.chemicals", "The bench needs a measure for each batch of rounds." },
+            { "blurb.tape", "One roll finishes a medkit." },
+            { "blurb.noise_lure", "Throw it to pull a horde off a door." },
+            { "blurb.molotov", "Breaks into fire." },
+            { "dist.ash_market", "Ash Market" },
+            { "dist.rail_yard", "Rail Yard" },
+            { "dist.old_hospital", "Old Hospital" },
+            { "dist.north_gate", "North Gate" },
+            { "dist.commercial_strip", "Commercial Strip" },
+            { "dist.police_station", "Police Station" },
+            { "dist.water_plant", "Water Plant" },
+            { "dist.mall", "Mall" },
+            { "dist.highway_overpass", "Highway Overpass" },
+            { "dist.downtown_core", "Downtown Core" },
+            { "trait.steady", "Steady Hands" },
+            { "trait.sleeper", "Light Sleeper" },
+            { "trait.medic", "Field Medic" },
+            { "trait.scrounger", "Scrounger" },
+            { "trait.watchful", "Watchful" },
+            { "mood.inspired", "Inspired" },
+            { "mood.steady", "Steady" },
+            { "mood.depressed", "Depressed" },
+            { "mood.breakdown", "Breakdown" },
+            { "bark.cant", "I can't do this." },
+            { "bark.cook", "Fire's lit." },
+            { "bark.guard", "Watching the gate." },
+            { "bark.medic", "Hold still." },
+            { "bark.scavenge", "I'll check the piles." },
+            { "bark.hold", "We'll hold." },
+            { "bark.rest", "Resting." },
+            { "recipe.bandage", "Bandage" },
+            { "recipe.medkit", "Medkit" },
+            { "recipe.antibiotics", "Antibiotics" },
+            { "recipe.painkillers", "Painkillers" },
+            { "recipe.ammo_9mm", "9mm (12)" },
+            { "recipe.ammo_shells", "Shells (6)" },
+            { "recipe.ammo_rifle", "Rifle mag" },
+            { "recipe.noise_lure", "Noise lure" },
+            { "recipe.molotov", "Molotov" },
+            { "recipe.suppressor", "Suppressor" },
+            { "recipe.optic", "Optic" },
+            { "recipe.extended_mag", "Extended mag" },
+            { "lesson.0", "WASD move, mouse aim, left click fire. C crouch, Shift sprint." },
+            { "lesson.1", "Fire the weapon in your hands. R reloads. 1-4 swaps." },
+            { "lesson.2", "Crouch to cut your exposure. Noise still draws the horde." },
+            { "lesson.3", "Kill and scavenge, then extract at the sanctuary gate." },
+            { "lesson.4", "Tab opens the pack. If you fall, the next survivor takes the gate." },
+            { "hint.move", "WASD moves. The mouse aims." },
+            { "hint.fire", "Left click fires. R reloads." },
+            { "hint.crouch", "Crouch cuts exposure. Noise still travels." },
+            { "hint.loot", "Scrap and supplies go into the pack." },
+            { "hint.pack", "Tab opens the pack. Use what you are carrying." },
+            { "hint.reload", "An empty magazine does not fire. Reload before the click." },
+            { "hint.flashlight", "The flashlight shows the street and shows you." },
+            { "hint.medkit", "A medkit closes a bleed. It will not refill itself." },
+            { "hint.sprint", "Sprint is loud and spends stamina." },
+            { "hint.aim", "Aim tightens the shot and narrows what you can see." },
+            { "hint.extract", "The gate is the way home. Unfinished work will not let you through." },
+            { "hint.weight", "The pack is near its limit. Drop or use something." },
+            { "codex.zombie.walker.title", "Walker" },
+            { "codex.zombie.walker.body", "Slow, loud, and enough of them to pin you. A scream pulls the ones you have not seen." },
+            { "codex.zombie.runner.title", "Runner" },
+            { "codex.zombie.runner.body", "Closes the gap with a lunge. Crouch and a corner buy you the reload." },
+            { "codex.zombie.brute.title", "Brute" },
+            { "codex.zombie.brute.body", "A charge that knocks you down. Barrels and a clear lane do more than a pistol." },
+            { "codex.item.medkit.title", "Medkit" },
+            { "codex.item.medkit.body", "Stops bleeding and puts health back. Q uses the one in your hands." },
+            { "codex.module.generator.title", "Generator" },
+            { "codex.module.generator.body", "Keeps the sanctuary lamps lit. It drinks fuel after dusk." },
+            { "codex.module.barricade.title", "Barricade" },
+            { "codex.module.barricade.body", "The night raid hits the nearest boards. A guard slows the damage." },
+            { "codex.module.cot.title", "Medical cot" },
+            { "codex.module.cot.body", "Rest and a medic close wounds faster than waiting the night out." },
+            { "codex.faction.market.title", "Ash Market" },
+            { "codex.faction.market.body", "The merchant trades medkits, rifle ammo, and water for camp scrap." },
+            { "codex.mechanic.noise.title", "Noise" },
+            { "codex.mechanic.noise.body", "Shots, sprints, and breaking barrels carry. Crouching cuts the footfall." },
+            { "codex.mechanic.exposure.title", "Exposure" },
+            { "codex.mechanic.exposure.body", "Lamplight and the flashlight make you easier to spot. Dark is cover." },
+            { "codex.mechanic.infection.title", "Infection" },
+            { "codex.mechanic.infection.body", "A dirty wound worsens until a medkit or the cot clears it." },
+            { "codex.mechanic.extract.title", "Extraction" },
+            { "codex.mechanic.extract.body", "Finish the quota, then stand in the sanctuary gate. The bag stays if you fall." }
         };
 
         private static readonly Dictionary<string, string> spanish = new Dictionary<string, string>
@@ -198,7 +380,189 @@ namespace OutpostZero.Shell
             { "set.pad", "Pulsa una acción del mando y luego un botón. Escape cancela." },
             { "set.reset_pad", "Restablecer mando" },
             { "set.revert", "Revertir" },
-            { "set.close", "Cerrar" }
+            { "set.close", "Cerrar" },
+            { "task.rest", "Descansar" },
+            { "task.scavenge", "Rebuscar" },
+            { "task.guard", "Vigilar" },
+            { "task.cook", "Cocinar" },
+            { "task.medic", "Curar" },
+            { "task.lead", "Liderar" },
+            { "task.fallen", "Caído" },
+            { "task.quarantine", "Cuarentena" },
+            { "camp.scrap", "Chatarra" },
+            { "camp.food", "Comida" },
+            { "camp.water", "Agua" },
+            { "camp.cloth", "Tela" },
+            { "camp.chem", "Quím" },
+            { "camp.tape", "Cinta" },
+            { "camp.gen_on", "Generador encendido" },
+            { "camp.gen_off", "Generador apagado" },
+            { "camp.morale", "Ánimo" },
+            { "camp.memorial", "Muro memorial" },
+            { "camp.caravan", "Caravana" },
+            { "camp.away", "lejos" },
+            { "camp.at_gate", "en la puerta" },
+            { "camp.advance", "Avanzar guardia" },
+            { "camp.raid_yes", "Esta noche es probable una incursión." },
+            { "camp.raid_no", "La calle está quieta esta noche." },
+            { "camp.endure", "Aguantar la noche" },
+            { "camp.build", "Construir [B] y clic." },
+            { "camp.barricade", "Barricada" },
+            { "camp.cot", "Camilla" },
+            { "camp.tower", "Torre" },
+            { "camp.generator", "Generador" },
+            { "camp.bench", "Banco" },
+            { "camp.post", "Puesto" },
+            { "camp.craft", "Fabricar" },
+            { "camp.radio", "Radio" },
+            { "camp.reroll", "Otra calle" },
+            { "camp.broadcast_holds", "La emisión sigue. Las noches continúan." },
+            { "camp.tower_air", "La torre está al aire." },
+            { "camp.broadcast", "Noche de emisión" },
+            { "camp.tower_needs", "La torre necesita tres piezas de radio y un generador construido." },
+            { "camp.district", "Distrito" },
+            { "camp.clear", "despejado" },
+            { "camp.part", "pieza" },
+            { "camp.closed", "camino cerrado" },
+            { "camp.leave", "Salir al distrito" },
+            { "camp.pack", "MOCHILA" },
+            { "camp.weight", "Peso" },
+            { "camp.use", "Usar" },
+            { "camp.info", "Info" },
+            { "camp.belt", "Cinturón" },
+            { "camp.drop", "Soltar" },
+            { "camp.split", "Partir" },
+            { "camp.container", "Contenedor" },
+            { "camp.take_all", "Llevar todo" },
+            { "camp.take", "Llevar" },
+            { "camp.unknown", "Desconocido" },
+            { "camp.unseen", "Aún no visto." },
+            { "camp.seed", "semilla" },
+            { "camp.opinion", "opinión" },
+            { "camp.codex", "Códice:" },
+            { "camp.heavy", "La mochila pesa demasiado" },
+            { "camp.picked", "Recogido" },
+            { "unit.health", "salud" },
+            { "unit.hunger", "hambre" },
+            { "unit.thirst", "sed" },
+            { "unit.rounds", "balas" },
+            { "unit.cure", "Corta la infección" },
+            { "unit.relief", "+20 de salud en 20 s" },
+            { "unit.lure", "Atrae a los muertos" },
+            { "unit.molotov", "Fuego al impacto" },
+            { "unit.cloth", "Vendajes y bombas" },
+            { "unit.chemicals", "Munición y medicina" },
+            { "unit.tape", "Sujeta un botiquín" },
+            { "unit.material", "Chatarra del campamento" },
+            { "item.medkit", "Botiquín" },
+            { "item.bandage", "Vendaje" },
+            { "item.antibiotics", "Antibióticos" },
+            { "item.painkillers", "Analgésicos" },
+            { "item.canned_food", "Comida enlatada" },
+            { "item.water", "Botella de agua" },
+            { "item.ammo_9mm", "Balas 9mm" },
+            { "item.ammo_shells", "Cartuchos" },
+            { "item.ammo_rifle", "Cargador de rifle" },
+            { "item.scrap", "Chatarra" },
+            { "item.cloth", "Tela" },
+            { "item.chemicals", "Químicos" },
+            { "item.tape", "Cinta americana" },
+            { "item.noise_lure", "Cebo de ruido" },
+            { "item.molotov", "Molotov" },
+            { "blurb.medkit", "Detiene la hemorragia y baja la fiebre." },
+            { "blurb.bandage", "Detiene la hemorragia." },
+            { "blurb.antibiotics", "Sirve antes de que la fiebre mate." },
+            { "blurb.painkillers", "Un alivio lento, no una cura." },
+            { "blurb.canned_food", "Pesa, y se conserva." },
+            { "blurb.water", "Una botella cubre unos diez minutos." },
+            { "blurb.ammo_9mm", "Sirve para la pistola." },
+            { "blurb.ammo_shells", "Sirve para la escopeta." },
+            { "blurb.ammo_rifle", "Sirve para el rifle." },
+            { "blurb.scrap", "El campamento gasta esto." },
+            { "blurb.cloth", "Se vuelve vendajes en el santuario." },
+            { "blurb.chemicals", "El banco pide una medida por cada tanda de balas." },
+            { "blurb.tape", "Un rollo termina un botiquín." },
+            { "blurb.noise_lure", "Lánzalo para apartar una horda de una puerta." },
+            { "blurb.molotov", "Se rompe en fuego." },
+            { "dist.ash_market", "Mercado de ceniza" },
+            { "dist.rail_yard", "Patio ferroviario" },
+            { "dist.old_hospital", "Hospital viejo" },
+            { "dist.north_gate", "Puerta norte" },
+            { "dist.commercial_strip", "Franja comercial" },
+            { "dist.police_station", "Comisaría" },
+            { "dist.water_plant", "Planta de agua" },
+            { "dist.mall", "Centro comercial" },
+            { "dist.highway_overpass", "Paso elevado" },
+            { "dist.downtown_core", "Centro" },
+            { "trait.steady", "Manos firmes" },
+            { "trait.sleeper", "Duerme ligero" },
+            { "trait.medic", "Médico de campo" },
+            { "trait.scrounger", "Rebuscador" },
+            { "trait.watchful", "Vigilante" },
+            { "mood.inspired", "Inspirado" },
+            { "mood.steady", "Estable" },
+            { "mood.depressed", "Deprimido" },
+            { "mood.breakdown", "Colapso" },
+            { "bark.cant", "No puedo con esto." },
+            { "bark.cook", "El fuego está listo." },
+            { "bark.guard", "Vigilo la puerta." },
+            { "bark.medic", "Quieto." },
+            { "bark.scavenge", "Reviso los montones." },
+            { "bark.hold", "Aguantaremos." },
+            { "bark.rest", "Descansando." },
+            { "recipe.bandage", "Vendaje" },
+            { "recipe.medkit", "Botiquín" },
+            { "recipe.antibiotics", "Antibióticos" },
+            { "recipe.painkillers", "Analgésicos" },
+            { "recipe.ammo_9mm", "9mm (12)" },
+            { "recipe.ammo_shells", "Cartuchos (6)" },
+            { "recipe.ammo_rifle", "Cargador" },
+            { "recipe.noise_lure", "Cebo de ruido" },
+            { "recipe.molotov", "Molotov" },
+            { "recipe.suppressor", "Silenciador" },
+            { "recipe.optic", "Mira" },
+            { "recipe.extended_mag", "Cargador largo" },
+            { "lesson.0", "WASD mueve, el ratón apunta, clic izquierdo dispara. C agacha, Shift corre." },
+            { "lesson.1", "Dispara el arma en las manos. R recarga. 1-4 cambia." },
+            { "lesson.2", "Agacharse baja la exposición. El ruido sigue llamando a la horda." },
+            { "lesson.3", "Mata y rebusca, luego extrae en la puerta del santuario." },
+            { "lesson.4", "Tab abre la mochila. Si caes, el siguiente superviviente toma la puerta." },
+            { "hint.move", "WASD mueve. El ratón apunta." },
+            { "hint.fire", "El clic izquierdo dispara. R recarga." },
+            { "hint.crouch", "Agacharse baja la exposición. El ruido viaja." },
+            { "hint.loot", "La chatarra y los suministros van a la mochila." },
+            { "hint.pack", "Tab abre la mochila. Usa lo que llevas." },
+            { "hint.reload", "Un cargador vacío no dispara. Recarga antes del clic." },
+            { "hint.flashlight", "La linterna muestra la calle y te muestra a ti." },
+            { "hint.medkit", "Un botiquín cierra una hemorragia. No se rellena solo." },
+            { "hint.sprint", "Correr hace ruido y gasta aguante." },
+            { "hint.aim", "Apuntar aprieta el tiro y estrecha lo que ves." },
+            { "hint.extract", "La puerta es el camino a casa. El trabajo a medias no deja pasar." },
+            { "hint.weight", "La mochila está al límite. Suelta o usa algo." },
+            { "codex.zombie.walker.title", "Caminante" },
+            { "codex.zombie.walker.body", "Lento, ruidoso, y bastan para inmovilizarte. Un grito llama a los que no ves." },
+            { "codex.zombie.runner.title", "Corredor" },
+            { "codex.zombie.runner.body", "Cierra la distancia con una embestida. Agacharse y una esquina dan la recarga." },
+            { "codex.zombie.brute.title", "Bruto" },
+            { "codex.zombie.brute.body", "Una carga que te tira. Los barriles y un pasillo claro valen más que una pistola." },
+            { "codex.item.medkit.title", "Botiquín" },
+            { "codex.item.medkit.body", "Detiene la hemorragia y devuelve salud. Q usa el que llevas." },
+            { "codex.module.generator.title", "Generador" },
+            { "codex.module.generator.body", "Mantiene las lámparas del santuario. Bebe combustible al anochecer." },
+            { "codex.module.barricade.title", "Barricada" },
+            { "codex.module.barricade.body", "La incursión nocturna golpea los tablones más cercanos. Un guardia frena el daño." },
+            { "codex.module.cot.title", "Camilla" },
+            { "codex.module.cot.body", "El descanso y un médico cierran heridas más rápido que esperar la noche." },
+            { "codex.faction.market.title", "Mercado de ceniza" },
+            { "codex.faction.market.body", "El mercader cambia botiquines, balas de rifle y agua por chatarra del campamento." },
+            { "codex.mechanic.noise.title", "Ruido" },
+            { "codex.mechanic.noise.body", "Los disparos, las carreras y los barriles rotos se oyen. Agacharse corta la pisada." },
+            { "codex.mechanic.exposure.title", "Exposición" },
+            { "codex.mechanic.exposure.body", "La luz de las farolas y la linterna te hacen fácil de ver. La oscuridad cubre." },
+            { "codex.mechanic.infection.title", "Infección" },
+            { "codex.mechanic.infection.body", "Una herida sucia empeora hasta que un botiquín o la camilla la limpia." },
+            { "codex.mechanic.extract.title", "Extracción" },
+            { "codex.mechanic.extract.body", "Cumple la cuota y quédate en la puerta del santuario. La bolsa se queda si caes." }
         };
 
         public static string T(string key)
@@ -219,6 +583,103 @@ namespace OutpostZero.Shell
             if (level == 1) return T("diff.scavenger");
             if (level == 3) return T("diff.nightmare");
             return T("diff.survivor");
+        }
+
+        public static string Item(string id)
+        {
+            return Pick("item." + (id ?? ""), id ?? "");
+        }
+
+        public static string Item(string id, string language)
+        {
+            return Pick("item." + (id ?? ""), id ?? "", language);
+        }
+
+        public static string District(string id)
+        {
+            return Pick("dist." + (id ?? ""), id ?? "");
+        }
+
+        public static string District(string id, string language)
+        {
+            return Pick("dist." + (id ?? ""), id ?? "", language);
+        }
+
+        public static string Task(string id)
+        {
+            return Task(id, null);
+        }
+
+        public static string Task(string id, string language)
+        {
+            if (string.IsNullOrEmpty(id)) return "";
+            return Pick("task." + id.ToLowerInvariant(), id, language);
+        }
+
+        public static string Trait(string trait)
+        {
+            string key = trait == "Steady Hands" ? "trait.steady"
+                : trait == "Light Sleeper" ? "trait.sleeper"
+                : trait == "Field Medic" ? "trait.medic"
+                : trait == "Scrounger" ? "trait.scrounger"
+                : trait == "Watchful" ? "trait.watchful"
+                : "";
+            if (key.Length == 0) return trait ?? "";
+            return Pick(key, trait);
+        }
+
+        public static string Mood(string mood)
+        {
+            if (string.IsNullOrEmpty(mood)) return "";
+            return Pick("mood." + mood.ToLowerInvariant(), mood);
+        }
+
+        public static string Bark(string action, float morale)
+        {
+            string key = morale < 10f ? "bark.cant"
+                : action == "Cook" ? "bark.cook"
+                : action == "Guard" ? "bark.guard"
+                : action == "Medic" ? "bark.medic"
+                : action == "Scavenge" ? "bark.scavenge"
+                : morale > 70f ? "bark.hold"
+                : "bark.rest";
+            return Pick(key, OutpostZero.Colony.CampRoutine.Bark(action, morale));
+        }
+
+        public static string Recipe(string id, string fallback)
+        {
+            return Pick("recipe." + (id ?? ""), fallback ?? "");
+        }
+
+        public static string EntryTitle(string id, string fallback)
+        {
+            return Pick("codex." + id + ".title", fallback ?? "");
+        }
+
+        public static string EntryBody(string id, string fallback)
+        {
+            return Pick("codex." + id + ".body", fallback ?? "");
+        }
+
+        public static string Hint(string id, string fallback)
+        {
+            return Pick(id ?? "", fallback ?? "");
+        }
+
+        public static string Lesson(int index, string fallback)
+        {
+            return Pick("lesson." + index, fallback ?? "");
+        }
+
+        private static string Pick(string key, string fallback)
+        {
+            return Pick(key, fallback, null);
+        }
+
+        private static string Pick(string key, string fallback, string language)
+        {
+            string line = language == null ? T(key) : T(key, language);
+            return line == key ? fallback : line;
         }
     }
 }

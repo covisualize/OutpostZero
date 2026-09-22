@@ -45,7 +45,7 @@ namespace OutpostZero.Shell
         [SerializeField] private bool finished;
 
         public bool Finished => finished;
-        public string Current => finished || index >= TutorialTrack.Steps.Length ? string.Empty : TutorialTrack.Steps[index];
+        public string Current => finished || index >= TutorialTrack.Steps.Length ? string.Empty : Loc.Lesson(index, TutorialTrack.Steps[index]);
 
         private void Awake()
         {

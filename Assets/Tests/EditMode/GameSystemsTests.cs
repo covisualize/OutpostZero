@@ -94,6 +94,14 @@ namespace OutpostZero.Tests.EditMode
             Assert.AreEqual("Superviviente", Loc.T("diff.survivor", "es"));
             Assert.AreEqual("Survivor", Loc.Difficulty(2));
             Assert.AreEqual("missing.key", Loc.T("missing.key", "es"));
+            Assert.AreEqual("Medkit", Loc.Item("medkit"));
+            Assert.AreEqual("Botiquín", Loc.Item("medkit", "es"));
+            Assert.AreEqual("Ash Market", Loc.District("ash_market"));
+            Assert.AreEqual("Mercado de ceniza", Loc.District("ash_market", "es"));
+            Assert.AreEqual("Rest", Loc.Task("Rest"));
+            Assert.AreEqual("Descansar", Loc.Task("Rest", "es"));
+            Assert.AreEqual("Manos firmes", Loc.T("trait.steady", "es"));
+            Assert.AreEqual("Caminante", Loc.T("codex.zombie.walker.title", "es"));
         }
 
         [Test]
