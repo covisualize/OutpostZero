@@ -28,6 +28,7 @@ namespace OutpostZero.Colony
         private float nextGuard;
         private int calledDay = -1;
         private bool breached;
+        private bool bittenTold;
         private int fronts = 1;
 
         public string Approach => approach;
@@ -104,6 +105,7 @@ namespace OutpostZero.Colony
             nextTurret = Time.time + TurretBeat.Interval;
             nextTrap = Time.time + TrapHit.Gap;
             nextGuard = Time.time + GuardVolley.Interval;
+            bittenTold = false;
             GameManager.Instance.SetState(GameState.RaidActive);
             AudioManager.Instance?.Sting("raid");
             int difficulty = WorldMapService.Instance != null ? WorldMapService.Instance.Difficulty : 2;
@@ -398,16 +400,26 @@ namespace OutpostZero.Colony
                     float dz = living[i].transform.position.z - origin.z;
                     distance[i] = (float)System.Math.Sqrt(dx * dx + dz * dz);
                 }
+                float reach = PostBite.Range(crew[g].injury);
+                for (int i = 0; i < distance.Length; i++)
+                {
+                    if (distance[i] > reach) distance[i] = -1f;
+                }
                 int mark = GuardVolley.Pick(distance);
                 if (mark < 0) continue;
                 if (ColonyStorage.Instance == null || ColonyStorage.Instance.TakeRounds(1) <= 0) break;
                 shots++;
+                if (crew[g].injury > 0 && !bittenTold)
+                {
+                    bittenTold = true;
+                    GameplayFeedback.Toast(PostBite.Line(null));
+                }
                 var target = living[mark];
                 Vector3 aim = target.transform.position + Vector3.up * 1.1f;
                 Vector3 direction = aim - origin;
                 var health = target.GetComponent<HealthSystem>();
                 if (health != null && !health.IsDead)
-                    health.TakeDamage(GuardVolley.Damage, aim, direction.normalized, gameObject);
+                    health.TakeDamage(PostBite.Damage(crew[g].injury), aim, direction.normalized, gameObject);
                 Vector3 eject = Vector3.Cross(direction.sqrMagnitude > 0.01f ? direction.normalized : Vector3.forward, Vector3.up);
                 CombatVfx.Shot(origin, direction, aim, eject);
                 if (Sensory.NoiseManager.Instance != null)

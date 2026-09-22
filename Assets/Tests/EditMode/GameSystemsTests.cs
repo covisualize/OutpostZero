@@ -6320,6 +6320,33 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void ABittenGuardShootsShortAndAFeverLeavesTheLine()
+        {
+            Assert.AreEqual(0.72f, PostBite.Reach, 0.001f);
+            Assert.AreEqual(0.7f, PostBite.Hit, 0.001f);
+            Assert.AreEqual(16f, PostBite.Range(0), 0.001f);
+            Assert.AreEqual(16f, PostBite.Range(-1), 0.001f);
+            Assert.AreEqual(11.52f, PostBite.Range(1), 0.001f);
+            Assert.AreEqual(0f, PostBite.Range(2), 0.001f);
+            Assert.AreEqual(0f, PostBite.Range(3), 0.001f);
+            Assert.AreEqual(8f, PostBite.Damage(0), 0.001f);
+            Assert.AreEqual(8f, PostBite.Damage(-2), 0.001f);
+            Assert.AreEqual(5.6f, PostBite.Damage(1), 0.001f);
+            Assert.AreEqual(0f, PostBite.Damage(2), 0.001f);
+            Assert.AreEqual(0f, PostBite.Damage(9), 0.001f);
+            Assert.AreEqual("The bite pulls the shot", PostBite.Line("en"));
+            Assert.AreEqual("La mordedura tira el tiro", PostBite.Line("es"));
+            Assert.AreEqual("Guard", GuardStand.Face("Guard", 60f, 1));
+            Assert.AreEqual("Medic", GuardStand.Face("Guard", 60f, 2));
+            Assert.AreEqual("Medic", GuardStand.Face("Guard", 60f, 3));
+            Assert.AreEqual(8f, GuardVolley.Damage, 0.001f);
+            Assert.AreEqual(16f, GuardVolley.Range, 0.001f);
+            Assert.AreEqual(16f, GuardVolley.Hit(2), 0.001f);
+            Assert.AreEqual(24f, GuardVolley.Hit(4), 0.001f);
+            Assert.AreEqual(1.4f, GuardVolley.Interval, 0.001f);
+        }
+
+        [Test]
         public void AZombieWithoutARigStillAttacksAndFalls()
         {
             Assert.AreEqual(14f, PoseSheet.Lean(ZombieAI.ZombieState.Chase, 0f), 0.001f);
