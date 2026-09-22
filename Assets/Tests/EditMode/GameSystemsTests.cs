@@ -1067,6 +1067,22 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void TheYardWallKeepsTheStreetOnThePlane()
+        {
+            Assert.AreEqual(33.4f, MapRim.Open, 0.001f);
+            Assert.AreEqual(3.2f, MapRim.Height, 0.001f);
+            Assert.IsTrue(MapRim.Inside(0f, 0f));
+            Assert.IsTrue(MapRim.Inside(20f, 16f));
+            Assert.IsTrue(MapRim.Inside(-18f, -16f));
+            Assert.IsTrue(MapRim.Inside(33.4f, 0f));
+            Assert.IsTrue(MapRim.Inside(-33.4f, -33.4f));
+            Assert.IsFalse(MapRim.Inside(33.5f, 0f));
+            Assert.IsFalse(MapRim.Inside(-33.5f, 0f));
+            Assert.IsFalse(MapRim.Inside(0f, 34f));
+            Assert.IsFalse(MapRim.Inside(0f, -34f));
+        }
+
+        [Test]
         public void APartlyEmptiedCrateKeepsWhatIsLeft()
         {
             var stacks = new[]
