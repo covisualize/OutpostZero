@@ -49,6 +49,7 @@ namespace OutpostZero.Expedition
             KitStructure.Raise(districtId, root);
             RaiseCaravan();
             StreetDetail.RaiseStreet(districtId, root);
+            StreetNav.Schedule(this);
         }
 
         private void RaiseBlocks(DistrictBlocks.Plan plan)
