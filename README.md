@@ -23,43 +23,73 @@ A 3D top-down / isometric post-apocalyptic survival game built in Unity, combini
 
 ## Controls & Keybindings
 
-| Key / Action | Function |
+Keyboard actions can be rebound in **Settings**. Gamepad buttons can be rebound there too.
+
+| Keyboard / mouse | Action |
 |---|---|
-| **W, A, S, D** | 8-Directional Character Movement |
-| **Mouse Cursor** | Raycast Ground Cursor Aiming & Torso Rotation |
-| **Left Mouse Button (LMB)** | Attack (Fire current firearm or swing melee weapon) |
-| **Right Mouse Button (RMB)** | Aim Down Sights (ADS zoom & camera focus) |
-| **Left Shift** | Sprint (Drains stamina, emits loud running noise) |
-| **Left Control / C** | Crouch / Sneak (Quiet footsteps, reduced zombie sight detection) |
-| **R** | Reload weapon magazine |
-| **1, 2, 3 / Mouse Wheel** | Select Weapon (1: 9mm Pistol, 2: Shotgun, 3: Combat Machete) |
-| **F** | Toggle Tactical Flashlight |
-| **Q** | Use Medical Kit (Restores 50 HP) |
-| **Escape** | Pause Expedition / Open Options |
-| **F9** | Dev menu (editor and development builds only): scene jump, god mode, spawn zombies, give a supply kit, skip 6 hours, reboot through Boot |
+| **W A S D** | Move |
+| **Mouse** | Aim; the torso turns to the cursor |
+| **Left mouse** | Fire or swing the current weapon |
+| **Right mouse** | Aim down sights |
+| **Left Shift** | Sprint (drains stamina, loud footsteps) |
+| **C / Left Ctrl** | Crouch (quiet footsteps, harder to see) |
+| **Space** | Dodge roll (brief invulnerability, costs stamina) |
+| **R** | Reload |
+| **E** | Interact: loot, doors, stalls, pick up bodies |
+| **Q** | Use a medkit |
+| **F** | Flashlight |
+| **G** | Throw the selected throwable |
+| **V** | Stealth takedown |
+| **B** | Build mode in camp |
+| **Tab / I** | Inventory |
+| **1 – 4** | Weapon slots (pistol, shotgun, machete, assault rifle) |
+| **5 – 8** | Belt quick-use slots |
+| **Mouse wheel** | Cycle weapons |
+| **Middle mouse / hold Z** | Weapon wheel |
+| **Escape** | Pause menu |
+| **F3** | AI watch overlay (zombie state and targets) |
+| **F9** | Dev menu (editor and development builds only): scene jump, god mode, spawn zombies, supply kit, skip 6 hours, reboot through Boot |
+
+| Gamepad | Action |
+|---|---|
+| **Left stick / click** | Move / sprint |
+| **Right stick / click** | Aim / crouch |
+| **Right trigger** | Fire |
+| **Left trigger** | Aim down sights |
+| **Right shoulder** | Dodge |
+| **Left shoulder (hold)** | Weapon wheel |
+| **South (A / Cross)** | Interact |
+| **West (X / Square)** | Reload |
+| **North (Y / Triangle)** | Medkit |
+| **East (B / Circle)** | Throw |
+| **D-pad up** | Flashlight |
+| **D-pad down** | Build |
+| **D-pad left / right** | Previous / next weapon |
+| **Select** | Inventory |
+| **Start** | Pause |
 
 ---
 
-## Core Systems Implemented (Phase 1)
+## Feature status by milestone
 
-1. **Twin-Stick Player Controller**: Smooth movement, stamina drain/recovery, cursor aiming, weapon handling, and crouching.
-2. **Tactical Noise & Acoustic Physics (`NoiseManager`)**:
-   - Footsteps, melee swings, and gunshots emit expanding acoustic waves.
-   - Sound muffles through solid building walls.
-   - Dynamic real-time noise meter on the HUD displays current sound footprint.
-3. **Weapon Arsenal**:
-   - **Tactical 9mm Pistol**: Moderate damage, quick reload, 22m sound radius.
-   - **Remington 870 Shotgun**: High spread pellet blast, massive knockback, 38m loud noise radius.
-   - **Steel Machete**: High close-range slash damage, stamina cost, silent (2.5m noise radius).
-4. **NavMesh Zombie Swarm AI (`ZombieAI` & `ZombieSpawner`)**:
-   - Sensory perception: 110-degree vision cone + sound hearing (`INoiseListener`).
-   - State machine: `Idle`, `Wander`, `InvestigateNoise`, `Chase`, `Attack`, `Stunned`, `Dead`.
-   - Swarm alerting: Zombies emit a distress/attack call alerting nearby dormant zombies.
-5. **Community Succession Permadeath**:
-   - When the active expedition leader is killed, the death overlay activates.
-   - You assume command of the next survivor from your sanctuary community.
-6. **Survival HUD**:
-   - Real-time Health, Stamina, Weapon Ammo/Reload status, Acoustic Noise Bar, and Scrap count.
+The plan lives in the Linear project [Outpost Zero — Full Playable Game](https://linear.app/co-projects/project/outpost-zero-full-playable-game-4362cca50e59) (milestones M0–M5, issues PRO-10 to PRO-70). "In code" below means the system exists, is wired into the game, and its rules are covered by EditMode tests. None of it has been checked by playing in the Unity editor yet.
+
+| Milestone | Systems | Status |
+|---|---|---|
+| **M0 — Playability & foundations** | Physics layers and hit masks, loot pickup, medkit binding, `WeaponDefinition` / `ZombieArchetype` data, repo-relative Blender paths, CI workflows | In code; Unity CI waits on license secrets |
+| **M1 — Gameplay** | Loot containers and item database, pistol / shotgun / SMG / rifle / machete with mods and suppressors, hit feedback, explosive barrels, runner lunge and brute charge, horde director, stealth and light detection, hunger / thirst / fatigue / injuries / infection, objectives and extraction, Input System with gamepad, inventory with belt slots | In code |
+| **M2 — Graphics** | URP post-processing, day-night and weather, decals, muzzle / tracer / explosion VFX, triplanar rim material, street dressing and skyline, character detail, Cinemachine follow rig, UI Toolkit HUD, LOD governor and perf budget | In code |
+| **M3 — Asset pipeline** | Manifest, UVs and baked texture sets, character armatures and clips, 2 m snap kit, FBX → prefab and material postprocessor, asset audit tests, docs | In code; per-asset manifest schema (PRO-46) not yet |
+| **M4 — Sanctuary & colony** | Survivor roster with traits and skills, camp management and world clock, needs / morale / relationships, grid building, crafting, succession with corpse recovery and memorials, night raids, merchants, caravans and factions | In code |
+| **M5 — Shell & release** | Boot scene, main menu with New Game (difficulty, permadeath, seed), save slots and autosave, settings and rebinding, adaptive audio, tutorial and codex, 10-district campaign with a radio-tower win and endless mode, English / Spanish, dev menu | In code; menu, camp and expedition still share the arena scene |
+
+## Documentation
+
+- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — namespaces, services, data flow, state machine, events
+- [docs/ASSET_PIPELINE.md](docs/ASSET_PIPELINE.md) — manifest, generators, naming, units, adding an asset
+- [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md) — setup, building, tests, CI, conventions
+- [docs/QA_CHECKLIST.md](docs/QA_CHECKLIST.md) — playtest checklist
+- [docs/AUDIO_ATTRIBUTION.md](docs/AUDIO_ATTRIBUTION.md) — sound credits
 
 ---
 
@@ -80,9 +110,3 @@ Repository secrets required for the Unity jobs:
 | `UNITY_PASSWORD` | Unity account password |
 
 See [GameCI](https://game.ci/) for activating a personal or serial license. Without those secrets the Unity jobs cannot start; the Blender path tests do not need them.
-
-## Roadmap Ahead
-
-- **Phase 2 (Colony Management)**: Survivor trait generator (Medic, Engineer, Cook), hunger/morale/fatigue needs, autonomous schedule routines, and interpersonal relationships.
-- **Phase 3 (Sanctuary Construction)**: Freeform grid base building (barricades, watchtowers, hydroponic farms, water purifiers, generators).
-- **Phase 4 (Factions & Vendors)**: Outpost trading bazaars, wandering merchant caravans, and dynamic faction reputation.
