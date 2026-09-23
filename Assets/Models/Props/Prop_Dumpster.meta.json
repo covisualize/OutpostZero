@@ -2,8 +2,8 @@
   "id": "Prop_Dumpster",
   "category": "Props",
   "generator": "generate_props.build_dumpster",
-  "generatorHash": "15f3ab9d80f32dbb630899346dd662c923f1a9a98d66bbcf44f9db212861ea57",
-  "gitSha": "77cf4c6acc9011d70980d184cc43104f1961ab9e",
+  "generatorHash": "5eb6191fc9aebf1f1ebd78d61c1a8e5ed15c48db23471f77101dccfca9cdf7bc",
+  "gitSha": "d603d236bf331476ae64349b92965cbfb924bc20",
   "blender": "4.2.11",
   "tags": [
     "container"

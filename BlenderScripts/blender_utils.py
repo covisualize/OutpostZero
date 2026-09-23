@@ -317,6 +317,10 @@ def export_fbx(output_filepath, animated=False, texture_size=None, unwrap=True):
     for obj in list(bpy.context.scene.objects):
         if obj.type == 'MESH' and not animated and unwrap:
             unwrap_mesh(obj)
+    import vertex_ao
+    for obj in list(bpy.context.scene.objects):
+        if obj.type == 'MESH':
+            vertex_ao.bake(obj)
     bpy.ops.object.select_all(action='SELECT')
     stats = scene_stats()
     pin_fbx_exporter()
@@ -335,6 +339,7 @@ def export_fbx(output_filepath, animated=False, texture_size=None, unwrap=True):
         bake_anim_use_all_actions=animated,
         bake_anim_use_nla_strips=False,
         bake_anim_simplify_factor=0.0,
+        colors_type='SRGB',
     )
     from texture_set import SIZE, model_meta_text, write_set
     write_set(output_filepath, texture_size or SIZE)

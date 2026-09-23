@@ -2,8 +2,8 @@
   "id": "Ruin_Wall_Corner",
   "category": "Environment",
   "generator": "generate_architecture.build_ruin_wall_corner",
-  "generatorHash": "a6a918d785a010e1c6bb8b9a41c3dae79fed97241a8fed709ba537bb83122d71",
-  "gitSha": "77cf4c6acc9011d70980d184cc43104f1961ab9e",
+  "generatorHash": "e8482b20ec0443b1bd44e69a738b0aa6fed56a3d41a4433230c61a9c0c674000",
+  "gitSha": "d603d236bf331476ae64349b92965cbfb924bc20",
   "blender": "4.2.11",
   "tags": [
     "ruin"

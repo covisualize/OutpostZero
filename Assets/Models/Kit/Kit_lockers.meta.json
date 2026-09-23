@@ -2,8 +2,8 @@
   "id": "Kit_lockers",
   "category": "Kit",
   "generator": "generate_kit.build_piece",
-  "generatorHash": "eb4c46827a3ddf2d3389eac5889a4fd3ec7cd83ece4ba50c4a3e73757cb9d821",
-  "gitSha": "77cf4c6acc9011d70980d184cc43104f1961ab9e",
+  "generatorHash": "b1be2b66280816705b0296244f9dcdbc3685124545d2cfc869f8c028575e70a4",
+  "gitSha": "d603d236bf331476ae64349b92965cbfb924bc20",
   "blender": "4.2.11",
   "tags": [
     "kit",

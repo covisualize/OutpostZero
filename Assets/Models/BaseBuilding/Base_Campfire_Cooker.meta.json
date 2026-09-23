@@ -2,8 +2,8 @@
   "id": "Base_Campfire_Cooker",
   "category": "BaseBuilding",
   "generator": "generate_base_building.build_campfire_cooker",
-  "generatorHash": "4ff1753e103d04f24047e4cb5db1567913ffd69d416ca73e4050f85f1b9674cc",
-  "gitSha": "77cf4c6acc9011d70980d184cc43104f1961ab9e",
+  "generatorHash": "7985c49eb604b401eb710e65eb02576a1226fa8eff71bb13ea82989e314bdfcd",
+  "gitSha": "d603d236bf331476ae64349b92965cbfb924bc20",
   "blender": "4.2.11",
   "tags": [
     "camp",

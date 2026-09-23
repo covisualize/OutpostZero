@@ -2,8 +2,8 @@
   "id": "Kit_wood_barricade",
   "category": "Kit",
   "generator": "generate_kit.build_piece",
-  "generatorHash": "816283029a12b0c5bdc1d17582e69e109aeb1c4cf300db31605fea6cba577112",
-  "gitSha": "77cf4c6acc9011d70980d184cc43104f1961ab9e",
+  "generatorHash": "f0dbf80005ae6eeaaefa8cf6d50672eddb9c24b22cecf84112a55daede4a580b",
+  "gitSha": "d603d236bf331476ae64349b92965cbfb924bc20",
   "blender": "4.2.11",
   "tags": [
     "kit",

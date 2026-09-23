@@ -131,9 +131,12 @@ def build_one(entry, models_root):
     blender_utils.export_fbx(output, animated=rigged, texture_size=bake.get("size"), unwrap=bake.get("uv", True))
     stats = dict(blender_utils.EXPORTS[-1])
     stats["lodTris"] = lod_triangles(names)
-    if bake.get("uv", True):
-        import fbx_uv
+    import fbx_uv
 
+    uncoloured = fbx_uv.colour_problems(output, entry["output"])
+    if uncoloured:
+        raise plan.PlanError("; ".join(uncoloured))
+    if bake.get("uv", True):
         overlapping = fbx_uv.problems(output, entry["output"])
         if overlapping:
             raise plan.PlanError("; ".join(overlapping))

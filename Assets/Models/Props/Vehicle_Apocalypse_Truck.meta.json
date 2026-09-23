@@ -2,8 +2,8 @@
   "id": "Vehicle_Apocalypse_Truck",
   "category": "Props",
   "generator": "generate_props.build_apocalypse_truck",
-  "generatorHash": "eb9ee3790b36960bc6b075c797c0ed4ec9cf7c6275de0b134a53bebb345dda2c",
-  "gitSha": "77cf4c6acc9011d70980d184cc43104f1961ab9e",
+  "generatorHash": "9710beb4e2f50231c5607dfc2781304a92cff540e6247c088e1fdad7b9081553",
+  "gitSha": "d603d236bf331476ae64349b92965cbfb924bc20",
   "blender": "4.2.11",
   "tags": [
     "vehicle",

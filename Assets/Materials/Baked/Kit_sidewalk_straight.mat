@@ -46,6 +46,7 @@ Material:
     - _Metallic: 0.05
     - _RimPower: 3
     - _Tile: 1.6
+    - _VertexAO: 1
     - _Wetness: 0
     m_Colors:
     - _BaseColor: {r: 0.34, g: 0.32, b: 0.28, a: 1}

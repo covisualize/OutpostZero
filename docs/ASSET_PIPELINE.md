@@ -97,6 +97,12 @@ Model prefixes in use: `Survivor_`, `Zombie_`, `NPC_`, `Colonist_`, `Weapon_`, `
 python3 BlenderScripts/texture_set.py
 ```
 
+The per-model maps stay at 128 px (`textureSize`) instead of PRO-47's 1024 for characters, 512 for props and 2048 for architecture. They are hash noise in the model's palette, so a bigger map adds bytes but no detail. Measured with `texture_set.png_bytes`: a 512 px set is 1.6 MB and a 1024 px set is 6.5 MB (about 7 s each in plain Python). A 2048 px set is about 26 MB, and there are 60 kit and environment models. The total would be well over a gigabyte, far past the 50 MB the issue sets for moving to Git LFS. The surface detail the flashlight picks up comes from the 1024 px material library below, which the importer maps onto each model's Blender material names. The per-model maps carry the palette, emissive eyes and a small-scale normal.
+
+### Vertex AO
+
+Every export also bakes ambient occlusion into a vertex colour layer named `AO` (`vertex_ao.py`). Each vertex casts a fixed 32-ray golden-spiral fan over its hemisphere, 0.6 m long, against its own mesh (Blender's BVH tree, in world space) and the floor at z = 0. The hits are cosine-weighted, and the result is lifted so it never drops below 0.35. Undersides, creases and the band where a model meets the ground come out darker. The FBX exporter writes the layer as sRGB bytes, so Unity reads the stored values. `OutpostZero/TriplanarRim` multiplies its occlusion by the red channel through `_VertexAO` (default 0, set to 1 on every baked material by the importer), and `OutpostZero/EnvironmentTriplanar` has the same input. The pipeline and `asset_audit.py` fail any FBX without the layer, and `test_vertex_ao.py` checks the fan, the floor, the weights and the committed layers.
+
 ## Material library
 
 `BlenderScripts/material_library.py` (numpy) paints thirteen seamless 1024 px surface families: Asphalt, ConcreteCracked, BrickRed, BrickGrey, MetalRusted, MetalPainted, Plywood, TarpFabric, Glass, Rubber, RotFlesh, Cloth and ChainLink. Each family gets `<Family>_Albedo`, `_Normal` and `_Mask` PNGs in `Assets/Materials/Library/Textures`. The mask is packed like URP/Lit wants it: R metallic, G occlusion, A smoothness, so one texture fills both the metallic and occlusion slots. All noise is periodic on the tile, and stretched noise must pass `freq_y` rather than scaling `u` or `v`, or the tile gets a seam. From those maps it writes:

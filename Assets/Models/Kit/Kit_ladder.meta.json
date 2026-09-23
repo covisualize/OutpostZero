@@ -2,8 +2,8 @@
   "id": "Kit_ladder",
   "category": "Kit",
   "generator": "generate_kit.build_piece",
-  "generatorHash": "a7151321067eebfa3865ac95a6d8f5c85d890d891d4aeaf48265c279fdf05675",
-  "gitSha": "77cf4c6acc9011d70980d184cc43104f1961ab9e",
+  "generatorHash": "48577df563e286f47b70eb59a4e2e09c601fedc73372f09cb6e65ce2d46cac78",
+  "gitSha": "d603d236bf331476ae64349b92965cbfb924bc20",
   "blender": "4.2.11",
   "tags": [
     "kit",

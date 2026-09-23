@@ -2,8 +2,8 @@
   "id": "Kit_road_curve",
   "category": "Kit",
   "generator": "generate_kit.build_piece",
-  "generatorHash": "106697f5c73f5ab9ecc295c7d962622ea23bdfd4785b2f7caec01c94e63c34c9",
-  "gitSha": "77cf4c6acc9011d70980d184cc43104f1961ab9e",
+  "generatorHash": "d8260e8ec01411184ed01daef6c1d9ec3d1fbc22fe630f83ea58d86b14d9a8ef",
+  "gitSha": "d603d236bf331476ae64349b92965cbfb924bc20",
   "blender": "4.2.11",
   "tags": [
     "kit",

@@ -2,8 +2,8 @@
   "id": "Base_HydroponicFarm",
   "category": "BaseBuilding",
   "generator": "generate_base_building.build_hydroponic_farm",
-  "generatorHash": "3792fded3be2550262143aea2f4af3419b4f8481ad8960bfbfe7821af647df2d",
-  "gitSha": "77cf4c6acc9011d70980d184cc43104f1961ab9e",
+  "generatorHash": "6d8a9db77dcec8ba25062fba3158dfcbe2b0b2d062baa68a7d8651f0c130908d",
+  "gitSha": "d603d236bf331476ae64349b92965cbfb924bc20",
   "blender": "4.2.11",
   "tags": [
     "camp",

@@ -2,8 +2,8 @@
   "id": "Loot_GeneratorPart",
   "category": "Weapons",
   "generator": "generate_items.build_generator_part",
-  "generatorHash": "2ad81918519b901ab3720b306acd9044444a08b126618488b99eaaac2a56df23",
-  "gitSha": "77cf4c6acc9011d70980d184cc43104f1961ab9e",
+  "generatorHash": "bf0d69bafe163af8fe21587382ae481bd3b2672beb1e4c72d54de9115bef9e6e",
+  "gitSha": "d603d236bf331476ae64349b92965cbfb924bc20",
   "blender": "4.2.11",
   "tags": [
     "loot",

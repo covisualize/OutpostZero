@@ -153,6 +153,7 @@ namespace OutpostZero.EditorTools
             material.SetTexture("_OcclusionMap", occlusion);
             material.SetTexture("_MaskMap", mask);
             material.SetFloat("_HasMaps", 1f);
+            material.SetFloat("_VertexAO", 1f);
             material.SetColor("_RimColor", OutpostZero.Graphics.SurfaceRim.For(stem));
             EditorUtility.SetDirty(material);
             return material;

@@ -1,5 +1,6 @@
 // Character and prop PBR (the SG_Character role). Baked models (_HasMaps = 1) sample their UV
-// albedo, tangent normal, AO and mask (R metallic, G roughness, B emissive: zombie eyes and veins);
+// albedo, tangent normal, AO and mask (R metallic, G roughness, B emissive: zombie eyes and veins),
+// times the Blender-baked vertex AO in colour red when _VertexAO is up (the importer sets 1);
 // untextured meshes fall back to a flat colour with world-space noise. On top: a view rim for
 // top-down readability (per faction: survivors cyan, zombies sickly green, overridden by the
 // colour-vision palette), _HitFlash, a _Dissolve with a burning edge, wetness and wind sway,
@@ -15,6 +16,7 @@ Shader "OutpostZero/TriplanarRim"
         _BaseMap ("Albedo", 2D) = "white" {}
         _BumpMap ("Normal", 2D) = "bump" {}
         _OcclusionMap ("Occlusion", 2D) = "white" {}
+        _VertexAO ("Vertex Colour AO", Range(0, 1)) = 0
         _MaskMap ("Mask (R metal, G rough, B emissive)", 2D) = "black" {}
         _HasMaps ("Has Maps", Float) = 0
         _Metallic ("Metallic (no maps)", Range(0, 1)) = 0.05
@@ -53,6 +55,7 @@ Shader "OutpostZero/TriplanarRim"
             half4 _DissolveEdge;
             half4 _GoreColor;
             half _HasMaps;
+            half _VertexAO;
             half _Metallic;
             half _Smoothness;
             float _Tile;
@@ -158,6 +161,7 @@ Shader "OutpostZero/TriplanarRim"
                 float3 normalOS : NORMAL;
                 float4 tangentOS : TANGENT;
                 float2 uv : TEXCOORD0;
+                half4 color : COLOR;
                 UNITY_VERTEX_INPUT_INSTANCE_ID
             };
 
@@ -168,6 +172,7 @@ Shader "OutpostZero/TriplanarRim"
                 float3 normalWS : TEXCOORD1;
                 float4 tangentWS : TEXCOORD2;
                 float2 uv : TEXCOORD3;
+                half vertexAO : TEXCOORD7;
                 half fogFactor : TEXCOORD4;
                 #ifdef _ADDITIONAL_LIGHTS_VERTEX
                 half3 vertexLight : TEXCOORD5;
@@ -191,6 +196,7 @@ Shader "OutpostZero/TriplanarRim"
                 output.tangentWS = float4(normals.tangentWS, input.tangentOS.w * GetOddNegativeScale());
                 output.uv = TRANSFORM_TEX(input.uv, _BaseMap);
                 output.positionOS = input.positionOS.xyz;
+                output.vertexAO = input.color.r;
                 output.fogFactor = ComputeFogFactor(pos.positionCS.z);
                 #ifdef _ADDITIONAL_LIGHTS_VERTEX
                 output.vertexLight = VertexLighting(pos.positionWS, normals.normalWS);
@@ -218,7 +224,7 @@ Shader "OutpostZero/TriplanarRim"
                     half4 mask = SAMPLE_TEXTURE2D(_MaskMap, sampler_MaskMap, input.uv);
                     metallic = mask.r;
                     smoothness = 1.0 - mask.g;
-                    occlusion = SAMPLE_TEXTURE2D(_OcclusionMap, sampler_OcclusionMap, input.uv).r;
+                    occlusion = SAMPLE_TEXTURE2D(_OcclusionMap, sampler_OcclusionMap, input.uv).r * lerp(1.0, input.vertexAO, _VertexAO);
                     emission += mask.b * _EyeGlow.rgb;
                     half3 normalTS = UnpackNormal(SAMPLE_TEXTURE2D(_BumpMap, sampler_BumpMap, input.uv));
                     float sgn = input.tangentWS.w;

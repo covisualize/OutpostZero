@@ -148,6 +148,8 @@ Play this in a player build, not the editor. Use Survivor difficulty and a fixed
 
 - [ ] PRO-46 **Play**: `blender -b -P BlenderScripts/pipeline.py -- --only Prop_Dumpster` finishes in under 10 s, and a full rebuild of unchanged generators matches byte for byte.
 - [ ] PRO-47 **Automated** (textures and UVs per manifest entry) and **Play**: the flashlight reveals normal detail on the sedan and the brick wall.
+  - Vertex AO fallback: every FBX carries a baked `AO` colour layer (a 32-ray hemisphere fan against the model and the floor), and the baked materials multiply it into their occlusion through `_VertexAO` = 1. Check: the underside and ground band of a crate, a dumpster and the sedan read darker than their tops with SSAO off (Low tier). Automated: `test_vertex_ao.py`, the audit's colour-layer check and `VertexAoTests`.
+  - Deviation: the per-model maps stay at 128 px rather than the issue's 1024/512/2048. They are procedural noise, and at those sizes they would add well over a gigabyte to the repo, far past the issue's 50 MB Git LFS level, with no gain in detail. The 1024 px material library carries the surface detail (`docs/ASSET_PIPELINE.md`, Textures).
   - UV overlap: `fbx_uv.py` reads each committed binary FBX without Blender and rasterises its first UV layer at 256². A mesh fails when more than 2% of its covered texels are claimed by two triangles. Both `asset_audit.py` and `pipeline.py` (after each export) run the check. All 114 committed meshes measure 0%.
   - Automated: `test_fbx_uv.py` and `test_asset_audit.py`.
 - [ ] PRO-48 **Play**: every character imports with no avatar errors, all clips play without tearing, and the Walker still shambles.

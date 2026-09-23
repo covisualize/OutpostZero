@@ -138,6 +138,28 @@ def layouts(data):
     return result
 
 
+def colour_layers(data):
+    """One (name, has a vertex colour layer) per mesh."""
+    result = []
+    for top in parse(data):
+        if top.name != "Objects":
+            continue
+        for geometry in top.all("Geometry"):
+            if geometry.child("PolygonVertexIndex") is None:
+                continue
+            name = geometry.props[1].split(b"\x00")[0].decode("utf-8", "replace") if len(geometry.props) > 1 else ""
+            layer = geometry.child("LayerElementColor")
+            result.append((name, layer is not None and layer.child("Colors") is not None))
+    return result
+
+
+def colour_problems(path, relative):
+    """Meshes exported without the baked vertex AO layer."""
+    with open(path, "rb") as handle:
+        data = handle.read()
+    return ["{0} {1} has no vertex AO colour layer".format(relative, name) for name, has in colour_layers(data) if not has]
+
+
 def _edge(a, b, p):
     return (b[0] - a[0]) * (p[1] - a[1]) - (b[1] - a[1]) * (p[0] - a[0])
 

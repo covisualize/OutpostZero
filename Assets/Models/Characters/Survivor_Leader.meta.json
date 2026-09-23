@@ -2,8 +2,8 @@
   "id": "Survivor_Leader",
   "category": "Characters",
   "generator": "generate_characters.build_player_leader",
-  "generatorHash": "54d897db22f6dba4773749424bf0fdd62fdc9452f076fa5cdff3368b52423314",
-  "gitSha": "77cf4c6acc9011d70980d184cc43104f1961ab9e",
+  "generatorHash": "e1ccbeb66898e52ce06b6e0b78bb1b7fd0edb4739ada326f1a4b77f94cc6b0cb",
+  "gitSha": "d603d236bf331476ae64349b92965cbfb924bc20",
   "blender": "4.2.11",
   "tags": [
     "character",

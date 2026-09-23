@@ -2,8 +2,8 @@
   "id": "Kit_counter",
   "category": "Kit",
   "generator": "generate_kit.build_piece",
-  "generatorHash": "3847646f8ffb80700f1e6934c96c5f3623d5cdcd282edaf3cb6459cc1bcab2ec",
-  "gitSha": "77cf4c6acc9011d70980d184cc43104f1961ab9e",
+  "generatorHash": "0f1404f219cd0820e634597a3845d4de85ecb00c1a3c53e0660cbcc5338918a3",
+  "gitSha": "d603d236bf331476ae64349b92965cbfb924bc20",
   "blender": "4.2.11",
   "tags": [
     "kit",

@@ -166,6 +166,7 @@ def audit(root=None, manifest=None):
             problems.append(relative + " missing uvs")
         elif (entry.get("bake") or {}).get("uv", True):
             problems.extend(fbx_uv.problems(path, relative))
+        problems.extend(fbx_uv.colour_problems(path, relative))
         if "/Characters/" in relative and "Hips" not in text:
             problems.append(relative + " missing hips")
         tris = triangle_count(path)
