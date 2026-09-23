@@ -878,6 +878,7 @@ namespace OutpostZero.Shell
             { "bark.clear", "I'll haul them." },
             { "bark.hold", "We'll hold." },
             { "bark.rest", "Resting." },
+            { "bark.wander", "Stretching my legs." },
             { "bark.visit", "Good to see you." },
             { "task.visit", "Visit" },
             { "bark.tired", "My legs are done." },
@@ -1848,6 +1849,7 @@ namespace OutpostZero.Shell
             { "bark.clear", "Los retiro." },
             { "bark.hold", "Aguantaremos." },
             { "bark.rest", "Descansando." },
+            { "bark.wander", "Estirando las piernas." },
             { "bark.visit", "Me alegra verte." },
             { "task.visit", "Visita" },
             { "bark.tired", "Las piernas no dan más." },
@@ -2091,6 +2093,7 @@ namespace OutpostZero.Shell
         {
             string key = morale < 10f ? "bark.cant"
                 : action == "Visit" ? "bark.visit"
+                : action == OutpostZero.Colony.CampUtility.Wander ? "bark.wander"
                 : action == "Rest" && OutpostZero.Player.NeedsPressure.Tired(fatigue) ? "bark.tired"
                 : action == "Cook" ? "bark.cook"
                 : action == "Guard" ? "bark.guard"

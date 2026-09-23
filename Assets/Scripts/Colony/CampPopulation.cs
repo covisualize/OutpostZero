@@ -64,15 +64,24 @@ namespace OutpostZero.Colony
             var ids = new string[mates];
             var actions = new string[mates];
             var present = new bool[mates];
+            var friends = new string[mates];
             int filled = 0;
             foreach (var survivor in roster.Survivors)
             {
                 if (survivor == null || !survivor.alive || survivor.leader) continue;
                 ids[filled] = survivor.id;
                 present[filled] = true;
+                filled++;
+            }
+            float hour = WorldClock.Instance != null ? WorldClock.Instance.Hour : 12f;
+            filled = 0;
+            foreach (var survivor in roster.Survivors)
+            {
+                if (survivor == null || !survivor.alive || survivor.leader) continue;
+                friends[filled] = CloseFriend(survivor, ids);
                 actions[filled] = raid
                     ? GuardStand.Face(survivor.task, survivor.morale, survivor.injury)
-                    : CampRoutine.Choose(survivor.task, survivor.hunger, survivor.thirst, survivor.morale, survivor.injury, survivor.fatigue);
+                    : CampUtility.Choose(survivor.id, survivor.task, survivor.hunger, survivor.thirst, survivor.morale, survivor.injury, survivor.fatigue, hour, friends[filled].Length > 0);
                 filled++;
             }
             int index = 0;
@@ -98,8 +107,27 @@ namespace OutpostZero.Colony
                     goal = Line(side, post);
                     guardSlot++;
                 }
+                else if (action == CampUtility.Wander)
+                {
+                    CampUtility.WanderSpot(survivor.id, hour, out float roamX, out float roamZ);
+                    goal = new Vector3(roamX, 1f, roamZ);
+                }
+                else if (action == CampUtility.Chat)
+                {
+                    if (CampUtility.Hosts(survivor.id, friends[index - 1])) goal = Station(CampUtility.Sleep, index - 1);
+                    else if (TryStand(friends[index - 1], out Vector3 friendAt))
+                    {
+                        YardVisit.Stand(friendAt.x, friendAt.z, out float chatX, out float chatZ);
+                        goal = new Vector3(chatX, 1f, chatZ);
+                    }
+                    else
+                    {
+                        action = CampUtility.Sleep;
+                        goal = Station(action, index - 1);
+                    }
+                }
                 else goal = Station(action, index - 1);
-                if (!raid)
+                if (!raid && action != CampUtility.Chat)
                 {
                     string host = YardVisit.Host(survivor.id, action, survivor.kin, survivor.fatigue, ids, actions, present);
                     if (host.Length > 0 && TryStand(host, out Vector3 hostAt))
@@ -128,6 +156,20 @@ namespace OutpostZero.Colony
                 bool speaks = YardBubble.Up(survivor.id, Time.time, survivor.morale);
                 bark.Say(speaks, speaks ? OutpostZero.Shell.Loc.Bark(action, survivor.morale, survivor.fatigue) : "", model ? YardBubble.Height : YardBubble.Height - 1f);
             }
+        }
+
+        /// <summary>The first close friend in the yard, by id order, or empty.</summary>
+        private static string CloseFriend(Survivor survivor, string[] ids)
+        {
+            string pick = "";
+            for (int i = 0; i < ids.Length; i++)
+            {
+                string other = ids[i];
+                if (string.IsNullOrEmpty(other) || other == survivor.id) continue;
+                if (!KinBoard.Close(survivor.kin, other)) continue;
+                if (pick.Length == 0 || string.CompareOrdinal(other, pick) < 0) pick = other;
+            }
+            return pick;
         }
 
         private Transform Ensure(string id, string displayName)
