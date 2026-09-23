@@ -29,7 +29,7 @@ namespace OutpostZero.Shell
             "Barricades fail when nobody is posted on Guard.",
             "Cooked food lifts morale. A skipped meal does not.",
             "The generator drinks fuel once dusk settles.",
-            "Three radio parts and a built generator open broadcast night.",
+            "Three radio parts and a tier-2 generator open broadcast night.",
             "Reload before the magazine clicks empty.",
             "Oil, toxic, and powder barrels chain if you break them.",
             "A medic on the board closes wounds between watches.",

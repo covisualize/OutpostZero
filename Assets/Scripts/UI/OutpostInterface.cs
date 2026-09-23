@@ -1020,6 +1020,13 @@ namespace OutpostZero.UI
             {
                 camp.Add(Body(Loc.T("camp.radio") + " " + CampaignBoard.PartCount(map.Parts) + "/3  " + Loc.Difficulty(map.Difficulty) + "  " + Loc.T("camp.seed") + " " + map.WorldSeed));
                 camp.Add(Button(Loc.T("camp.reroll"), () => map.RerollSeed()));
+                var works = GridBuilder.Instance;
+                if (works != null && works.HasKind("Generator") && !map.Endless && !map.CampaignWon)
+                {
+                    if (works.GeneratorTier() >= 2) camp.Add(Body(Loc.T("camp.gen_t2")));
+                    else if (works.GeneratorOrdered()) camp.Add(Body(Loc.T("camp.gen_raise") + " " + works.GeneratorWork() + "/" + CraftGate.Hours));
+                    else camp.Add(Button(CraftSay.Line(Loc.T("camp.gen_raise"), GeneratorTune.Scrap, 0, GeneratorTune.Chemicals, GeneratorTune.Tape, null), () => GridBuilder.Instance?.OrderGenerator()));
+                }
                 if (map.Endless) camp.Add(Body(Loc.T("camp.broadcast_holds")));
                 else if (map.CampaignWon) camp.Add(Body(Loc.T("camp.tower_air")));
                 else if (map.ReadyToBroadcast) camp.Add(Button(Loc.T("camp.broadcast"), () => NightRaidController.Instance?.BeginBroadcast()));
@@ -1376,6 +1383,9 @@ namespace OutpostZero.UI
                     key.Add(GridBuilder.Instance.PerimeterScore);
                     key.Add(GridBuilder.Instance.PowerUsed);
                     key.Add(GridBuilder.Instance.Reinforced());
+                    key.Add(GridBuilder.Instance.BenchWork());
+                    key.Add(GridBuilder.Instance.GeneratorWork());
+                    key.Add(GridBuilder.Instance.GeneratorTier());
                 }
                 key.Add(storage.Food);
                 key.Add(storage.Water);

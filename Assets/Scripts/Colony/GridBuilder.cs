@@ -738,60 +738,70 @@ namespace OutpostZero.Colony
             }
         }
 
-        public int BenchTier()
+        public int BenchTier() => TierOf("Workbench");
+        public bool BenchOrdered() => Ordered("Workbench");
+        public int BenchWork() => Worked("Workbench");
+        public bool OrderBench() => Order("Workbench", CraftGate.UpgradeScrap, CraftGate.UpgradeCloth, 0, CraftGate.UpgradeTape, "camp.bench_raise");
+
+        public int GeneratorTier() => TierOf("Generator");
+        public bool GeneratorOrdered() => Ordered("Generator");
+        public int GeneratorWork() => Worked("Generator");
+        public bool OrderGenerator() => Order("Generator", GeneratorTune.Scrap, 0, GeneratorTune.Chemicals, GeneratorTune.Tape, "camp.gen_raise");
+
+        private int TierOf(string kind)
         {
             for (int i = 0; i < placed.Count; i++)
             {
                 var module = placed[i];
-                if (module.kind != "Workbench" || !BuildSite.Ready(module.site, module.integrity)) continue;
-                if (module.tier >= 2 || module.job >= CraftGate.Done) return 2;
+                if (module.kind != kind || !BuildSite.Ready(module.site, module.integrity)) continue;
+                if (GeneratorTune.Tier(module.tier, module.job) >= 2) return 2;
             }
             return 1;
         }
 
-        public bool BenchOrdered()
+        private bool Ordered(string kind)
         {
             for (int i = 0; i < placed.Count; i++)
             {
                 var module = placed[i];
-                if (module.kind != "Workbench" || !BuildSite.Ready(module.site, module.integrity)) continue;
+                if (module.kind != kind || !BuildSite.Ready(module.site, module.integrity)) continue;
                 if (CraftGate.Ordered(module.job)) return true;
             }
             return false;
         }
 
-        public int BenchWork()
+        private int Worked(string kind)
         {
             for (int i = 0; i < placed.Count; i++)
             {
                 var module = placed[i];
-                if (module.kind != "Workbench" || !BuildSite.Ready(module.site, module.integrity)) continue;
+                if (module.kind != kind || !BuildSite.Ready(module.site, module.integrity)) continue;
                 if (CraftGate.Ordered(module.job) || module.job >= CraftGate.Done) return CraftGate.Worked(module.job);
             }
             return 0;
         }
 
-        public bool OrderBench()
+        private bool Order(string kind, int scrap, int cloth, int chemicals, int tape, string toast)
         {
-            if (BenchTier() >= 2 || BenchOrdered()) return false;
-            PlacedModule bench = null;
+            if (TierOf(kind) >= 2 || Ordered(kind)) return false;
+            PlacedModule target = null;
             for (int i = 0; i < placed.Count; i++)
             {
                 var module = placed[i];
-                if (module.kind != "Workbench" || !BuildSite.Ready(module.site, module.integrity)) continue;
+                if (module.kind != kind || !BuildSite.Ready(module.site, module.integrity)) continue;
                 if (module.job != 0 || module.tier >= 2) continue;
-                bench = module;
+                target = module;
                 break;
             }
-            if (bench == null) return false;
+            if (target == null) return false;
             var storage = ColonyStorage.Instance;
-            if (storage == null || !storage.TrySpendBill(CraftGate.UpgradeScrap, CraftGate.UpgradeCloth, 0, CraftGate.UpgradeTape))
+            if (storage == null || !storage.TrySpendBill(scrap, cloth, chemicals, tape))
             {
                 GameplayFeedback.Toast(YardSay.Short(null));
                 return false;
             }
-            bench.job = 1;
-            GameplayFeedback.Toast(Loc.T("camp.bench_raise"));
+            target.job = 1;
+            GameplayFeedback.Toast(Loc.T(toast));
             return true;
         }
 
@@ -800,14 +810,15 @@ namespace OutpostZero.Colony
             for (int i = 0; i < placed.Count; i++)
             {
                 var module = placed[i];
-                if (module.kind != "Workbench" || !BuildSite.Ready(module.site, module.integrity)) continue;
+                if (!GeneratorTune.Raises(module.kind) || !BuildSite.Ready(module.site, module.integrity)) continue;
                 if (!CraftGate.Ordered(module.job)) continue;
                 CraftGate.Advance(module.job, pace, out int next, out bool done);
                 if (next == module.job) return false;
                 module.job = next;
                 if (done) module.tier = 2;
                 RefreshViews();
-                GameplayFeedback.Toast(done ? Loc.T("camp.bench_t2") : Loc.T("camp.bench_raise"));
+                bool bench = module.kind == "Workbench";
+                GameplayFeedback.Toast(Loc.T(done ? (bench ? "camp.bench_t2" : "camp.gen_t2") : (bench ? "camp.bench_raise" : "camp.gen_raise")));
                 return true;
             }
             return false;

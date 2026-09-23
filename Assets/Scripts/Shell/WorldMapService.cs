@@ -51,8 +51,9 @@ namespace OutpostZero.Shell
         public int WorldSeed => DistrictGenerator.Resolve(worldSeed);
         public string Street => street ?? "";
         public bool GeneratorBuilt => GridBuilder.Instance != null && GridBuilder.Instance.HasKind("Generator");
-        public bool ReadyToBroadcast => CampaignBoard.Ready(parts, GeneratorBuilt, broadcastWon);
-        public bool CampaignWon => CampaignBoard.Won(parts, GeneratorBuilt, broadcastWon);
+        public bool GeneratorRaised => GridBuilder.Instance != null && GridBuilder.Instance.GeneratorTier() >= 2;
+        public bool ReadyToBroadcast => CampaignBoard.Ready(parts, GeneratorRaised, broadcastWon);
+        public bool CampaignWon => CampaignBoard.Won(parts, GeneratorRaised, broadcastWon);
 
         private void Awake()
         {
