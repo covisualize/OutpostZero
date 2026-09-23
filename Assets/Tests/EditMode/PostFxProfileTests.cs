@@ -132,6 +132,81 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void TheLookProfilesHoldEachLookAtFullStrength()
+        {
+            var sanctuary = Parts(GradeLayers.SanctuaryPath);
+            Assert.AreEqual(1, sanctuary.Count);
+            Assert.AreEqual("ColorAdjustments", sanctuary[0].name);
+            Assert.AreEqual(1, sanctuary[0].part.Values.Count, "only the filter, so the base exposure and contrast pass through");
+            Near((Vector4)GradeLayers.SanctuaryFilter(PostFxRig.Filter), (Vector4)C(sanctuary[0].part.Values["colorFilter"]), "sanctuary filter");
+
+            var toxic = Parts(GradeLayers.ToxicPath);
+            var byToxic = new Dictionary<string, Part>();
+            foreach (var (name, part) in toxic) { Assert.IsTrue(part.Active, name); byToxic[name] = part; }
+            CollectionAssert.AreEquivalent(new[] { "ColorAdjustments", "Vignette", "MotionBlur" }, byToxic.Keys);
+            Near((Vector4)GradeLayers.ToxicFilter(PostFxRig.Filter), (Vector4)C(byToxic["ColorAdjustments"].Values["colorFilter"]), "toxic tint");
+            Assert.AreEqual(GradeLayers.ToxicVignette(PostFxRig.VignetteIntensity), F(byToxic["Vignette"].Values["intensity"]), 1e-4f);
+            Assert.AreEqual(PoisonVeil.Blur, F(byToxic["MotionBlur"].Values["intensity"]), 1e-4f, "the toxic blur");
+
+            var damage = Parts(GradeLayers.DamagePath);
+            var byDamage = new Dictionary<string, Part>();
+            foreach (var (name, part) in damage) { Assert.IsTrue(part.Active, name); byDamage[name] = part; }
+            CollectionAssert.AreEquivalent(new[] { "Vignette", "ColorAdjustments" }, byDamage.Keys);
+            Assert.AreEqual(GradeLayers.DamageVignette(PostFxRig.VignetteIntensity), F(byDamage["Vignette"].Values["intensity"]), 1e-4f);
+            Near((Vector4)GradeLayers.DamageEdge, (Vector4)C(byDamage["Vignette"].Values["color"]), "red edge");
+            Assert.AreEqual(GradeLayers.DamageSaturation(0f), F(byDamage["ColorAdjustments"].Values["saturation"]), 1e-4f);
+            Assert.AreEqual(1, byDamage["ColorAdjustments"].Values.Count, "only the drain, so the base filter passes through");
+        }
+
+        [Test]
+        public void EachLookHasItsOwnVolumeAboveTheBase()
+        {
+            string rig = Read("Assets/Scripts/Graphics/PostFxRig.cs");
+            StringAssert.Contains("Profile(sanctuary, GradeLayers.SanctuaryPath)", rig);
+            StringAssert.Contains("Profile(toxic, GradeLayers.ToxicPath)", rig);
+            StringAssert.Contains("Profile(damage, GradeLayers.DamagePath)", rig);
+            StringAssert.Contains("damage.weight = hurt;", rig);
+            Assert.IsFalse(rig.Contains("PoisonVeil.Tint("), "the base volume no longer carries the poison tint");
+            Assert.IsFalse(rig.Contains("ScreenGrade.Warm("), "the base volume no longer carries the camp warmth");
+            Assert.Less(20f, GradeLayers.ToxicPriority);
+            Assert.Less(GradeLayers.ToxicPriority, GradeLayers.SanctuaryPriority);
+            Assert.Less(GradeLayers.SanctuaryPriority, GradeLayers.DamagePriority);
+        }
+
+        [Test]
+        public void TheStackedLooksMatchTheSingleVolumeGrade()
+        {
+            const float edge = 0.28f;
+            for (float hurt = 0f; hurt <= 1f; hurt += 0.25f)
+            {
+                foreach (bool poisoned in new[] { false, true })
+                {
+                    float closed = GradeLayers.Blend(edge, GradeLayers.ToxicVignette(edge), poisoned ? 1f : 0f);
+                    float stacked = GradeLayers.Blend(closed, GradeLayers.DamageVignette(closed), hurt);
+                    Assert.AreEqual(ScreenGrade.Vignette(PoisonVeil.Shade(edge, poisoned), hurt), stacked, 1e-5f, "vignette");
+                }
+                float drained = GradeLayers.Blend(ScreenGrade.Saturation(0f, 0.3f), GradeLayers.DamageSaturation(0.3f), hurt);
+                Assert.AreEqual(ScreenGrade.Saturation(hurt, 0.3f), drained, 1e-4f, "saturation");
+                Near((Vector4)ScreenGrade.VignetteColor(hurt), (Vector4)GradeLayers.Blend(Color.black, GradeLayers.DamageEdge, hurt), "edge colour");
+            }
+            var filter = PostFxRig.Filter;
+            var tinted = GradeLayers.Blend(filter, GradeLayers.ToxicFilter(filter), 1f);
+            var both = GradeLayers.Blend(tinted, GradeLayers.SanctuaryFilter(tinted), 1f);
+            PoisonVeil.Tint(true, filter.r, filter.g, filter.b, out float r, out float g, out float b);
+            ScreenGrade.Warm(true, r, g, b, out r, out g, out b);
+            Near(new Vector4(r, g, b, 1f), (Vector4)both, "camp and poison together");
+        }
+
+        [Test]
+        public void LooksFadeRatherThanCut()
+        {
+            Assert.AreEqual(GradeLayers.FadeRate * 0.1f, GradeLayers.Fade(0f, true, 0.1f), 1e-5f);
+            Assert.AreEqual(1f, GradeLayers.Fade(0.95f, true, 0.1f));
+            Assert.AreEqual(0f, GradeLayers.Fade(0.05f, false, 0.1f));
+            Assert.AreEqual(0.5f, GradeLayers.Fade(0.5f, true, -1f));
+        }
+
+        [Test]
         public void TheRigLoadsTheProfilesAndClonesThemPerVolume()
         {
             string rig = Read("Assets/Scripts/Graphics/PostFxRig.cs");

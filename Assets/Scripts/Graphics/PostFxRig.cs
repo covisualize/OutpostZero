@@ -17,6 +17,15 @@ namespace OutpostZero.Graphics
         private MotionBlur blur;
         private LiftGammaGain night;
         private ChromaticAberration fringe;
+        private Volume sanctuary;
+        private ColorAdjustments sanctuaryColor;
+        private Volume toxic;
+        private ColorAdjustments toxicColor;
+        private Vignette toxicEdge;
+        private MotionBlur toxicBlur;
+        private Volume damage;
+        private Vignette damageEdge;
+        private ColorAdjustments damageColor;
 
         public const string ProfilePath = "PostFX/OutpostZero_PostFX";
         public const string AimProfilePath = "PostFX/OutpostZero_AimDepth";
@@ -90,7 +99,38 @@ namespace OutpostZero.Graphics
                 d.gaussianStart.Override(DepthStart);
                 d.gaussianEnd.Override(DepthEnd);
             });
+
+            sanctuary = Layer("SanctuaryVolume", GradeLayers.SanctuaryPriority);
+            var sanctuaryProfile = Profile(sanctuary, GradeLayers.SanctuaryPath);
+            sanctuaryColor = Take<ColorAdjustments>(sanctuaryProfile, c => c.colorFilter.Override(GradeLayers.SanctuaryFilter(Filter)));
+
+            toxic = Layer("ToxicVolume", GradeLayers.ToxicPriority);
+            var toxicProfile = Profile(toxic, GradeLayers.ToxicPath);
+            toxicColor = Take<ColorAdjustments>(toxicProfile, c => c.colorFilter.Override(GradeLayers.ToxicFilter(Filter)));
+            toxicEdge = Take<Vignette>(toxicProfile, v => v.intensity.Override(GradeLayers.ToxicVignette(VignetteIntensity)));
+            toxicBlur = Take<MotionBlur>(toxicProfile, m => m.intensity.Override(PoisonVeil.Blur));
+
+            damage = Layer("DamageVolume", GradeLayers.DamagePriority);
+            var damageProfile = Profile(damage, GradeLayers.DamagePath);
+            damageEdge = Take<Vignette>(damageProfile, v =>
+            {
+                v.intensity.Override(GradeLayers.DamageVignette(VignetteIntensity));
+                v.color.Override(GradeLayers.DamageEdge);
+            });
+            damageColor = Take<ColorAdjustments>(damageProfile, c => c.saturation.Override(GradeLayers.DamageSaturation(0f)));
             ApplyTier(1, false);
+        }
+
+        /// <summary>A global volume for one look, starting unseen; its weight is set every frame.</summary>
+        private Volume Layer(string name, float priority)
+        {
+            var host = new GameObject(name);
+            host.transform.SetParent(transform, false);
+            var layer = host.AddComponent<Volume>();
+            layer.isGlobal = true;
+            layer.priority = priority;
+            layer.weight = 0f;
+            return layer;
         }
 
         /// <summary>
@@ -155,9 +195,11 @@ namespace OutpostZero.Graphics
                 if (health != null && health.MaxHealth > 0f && !health.IsDead) hurt = ScreenGrade.Hurt(health.CurrentHealth / health.MaxHealth);
             }
             float dark = DayNightCycle.Instance != null ? DayNightCycle.Instance.NightFactor : 0f;
+            float dt = Time.unscaledDeltaTime;
             bloom.intensity.Override(budget.Bloom);
-            vignette.intensity.Override(ScreenGrade.Vignette(PoisonVeil.Shade(RaidGrade.Vignette(raid, tier), poisoned), hurt));
-            vignette.color.Override(ScreenGrade.VignetteColor(hurt));
+            float edge = RaidGrade.Vignette(raid, tier);
+            vignette.intensity.Override(edge);
+            vignette.color.Override(Color.black);
             if (night != null)
             {
                 night.lift.Override(ScreenGrade.Lift(dark));
@@ -172,19 +214,34 @@ namespace OutpostZero.Graphics
                 float bright = SettingsService.Instance != null ? SettingsService.Instance.Brightness : 1f;
                 color.postExposure.Override(BoltGlare.Bright(RaidGrade.Exposure(bright, raid), flash));
                 RaidGrade.Filter(raid, out float red, out float green, out float blue);
-                PoisonVeil.Tint(poisoned, red, green, blue, out red, out green, out blue);
                 BoltGlare.Wash(flash, red, green, blue, out red, out green, out blue);
                 bool ash = WeatherController.Instance != null && AshFall.Falls(WeatherController.Instance.District);
                 AshVeil.Grit(ash, red, green, blue, out red, out green, out blue);
-                ScreenGrade.Warm(camp, red, green, blue, out red, out green, out blue);
-                color.colorFilter.Override(new Color(red, green, blue));
-                color.saturation.Override(ScreenGrade.Saturation(hurt, ExpeditionCameraRig.DeathWeight));
+                var filter = new Color(red, green, blue);
+                color.colorFilter.Override(filter);
+                color.saturation.Override(ScreenGrade.Saturation(0f, ExpeditionCameraRig.DeathWeight));
+
+                toxic.weight = GradeLayers.Fade(toxic.weight, poisoned, dt);
+                toxicColor.colorFilter.Override(GradeLayers.ToxicFilter(filter));
+                var tinted = GradeLayers.Blend(filter, GradeLayers.ToxicFilter(filter), toxic.weight);
+                sanctuary.weight = GradeLayers.Fade(sanctuary.weight, camp, dt);
+                sanctuaryColor.colorFilter.Override(GradeLayers.SanctuaryFilter(tinted));
             }
             if (blur != null)
             {
-                blur.active = PoisonVeil.Soft(poisoned, motion);
-                blur.intensity.Override(PoisonVeil.BlurOf(poisoned, motion));
+                blur.active = motion;
+                blur.intensity.Override(PoisonVeil.BlurOf(false, motion));
             }
+
+            if (color == null) toxic.weight = GradeLayers.Fade(toxic.weight, poisoned, dt);
+            toxicEdge.intensity.Override(GradeLayers.ToxicVignette(edge));
+            toxicBlur.intensity.Override(PoisonVeil.Blur);
+            float closed = GradeLayers.Blend(edge, GradeLayers.ToxicVignette(edge), toxic.weight);
+
+            damage.weight = hurt;
+            damageEdge.intensity.Override(GradeLayers.DamageVignette(closed));
+            damageEdge.color.Override(GradeLayers.DamageEdge);
+            damageColor.saturation.Override(GradeLayers.DamageSaturation(ExpeditionCameraRig.DeathWeight));
         }
     }
 }
