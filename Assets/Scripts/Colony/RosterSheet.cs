@@ -28,8 +28,13 @@ namespace OutpostZero.Colony
             if (traits.Length > 0) text.Append(" - ").Append(traits);
             if (!survivor.alive) return text.Append(" | ").Append(Loc.T("dev.dead", language)).ToString();
 
-            string skills = Practice.Line(survivor.combat, survivor.medicine, survivor.engineering, survivor.cooking, survivor.scavenge, language);
-            if (survivor.leadership > 0) skills += (skills.Length > 0 ? "  " : "") + Loc.T("camp.leads", language) + " " + Number(survivor.leadership);
+            string skills = "";
+            Skill(ref skills, Loc.Task("Guard", language), survivor.combat, survivor.combatXp);
+            Skill(ref skills, Loc.Task("Medic", language), survivor.medicine, survivor.medicineXp);
+            Skill(ref skills, Loc.Task("Build", language), survivor.engineering, survivor.engineeringXp);
+            Skill(ref skills, Loc.Task("Cook", language), survivor.cooking, survivor.cookingXp);
+            Skill(ref skills, Loc.Task("Scavenge", language), survivor.scavenge, survivor.scavengeXp);
+            Skill(ref skills, Loc.T("camp.leads", language), survivor.leadership, survivor.leadershipXp);
             if (skills.Length > 0) text.Append(" | ").Append(skills);
 
             text.Append(" | ").Append(Loc.T("hud.hunger", language)).Append(" ").Append(Number(survivor.hunger))
@@ -40,6 +45,15 @@ namespace OutpostZero.Colony
             text.Append(" | ").Append(Loc.Task(survivor.task, language))
                 .Append(" | ").Append(Loc.T("camp.opinion", language)).Append(" ").Append(Number(survivor.opinion));
             return text.ToString();
+        }
+
+        /// <summary>A skill as "Guard 5 1/3": the level, then experience toward the next one. A skill at the cap shows no fraction.</summary>
+        private static void Skill(ref string text, string label, int skill, int xp)
+        {
+            if (skill <= 0 && xp <= 0) return;
+            if (text.Length > 0) text += "  ";
+            text += label + " " + Number(skill);
+            if (skill < Practice.Cap) text += " " + Number(xp) + "/" + Number(Practice.Need(skill));
         }
 
         private static string Traits(Survivor survivor)

@@ -4060,9 +4060,17 @@ namespace OutpostZero.Tests.EditMode
         [Test]
         public void TheFourthShiftPaysAndAnOldSaveStaysAtZero()
         {
-            Assert.AreEqual(4, Practice.Gain(3));
-            Assert.AreEqual(8, Practice.Gain(8));
-            Assert.AreEqual(1, Practice.Gain(-1));
+            int skill = 0, xp = 0;
+            for (int shift = 1; shift <= 4; shift++)
+            {
+                Practice.Train(ref skill, ref xp);
+                Assert.AreEqual(shift, skill, "one shift a level below 4");
+            }
+            Assert.AreEqual(1, Practice.Bonus(skill), "the fourth shift is the first one that pays");
+            skill = -1; xp = -3;
+            Practice.Train(ref skill, ref xp);
+            Assert.AreEqual(1, skill);
+            Assert.AreEqual(0, xp);
             Assert.AreEqual(0, Practice.Bonus(3));
             Assert.AreEqual(1, Practice.Bonus(4));
             Assert.AreEqual(1, Practice.Bonus(8));
@@ -4085,6 +4093,47 @@ namespace OutpostZero.Tests.EditMode
             Assert.AreEqual(0, scavenge);
             Assert.AreEqual("Vigilar 4  Construir 1  Rebuscar 2", Practice.Line(4, 0, 1, 0, 2, "es"));
             Assert.AreEqual("", Practice.Line(0, 0, 0, 0, 0, "es"));
+        }
+
+        [Test]
+        public void SkillsClimbToTenOnExperienceThatCostsMoreEachLevelFromFour()
+        {
+            Assert.AreEqual(10, Practice.Cap);
+            Assert.AreEqual(1, Practice.Need(0));
+            Assert.AreEqual(1, Practice.Need(3));
+            Assert.AreEqual(2, Practice.Need(4));
+            Assert.AreEqual(7, Practice.Need(9));
+            Assert.AreEqual(4, Practice.Shifts(0, 4));
+            Assert.AreEqual(18, Practice.Shifts(0, 8));
+            Assert.AreEqual(31, Practice.Shifts(0, 10));
+
+            int skill = 4, xp = 0;
+            Practice.Train(ref skill, ref xp);
+            Assert.AreEqual(4, skill);
+            Assert.AreEqual(1, xp);
+            Practice.Train(ref skill, ref xp);
+            Assert.AreEqual(5, skill);
+            Assert.AreEqual(0, xp, "experience starts over at each level");
+
+            skill = 0; xp = 0;
+            int shifts = 0;
+            while (skill < Practice.Cap && shifts < 100) { Practice.Train(ref skill, ref xp); shifts++; }
+            Assert.AreEqual(31, shifts);
+            Practice.Train(ref skill, ref xp);
+            Assert.AreEqual(10, skill, "ten is the ceiling");
+            Assert.AreEqual(0, xp, "no experience piles up at the ceiling");
+
+            Practice.Unpack(Practice.Pack(10, 9, 0, 0, 12), out int combat, out int medicine, out _, out _, out int scavenge);
+            Assert.AreEqual(10, combat);
+            Assert.AreEqual(9, medicine);
+            Assert.AreEqual(10, scavenge, "a packed skill past the ceiling reads back at ten");
+            string drill = Practice.PackXp(1, 0, 3, 0, 6, 2);
+            Assert.AreEqual("1,0,3,0,6,2", drill);
+            Assert.AreEqual(3, Practice.ReadXp(drill, 2));
+            Assert.AreEqual(2, Practice.ReadXp(drill, 5));
+            Assert.AreEqual(0, Practice.ReadXp(null, 0), "a save from before experience starts every skill fresh");
+            Assert.AreEqual(0, Practice.ReadXp("4", 3));
+            Assert.AreEqual(8, Practice.ReadXp("999", 0));
         }
 
         [Test]
@@ -4111,7 +4160,8 @@ namespace OutpostZero.Tests.EditMode
             Assert.AreEqual(4, HandDepth.Heal(8));
             Assert.AreEqual(0, HandDepth.Scrap(4));
             Assert.AreEqual(4, HandDepth.Scrap(8));
-            Assert.AreEqual(8, Practice.Gain(8));
+            Assert.AreEqual(0.8f, FieldHand.Reload(Practice.Cap), 0.001f);
+            Assert.AreEqual(0.9f, HandDepth.Reload(Practice.Cap), 0.001f);
             Assert.AreEqual(2.5f, RecoilBloom.Spread(2.5f, FieldHand.Spread(0), 0f), 0.001f);
             Assert.AreEqual(2.125f, RecoilBloom.Spread(2.5f, FieldHand.Spread(4), 0f), 0.001f);
         }

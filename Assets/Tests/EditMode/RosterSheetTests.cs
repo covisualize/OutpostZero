@@ -40,6 +40,24 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void EachSkillShowsExperienceTowardItsNextLevel()
+        {
+            var mara = Mara();
+            mara.combatXp = 0;
+            mara.cooking = 5;
+            mara.cookingXp = 2;
+            mara.medicineXp = 1;
+            mara.engineering = Practice.Cap;
+            string line = RosterSheet.Line(mara, "en");
+            StringAssert.Contains("Guard 2 0/1", line);
+            StringAssert.Contains("Cook 5 2/3", line);
+            StringAssert.Contains("Medic 0 1/1", line);
+            StringAssert.Contains("Build 10  ", line);
+            StringAssert.Contains("Leads 3 0/1", line);
+            StringAssert.DoesNotContain("Scavenge", line);
+        }
+
+        [Test]
         public void AWoundShowsAndTheDeadShowOnlyWhoTheyWere()
         {
             var hurt = Mara();

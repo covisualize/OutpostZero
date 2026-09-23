@@ -316,6 +316,7 @@ namespace OutpostZero.Shell
                         kin = survivor.kin,
                         practice = Practice.Pack(survivor.combat, survivor.medicine, survivor.engineering, survivor.cooking, survivor.scavenge),
                         leadership = survivor.leadership,
+                        drill = Practice.PackXp(survivor.combatXp, survivor.medicineXp, survivor.engineeringXp, survivor.cookingXp, survivor.scavengeXp, survivor.leadershipXp),
                         age = survivor.age,
                         past = survivor.past
                     });
@@ -404,7 +405,13 @@ namespace OutpostZero.Shell
                         engineering = ReadPractice(saved.practice, 2),
                         cooking = ReadPractice(saved.practice, 3),
                         scavenge = ReadPractice(saved.practice, 4),
-                        leadership = saved.leadership < 0 ? 0 : saved.leadership,
+                        leadership = saved.leadership < 0 ? 0 : (saved.leadership > Practice.Cap ? Practice.Cap : saved.leadership),
+                        combatXp = Practice.ReadXp(saved.drill, 0),
+                        medicineXp = Practice.ReadXp(saved.drill, 1),
+                        engineeringXp = Practice.ReadXp(saved.drill, 2),
+                        cookingXp = Practice.ReadXp(saved.drill, 3),
+                        scavengeXp = Practice.ReadXp(saved.drill, 4),
+                        leadershipXp = Practice.ReadXp(saved.drill, 5),
                         age = saved.age < 0 ? 0 : saved.age,
                         past = saved.past ?? ""
                     });

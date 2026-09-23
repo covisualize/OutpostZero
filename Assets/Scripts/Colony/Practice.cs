@@ -3,20 +3,72 @@ using OutpostZero.Shell;
 namespace OutpostZero.Colony
 {
     /// <summary>
-    /// A colonist gets better at the work they keep doing.
-    /// The fourth shift is the first one that pays an extra point. Eight is the ceiling.
+    /// A colonist gets better at the work they keep doing. Every paid shift is one point of experience.
+    /// Below skill 4 one point raises the skill, so the fourth shift is still the first one that pays an extra point.
+    /// From 4 up a level costs its skill less two points: 2 to reach 5, and 7 to reach the ceiling of 10.
     /// An empty save is all zeros.
     /// </summary>
     public static class Practice
     {
-        public const int Cap = 8;
+        public const int Cap = 10;
         public const int BonusAt = 4;
 
-        public static int Gain(int skill)
+        public static int Need(int skill)
+        {
+            if (skill < BonusAt) return 1;
+            return skill - 2;
+        }
+
+        public static void Train(ref int skill, ref int xp)
         {
             if (skill < 0) skill = 0;
-            if (skill >= Cap) return Cap;
-            return skill + 1;
+            if (xp < 0) xp = 0;
+            if (skill >= Cap)
+            {
+                skill = Cap;
+                xp = 0;
+                return;
+            }
+            xp++;
+            if (xp < Need(skill)) return;
+            skill++;
+            xp = 0;
+        }
+
+        public static int Shifts(int from, int to)
+        {
+            if (from < 0) from = 0;
+            if (to > Cap) to = Cap;
+            int total = 0;
+            for (int level = from; level < to; level++) total += Need(level);
+            return total;
+        }
+
+        public static string PackXp(int combat, int medicine, int engineering, int cooking, int scavenge, int leadership)
+        {
+            return Xp(combat) + "," + Xp(medicine) + "," + Xp(engineering) + "," + Xp(cooking) + "," + Xp(scavenge) + "," + Xp(leadership);
+        }
+
+        public static int ReadXp(string packed, int index)
+        {
+            if (string.IsNullOrEmpty(packed) || index < 0) return 0;
+            string[] parts = packed.Split(',');
+            if (index >= parts.Length) return 0;
+            int value = 0;
+            string token = parts[index];
+            for (int i = 0; i < token.Length; i++)
+            {
+                char c = token[i];
+                if (c < '0' || c > '9') continue;
+                value = value * 10 + (c - '0');
+                if (value > Need(Cap)) return Need(Cap);
+            }
+            return value;
+        }
+
+        private static int Xp(int xp)
+        {
+            return xp < 0 ? 0 : xp;
         }
 
         public static int Bonus(int skill)

@@ -31,6 +31,12 @@ namespace OutpostZero.Colony
         public int cooking;
         public int scavenge;
         public int leadership;
+        public int combatXp;
+        public int medicineXp;
+        public int engineeringXp;
+        public int cookingXp;
+        public int scavengeXp;
+        public int leadershipXp;
         public string task = "Rest";
         public bool ownCall;
         public string bond = "";
@@ -519,7 +525,7 @@ namespace OutpostZero.Colony
                         int scrap = Pay(4 + (scrounge ? 3 : 0), survivor.morale, survivor.trait, survivor.aside, survivor.mark, survivor.fatigue);
                         if (scrap > 0)
                         {
-                            survivor.scavenge = Practice.Gain(survivor.scavenge);
+                            Practice.Train(ref survivor.scavenge, ref survivor.scavengeXp);
                             scrap += Practice.Bonus(survivor.scavenge);
                             scrap += ScrapDepth.Extra(survivor.scavenge);
                         }
@@ -544,7 +550,7 @@ namespace OutpostZero.Colony
                         CookPot.Serve(fire, raw, hands, out int spent, out int served, out int lift);
                         if (hands > 0)
                         {
-                            survivor.cooking = Practice.Gain(survivor.cooking);
+                            Practice.Train(ref survivor.cooking, ref survivor.cookingXp);
                             served += Practice.Bonus(survivor.cooking);
                             if (spent > 0) served += PotDepth.Plate(survivor.cooking);
                         }
@@ -556,7 +562,7 @@ namespace OutpostZero.Colony
                         int watch = Pay(1, survivor.morale, survivor.trait, survivor.aside, survivor.mark, survivor.fatigue);
                         if (watch > 0)
                         {
-                            survivor.combat = Practice.Gain(survivor.combat);
+                            Practice.Train(ref survivor.combat, ref survivor.combatXp);
                             watch += Practice.Bonus(survivor.combat);
                             watch += GuardDepth.Post(survivor.combat);
                             survivor.morale = Mathf.Max(0f, survivor.morale - TraitHook.WatchCost(survivor.trait, survivor.aside, survivor.mark));
@@ -570,7 +576,7 @@ namespace OutpostZero.Colony
                         break;
                     case "Medic":
                         if (ColonyDay.OutputScale(survivor.morale, survivor.trait, survivor.aside, survivor.mark) <= 0f) break;
-                        survivor.medicine = Practice.Gain(survivor.medicine);
+                        Practice.Train(ref survivor.medicine, ref survivor.medicineXp);
                         survivor.morale = Mathf.Min(100f, survivor.morale + 2f);
                         var leader = PlayerRegistry.Current;
                         leader?.GetComponent<Combat.HealthSystem>()?.Heal(12f + Practice.Bonus(survivor.medicine) * 6f + MedDepth.Mend(survivor.medicine));
@@ -588,7 +594,7 @@ namespace OutpostZero.Colony
                         if (markPace > pace) pace = markPace;
                         if (pace > 0)
                         {
-                            survivor.engineering = Practice.Gain(survivor.engineering);
+                            Practice.Train(ref survivor.engineering, ref survivor.engineeringXp);
                             pace += Practice.Bonus(survivor.engineering);
                             pace += BuildDepth.Raise(survivor.engineering);
                             pace = ShiftWear.Short(pace, survivor.fatigue);
@@ -605,7 +611,7 @@ namespace OutpostZero.Colony
                         int made = crafts > 0 ? CraftingBench.Instance.WorkOrders(crafts) : 0;
                         if (made > 0)
                         {
-                            survivor.engineering = Practice.Gain(survivor.engineering);
+                            Practice.Train(ref survivor.engineering, ref survivor.engineeringXp);
                             survivor.morale = Mathf.Max(0f, survivor.morale - 1f);
                             GameplayFeedback.Toast(survivor.displayName + " " + Loc.T("craft.done") + " " + made);
                         }
@@ -643,7 +649,7 @@ namespace OutpostZero.Colony
             PickOwnCalls();
             Publish(notes);
             var held = Leader;
-            if (held != null) held.leadership = Practice.Gain(held.leadership);
+            if (held != null) Practice.Train(ref held.leadership, ref held.leadershipXp);
             FactionTrade.Instance?.OnMorning(WorldClock.Instance != null ? WorldClock.Instance.Day : 1);
             AudioManager.Instance?.Sting("dawn");
         }
