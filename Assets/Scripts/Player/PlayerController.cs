@@ -572,6 +572,23 @@ namespace OutpostZero.Player
             return SlotLines(activeWeaponIndex);
         }
 
+        public int SlotCount => equippedWeapons != null ? equippedWeapons.Length : 0;
+
+        /// <summary>One slot's wheel row, marked when it is the weapon in hand.</summary>
+        public string SlotLine(int slot)
+        {
+            if (equippedWeapons == null || slot < 0 || slot >= equippedWeapons.Length) return "";
+            return WeaponWheel.Row(slot, SlotName(slot), slot == activeWeaponIndex, null);
+        }
+
+        private string SlotName(int slot)
+        {
+            var held = equippedWeapons[slot];
+            if (held == null) return "";
+            string id = held is FirearmWeapon gun ? gun.CardId : WeaponCard.IdFor(held.Type);
+            return FightSay.Gun(id, held.WeaponName, null);
+        }
+
         private string SlotLines(int hot)
         {
             if (equippedWeapons == null) return "";
@@ -580,14 +597,7 @@ namespace OutpostZero.Player
             for (int i = 0; i < count; i++)
             {
                 if (i > 0) builder.Append('\n');
-                string name = "";
-                if (equippedWeapons[i] != null)
-                {
-                    var held = equippedWeapons[i];
-                    string id = held is FirearmWeapon gun ? gun.CardId : WeaponCard.IdFor(held.Type);
-                    name = FightSay.Gun(id, held.WeaponName, null);
-                }
-                builder.Append(WeaponWheel.Row(i, name, i == hot, null));
+                builder.Append(WeaponWheel.Row(i, SlotName(i), i == hot, null));
             }
             return builder.ToString();
         }
@@ -933,6 +943,19 @@ namespace OutpostZero.Player
             }
 
             OnActiveWeaponChanged?.Invoke(ActiveWeapon);
+        }
+
+        /// <summary>Trades two weapon slots from the pack screen; the weapon in hand stays in hand.</summary>
+        public bool SwapSlots(int a, int b)
+        {
+            if (equippedWeapons == null || a == b) return false;
+            if (a < 0 || b < 0 || a >= equippedWeapons.Length || b >= equippedWeapons.Length) return false;
+            var held = equippedWeapons[a];
+            equippedWeapons[a] = equippedWeapons[b];
+            equippedWeapons[b] = held;
+            activeWeaponIndex = WeaponWheel.AfterSwap(activeWeaponIndex, a, b);
+            OnActiveWeaponChanged?.Invoke(ActiveWeapon);
+            return true;
         }
 
         public void CycleWeapon(int direction)

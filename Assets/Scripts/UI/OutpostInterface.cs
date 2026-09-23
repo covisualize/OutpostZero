@@ -1102,9 +1102,23 @@ namespace OutpostZero.UI
             var gear = inventory.GetComponent<PlayerController>();
             if (gear != null)
             {
+                pack.Add(Body(Loc.T("pack.gear")));
+                int count = Mathf.Min(gear.SlotCount, WeaponWheel.Slots);
+                for (int i = 0; i < count; i++)
+                {
+                    int slot = i;
+                    var slotRow = new VisualElement { style = { flexDirection = FlexDirection.Row, alignItems = Align.Center } };
+                    var slotLabel = Body();
+                    slotLabel.text = gear.SlotLine(slot);
+                    slotLabel.style.flexGrow = 1;
+                    slotRow.Add(slotLabel);
+                    if (slot != gear.ActiveSlot && gear.WeaponAt(slot) != null) slotRow.Add(Button(Loc.T("pack.equip"), () => gear.SelectWeapon(slot)));
+                    if (slot > 0) slotRow.Add(Button(Loc.T("pack.up"), () => gear.SwapSlots(slot, slot - 1)));
+                    pack.Add(slotRow);
+                }
                 var slots = Body();
                 slots.style.whiteSpace = WhiteSpace.PreWrap;
-                slots.text = Loc.T("pack.gear") + "\n" + gear.GearLine() + "\n" + Loc.T("camp.belt") + " " + inventory.BeltLine + "\n" + Loc.T("pack.tier") + " " + inventory.PackTier;
+                slots.text = Loc.T("camp.belt") + " " + inventory.BeltLine + "\n" + Loc.T("pack.tier") + " " + inventory.PackTier;
                 pack.Add(slots);
             }
             pack.Add(Button(Loc.T("pack.filter") + ": " + Loc.T(PackFilter.Key(packFilter)), () => packFilter = PackFilter.Next(packFilter)));

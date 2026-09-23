@@ -8,6 +8,14 @@ namespace OutpostZero.Combat
     public static class WeaponWheel
     {
         public const int Slots = 4;
+
+        /// <summary>Where the held weapon sits after slots <paramref name="a"/> and <paramref name="b"/> trade places.</summary>
+        public static int AfterSwap(int active, int a, int b)
+        {
+            if (active == a) return b;
+            if (active == b) return a;
+            return active;
+        }
         public const float Deadzone = 0.35f;
         public const float HoldSeconds = 0.16f;
 
