@@ -21,6 +21,7 @@ namespace OutpostZero.Core
             public float ambience;
             public float ui;
             public float text;
+            public float uiScale;
             public float fov;
             public float opacity;
             public float brightness;
@@ -60,6 +61,7 @@ namespace OutpostZero.Core
                 ambience = 0.8f,
                 ui = 1f,
                 text = 1f,
+                uiScale = 1f,
                 fov = 55f,
                 opacity = 1f,
                 brightness = 1f,
@@ -100,6 +102,7 @@ namespace OutpostZero.Core
             Num(builder, "ambience", snap.ambience, false);
             Num(builder, "ui", snap.ui, false);
             Num(builder, "text", snap.text, false);
+            Num(builder, "uiScale", snap.uiScale, false);
             Num(builder, "fov", snap.fov, false);
             Num(builder, "opacity", snap.opacity, false);
             Num(builder, "brightness", snap.brightness, false);
@@ -141,6 +144,7 @@ namespace OutpostZero.Core
             snap.ambience = Num(json, "ambience", snap.ambience);
             snap.ui = Num(json, "ui", snap.ui);
             snap.text = Num(json, "text", snap.text);
+            snap.uiScale = Num(json, "uiScale", snap.uiScale);
             snap.fov = Num(json, "fov", snap.fov);
             snap.opacity = Num(json, "opacity", snap.opacity);
             snap.brightness = Num(json, "brightness", snap.brightness);

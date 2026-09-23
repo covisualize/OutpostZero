@@ -115,6 +115,7 @@ namespace OutpostZero.UI
             panel.sortingOrder = 20;
             document = Attach.Ensure<UIDocument>(gameObject);
             document.panelSettings = panel;
+            PanelScale.Track(panel);
             root = document.rootVisualElement;
             if (root == null) return;
 
@@ -287,6 +288,7 @@ namespace OutpostZero.UI
         {
             if (root == null) return;
             float scale = SettingsService.Instance != null ? SettingsService.Instance.TextScale : 1f;
+            PanelScale.Apply(SettingsService.Instance != null ? SettingsService.Instance.UiScale : 1f);
             root.style.fontSize = Mathf.RoundToInt(14 * scale);
             root.style.opacity = SettingsService.Instance != null ? SettingsService.Instance.HudOpacity : 1f;
             int vision = SettingsService.Instance != null ? SettingsService.Instance.ColorblindMode : 0;
@@ -877,6 +879,7 @@ namespace OutpostZero.UI
             parent.Add(SliderRow(Loc.T("set.ui"), settings.UiVolume, settings.SetUi));
             parent.Add(SliderRow(Loc.T("set.fov"), settings.FieldOfView, 40f, 75f, settings.SetFieldOfView));
             parent.Add(SliderRow(Loc.T("set.text"), settings.TextScale, 0.8f, 1.6f, settings.SetTextScale));
+            parent.Add(SliderRow(Loc.T("set.ui_scale"), settings.UiScale, PlayOptions.UiScaleMin, PlayOptions.UiScaleMax, settings.SetUiScale));
             parent.Add(SliderRow(Loc.T("set.hud"), settings.HudOpacity, 0.45f, 1f, settings.SetHudOpacity));
             parent.Add(SliderRow(Loc.T("set.bright"), settings.Brightness, 0.6f, 1.4f, settings.SetBrightness));
             parent.Add(Button(settings.Subtitles ? Loc.T("set.subs_on") : Loc.T("set.subs_off"), () => settings.SetSubtitles(!settings.Subtitles)));

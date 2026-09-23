@@ -15,6 +15,36 @@ namespace OutpostZero.Tests.EditMode
         public void Reset() => ControlBindings.ResetDefaults();
 
         [Test]
+        public void InterfaceSizeRunsFromEightyToOneHundredFiftyPercentAndIsSaved()
+        {
+            Assert.AreEqual(0.8f, PlayOptions.UiScale(0.5f), 0.0001f);
+            Assert.AreEqual(1.5f, PlayOptions.UiScale(3f), 0.0001f);
+            Assert.AreEqual(1.25f, PlayOptions.UiScale(1.25f), 0.0001f);
+            Assert.AreEqual(1f, PlayOptions.UiScale(0f), 0.0001f);
+            Assert.AreEqual(1f, PlayOptions.UiScale(float.NaN), 0.0001f);
+            var snap = SettingsFile.Defaults();
+            Assert.AreEqual(1f, snap.uiScale, 0.0001f);
+            snap.uiScale = 1.4f;
+            Assert.IsTrue(SettingsFile.TryFromJson(SettingsFile.ToJson(snap), out var back));
+            Assert.AreEqual(1.4f, back.uiScale, 0.001f);
+            Assert.IsTrue(SettingsFile.TryFromJson("{\"shake\":1}", out var old));
+            Assert.AreEqual(1f, PlayOptions.UiScale(old.uiScale), 0.0001f);
+        }
+
+        [Test]
+        public void EveryPanelFollowsTheInterfaceSize()
+        {
+            string ui = Path.Combine(Directory.GetCurrentDirectory(), "Assets", "Scripts", "UI");
+            var assign = new Regex(@"\.panelSettings\s*=\s*(\w+);");
+            foreach (var file in Directory.GetFiles(ui, "*.cs", SearchOption.AllDirectories))
+            {
+                string text = File.ReadAllText(file);
+                foreach (Match match in assign.Matches(text))
+                    StringAssert.Contains("PanelScale.Track(" + match.Groups[1].Value + ")", text, Path.GetFileName(file));
+            }
+        }
+
+        [Test]
         public void RenderScaleFollowsTheTierUntilOverridden()
         {
             Assert.AreEqual(0.75f, PlayOptions.RenderScale(0, 0.75f), 0.0001f);

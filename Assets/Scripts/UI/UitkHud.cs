@@ -22,6 +22,7 @@ namespace OutpostZero.UI
             panel.referenceResolution = new Vector2Int(1920, 1080);
             document = gameObject.AddComponent<UIDocument>();
             document.panelSettings = panel;
+            PanelScale.Track(panel);
             var root = document.rootVisualElement;
             if (root == null)
             {

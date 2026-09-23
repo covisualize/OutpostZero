@@ -45,6 +45,7 @@ namespace OutpostZero.UI
             settings.sortingOrder = 45;
             var document = gameObject.AddComponent<UIDocument>();
             document.panelSettings = settings;
+            PanelScale.Track(settings);
             var root = document.rootVisualElement;
             if (root == null) return;
 

@@ -32,6 +32,7 @@ namespace OutpostZero.UI
             panel.sortingOrder = sortingOrder;
             var document = host.AddComponent<UIDocument>();
             document.panelSettings = panel;
+            PanelScale.Track(panel);
             var root = document.rootVisualElement;
             if (root == null) return null;
 

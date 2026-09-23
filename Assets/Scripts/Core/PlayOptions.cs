@@ -65,6 +65,15 @@ namespace OutpostZero.Core
         /// <summary>
         /// Step 0 follows the quality tier; every other step overrides it.
         /// </summary>
+        public const float UiScaleMin = 0.8f;
+        public const float UiScaleMax = 1.5f;
+
+        public static float UiScale(float stored)
+        {
+            if (float.IsNaN(stored) || stored <= 0f) return 1f;
+            return stored < UiScaleMin ? UiScaleMin : stored > UiScaleMax ? UiScaleMax : stored;
+        }
+
         public static float RenderScale(int stored, float tierScale)
         {
             int step = ScaleStep(stored);

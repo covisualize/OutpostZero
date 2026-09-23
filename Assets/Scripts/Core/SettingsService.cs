@@ -17,6 +17,7 @@ namespace OutpostZero.Core
         [SerializeField] private float screenShake = 1f;
         [SerializeField] private float masterVolume = 1f;
         [SerializeField] private float textScale = 1f;
+        [SerializeField] private float uiScale = 1f;
         [SerializeField] private bool subtitles = true;
         [SerializeField] private bool quietFlash;
         [SerializeField] private int colorblindMode;
@@ -53,6 +54,7 @@ namespace OutpostZero.Core
         public float AmbienceVolume => ambienceVolume;
         public float UiVolume => uiVolume;
         public float TextScale => textScale;
+        public float UiScale => uiScale;
         public bool Subtitles => subtitles;
         public bool QuietFlash => quietFlash;
         public int ColorblindMode => colorblindMode;
@@ -137,6 +139,12 @@ namespace OutpostZero.Core
         {
             masterVolume = Mathf.Clamp01(value);
             ApplyVolume();
+            Raise();
+        }
+
+        public void SetUiScale(float value)
+        {
+            uiScale = PlayOptions.UiScale(value);
             Raise();
         }
 
@@ -489,6 +497,7 @@ namespace OutpostZero.Core
                 ambience = ambienceVolume,
                 ui = uiVolume,
                 text = textScale,
+                uiScale = uiScale,
                 fov = fieldOfView,
                 opacity = hudOpacity,
                 brightness = brightness,
@@ -527,6 +536,7 @@ namespace OutpostZero.Core
             ambienceVolume = Mathf.Clamp01(snap.ambience);
             uiVolume = Mathf.Clamp01(snap.ui);
             textScale = Mathf.Clamp(snap.text <= 0f ? 1f : snap.text, 0.8f, 1.6f);
+            uiScale = PlayOptions.UiScale(snap.uiScale);
             fieldOfView = Mathf.Clamp(snap.fov < 40f ? 55f : snap.fov, 40f, 75f);
             hudOpacity = Presentation.Opacity(snap.opacity);
             brightness = Presentation.Brightness(snap.brightness);
