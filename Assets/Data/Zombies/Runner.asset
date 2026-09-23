@@ -28,5 +28,6 @@ MonoBehaviour:
   hordeAlertRadius: 10
   specialAbility: 1
   hitVfx: 11
+  vocals: runner
   deathVfx: 14
   lootTable: runner

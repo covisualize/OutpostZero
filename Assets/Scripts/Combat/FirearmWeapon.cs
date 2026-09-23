@@ -94,9 +94,13 @@ namespace OutpostZero.Combat
             useProjectile = WeaponCard.FiresProjectile(weaponType, definition.useProjectile);
             if (!string.IsNullOrEmpty(definition.id)) cardId = definition.id;
             muzzleVfx = definition.muzzleVfx;
+            fireSfx = definition.fireSfx ?? "";
         }
 
         private VfxEvent muzzleVfx = VfxEvent.None;
+        private string fireSfx = "";
+
+        public string FireSfx => fireSfx;
 
         /// <summary>The flash this gun plays: its definition's, or the default for its type.</summary>
         public VfxEvent MuzzleVfx => muzzleVfx != VfxEvent.None ? muzzleVfx : VfxBook.MuzzleFor(weaponType);

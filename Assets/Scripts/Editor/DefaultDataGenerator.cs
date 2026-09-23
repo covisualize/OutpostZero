@@ -169,6 +169,7 @@ namespace OutpostZero.EditorTools
             fill(asset);
             asset.name = assetName;
             if (asset.muzzleVfx == VfxEvent.None) asset.muzzleVfx = VfxBook.MuzzleFor(asset.weaponType);
+            if (string.IsNullOrEmpty(asset.fireSfx) && asset.weaponType != WeaponType.Melee) asset.fireSfx = OutpostZero.Shell.ClipBook.Fire(asset.weaponType);
             if (asset.heldPrefab == null && !string.IsNullOrEmpty(asset.modelPath))
             {
                 asset.heldPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/Weapons/" + PrefabCatalog.Id(asset.modelPath) + ".prefab");

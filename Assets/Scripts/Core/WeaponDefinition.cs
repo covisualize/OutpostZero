@@ -84,6 +84,9 @@ namespace OutpostZero.Core
         /// <summary>Muzzle effect (a VfxLibrary event); None picks the flash for the weapon type.</summary>
         [Tooltip("Muzzle effect (a VfxLibrary event); None picks the flash for the weapon type.")]
         public VfxEvent muzzleVfx = VfxEvent.None;
+        /// <summary>Fire sound (a ClipBook id such as gun, shotgun, rifle or smg); empty picks the sound for the weapon type.</summary>
+        [Tooltip("Fire sound (a ClipBook id such as gun, shotgun, rifle or smg); empty picks the sound for the weapon type.")]
+        public string fireSfx = "";
 
         /// <summary>HUD slot icon rendered from the weapon model by the Blender pipeline.</summary>
         [Tooltip("HUD slot icon rendered from the weapon model by the Blender pipeline.")]

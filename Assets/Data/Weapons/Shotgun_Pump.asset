@@ -35,4 +35,5 @@ MonoBehaviour:
   holdOffset: {x: 0, y: 0, z: 0.1}
   holdEuler: {x: 0, y: 90, z: 0}
   muzzleVfx: 2
+  fireSfx: shotgun
   icon: {fileID: 2800000, guid: 2032ef10c270522714efdd78de0f6954, type: 3}

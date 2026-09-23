@@ -25,6 +25,11 @@ namespace OutpostZero.Core
 
         public SurfaceKind Kind => kind;
 
+        [Tooltip("Footstep sound (a ClipBook id such as step_metal); empty picks the step for the surface kind.")]
+        [SerializeField] private string footsteps = "";
+
+        public string Footsteps => footsteps ?? "";
+
         public void Set(SurfaceKind value)
         {
             kind = value;

@@ -22,6 +22,33 @@ namespace OutpostZero.Shell
 
         public List<Entry> entries = new List<Entry>();
 
+        /// <summary>Picks a variant, never the one this id played last while it has another.</summary>
+        public AudioClip Pick(string id, int roll, Dictionary<string, int> last)
+        {
+            var entry = Find(id);
+            if (entry == null) return null;
+            int previous = last != null && last.TryGetValue(id, out int seen) ? seen : -1;
+            int slot = Fresh(entry.variants.Length, previous, roll);
+            if (slot < 0) return null;
+            if (last != null) last[id] = slot;
+            return entry.variants[slot];
+        }
+
+        private Entry Find(string id)
+        {
+            if (string.IsNullOrEmpty(id) || entries == null) return null;
+            foreach (var entry in entries)
+                if (entry != null && entry.id == id && entry.variants != null) return entry;
+            return null;
+        }
+
+        public static int Fresh(int count, int previous, int roll)
+        {
+            int slot = Variant(count, roll);
+            if (count > 1 && slot == previous) slot = (slot + 1) % count;
+            return slot;
+        }
+
         public AudioClip Pick(string id, int roll)
         {
             if (string.IsNullOrEmpty(id) || entries == null) return null;

@@ -57,6 +57,7 @@ namespace OutpostZero.Shell
         public static AudioManager Instance { get; private set; }
 
         private readonly Dictionary<string, AudioClip> clips = new Dictionary<string, AudioClip>();
+        private readonly Dictionary<string, int> lastVariant = new Dictionary<string, int>();
         private SfxLibrary library;
         private readonly List<AudioSource> pool = new List<AudioSource>();
         private AudioSource ambient;
@@ -407,7 +408,7 @@ namespace OutpostZero.Shell
             if (Physics.Raycast(player.transform.position + Vector3.up, Vector3.down, out var hit, 2.2f, GameLayers.VisionOcclusionMask, QueryTriggerInteraction.Ignore))
             {
                 var tag = SurfaceTag.Of(hit.collider);
-                step = tag != null && tag.Kind != SurfaceKind.Default ? SurfaceTag.StepId(tag.Kind) : AudioMix.StepId(hit.collider.name);
+                step = tag != null ? ClipBook.Step(tag.Footsteps, tag.Kind, hit.collider.name) : AudioMix.StepId(hit.collider.name);
             }
             if (OutpostZero.Expedition.GlassShard.Covers(player.transform.position.x, player.transform.position.z))
                 step = "step_glass";
@@ -448,7 +449,7 @@ namespace OutpostZero.Shell
         private void OnShot(Vector3 muzzle, WeaponBase weapon)
         {
             if (weapon == null) return;
-            string id = ClipBook.Fire(weapon.Type);
+            string id = ClipBook.Fire(weapon.Type, weapon is FirearmWeapon firearm ? firearm.FireSfx : "");
             PlayAt(id, muzzle, 0.8f);
             if (id == "swing") return;
             float distance = HearDistance(muzzle);
@@ -535,7 +536,7 @@ namespace OutpostZero.Shell
 
         private AudioClip Clip(string id)
         {
-            var authored = library != null ? library.Pick(id, Random.Range(0, 1 << 16)) : null;
+            var authored = library != null ? library.Pick(id, Random.Range(0, 1 << 16), lastVariant) : null;
             return authored != null ? authored : Procedural(id);
         }
 

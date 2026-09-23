@@ -11,6 +11,12 @@ namespace OutpostZero.AI
         public const float Gap = 4.8f;
         public const float Hold = 0.7f;
 
+        public static string Breed(string id, int ability, string vocals)
+        {
+            if (vocals == "walker" || vocals == "runner" || vocals == "brute") return vocals;
+            return Breed(id, ability);
+        }
+
         public static string Breed(string id, int ability)
         {
             if (ability == 2) return "brute";

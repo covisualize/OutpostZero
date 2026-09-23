@@ -35,4 +35,5 @@ MonoBehaviour:
   holdOffset: {x: 0, y: 0, z: 0}
   holdEuler: {x: 0, y: 90, z: 0}
   muzzleVfx: 3
+  fireSfx: rifle
   icon: {fileID: 2800000, guid: 8333f638ea4988dac1aa79ebbcb532f9, type: 3}

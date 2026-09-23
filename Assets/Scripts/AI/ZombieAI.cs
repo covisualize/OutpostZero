@@ -122,6 +122,7 @@ namespace OutpostZero.AI
         private static readonly float[] crowdZ = new float[48];
         [SerializeField] private ZombieSpecialAbility specialAbility;
         private string archetypeId = "";
+        private string vocals = "";
         private string lootTable = "";
         private int sightToken;
 
@@ -335,6 +336,7 @@ namespace OutpostZero.AI
             hordeAlertRadius = archetype.hordeAlertRadius;
             specialAbility = archetype.specialAbility;
             archetypeId = archetype.id;
+            vocals = archetype.vocals ?? "";
             lootTable = archetype.lootTable ?? "";
             ModelId = CharacterRig.ModelId(archetype.modelPath);
             if (archetype.hitVfx != VfxEvent.None) HitVfx = archetype.hitVfx;
@@ -1278,7 +1280,7 @@ namespace OutpostZero.AI
         {
             int ability = specialAbility == ZombieSpecialAbility.Charge ? 2 : specialAbility == ZombieSpecialAbility.Lunge ? 1 : 0;
             string id = string.IsNullOrEmpty(archetypeId) ? name : archetypeId;
-            return ZombieVoice.Breed(id, ability);
+            return ZombieVoice.Breed(id, ability, vocals);
         }
 
         private void Voice(string moment)

@@ -56,6 +56,9 @@ namespace OutpostZero.Core
         /// <summary>Effect a hit on this body throws (a VfxLibrary event).</summary>
         [Tooltip("Effect a hit on this body throws (a VfxLibrary event).")]
         public VfxEvent hitVfx = VfxEvent.BloodSpray;
+        /// <summary>Voice set: walker, runner or brute. Empty reads it from the id and the special ability.</summary>
+        [Tooltip("Voice set: walker, runner or brute. Empty reads it from the id and the special ability.")]
+        public string vocals = "";
         /// <summary>Effect played where this body falls.</summary>
         [Tooltip("Effect played where this body falls.")]
         public VfxEvent deathVfx = VfxEvent.DeathBurst;

@@ -32,6 +32,19 @@ namespace OutpostZero.Shell
             return "gun";
         }
 
+        /// <summary>A weapon's own fire sound when it names a known clip, else the one for its type.</summary>
+        public static string Fire(WeaponType type, string authored)
+        {
+            return type != WeaponType.Melee && Has(authored) ? authored : Fire(type);
+        }
+
+        /// <summary>A surface's own footstep when it names a known step clip, else the step for its kind or collider name.</summary>
+        public static string Step(string authored, SurfaceKind kind, string colliderName)
+        {
+            if (Has(authored) && authored.StartsWith("step", System.StringComparison.Ordinal)) return authored;
+            return kind != SurfaceKind.Default ? SurfaceTag.StepId(kind) : AudioMix.StepId(colliderName);
+        }
+
         public static bool Has(string id)
         {
             if (string.IsNullOrEmpty(id)) return false;

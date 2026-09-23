@@ -154,5 +154,73 @@ namespace OutpostZero.Tests.EditMode
             StringAssert.Contains("SfxLibrary", doc);
             StringAssert.Contains(SfxLibrary.ResourcePath, doc);
         }
+            static string Field(string asset, string name) =>
+            Regex.Match(asset, "^  " + name + ": ?(.*)$", RegexOptions.Multiline).Groups[1].Value.Trim();
+
+        [Test]
+        public void WeaponAndZombieAssetsNameTheirOwnSounds()
+        {
+            string data = Path.Combine(Directory.GetCurrentDirectory(), "Assets", "Data");
+            var weapons = Directory.GetFiles(Path.Combine(data, "Weapons"), "*.asset");
+            Assert.GreaterOrEqual(weapons.Length, 4);
+            foreach (var file in weapons)
+            {
+                string asset = File.ReadAllText(file).Replace("\r\n", "\n");
+                var type = (WeaponType)int.Parse(Field(asset, "weaponType"));
+                StringAssert.Contains("  fireSfx:", asset, file);
+                string sfx = Field(asset, "fireSfx");
+                if (type == WeaponType.Melee) Assert.AreEqual("", sfx, file);
+                else Assert.IsTrue(ClipBook.Has(sfx), file + " names " + sfx);
+                Assert.AreEqual(ClipBook.Fire(type), ClipBook.Fire(type, sfx), file + " changes its sound from the type default");
+            }
+            var zombies = Directory.GetFiles(Path.Combine(data, "Zombies"), "*.asset");
+            Assert.AreEqual(3, zombies.Length);
+            foreach (var file in zombies)
+            {
+                string asset = File.ReadAllText(file).Replace("\r\n", "\n");
+                string vocals = Field(asset, "vocals");
+                CollectionAssert.Contains(new[] { "walker", "runner", "brute" }, vocals, file);
+                Assert.AreEqual(ZombieVoice.Breed(Field(asset, "id"), 0), vocals, file);
+                foreach (var id in new[] { ZombieVoice.Idle(vocals), ZombieVoice.Bite(vocals), ZombieVoice.Hurt(vocals), ZombieVoice.Death(vocals) })
+                    Assert.IsTrue(ClipBook.Has(id), vocals + " voice " + id);
+            }
+        }
+
+        [Test]
+        public void AuthoredSoundNamesOverrideOnlyWithKnownClips()
+        {
+            Assert.AreEqual("rifle", ClipBook.Fire(WeaponType.Pistol, "rifle"));
+            Assert.AreEqual("gun", ClipBook.Fire(WeaponType.Pistol, "no_such_clip"));
+            Assert.AreEqual("swing", ClipBook.Fire(WeaponType.Melee, "gun"), "a blade never fires a gunshot");
+            Assert.AreEqual("brute", ZombieVoice.Breed("walker", 0, "brute"));
+            Assert.AreEqual("runner", ZombieVoice.Breed("walker", 1, ""));
+            Assert.AreEqual("walker", ZombieVoice.Breed("walker", 0, "choir"));
+
+            Assert.AreEqual("step_metal", ClipBook.Step("step_metal", SurfaceKind.Wood, "Floor"));
+            Assert.AreEqual(SurfaceTag.StepId(SurfaceKind.Wood), ClipBook.Step("gun", SurfaceKind.Wood, "Floor"), "only step clips can be footsteps");
+            Assert.AreEqual(SurfaceTag.StepId(SurfaceKind.Gravel), ClipBook.Step("", SurfaceKind.Gravel, "Floor"));
+            Assert.AreEqual(AudioMix.StepId("Metal_Grate"), ClipBook.Step("", SurfaceKind.Default, "Metal_Grate"));
+        }
+
+        [Test]
+        public void AVariantNeverPlaysTwiceInARowWhileAnotherExists()
+        {
+            Assert.AreEqual(-1, SfxLibrary.Fresh(0, -1, 5));
+            Assert.AreEqual(0, SfxLibrary.Fresh(1, 0, 7), "a lone clip still plays");
+            for (int count = 2; count <= 4; count++)
+            {
+                int last = -1;
+                var played = new HashSet<int>();
+                for (int roll = 0; roll < 64; roll++)
+                {
+                    int slot = SfxLibrary.Fresh(count, last, roll * 7919 % 97);
+                    Assert.AreNotEqual(last, slot, count + " variants, roll " + roll);
+                    Assert.That(slot, Is.InRange(0, count - 1));
+                    played.Add(slot);
+                    last = slot;
+                }
+                Assert.AreEqual(count, played.Count, "every variant gets a turn");
+            }
+        }
     }
 }
