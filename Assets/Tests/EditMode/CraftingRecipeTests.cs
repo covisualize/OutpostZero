@@ -33,6 +33,17 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void NoRecipeMakesAMaterialSoNoCraftCanFeedItself()
+        {
+            var materials = new[] { "scrap", "cloth", "chemicals", "chemical", "tape", "duct_tape", "raw", "raw_food" };
+            foreach (var recipe in CraftingBench.Recipes)
+            {
+                CollectionAssert.DoesNotContain(materials, recipe.Id, recipe.Id + " is a bill material");
+                CollectionAssert.DoesNotContain(materials, recipe.OutputId, recipe.Id + " makes a bill material and could loop");
+            }
+        }
+
+        [Test]
         public void DismantlingNeverPaysBackMoreThanTheCheapestCraft()
         {
             foreach (var recipe in CraftingBench.Recipes)
