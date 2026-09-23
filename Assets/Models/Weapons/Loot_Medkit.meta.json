@@ -1,0 +1,37 @@
+{
+  "id": "Loot_Medkit",
+  "category": "Weapons",
+  "generator": "generate_weapons.build_medkit",
+  "generatorHash": "6950d259807644f2b5f04b4ea542dbc30441ef8fe332046c05aef8457bdd9184",
+  "gitSha": "edff058f31a908ed7de64edaf527c44ea12a41ff",
+  "blender": "4.2.11",
+  "tags": [
+    "loot",
+    "item"
+  ],
+  "pivot": "bottom",
+  "collider": "box",
+  "rig": "",
+  "lods": [
+    1.0
+  ],
+  "tris": 200,
+  "lodTris": [
+    200
+  ],
+  "size": {
+    "width": 0.34,
+    "depth": 0.149,
+    "height": 0.274
+  },
+  "floor": 0.0,
+  "center": {
+    "x": 0.0,
+    "y": 0.0045
+  },
+  "materials": [
+    "Mat_Medkit_Clasps",
+    "Mat_Medkit_Cross",
+    "Mat_Medkit_White"
+  ]
+}

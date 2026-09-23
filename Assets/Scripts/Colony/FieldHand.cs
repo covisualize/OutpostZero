@@ -28,7 +28,40 @@ namespace OutpostZero.Colony
 
         public static string Dose(int skill)
         {
-            return "Medkit used  +" + Medkit(skill) + " HP";
+            return Dose(skill, "en");
+        }
+
+        public static string Dose(int skill, string language)
+        {
+            int hp = Medkit(skill) + HandDepth.Heal(skill);
+            return Word("dose.kit", language) + "  +" + hp + " " + Word("dose.hp", language);
+        }
+
+        public static string Fail(string language)
+        {
+            return Word("dose.fail", language);
+        }
+
+        public static string Breaks(string language)
+        {
+            return Word("dose.break", language);
+        }
+
+        public static string Relief(string id, string language)
+        {
+            if (string.IsNullOrEmpty(language)) return Shell.Loc.Item(id);
+            return Shell.Loc.Item(id, language);
+        }
+
+        public static string Spent(string id, string language)
+        {
+            return Word("dose.spent", language) + " " + Relief(id, language);
+        }
+
+        private static string Word(string key, string language)
+        {
+            if (string.IsNullOrEmpty(language)) return Shell.Loc.T(key);
+            return Shell.Loc.T(key, language);
         }
     }
 }

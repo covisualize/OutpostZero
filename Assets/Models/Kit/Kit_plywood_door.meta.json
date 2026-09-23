@@ -1,0 +1,35 @@
+{
+  "id": "Kit_plywood_door",
+  "category": "Kit",
+  "generator": "generate_kit.build_piece",
+  "generatorHash": "4c44592212c0aa24784ac36fc5ab0f803a580260f4c38258335e357959236512",
+  "gitSha": "edff058f31a908ed7de64edaf527c44ea12a41ff",
+  "blender": "4.2.11",
+  "tags": [
+    "kit",
+    "fort"
+  ],
+  "pivot": "authored",
+  "collider": "box",
+  "rig": "",
+  "lods": [
+    1.0
+  ],
+  "tris": 36,
+  "lodTris": [
+    36
+  ],
+  "size": {
+    "width": 2.0,
+    "depth": 0.08,
+    "height": 2.2
+  },
+  "floor": 0.0,
+  "center": {
+    "x": 1.0,
+    "y": 0.04
+  },
+  "materials": [
+    "Mat_wood"
+  ]
+}

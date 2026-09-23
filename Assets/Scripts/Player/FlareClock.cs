@@ -11,7 +11,12 @@ namespace OutpostZero.Player
 
         public static bool Lit(float elapsed)
         {
-            return elapsed >= 0f && elapsed < Duration;
+            return Lit(elapsed, Duration);
+        }
+
+        public static bool Lit(float elapsed, float burn)
+        {
+            return elapsed >= 0f && elapsed < burn;
         }
 
         public static bool PulseDue(float previous, float now)

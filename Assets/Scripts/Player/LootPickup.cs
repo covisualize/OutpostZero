@@ -1,5 +1,8 @@
 using UnityEngine;
 using OutpostZero.Core;
+using OutpostZero.Graphics;
+using OutpostZero.Sensory;
+using OutpostZero.Shell;
 
 namespace OutpostZero.Player
 {
@@ -47,10 +50,21 @@ namespace OutpostZero.Player
             go.name = "Loot_" + lootKind;
             go.transform.position = worldPosition + Vector3.up * 0.45f;
             go.transform.localScale = Vector3.one * 0.35f;
+            MaterialLibrary.Dress(go.GetComponent<Renderer>(), FamilyFor(lootKind));
 
             var pickup = go.AddComponent<LootPickup>();
             pickup.Configure(lootKind, lootAmount);
             return pickup;
+        }
+
+        public static SurfaceFamily FamilyFor(LootKind kind)
+        {
+            switch (kind)
+            {
+                case LootKind.Scrap: return SurfaceFamily.MetalRusted;
+                case LootKind.Medkit: return SurfaceFamily.MetalPainted;
+                default: return SurfaceFamily.Plywood;
+            }
         }
 
         private void EnsureTrigger()
@@ -101,19 +115,12 @@ namespace OutpostZero.Player
             if (inventory == null || !inventory.TryCollect(kind, amount)) return;
 
             collected = true;
-            GameplayFeedback.Toast(Describe());
+            if (NoiseManager.Instance != null)
+                NoiseManager.Instance.EmitNoise(transform.position, NoiseTable.Radius(NoiseTable.LootTake), NoiseTable.Loud(NoiseTable.LootTake), NoiseType.ObjectBroken, player.gameObject);
+            AudioManager.Instance?.PlayAt(LootTake.Sound(kind), transform.position, LootTake.Volume);
+            string language = SettingsService.Instance != null ? SettingsService.Instance.Language : "en";
+            GameplayFeedback.Toast(LootTake.Line(kind, amount, language));
             Destroy(gameObject);
-        }
-
-        private string Describe()
-        {
-            switch (kind)
-            {
-                case LootKind.Medkit: return $"Picked up Medkit (+{amount})";
-                case LootKind.Ammo9mm: return $"Picked up 9mm ammo (+{amount})";
-                case LootKind.AmmoShotgun: return $"Picked up shotgun shells (+{amount})";
-                default: return $"Picked up scrap (+{amount})";
-            }
         }
     }
 }

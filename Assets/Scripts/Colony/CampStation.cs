@@ -21,21 +21,7 @@ namespace OutpostZero.Colony
         [SerializeField] private StationKind kind;
 
         public StationKind Kind => kind;
-        public string Prompt
-        {
-            get
-            {
-                switch (kind)
-                {
-                    case StationKind.Workbench: return "Use workbench";
-                    case StationKind.Campfire: return "Cook and rest";
-                    case StationKind.MedicalCot: return "Treat wounds";
-                    case StationKind.Water: return "Draw water";
-                    case StationKind.Generator: return "Fuel the generator";
-                    default: return "Trade";
-                }
-            }
-        }
+        public string Prompt => StallVoice.Prompt(kind, null);
 
         public void Configure(StationKind stationKind) => kind = stationKind;
 
@@ -46,7 +32,7 @@ namespace OutpostZero.Colony
             switch (kind)
             {
                 case StationKind.Workbench:
-                    GameplayFeedback.Toast("Workbench open — craft from the camp menu");
+                    GameplayFeedback.Toast(Loc.T("stall.open"));
                     break;
                 case StationKind.Campfire:
                     var needs = inventory != null ? inventory.GetComponent<SurvivalNeeds>() : null;
@@ -67,20 +53,20 @@ namespace OutpostZero.Colony
                     var health = inventory != null ? inventory.GetComponent<Combat.HealthSystem>() : null;
                     health?.Heal(40f);
                     inventory?.GetComponent<StatusEffectController>()?.ClearInjury();
-                    GameplayFeedback.Toast("Wounds treated");
+                    GameplayFeedback.Toast(Loc.T("stall.wounds"));
                     break;
                 case StationKind.Water:
                     inventory?.GetComponent<SurvivalNeeds>()?.Drink(45f);
                     ColonyStorage.Instance?.AddWater(1);
-                    GameplayFeedback.Toast("Water collected");
+                    GameplayFeedback.Toast(Loc.T("stall.drawn"));
                     break;
                 case StationKind.Generator:
                     if (ColonyStorage.Instance != null && ColonyStorage.Instance.TrySpendScrap(4))
                     {
                         CampServices.Instance?.Refuel(8f);
-                        GameplayFeedback.Toast("Generator fueled");
+                        GameplayFeedback.Toast(Loc.T("stall.fueled"));
                     }
-                    else GameplayFeedback.Toast("Need 4 camp scrap");
+                    else GameplayFeedback.Toast(Loc.T("stall.scrap"));
                     break;
                 default:
                     FactionTrade.Instance?.Toggle();

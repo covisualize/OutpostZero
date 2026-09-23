@@ -1,0 +1,35 @@
+{
+  "id": "Loot_AmmoBox_9mm",
+  "category": "Weapons",
+  "generator": "generate_weapons.build_ammo_box_9mm",
+  "generatorHash": "82754bbafd7cc40d36be8114c1095abcff714332ef350d1dd1fde581f29267db",
+  "gitSha": "edff058f31a908ed7de64edaf527c44ea12a41ff",
+  "blender": "4.2.11",
+  "tags": [
+    "loot",
+    "item"
+  ],
+  "pivot": "bottom",
+  "collider": "box",
+  "rig": "",
+  "lods": [
+    1.0
+  ],
+  "tris": 108,
+  "lodTris": [
+    108
+  ],
+  "size": {
+    "width": 0.18,
+    "depth": 0.12,
+    "height": 0.16
+  },
+  "floor": 0.0,
+  "center": {
+    "x": 0.0,
+    "y": 0.0
+  },
+  "materials": [
+    "Mat_Ammo_9mm_Box"
+  ]
+}

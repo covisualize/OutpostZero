@@ -1,0 +1,36 @@
+{
+  "id": "Loot_ScrapPile",
+  "category": "Weapons",
+  "generator": "generate_weapons.build_scrap_pile",
+  "generatorHash": "cecdb8aae1e5916476b01752e124646e7f418a191c342cb7ca7eb6a6e68ba64e",
+  "gitSha": "edff058f31a908ed7de64edaf527c44ea12a41ff",
+  "blender": "4.2.11",
+  "tags": [
+    "loot",
+    "item"
+  ],
+  "pivot": "bottom",
+  "collider": "box",
+  "rig": "",
+  "lods": [
+    1.0
+  ],
+  "tris": 136,
+  "lodTris": [
+    136
+  ],
+  "size": {
+    "width": 0.8093,
+    "depth": 0.6444,
+    "height": 0.8404
+  },
+  "floor": -0.0,
+  "center": {
+    "x": 0.0097,
+    "y": -0.0136
+  },
+  "materials": [
+    "Mat_Rust_Metal",
+    "Mat_Scrap_Steel"
+  ]
+}

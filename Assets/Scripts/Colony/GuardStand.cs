@@ -33,6 +33,12 @@ namespace OutpostZero.Colony
             CampPost.Place("Guard", slot, found ? x[pick] : 0f, found ? z[pick] : 0f, found, out px, out pz);
         }
 
+        public static bool Perched(string approach, int slot, string[] kinds, float[] x, float[] z, int[] sites, int[] integrity)
+        {
+            int pick = Pick(approach, kinds, x, z, sites, integrity, slot);
+            return pick >= 0 && kinds[pick] == "Watchtower";
+        }
+
         public static int Slot(int slot, int posts)
         {
             if (posts <= 0) return 0;

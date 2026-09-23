@@ -1,5 +1,6 @@
 using UnityEngine;
 using OutpostZero.Graphics;
+using OutpostZero.Sensory;
 
 namespace OutpostZero.Player
 {
@@ -33,7 +34,10 @@ namespace OutpostZero.Player
             bool crouch = controller != null && controller.IsCrouching;
             bool sprint = controller != null && controller.IsSprinting;
             bool flashlight = controller != null && controller.FlashlightOn;
-            exposure = SpotRange.Exposure(crouch, sprint, flashlight, night, nearest);
+            float bare = SpotRange.Exposure(crouch, sprint, flashlight, night, nearest);
+            bool railLit = controller != null && controller.RailLit;
+            float shown = RailLamp.Exposure(bare, railLit, flashlight);
+            exposure = BoltGlare.Glare(shown, BoltGlare.Live(StormCover.Bolt, Time.time));
         }
     }
 }

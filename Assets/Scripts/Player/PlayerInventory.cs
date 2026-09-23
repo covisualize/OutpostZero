@@ -4,6 +4,7 @@ using UnityEngine;
 using OutpostZero.Colony;
 using OutpostZero.Core;
 using OutpostZero.Items;
+using OutpostZero.Shell;
 
 namespace OutpostZero.Player
 {
@@ -59,10 +60,10 @@ namespace OutpostZero.Player
             int slot = ItemBelt.Toggle(belt, id);
             if (slot < 0)
             {
-                if (slot == -2) GameplayFeedback.Toast("Belt is full");
+                if (slot == -2) GameplayFeedback.Toast(PackSay.Full(null));
                 return false;
             }
-            GameplayFeedback.Toast(occupied ? "Cleared belt" : "Belt " + (slot + 5));
+            GameplayFeedback.Toast(occupied ? PackSay.Clear(null) : PackSay.Slot(slot + 5, null));
             OnInventoryChanged?.Invoke();
             return true;
         }
@@ -72,7 +73,7 @@ namespace OutpostZero.Player
             string id = ItemBelt.IdAt(belt, index);
             if (string.IsNullOrEmpty(id)) return false;
             bool used = TryUse(id);
-            if (used && id == "medkit") GameplayFeedback.Toast(FieldHand.Dose(LastDoseSkill));
+            if (used && id == "medkit") GameplayFeedback.Toast(FieldHand.Dose(LastDoseSkill, null));
             if (!StillCarrying(id)) belt[index] = "";
             return used;
         }
@@ -139,7 +140,15 @@ namespace OutpostZero.Player
             RecalculateWeight();
             OnInventoryChanged?.Invoke();
             if (WeightRatio >= 0.8f) OutpostZero.Shell.CodexDirector.Hear("weight");
+            if (TossKind.Of(id) != TossKind.None) OutpostZero.Shell.CodexDirector.Hear("throwable");
+            NoteFound(category, id, count);
             return true;
+        }
+
+        private static void NoteFound(ItemCategory category, string id, int count)
+        {
+            if (GameManager.Instance == null || GameManager.Instance.CurrentState != GameState.ExpeditionActive) return;
+            OutpostZero.Expedition.ObjectiveTracker.Instance?.NotePickup(category, id, count);
         }
 
         public void AddMedicalKits(int amount)
@@ -156,6 +165,7 @@ namespace OutpostZero.Player
             {
                 case LootKind.Medkit:
                     AddMedicalKits(amount);
+                    NoteFound(ItemCategory.Medical, "medkit", amount);
                     return true;
                 case LootKind.Ammo9mm:
                     return GrantAmmo(WeaponType.Pistol, amount);
@@ -170,6 +180,13 @@ namespace OutpostZero.Player
         }
 
         public bool GrantAmmoPublic(WeaponType weaponType, int amount) => GrantAmmo(weaponType, amount);
+
+        public bool Has(string id)
+        {
+            for (int i = 0; i < items.Count; i++)
+                if (items[i].ItemId == id && items[i].Quantity > 0) return true;
+            return false;
+        }
 
         public bool TryConsume(string id)
         {
@@ -188,33 +205,68 @@ namespace OutpostZero.Player
             if (record == null) return false;
             if (record.Use == OutpostZero.Items.ItemUse.Ammo) return false;
             if (record.Id == "medkit") return UseMedkit();
-            if (record.Id == "antibiotics")
+            if (UseEffects.Treats(record.Effect, UseEffect.CureInfection))
             {
                 var fever = GetComponent<StatusEffectController>();
-                if (fever == null || !Affliction.AntibioticsWork(fever.InfectionStage))
+                bool street = fever != null && Affliction.AntibioticsWork(fever.InfectionStage);
+                var leader = SurvivorRoster.Instance != null ? SurvivorRoster.Instance.Leader : null;
+                bool camp = leader != null && WoundEase.Helps(leader.injury);
+                if (!street && !camp)
                 {
-                    GameplayFeedback.Toast("Antibiotics won't help");
+                    GameplayFeedback.Toast(FieldHand.Fail(null));
                     return false;
                 }
                 if (!TryConsume(id)) return false;
-                fever.CureInfection();
-                GameplayFeedback.Toast("The fever breaks");
+                if (street) fever.CureInfection();
+                bool leaderEased = SurvivorRoster.Instance != null && SurvivorRoster.Instance.EaseLeader();
+                if (leaderEased && !street) GameplayFeedback.Toast(WoundEase.Line(null));
+                else GameplayFeedback.Toast(WoundEase.Note(FieldHand.Breaks(null), leaderEased, null));
                 return true;
             }
-            if (record.Id == "painkillers")
+            if (UseEffects.Treats(record.Effect, UseEffect.PainRelief))
             {
                 if (!TryConsume(id)) return false;
                 GetComponent<StatusEffectController>()?.ApplyPainkiller();
-                GameplayFeedback.Toast("Painkillers");
+                GameplayFeedback.Toast(FieldHand.Relief(record.Id, null));
+                return true;
+            }
+            if (TossKind.Throws(record.Id))
+            {
+                var hands = GetComponent<PlayerInteractor>();
+                if (hands == null || !hands.ThrowId(record.Id))
+                {
+                    GameplayFeedback.Toast(Loc.T("toss.none"));
+                    return false;
+                }
+                return true;
+            }
+            if (record.Id == "cell")
+            {
+                var body = GetComponent<PlayerController>();
+                if (body == null || LampCell.Tops(body.LampCellCharge))
+                {
+                    GameplayFeedback.Toast(Loc.T("lamp.full"));
+                    return false;
+                }
+                if (!TryConsume(id)) return false;
+                body.AddLamp(LampCell.Pack);
+                GameplayFeedback.Toast(Loc.T("lamp.fit"));
                 return true;
             }
             if (!TryConsume(id)) return false;
-            if (record.Id == "bandage") GetComponent<StatusEffectController>()?.StopBleed();
+            bool eased = false;
+            if (UseEffects.Treats(record.Effect, UseEffect.StopBleeding))
+            {
+                GetComponent<StatusEffectController>()?.StopBleed();
+                eased = SurvivorRoster.Instance != null && SurvivorRoster.Instance.EaseLeader();
+            }
             if (record.Heal > 0) GetComponent<Combat.HealthSystem>()?.Heal(record.Heal);
             var needs = GetComponent<SurvivalNeeds>();
             if (record.Hunger > 0f) needs?.Eat(record.Hunger);
             if (record.Thirst > 0f) needs?.Drink(record.Thirst);
-            GameplayFeedback.Toast("Used " + record.DisplayName);
+            if (RationNoise.Calls(record.Hunger, record.Thirst) && OutpostZero.Sensory.NoiseManager.Instance != null)
+                OutpostZero.Sensory.NoiseManager.Instance.EmitNoise(transform.position, OutpostZero.Sensory.NoiseTable.Radius(OutpostZero.Sensory.NoiseTable.Ration), OutpostZero.Sensory.NoiseTable.Loud(OutpostZero.Sensory.NoiseTable.Ration), NoiseType.RationBite, gameObject);
+            GameplayFeedback.Toast(WoundEase.Note(FieldHand.Spent(record.Id, null), eased, null));
             return true;
         }
 
@@ -293,7 +345,8 @@ namespace OutpostZero.Player
             return granted;
         }
 
-        public string TakeGear()
+        /// <summary>The pack as <c>id*count+...</c>, the form <see cref="RestoreGear"/> reads.</summary>
+        public string PackGear()
         {
             var parts = new List<string>();
             for (int i = 0; i < items.Count; i++)
@@ -303,12 +356,37 @@ namespace OutpostZero.Player
             }
             if (scrapCount > 0) parts.Add("scrap*" + scrapCount);
             if (medicalKits > 0) parts.Add("medkit*" + medicalKits);
+            return string.Join("+", parts);
+        }
+
+        public string TakeGear()
+        {
+            string packed = PackGear();
             items.Clear();
             scrapCount = 0;
             medicalKits = 0;
             currentWeight = 0f;
             OnInventoryChanged?.Invoke();
-            return string.Join("+", parts);
+            return packed;
+        }
+
+        /// <summary>Empties the pack and fills it from a packed list, as a loaded save does.</summary>
+        public void ReplaceGear(string packed)
+        {
+            TakeGear();
+            RestoreGear(packed);
+        }
+
+        public string[] BeltSlots() => (string[])belt.Clone();
+
+        public void SetBelt(string[] slots)
+        {
+            for (int i = 0; i < belt.Length; i++)
+            {
+                string id = slots != null && i < slots.Length ? slots[i] ?? "" : "";
+                belt[i] = id.Length > 0 && StillCarrying(id) ? id : "";
+            }
+            OnInventoryChanged?.Invoke();
         }
 
         public void RestoreGear(string packed)
@@ -374,13 +452,8 @@ namespace OutpostZero.Player
 
         private void SpawnDrop(string id, string name, int count)
         {
-            var drop = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            drop.name = "Dropped_" + id;
-            drop.transform.position = transform.position + transform.forward * 0.8f + Vector3.up * 0.25f;
-            drop.transform.localScale = new Vector3(0.28f, 0.18f, 0.28f);
-            drop.layer = GameLayers.Interactable;
-            drop.AddComponent<WorldItem>().Configure(id, count);
-            GameplayFeedback.Toast("Dropped " + (string.IsNullOrEmpty(name) ? id : name));
+            ItemDatabase.SpawnWorld(id, count, transform.position + transform.forward * 0.8f + Vector3.up * 0.05f, Quaternion.Euler(0f, transform.eulerAngles.y, 0f));
+            GameplayFeedback.Toast(PackSay.Dropped(id, name, null));
         }
 
         public bool TryConsume(string id, int count)
@@ -404,22 +477,60 @@ namespace OutpostZero.Player
             return true;
         }
 
+        public int CarriedMeds => FactionQuest.Meds(medicalKits, MedicalItems());
+
+        /// <summary>Hands in meds for a quest: loose Medical items first, then medkits; nothing goes if the pack is short.</summary>
+        public bool TrySpendMeds(int count)
+        {
+            var taken = new List<KeyValuePair<string, int>>();
+            if (!FactionQuest.Split(count, medicalKits, MedicalItems(), taken, out int kits)) return false;
+            foreach (var take in taken)
+            {
+                var item = items.Find(entry => entry.ItemId == take.Key && entry.Category == ItemCategory.Medical);
+                if (item == null) continue;
+                item.Quantity -= take.Value;
+                if (item.Quantity <= 0) items.Remove(item);
+            }
+            medicalKits -= kits;
+            RecalculateWeight();
+            OnInventoryChanged?.Invoke();
+            return true;
+        }
+
+        private List<KeyValuePair<string, int>> MedicalItems()
+        {
+            var list = new List<KeyValuePair<string, int>>();
+            foreach (var item in items)
+                if (item != null && item.Category == ItemCategory.Medical && item.Quantity > 0)
+                    list.Add(new KeyValuePair<string, int>(item.ItemId, item.Quantity));
+            return list;
+        }
+
         public int LastDoseSkill { get; private set; }
+
+        public bool LastEase { get; private set; }
 
         public bool UseMedkit()
         {
+            LastEase = false;
             if (medicalKits <= 0) return false;
 
             var health = GetComponent<Combat.HealthSystem>();
             var effects = GetComponent<StatusEffectController>();
             bool wounded = effects != null && (effects.IsBleeding || effects.IsInfected);
-            if (health != null && health.CurrentHealth >= health.MaxHealth && !wounded) return false;
+            var leader = SurvivorRoster.Instance != null ? SurvivorRoster.Instance.Leader : null;
+            bool camp = leader != null && WoundEase.Helps(leader.injury);
+            if (health != null && health.CurrentHealth >= health.MaxHealth && !wounded && !camp) return false;
 
             medicalKits--;
             LastDoseSkill = SurvivorRoster.LeaderPractice("Medic");
-            health?.Heal(FieldHand.Medkit(LastDoseSkill));
-            effects?.StopBleed();
-            effects?.CureInfection();
+            health?.Heal(FieldHand.Medkit(LastDoseSkill) + HandDepth.Heal(LastDoseSkill));
+            var kit = OutpostZero.Items.ItemCatalog.Find("medkit");
+            var treats = kit != null ? kit.Effect : UseEffects.Medkit;
+            if (UseEffects.Treats(treats, UseEffect.StopBleeding)) effects?.StopBleed();
+            if (UseEffects.Treats(treats, UseEffect.CureInfection)) effects?.CureInfection();
+            if (UseEffects.Treats(treats, UseEffect.PainRelief)) effects?.ApplyPainkiller();
+            LastEase = SurvivorRoster.Instance != null && SurvivorRoster.Instance.EaseLeader();
             RecalculateWeight();
             OnInventoryChanged?.Invoke();
             return true;

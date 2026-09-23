@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><TargetFramework>netstandard2.1</TargetFramework><AssemblyName>OutpostZero.Tests</AssemblyName><EditorRefs>true</EditorRefs><ExtraDefines>UNITY_EDITOR;UNITY_INCLUDE_TESTS</ExtraDefines></PropertyGroup>
+  <Import Project="../packages.props" />
+  <ItemGroup>
+    <Compile Include="$(RepoRoot)/Assets/Tests/**/*.cs" />
+    <Reference Include="$(UnityData)/Resources/PackageManager/BuiltInPackages/com.unity.ext.nunit/net40/unity-custom/nunit.framework.dll" />
+    <ProjectReference Include="../TestRunner/TestRunner.csproj" />
+    <ProjectReference Include="../Editor/Editor.csproj" />
+    <ProjectReference Include="../GameEditor/GameEditor.csproj" />
+  </ItemGroup>
+</Project>

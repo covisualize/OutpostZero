@@ -1,0 +1,40 @@
+{
+  "id": "Base_HydroponicFarm",
+  "category": "BaseBuilding",
+  "generator": "generate_base_building.build_hydroponic_farm",
+  "generatorHash": "ad5f3dcc05c8cd2476e740c526a2e481cbc7bacb073af389cbd17538b8da1298",
+  "gitSha": "edff058f31a908ed7de64edaf527c44ea12a41ff",
+  "blender": "4.2.11",
+  "tags": [
+    "camp",
+    "module",
+    "codex"
+  ],
+  "pivot": "bottom",
+  "collider": "box",
+  "rig": "",
+  "lods": [
+    1.0
+  ],
+  "tris": 836,
+  "lodTris": [
+    836
+  ],
+  "size": {
+    "width": 2.34,
+    "depth": 2.0,
+    "height": 1.34
+  },
+  "floor": 0.0,
+  "center": {
+    "x": 0.17,
+    "y": 0.0
+  },
+  "materials": [
+    "Mat_Farm_Leaves",
+    "Mat_Farm_PalletWood",
+    "Mat_Farm_PvcPipe",
+    "Mat_Farm_Tarp",
+    "Mat_Farm_TrayPlastic"
+  ]
+}

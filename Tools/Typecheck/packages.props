@@ -1,0 +1,7 @@
+<Project>
+  <ItemGroup>
+    <ProjectReference Include="../Stubs/Stubs.csproj" />
+    <ProjectReference Include="../InputSystem/InputSystem.csproj" />
+    <ProjectReference Include="../Navigation/Navigation.csproj" />
+  </ItemGroup>
+</Project>

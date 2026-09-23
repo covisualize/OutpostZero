@@ -1,0 +1,35 @@
+{
+  "id": "Kit_ceiling_light",
+  "category": "Kit",
+  "generator": "generate_kit.build_piece",
+  "generatorHash": "c3664b225c8b8e218db39a8241242442979eadf5221ff60c952c0e99164d802d",
+  "gitSha": "edff058f31a908ed7de64edaf527c44ea12a41ff",
+  "blender": "4.2.11",
+  "tags": [
+    "kit",
+    "interior"
+  ],
+  "pivot": "authored",
+  "collider": "box",
+  "rig": "",
+  "lods": [
+    1.0
+  ],
+  "tris": 12,
+  "lodTris": [
+    12
+  ],
+  "size": {
+    "width": 0.4,
+    "depth": 0.8,
+    "height": 0.15
+  },
+  "floor": 0.0,
+  "center": {
+    "x": 0.2,
+    "y": 0.4
+  },
+  "materials": [
+    "Mat_metal"
+  ]
+}

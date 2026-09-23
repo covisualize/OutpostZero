@@ -21,10 +21,13 @@ namespace OutpostZero.Core
             public float ambience;
             public float ui;
             public float text;
+            public float uiScale;
             public float fov;
             public float opacity;
             public float brightness;
+            public float sensitivity;
             public int colorblind;
+            public int outline;
             public int quality;
             public int vsync;
             public int difficulty;
@@ -37,8 +40,10 @@ namespace OutpostZero.Core
             public int invert;
             public int crouch;
             public int sprint;
+            public int ads;
             public int frame;
             public int resolution;
+            public int render;
             public bool subtitles;
             public bool merciful;
             public bool quietFlash;
@@ -58,10 +63,13 @@ namespace OutpostZero.Core
                 ambience = 0.8f,
                 ui = 1f,
                 text = 1f,
+                uiScale = 1f,
                 fov = 55f,
                 opacity = 1f,
                 brightness = 1f,
+                sensitivity = 1f,
                 colorblind = 0,
+                outline = 0,
                 quality = 1,
                 vsync = 1,
                 difficulty = 2,
@@ -74,8 +82,10 @@ namespace OutpostZero.Core
                 invert = 0,
                 crouch = 0,
                 sprint = 0,
+                ads = 0,
                 frame = 0,
                 resolution = 0,
+                render = 0,
                 subtitles = true,
                 merciful = false,
                 quietFlash = false,
@@ -96,10 +106,13 @@ namespace OutpostZero.Core
             Num(builder, "ambience", snap.ambience, false);
             Num(builder, "ui", snap.ui, false);
             Num(builder, "text", snap.text, false);
+            Num(builder, "uiScale", snap.uiScale, false);
             Num(builder, "fov", snap.fov, false);
             Num(builder, "opacity", snap.opacity, false);
             Num(builder, "brightness", snap.brightness, false);
+            Num(builder, "sensitivity", snap.sensitivity, false);
             Int(builder, "colorblind", snap.colorblind);
+            Int(builder, "outline", snap.outline);
             Int(builder, "quality", snap.quality);
             Int(builder, "vsync", snap.vsync);
             Int(builder, "difficulty", snap.difficulty);
@@ -112,8 +125,10 @@ namespace OutpostZero.Core
             Int(builder, "invert", snap.invert);
             Int(builder, "crouch", snap.crouch);
             Int(builder, "sprint", snap.sprint);
+            Int(builder, "ads", snap.ads);
             Int(builder, "frame", snap.frame);
             Int(builder, "resolution", snap.resolution);
+            Int(builder, "render", snap.render);
             Int(builder, "subtitles", snap.subtitles ? 1 : 0);
             Int(builder, "merciful", snap.merciful ? 1 : 0);
             Int(builder, "flash", snap.quietFlash ? 1 : 0);
@@ -135,10 +150,13 @@ namespace OutpostZero.Core
             snap.ambience = Num(json, "ambience", snap.ambience);
             snap.ui = Num(json, "ui", snap.ui);
             snap.text = Num(json, "text", snap.text);
+            snap.uiScale = Num(json, "uiScale", snap.uiScale);
             snap.fov = Num(json, "fov", snap.fov);
             snap.opacity = Num(json, "opacity", snap.opacity);
             snap.brightness = Num(json, "brightness", snap.brightness);
+            snap.sensitivity = Num(json, "sensitivity", snap.sensitivity);
             snap.colorblind = (int)Num(json, "colorblind", snap.colorblind);
+            snap.outline = (int)Num(json, "outline", snap.outline);
             snap.quality = (int)Num(json, "quality", snap.quality);
             snap.vsync = (int)Num(json, "vsync", snap.vsync);
             snap.difficulty = (int)Num(json, "difficulty", snap.difficulty);
@@ -151,8 +169,10 @@ namespace OutpostZero.Core
             snap.invert = (int)Num(json, "invert", snap.invert);
             snap.crouch = (int)Num(json, "crouch", snap.crouch);
             snap.sprint = (int)Num(json, "sprint", snap.sprint);
+            snap.ads = (int)Num(json, "ads", snap.ads);
             snap.frame = (int)Num(json, "frame", snap.frame);
             snap.resolution = (int)Num(json, "resolution", snap.resolution);
+            snap.render = (int)Num(json, "render", snap.render);
             snap.subtitles = Num(json, "subtitles", 1f) != 0f;
             snap.merciful = Num(json, "merciful", 0f) != 0f;
             snap.quietFlash = Num(json, "flash", 0f) != 0f;

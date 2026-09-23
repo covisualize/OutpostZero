@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using OutpostZero.Graphics;
 
 namespace OutpostZero.Colony
 {
@@ -10,8 +11,12 @@ namespace OutpostZero.Colony
     {
         public string id;
         public string trait;
+        public string aside = "";
+        public string mark = "";
         public string task;
         public string bond;
+        public string kin = "";
+        public string name = "";
         public bool alive = true;
         public bool leader;
         public float morale = 70f;
@@ -20,6 +25,7 @@ namespace OutpostZero.Colony
         public int opinion = 18;
         public int injury;
         public int leadership;
+        public float fatigue;
     }
 
     /// <summary>
@@ -31,6 +37,23 @@ namespace OutpostZero.Colony
     {
         public static string Mood(float morale)
         {
+            return Mood(morale, null);
+        }
+
+        public static string Mood(float morale, string trait, string aside)
+        {
+            return Mood(morale, trait, aside, null);
+        }
+
+        public static string Mood(float morale, string trait, string aside, string mark)
+        {
+            if (mark == "Optimist" || aside == "Optimist") return Mood(morale, "Optimist");
+            return Mood(morale, trait);
+        }
+
+        public static string Mood(float morale, string trait)
+        {
+            if (trait == "Optimist" && morale > 60f && morale <= 70f) return "Inspired";
             if (morale > 70f) return "Inspired";
             if (morale < 10f) return "Breakdown";
             if (morale < 30f) return "Depressed";
@@ -39,6 +62,23 @@ namespace OutpostZero.Colony
 
         public static float OutputScale(float morale)
         {
+            return OutputScale(morale, null);
+        }
+
+        public static float OutputScale(float morale, string trait, string aside)
+        {
+            return OutputScale(morale, trait, aside, null);
+        }
+
+        public static float OutputScale(float morale, string trait, string aside, string mark)
+        {
+            if (mark == "Optimist" || aside == "Optimist") return OutputScale(morale, "Optimist");
+            return OutputScale(morale, trait);
+        }
+
+        public static float OutputScale(float morale, string trait)
+        {
+            if (trait == "Optimist" && morale > 60f && morale >= 10f) return 1.1f;
             if (morale > 70f) return 1.1f;
             if (morale < 10f) return 0f;
             if (morale < 30f) return 0.7f;
@@ -57,6 +97,16 @@ namespace OutpostZero.Colony
         }
 
         public static string[] Simulate(IList<ColonistDay> people, ref int food, ref int water, bool cot, bool expeditionWon, string fallenName, int bodies, ref int raw)
+        {
+            return Simulate(people, ref food, ref water, cot, expeditionWon, fallenName, bodies, ref raw, WeatherKind.Clear);
+        }
+
+        public static string[] Simulate(IList<ColonistDay> people, ref int food, ref int water, bool cot, bool expeditionWon, string fallenName, int bodies, ref int raw, WeatherKind sky)
+        {
+            return Simulate(people, ref food, ref water, cot, expeditionWon, fallenName, bodies, ref raw, sky, false);
+        }
+
+        public static string[] Simulate(IList<ColonistDay> people, ref int food, ref int water, bool cot, bool expeditionWon, string fallenName, int bodies, ref int raw, WeatherKind sky, bool idle)
         {
             var events = new List<string>();
             if (people == null) return Array.Empty<string>();
@@ -80,18 +130,33 @@ namespace OutpostZero.Colony
                 }
                 if (person.task == "Cook") anyCook = true;
                 if (person.task == "Medic") medic = true;
-                if (person.trait == "Volatile") volatilePresent = true;
+                if (TraitHook.Holds(person.trait, person.aside, person.mark, "Volatile")) volatilePresent = true;
             }
 
             string fallenFirst = FirstName(fallenName);
+            string fallenId = KinBoard.FallenId(people, fallenName);
+            if (anyCook)
+            {
+                int made = CookPot.Stew(raw, food, CampRoom.Food, true);
+                if (made > 0)
+                {
+                    raw -= made;
+                    food += made;
+                    Once(events, "stew");
+                }
+            }
+            if (FeverSpread.Try(people)) Once(events, "fever");
             for (int i = 0; i < people.Count; i++)
             {
                 var person = people[i];
                 if (person == null || !person.alive) continue;
 
+                person.fatigue = ShiftWear.After(person.fatigue, person.task, cot);
+                person.fatigue = YardSoak.Wear(person.fatigue, person.task, sky);
                 person.morale -= stain;
+                person.morale -= YardSoak.Mood(person.task, sky);
                 float hungerBefore = person.hunger;
-                person.hunger = Clamp(person.hunger - TraitHook.HungerDrop(person.trait));
+                person.hunger = Clamp(person.hunger - TraitHook.HungerDrop(person.trait, person.aside, person.mark));
                 person.thirst = Clamp(person.thirst - 22f);
 
                 int beforeFood = food;
@@ -113,20 +178,32 @@ namespace OutpostZero.Colony
                 }
 
                 if (expeditionWon) person.morale += 10f;
+                if (idle) person.morale -= IdleDay.Mood;
 
                 if (!string.IsNullOrEmpty(fallenFirst))
                 {
-                    if (!string.IsNullOrEmpty(person.bond) && person.bond.IndexOf(fallenFirst, StringComparison.Ordinal) >= 0)
+                    if (KinBoard.Grieves(person.bond, person.kin, fallenName, fallenId))
                     {
                         person.morale -= 40f;
+                        if (BondMark.Partner(KinBoard.Read(person.kin, fallenId))) person.morale -= BondMark.PartnerGrief;
                         Once(events, "grief");
                     }
                     else person.morale -= 25f;
                 }
 
                 int opinionBefore = person.opinion;
-                if (SharesWork(people, person)) person.opinion += 2;
-                if (person.trait == "Volatile") person.opinion -= MealTable.FeudShift(6, leaderPresent, leadSkill);
+                int bitter = WorstCoworker(people, person);
+                if (SharesWork(people, person) && !TraitHook.Holds(person.trait, person.aside, person.mark, "Loner"))
+                {
+                    person.opinion += 2;
+                    person.kin = KinBoard.Warm(person.kin, people, person.id, person.task, false);
+                }
+                if (BondMark.Rival(bitter)) person.opinion -= BondMark.RivalCut;
+                if (TraitHook.Holds(person.trait, person.aside, person.mark, "Volatile"))
+                {
+                    person.opinion -= MealTable.FeudShift(6, leaderPresent, leadSkill);
+                    person.kin = KinBoard.ChillToward(person.kin, people, person.id, leaderPresent, leadSkill);
+                }
                 if (opinionBefore < 40 && person.opinion >= 40) Once(events, "friendship");
 
                 if (person.injury > 0 && (cot || medic))
@@ -143,6 +220,7 @@ namespace OutpostZero.Colony
                         continue;
                     }
                     person.task = "Quarantine";
+                    Once(events, "stage3");
                 }
 
                 person.morale = Clamp(person.morale);
@@ -175,8 +253,10 @@ namespace OutpostZero.Colony
                 }
             }
 
-            if (MealTable.Argument(volatilePresent, living, leaderPresent)) Once(events, "argument");
+            if (MealTable.Argument(volatilePresent, living, leaderPresent) || KinBoard.Quarrel(people, leaderPresent)) Once(events, "argument");
             if (expeditionWon && Average(people) > 70f) Once(events, "celebration");
+            if (YardSoak.Soaked(sky)) Once(events, "soak");
+            if (idle && living > 0) Once(events, "idle");
             return events.ToArray();
         }
 
@@ -191,6 +271,26 @@ namespace OutpostZero.Colony
             }
             if (Average(people) > 70f) return new[] { "celebration" };
             return Array.Empty<string>();
+        }
+
+        private static int WorstCoworker(IList<ColonistDay> people, ColonistDay self)
+        {
+            if (self == null || people == null) return 0;
+            int worst = 0;
+            bool any = false;
+            for (int i = 0; i < people.Count; i++)
+            {
+                var other = people[i];
+                if (other == null || !other.alive || other.id == self.id) continue;
+                if (other.task != self.task || string.IsNullOrEmpty(other.id)) continue;
+                int score = KinBoard.Read(self.kin, other.id);
+                if (!any || score < worst)
+                {
+                    worst = score;
+                    any = true;
+                }
+            }
+            return any ? worst : 0;
         }
 
         private static bool SharesWork(IList<ColonistDay> people, ColonistDay self)

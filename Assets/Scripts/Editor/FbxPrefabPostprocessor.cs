@@ -6,7 +6,9 @@ using UnityEngine;
 namespace OutpostZero.EditorTools
 {
     /// <summary>
-    /// Turns each imported model into a prefab with a collider the first time it arrives.
+    /// Turns each imported model into a prefab the first time it arrives. The pipeline's
+    /// &lt;id&gt;.meta.json sidecar picks the collider and names the source materials that are
+    /// remapped onto the baked surface material, so LOD copies share it too.
     /// </summary>
     public class FbxPrefabPostprocessor : AssetPostprocessor
     {
@@ -29,6 +31,48 @@ namespace OutpostZero.EditorTools
                 importer.avatarSetup = ModelImporterAvatarSetup.CreateFromThisModel;
                 importer.animationCompression = ModelImporterAnimationCompression.Off;
             }
+            RemapToBaked(importer, assetPath, ModelSidecar.Load(assetPath));
+        }
+
+        /// <summary>
+        /// The importer builds a LODGroup from the pipeline's _LOD0/_LOD1 meshes with default screen sizes;
+        /// replace them with <see cref="LodBands"/> so LOD1 starts at 28 m and everything culls at 60 m.
+        /// </summary>
+        private void OnPostprocessModel(GameObject root)
+        {
+            if (!assetPath.StartsWith("Assets/Models/")) return;
+            var group = root.GetComponent<LODGroup>();
+            if (group == null) return;
+            FitLods(group);
+        }
+
+        public static void FitLods(LODGroup group)
+        {
+            var lods = group.GetLODs();
+            if (lods.Length == 0) return;
+            group.RecalculateBounds();
+            float[] heights = OutpostZero.Graphics.LodBands.Heights(group.size, lods.Length);
+            for (int i = 0; i < lods.Length; i++) lods[i].screenRelativeTransitionHeight = heights[i];
+            group.SetLODs(lods);
+            group.fadeMode = LODFadeMode.CrossFade;
+            group.animateCrossFading = true;
+        }
+
+        private static void RemapToBaked(ModelImporter importer, string fbxPath, ModelSidecar sidecar)
+        {
+            if (sidecar == null || sidecar.materials == null) return;
+            var baked = AssetDatabase.LoadAssetAtPath<Material>(BakedPath(fbxPath));
+            if (baked == null) return;
+            foreach (string source in sidecar.materials)
+            {
+                if (string.IsNullOrEmpty(source)) continue;
+                importer.AddRemap(new AssetImporter.SourceAssetIdentifier(typeof(Material), source), baked);
+            }
+        }
+
+        private static string BakedPath(string fbxPath)
+        {
+            return "Assets/Materials/Baked/" + Path.GetFileNameWithoutExtension(fbxPath) + ".mat";
         }
 
         private static void OnPostprocessAllAssets(string[] imported, string[] deleted, string[] moved, string[] movedFrom)
@@ -46,7 +90,19 @@ namespace OutpostZero.EditorTools
                     string prefabPath = "Assets/Prefabs/" + Path.ChangeExtension(relative, ".prefab");
                     string directory = Path.GetDirectoryName(prefabPath);
                     if (!string.IsNullOrEmpty(directory)) Directory.CreateDirectory(directory);
-                    if (File.Exists(prefabPath)) continue;
+                    if (File.Exists(prefabPath))
+                    {
+                        var contents = PrefabUtility.LoadPrefabContents(prefabPath);
+                        try
+                        {
+                            if (PrefabTags.Apply(contents, ModelSidecar.Load(path))) PrefabUtility.SaveAsPrefabAsset(contents, prefabPath);
+                        }
+                        finally
+                        {
+                            PrefabUtility.UnloadPrefabContents(contents);
+                        }
+                        continue;
+                    }
 
                     var source = AssetDatabase.LoadAssetAtPath<GameObject>(path);
                     if (source == null) continue;
@@ -56,18 +112,10 @@ namespace OutpostZero.EditorTools
                         foreach (var renderer in instance.GetComponentsInChildren<Renderer>())
                             renderer.sharedMaterial = baked;
                     }
+                    var sidecar = ModelSidecar.Load(path);
                     if (instance.GetComponentInChildren<Collider>() == null)
-                    {
-                        var box = instance.AddComponent<BoxCollider>();
-                        var renderers = instance.GetComponentsInChildren<Renderer>();
-                        if (renderers.Length > 0)
-                        {
-                            var bounds = renderers[0].bounds;
-                            for (int i = 1; i < renderers.Length; i++) bounds.Encapsulate(renderers[i].bounds);
-                            box.center = instance.transform.InverseTransformPoint(bounds.center);
-                            box.size = bounds.size;
-                        }
-                    }
+                        ModelSidecar.AddCollider(instance, sidecar);
+                    PrefabTags.Apply(instance, sidecar);
                     PrefabUtility.SaveAsPrefabAsset(instance, prefabPath);
                     Object.DestroyImmediate(instance);
                 }
@@ -91,7 +139,7 @@ namespace OutpostZero.EditorTools
             if (shader == null) return null;
             const string folder = "Assets/Materials/Baked";
             Directory.CreateDirectory(folder);
-            string materialPath = folder + "/" + stem + ".mat";
+            string materialPath = BakedPath(fbxPath);
             var material = AssetDatabase.LoadAssetAtPath<Material>(materialPath);
             if (material == null)
             {
@@ -99,11 +147,14 @@ namespace OutpostZero.EditorTools
                 AssetDatabase.CreateAsset(material, materialPath);
             }
             material.shader = shader;
+            material.enableInstancing = true;
             material.SetTexture("_BaseMap", albedo);
             material.SetTexture("_BumpMap", normal);
             material.SetTexture("_OcclusionMap", occlusion);
             material.SetTexture("_MaskMap", mask);
             material.SetFloat("_HasMaps", 1f);
+            material.SetFloat("_VertexAO", 1f);
+            material.SetColor("_RimColor", OutpostZero.Graphics.SurfaceRim.For(stem));
             EditorUtility.SetDirty(material);
             return material;
         }
@@ -117,7 +168,7 @@ namespace OutpostZero.EditorTools
                 if (clip == null || clip.name.StartsWith("__preview")) continue;
                 clips.Add(clip);
             }
-            if (clips.Count > 0) SurvivorAnimatorBuilder.AssignMotions(clips);
+            if (clips.Count > 0) SurvivorAnimatorBuilder.AssignMotions(OutpostZero.Core.CharacterRig.ControllerAsset(Path.GetFileNameWithoutExtension(path)), clips, AssetDatabase.LoadAssetAtPath<GameObject>(path));
         }
     }
 }

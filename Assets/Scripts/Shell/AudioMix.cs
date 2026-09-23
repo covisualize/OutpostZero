@@ -17,7 +17,7 @@ namespace OutpostZero.Shell
     }
 
     /// <summary>
-    /// Bus gains and snapshot ducks. No mixer asset: the listener applies these numbers.
+    /// Bus gains and snapshot ducks. OutpostMixer.mixer is generated from Duck and LowpassHz; without it the sources apply them.
     /// </summary>
     public static class AudioMix
     {
@@ -30,7 +30,7 @@ namespace OutpostZero.Shell
         {
             if (id == "ambient" || id == "pulse") return MixBus.Music;
             if (id == "ui") return MixBus.Ui;
-            if (id == "rain" || id == "wind" || id == "ambience") return MixBus.Ambience;
+            if (id == "rain" || id == "storm" || id == "wind" || id == "ash" || id == "hum" || id == "crackle" || id == "buzz" || id == "flies") return MixBus.Ambience;
             return MixBus.Sfx;
         }
 
@@ -50,7 +50,7 @@ namespace OutpostZero.Shell
         public static float Gain(string id, float clip, float master, float music, float sfx, float ambience, float ui, MixSnapshot snapshot)
         {
             float bus = BusLevel(BusOf(id), music, sfx, ambience, ui);
-            float ducked = Unit(clip) * Unit(master) * bus * SnapshotScale(BusOf(id), snapshot);
+            float ducked = Unit(clip) * Unit(master) * bus * Duck(BusOf(id), snapshot);
             if (ducked < 0f) return 0f;
             if (ducked > 1f) return 1f;
             return ducked;
@@ -71,6 +71,8 @@ namespace OutpostZero.Shell
             if (name.Contains("metal") || name.Contains("grate") || name.Contains("manhole")) return "step_metal";
             if (name.Contains("wood") || name.Contains("plank") || name.Contains("board")) return "step_wood";
             if (name.Contains("water") || name.Contains("puddle")) return "step_water";
+            if (name.Contains("glass")) return "step_glass";
+            if (name.Contains("gravel") || name.Contains("rubble") || name.Contains("dirt") || name.Contains("ash")) return "step_gravel";
             if (name.Contains("road") || name.Contains("street") || name.Contains("concrete") || name.Contains("asphalt") || name.Contains("sidewalk")) return "step_hard";
             return "step";
         }
@@ -83,7 +85,7 @@ namespace OutpostZero.Shell
             return Unit(sfx);
         }
 
-        private static float SnapshotScale(MixBus bus, MixSnapshot snapshot)
+        public static float Duck(MixBus bus, MixSnapshot snapshot)
         {
             if (snapshot == MixSnapshot.Paused)
             {

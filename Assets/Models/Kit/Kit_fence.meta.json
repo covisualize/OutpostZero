@@ -1,0 +1,35 @@
+{
+  "id": "Kit_fence",
+  "category": "Kit",
+  "generator": "generate_kit.build_piece",
+  "generatorHash": "523e156d3ca5cbf9a7da42e291d4021bdb0c9d7db380c89e71f0b33a06b58532",
+  "gitSha": "edff058f31a908ed7de64edaf527c44ea12a41ff",
+  "blender": "4.2.11",
+  "tags": [
+    "kit",
+    "fort"
+  ],
+  "pivot": "authored",
+  "collider": "box",
+  "rig": "",
+  "lods": [
+    1.0
+  ],
+  "tris": 12,
+  "lodTris": [
+    12
+  ],
+  "size": {
+    "width": 2.0,
+    "depth": 0.08,
+    "height": 2.0
+  },
+  "floor": 0.0,
+  "center": {
+    "x": 1.0,
+    "y": 0.04
+  },
+  "materials": [
+    "Mat_metal"
+  ]
+}

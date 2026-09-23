@@ -1,0 +1,35 @@
+{
+  "id": "Kit_fridge",
+  "category": "Kit",
+  "generator": "generate_kit.build_piece",
+  "generatorHash": "63f73bbacf08ebf6aafe92a773b82ef454f4c3163bd0e08d97a27110e7b371d2",
+  "gitSha": "edff058f31a908ed7de64edaf527c44ea12a41ff",
+  "blender": "4.2.11",
+  "tags": [
+    "kit",
+    "interior"
+  ],
+  "pivot": "authored",
+  "collider": "box",
+  "rig": "",
+  "lods": [
+    1.0
+  ],
+  "tris": 12,
+  "lodTris": [
+    12
+  ],
+  "size": {
+    "width": 0.7,
+    "depth": 0.7,
+    "height": 1.8
+  },
+  "floor": 0.0,
+  "center": {
+    "x": 0.35,
+    "y": 0.35
+  },
+  "materials": [
+    "Mat_metal"
+  ]
+}

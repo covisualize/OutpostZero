@@ -1,0 +1,36 @@
+{
+  "id": "Prop_Dumpster",
+  "category": "Props",
+  "generator": "generate_props.build_dumpster",
+  "generatorHash": "65c9f518df592cad3de1a9c4934f67758df080a5d014beca7d1e48c825a148b1",
+  "gitSha": "edff058f31a908ed7de64edaf527c44ea12a41ff",
+  "blender": "4.2.11",
+  "tags": [
+    "container"
+  ],
+  "pivot": "bottom",
+  "collider": "box",
+  "rig": "",
+  "lods": [
+    1.0
+  ],
+  "tris": 60,
+  "lodTris": [
+    60
+  ],
+  "size": {
+    "width": 2.42,
+    "depth": 1.4618,
+    "height": 1.8671
+  },
+  "floor": 0.0,
+  "center": {
+    "x": 0.0,
+    "y": 0.0609
+  },
+  "materials": [
+    "Mat_Dumpster_BlackLid",
+    "Mat_Dumpster_Green",
+    "Mat_Dumpster_Rust"
+  ]
+}

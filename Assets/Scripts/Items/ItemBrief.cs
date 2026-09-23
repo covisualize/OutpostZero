@@ -29,6 +29,14 @@ namespace OutpostZero.Items
             return whole + "." + (frac < 10 ? "0" : "") + frac + " kg";
         }
 
+        public static string Offer(string verb, string name, int count, float each)
+        {
+            if (count < 1) count = 1;
+            string line = verb + " " + (count > 1 ? count + "× " : "") + name;
+            float kg = each * count;
+            return kg > 0f ? line + " (" + Weight(kg) + ")" : line;
+        }
+
         public static string Effect(ItemRecord record)
         {
             if (record == null) return "";
@@ -42,6 +50,7 @@ namespace OutpostZero.Items
             if (record.Use == ItemUse.Molotov) return Loc.T("unit.molotov");
             if (record.Use == ItemUse.Flare) return Loc.T("unit.flare");
             if (record.Use == ItemUse.Bomb) return Loc.T("unit.pipe_bomb");
+            if (record.Use == ItemUse.Cell) return Loc.T("unit.cell");
             if (record.Id == "cloth") return Loc.T("unit.cloth");
             if (record.Id == "chemicals") return Loc.T("unit.chemicals");
             if (record.Id == "tape") return Loc.T("unit.tape");

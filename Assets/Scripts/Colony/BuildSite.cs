@@ -8,6 +8,11 @@ namespace OutpostZero.Colony
     {
         public static int Need(string kind)
         {
+            return ModuleTable.TryRow(kind, out var row) ? System.Math.Max(1, row.Hours) : CodeNeed(kind);
+        }
+
+        public static int CodeNeed(string kind)
+        {
             switch (kind)
             {
                 case "Barricade":

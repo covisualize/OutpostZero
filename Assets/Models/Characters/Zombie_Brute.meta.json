@@ -1,0 +1,42 @@
+{
+  "id": "Zombie_Brute",
+  "category": "Characters",
+  "generator": "generate_characters.build_zombie_brute",
+  "generatorHash": "32b5231c6b11e7add607ce3fcacafd48e656e955d42a0e14dd93a6ba159cada3",
+  "gitSha": "edff058f31a908ed7de64edaf527c44ea12a41ff",
+  "blender": "4.2.11",
+  "tags": [
+    "character",
+    "zombie",
+    "codex"
+  ],
+  "pivot": "bottom",
+  "collider": "box",
+  "rig": "humanoid",
+  "lods": [
+    1.0
+  ],
+  "tris": 1164,
+  "lodTris": [
+    1164
+  ],
+  "size": {
+    "width": 1.6635,
+    "depth": 0.7278,
+    "height": 2.15
+  },
+  "floor": 0.0,
+  "center": {
+    "x": 0.0975,
+    "y": 0.0889
+  },
+  "materials": [
+    "Mat_Bone_Calcified",
+    "Mat_Brute_Overalls",
+    "Mat_Eye_Brute",
+    "Mat_Face_Brute",
+    "Mat_Mutant_Veins",
+    "Mat_Thumb_Brute",
+    "Mat_Zombie_BruteFlesh"
+  ]
+}

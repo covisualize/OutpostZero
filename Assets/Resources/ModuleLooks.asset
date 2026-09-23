@@ -1,0 +1,47 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c75b8df8091a2b3c4d5e6f708192a4bb, type: 3}
+  m_Name: ModuleLooks
+  m_EditorClassIdentifier: OutpostZero::OutpostZero.Colony.ModuleLooks
+  looks:
+  - kind: Barricade
+    prefab: {fileID: 5008283216879258257, guid: 832f6ed4605347249839362f39b4bfd4, type: 3}
+  - kind: Cot
+    prefab: {fileID: 2360961056936540567, guid: 5653d1b5c80516a4a97932948bddcb10, type: 3}
+  - kind: Water
+    prefab: {fileID: 302368637378083449, guid: 5d65996b96fc3524b89d94698ea38d4a, type: 3}
+  - kind: Watchtower
+    prefab: {fileID: 8293985796486586371, guid: bbbd229981231d8499488319655eea20, type: 3}
+  - kind: Generator
+    prefab: {fileID: 2000864073072270859, guid: 192d4c0edd31c1741b105eec63e068e0, type: 3}
+  - kind: Workbench
+    prefab: {fileID: 7877962596588969133, guid: 19bd684a17c64d042b668078451125e9, type: 3}
+  - kind: TradingPost
+    prefab: {fileID: 6095024573785330700, guid: 200db664fe84f234f89e9c7b4e2afe6e, type: 3}
+  - kind: Purifier
+    prefab: {fileID: 302368637378083449, guid: 5d65996b96fc3524b89d94698ea38d4a, type: 3}
+  - kind: Spikes
+    prefab: {fileID: 4256683995616890599, guid: ab510082accfcd94b96a5b0548d92563, type: 3}
+  - kind: Oil
+    prefab: {fileID: 811347917019252578, guid: 08e618739d8bbff4c83311596cf470d2, type: 3}
+  - kind: Crate
+    prefab: {fileID: 3974039858684749840, guid: 93ac003867f4fae45825984fdc82ae64, type: 3}
+  - kind: Lamp
+    prefab: {fileID: 3750190426169025734, guid: 5bb74c6bc8ddfa946be1e4265a5248d3, type: 3}
+  - kind: Campfire
+    prefab: {fileID: 1384942916315745012, guid: 136058975e374cd44a64d60bf0143a03, type: 3}
+  - kind: Memorial
+    prefab: {fileID: 6073423727963872220, guid: 4f1e9965d6ac2fd4d9e89f8d925b96e0, type: 3}
+  - kind: Farm
+    prefab: {fileID: 2248997021007872807, guid: dafd1c5478fe4c038b43d15992ee9ac7, type: 3}
+  - kind: Turret
+    prefab: {fileID: 185622955039176245, guid: 979460efb89845398c51c3e913950593, type: 3}

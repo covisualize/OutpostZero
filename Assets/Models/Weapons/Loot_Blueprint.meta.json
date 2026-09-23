@@ -1,0 +1,37 @@
+{
+  "id": "Loot_Blueprint",
+  "category": "Weapons",
+  "generator": "generate_items.build_blueprint",
+  "generatorHash": "6e7b9c750e7aaadb2280479d18cbf57667a9bc3b6144c9c8b45335b7187786e5",
+  "gitSha": "edff058f31a908ed7de64edaf527c44ea12a41ff",
+  "blender": "4.2.11",
+  "tags": [
+    "loot",
+    "item"
+  ],
+  "pivot": "bottom",
+  "collider": "box",
+  "rig": "",
+  "lods": [
+    1.0
+  ],
+  "tris": 128,
+  "lodTris": [
+    128
+  ],
+  "size": {
+    "width": 0.22,
+    "depth": 0.1485,
+    "height": 0.038
+  },
+  "floor": 0.0,
+  "center": {
+    "x": 0.0,
+    "y": 0.0043
+  },
+  "materials": [
+    "Mat_Item_Blueprint",
+    "Mat_Item_BlueprintBand",
+    "Mat_Item_BlueprintInk"
+  ]
+}

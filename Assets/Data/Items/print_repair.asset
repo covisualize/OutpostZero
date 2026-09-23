@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c75b21f8091a2b3c4d5e6f708192a44f, type: 3}
+  m_Name: print_repair
+  m_EditorClassIdentifier: OutpostZero::OutpostZero.Items.ItemDefinition
+  id: print_repair
+  displayName: Repair Blueprint
+  category: 6
+  weight: 0.05
+  use: 0
+  useEffect: 0
+  heal: 0
+  hunger: 0
+  thirst: 0
+  worldModel: Loot_Blueprint
+  worldPrefab: {fileID: 382603316647805370, guid: 8f64b370dfabcb9fdc14bed8c4a1c1f1, type: 3}
+  icon: {fileID: 2800000, guid: d2a13d89b321f857bd128e6e5d01545c, type: 3}

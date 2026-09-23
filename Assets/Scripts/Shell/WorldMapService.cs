@@ -42,15 +42,18 @@ namespace OutpostZero.Shell
         private bool broadcastWon;
         private bool endless;
         private int worldSeed = DistrictGenerator.DefaultSeed;
+        private string street = "";
 
         public string Parts => parts;
         public int Difficulty => difficulty;
         public bool BroadcastWon => broadcastWon;
         public bool Endless => endless;
         public int WorldSeed => DistrictGenerator.Resolve(worldSeed);
+        public string Street => street ?? "";
         public bool GeneratorBuilt => GridBuilder.Instance != null && GridBuilder.Instance.HasKind("Generator");
-        public bool ReadyToBroadcast => CampaignBoard.Ready(parts, GeneratorBuilt, broadcastWon);
-        public bool CampaignWon => CampaignBoard.Won(parts, GeneratorBuilt, broadcastWon);
+        public bool GeneratorRaised => GridBuilder.Instance != null && GridBuilder.Instance.GeneratorTier() >= 2;
+        public bool ReadyToBroadcast => CampaignBoard.Ready(parts, GeneratorRaised, broadcastWon);
+        public bool CampaignWon => CampaignBoard.Won(parts, GeneratorRaised, broadcastWon);
 
         private void Awake()
         {
@@ -75,6 +78,36 @@ namespace OutpostZero.Shell
             parts = "";
             broadcastWon = false;
             endless = false;
+            street = "";
+        }
+
+        public void NoteStreet(string mark)
+        {
+            string district = Current != null ? Current.id : "";
+            street = StreetLedger.Note(street, district, mark);
+        }
+
+        public bool StreetTaken(string mark)
+        {
+            string district = Current != null ? Current.id : "";
+            return StreetLedger.Has(street, district, mark);
+        }
+
+        public void NoteHold(string mark, string body)
+        {
+            string district = Current != null ? Current.id : "";
+            street = StreetLedger.Hold(street, district, mark, body);
+        }
+
+        public string StreetLeft(string mark)
+        {
+            string district = Current != null ? Current.id : "";
+            return StreetLedger.Read(street, district, mark);
+        }
+
+        public void RestoreStreet(string packed)
+        {
+            street = packed ?? "";
         }
 
         public bool TryBeginEndless()
@@ -87,6 +120,11 @@ namespace OutpostZero.Shell
         public void RerollSeed()
         {
             worldSeed = DistrictGenerator.Resolve(worldSeed) + 17;
+        }
+
+        public void SetSeed(int seed)
+        {
+            worldSeed = DistrictGenerator.Resolve(seed);
         }
 
         public void SelectIndex(int index)
@@ -107,7 +145,7 @@ namespace OutpostZero.Shell
                 if (districts[i].cleared && !endless) continue;
                 if (!CampaignBoard.Reachable(id, ClearedIds()))
                 {
-                    GameplayFeedback.Toast("That road is still closed");
+                    GameplayFeedback.Toast(GateLine.Road(null));
                     return false;
                 }
                 currentIndex = i;
@@ -120,19 +158,30 @@ namespace OutpostZero.Shell
         {
             float hours = CampaignBoard.TravelHours(Current != null ? Current.id : "ash_market");
             WorldClock.Instance?.Advance(hours);
+            float burned = CampServices.Instance != null ? CampServices.Instance.BurnTrip(hours) : 0f;
+            if (burned > 0.05f) GameplayFeedback.Toast(Loc.T("camp.trip") + " " + FuelTank.Label(burned));
         }
 
-        public void ApplyOpening()
+        public void ApplyOpening(bool resumed = false)
         {
             string districtId = Current != null ? Current.id : "ash_market";
             var rules = DistrictRules.For(districtId);
             DistrictRules.SetActiveTable(rules.LootTable);
             int day = WorldClock.Instance != null ? WorldClock.Instance.Day : 1;
-            var curve = DifficultyProfile.For(CampaignBoard.Tier(districtId), day, difficulty);
+            DifficultyBook.Ensure();
+            ExpeditionBook.Ensure();
+            StreetTerms.Begin(districtId);
+            int streetDifficulty = StreetTerms.Difficulty(districtId, difficulty);
+            DifficultyProfile.Active = streetDifficulty;
+            var curve = DifficultyProfile.For(CampaignBoard.Tier(districtId), day, streetDifficulty);
             int kills = rules.KillGoal + curve.ExtraKills;
-            ObjectiveTracker.Instance?.SetGoals(kills, rules.ScrapGoal);
+            bool lessonsDone = TutorialDirector.Instance == null || TutorialDirector.Instance.Finished;
+            bool tutorial = TutorialRun.Applies(lessonsDone, endless);
+            if (tutorial) ObjectiveTracker.Instance?.SetGoals(TutorialRun.KillGoal, TutorialRun.Scrap(rules.ScrapGoal));
+            else ObjectiveTracker.Instance?.SetGoals(kills, rules.ScrapGoal);
             float tension = rules.OpeningTension + curve.Tension;
-            if (FactionTrade.Instance != null && FactionTrade.Instance.Ambush) tension += 12f;
+            bool ambush = !tutorial && !resumed && FactionTrade.Instance != null && FactionTrade.Instance.Ambush;
+            if (ambush) tension += 12f;
             float interval = Mathf.Max(3f, rules.SpawnInterval * curve.Interval);
             if (endless)
             {
@@ -140,8 +189,17 @@ namespace OutpostZero.Shell
                 interval = Mathf.Max(3f, interval * EndlessShift.IntervalScale(day));
             }
             string prefer = string.IsNullOrEmpty(rules.PreferredVariant) ? curve.Prefer : rules.PreferredVariant;
-            HordeDirector.Instance?.ApplyOpening(tension, interval, prefer, difficulty, CampaignBoard.Tier(districtId));
-            WeatherController.Instance?.SetFor(rules.Weather, 180f);
+            HordeDirector.Instance?.ApplyOpening(tension, interval, prefer, streetDifficulty, CampaignBoard.Tier(districtId));
+            var player = PlayerRegistry.Current;
+            if (tutorial && player != null) HordeDirector.Instance?.BeginTutorial(player.transform.position, player.transform.forward);
+            if (ambush)
+            {
+                HordeDirector.Instance?.DropAmbush(true);
+                GameplayFeedback.Toast(Loc.T("ambush.warn"));
+            }
+            ObjectiveTracker.Instance?.Brief(tutorial ? "" : districtId);
+            WeatherController.Instance?.SetDistrict(districtId);
+            WeatherController.Instance?.SetFor(CloudDeck.Lay(rules.Weather, day), 180f);
             DistrictDressing.Instance?.Build(districtId);
             SurvivorRoster.Instance?.RaiseCorpses(districtId);
         }
@@ -153,7 +211,7 @@ namespace OutpostZero.Shell
             district.cleared = true;
             string before = parts;
             parts = CampaignBoard.AddPart(parts, CampaignBoard.PartFor(district.id));
-            if (parts != before) GameplayFeedback.Toast("Radio part recovered");
+            if (parts != before) GameplayFeedback.Toast(GateLine.Radio(null));
             string print = CraftGate.Sheet(district.id);
             if (!string.IsNullOrEmpty(print) && ColonyStorage.Instance != null)
             {
@@ -162,7 +220,6 @@ namespace OutpostZero.Shell
                 if (ColonyStorage.Instance.Prints != known) GameplayFeedback.Toast(Loc.T("camp.print") + ": " + Loc.T("print." + print));
             }
             if (!CurrentOpen()) SelectFirstOpen();
-            FactionTrade.Instance?.NoteDistrictCleared();
         }
 
         public void NoteBroadcast()
@@ -179,6 +236,7 @@ namespace OutpostZero.Shell
         {
             parts = radio ?? "";
             difficulty = DifficultyProfile.Resolve(storedDifficulty);
+            DifficultyProfile.Active = difficulty;
             broadcastWon = broadcast != 0;
             worldSeed = DistrictGenerator.Resolve(seed);
             endless = endlessFlag != 0 && broadcastWon;
@@ -202,6 +260,7 @@ namespace OutpostZero.Shell
         {
             Seed();
             difficulty = DifficultyProfile.Resolve(storedDifficulty);
+            DifficultyProfile.Active = difficulty;
             worldSeed = DistrictGenerator.DefaultSeed;
             DistrictRules.SetActiveTable("");
         }

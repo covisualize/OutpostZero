@@ -1,0 +1,36 @@
+{
+  "id": "Barricade_Concrete_Jersey",
+  "category": "Props",
+  "generator": "generate_props.build_jersey_barrier",
+  "generatorHash": "4c61c038817bfceda9d52fbc910001106094c2b1f055fb2753f8faf9e9e8149a",
+  "gitSha": "edff058f31a908ed7de64edaf527c44ea12a41ff",
+  "blender": "4.2.11",
+  "tags": [
+    "barricade",
+    "cover"
+  ],
+  "pivot": "bottom",
+  "collider": "box",
+  "rig": "",
+  "lods": [
+    1.0
+  ],
+  "tris": 272,
+  "lodTris": [
+    272
+  ],
+  "size": {
+    "width": 3.0,
+    "depth": 0.8,
+    "height": 1.1875
+  },
+  "floor": 0.0,
+  "center": {
+    "x": 0.0,
+    "y": 0.0
+  },
+  "materials": [
+    "Mat_Concrete_Weathered",
+    "Mat_Rebar_Rusted"
+  ]
+}

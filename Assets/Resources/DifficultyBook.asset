@@ -1,0 +1,18 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 86aa0646cc134f6980f8961cead55175, type: 3}
+  m_Name: DifficultyBook
+  m_EditorClassIdentifier: OutpostZero::OutpostZero.AI.DifficultyBook
+  levels:
+  - {fileID: 11400000, guid: 0feb9257f06a4d7c94e122a1602c3f47, type: 2}
+  - {fileID: 11400000, guid: 5d61dc0064ed4dfe92a0469ffe26a9df, type: 2}
+  - {fileID: 11400000, guid: 27fbba074cb74027a12f55ae0971d49d, type: 2}

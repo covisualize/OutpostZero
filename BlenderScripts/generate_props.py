@@ -7,16 +7,13 @@ script_dir = os.path.dirname(os.path.abspath(__file__))
 if script_dir not in sys.path:
     sys.path.append(script_dir)
 
-from blender_paths import models_dir
 from blender_utils import (
-    reset_scene, get_or_create_material, create_box, create_cylinder, 
-    create_sphere, create_cone, join_objects, set_origin_to_bottom, export_fbx
+    get_or_create_material, create_box, create_cylinder, 
+    create_sphere, create_cone, join_objects
 )
 
-MODELS_DIR = models_dir("Props")
 
-def generate_jersey_barrier():
-    reset_scene()
+def build_jersey_barrier(ctx):
     parts = []
 
     mat_concrete = get_or_create_material("Mat_Concrete_Weathered", (0.55, 0.54, 0.52, 1.0), roughness=0.9)
@@ -34,11 +31,10 @@ def generate_jersey_barrier():
     parts.extend([rebar1, rebar2])
 
     final_mesh = join_objects(parts, "Barricade_Concrete_Jersey")
-    set_origin_to_bottom(final_mesh)
-    export_fbx(os.path.join(MODELS_DIR, "Barricade_Concrete_Jersey.fbx"))
+    return final_mesh
 
-def generate_wood_wire_barricade():
-    reset_scene()
+
+def build_wood_wire_barricade(ctx):
     parts = []
 
     mat_wood = get_or_create_material("Mat_Pallet_Wood", (0.45, 0.34, 0.22, 1.0), roughness=0.9)
@@ -61,11 +57,10 @@ def generate_wood_wire_barricade():
         parts.append(coil)
 
     final_mesh = join_objects(parts, "Barricade_Wood_Wire")
-    set_origin_to_bottom(final_mesh)
-    export_fbx(os.path.join(MODELS_DIR, "Barricade_Wood_Wire.fbx"))
+    return final_mesh
 
-def generate_sandbags():
-    reset_scene()
+
+def build_sandbags(ctx):
     parts = []
 
     mat_canvas = get_or_create_material("Mat_Sandbag_Canvas", (0.64, 0.58, 0.44, 1.0), roughness=0.95)
@@ -85,11 +80,10 @@ def generate_sandbags():
             parts.append(bag)
 
     final_mesh = join_objects(parts, "Barricade_Sandbags")
-    set_origin_to_bottom(final_mesh)
-    export_fbx(os.path.join(MODELS_DIR, "Barricade_Sandbags.fbx"))
+    return final_mesh
 
-def generate_wrecked_sedan():
-    reset_scene()
+
+def build_wrecked_sedan(ctx):
     parts = []
 
     mat_car_paint = get_or_create_material("Mat_Sedan_RustedPaint", (0.32, 0.18, 0.14, 1.0), metallic=0.5, roughness=0.75) # Rusted maroon
@@ -98,24 +92,24 @@ def generate_wrecked_sedan():
     mat_glass = get_or_create_material("Mat_Car_BrokenGlass", (0.20, 0.25, 0.30, 1.0), metallic=0.3, roughness=0.3)
     mat_bumper = get_or_create_material("Mat_Car_BumperChrome", (0.65, 0.65, 0.68, 1.0), metallic=0.8, roughness=0.4)
 
-    # 1. Main Chassis & Hood (4.4m long, 1.85m wide, 1.35m high)
+    # Main Chassis & Hood (4.4m long, 1.85m wide, 1.35m high)
     lower_body = create_box("LowerBody", (0, 0, 0.48), (1.85, 4.2, 0.48), mat_car_paint, bevel_radius=0.04)
     cabin_roof = create_box("CabinRoof", (0, -0.25, 1.02), (1.55, 2.1, 0.58), mat_car_paint, bevel_radius=0.03)
     hood = create_box("Hood", (0, 1.25, 0.68), (1.75, 1.45, 0.12), mat_car_paint)
     trunk = create_box("Trunk", (0, -1.55, 0.66), (1.75, 1.1, 0.14), mat_car_paint)
     parts.extend([lower_body, cabin_roof, hood, trunk])
 
-    # 2. Windshield & Windows
+    # Windshield & Windows
     windshield = create_box("Windshield", (0, 0.72, 0.98), (1.50, 0.35, 0.48), mat_glass, rotation=(math.radians(35), 0, 0))
     rear_window = create_box("RearWindow", (0, -1.22, 0.98), (1.50, 0.35, 0.48), mat_glass, rotation=(math.radians(-35), 0, 0))
     parts.extend([windshield, rear_window])
 
-    # 3. Bumpers
+    # Bumpers
     front_bumper = create_box("FrontBumper", (0, 2.15, 0.38), (1.92, 0.20, 0.22), mat_bumper)
     rear_bumper = create_box("RearBumper", (0, -2.15, 0.38), (1.92, 0.20, 0.22), mat_bumper)
     parts.extend([front_bumper, rear_bumper])
 
-    # 4. Wheels (flat / askew)
+    # Wheels (flat / askew)
     wheel_positions = [
         (-0.95, 1.35),
         (0.95, 1.35),
@@ -128,11 +122,10 @@ def generate_wrecked_sedan():
         parts.extend([tire, rim])
 
     final_mesh = join_objects(parts, "Vehicle_Wrecked_Sedan")
-    set_origin_to_bottom(final_mesh)
-    export_fbx(os.path.join(MODELS_DIR, "Vehicle_Wrecked_Sedan.fbx"))
+    return final_mesh
 
-def generate_apocalypse_truck():
-    reset_scene()
+
+def build_apocalypse_truck(ctx):
     parts = []
 
     mat_truck_cab = get_or_create_material("Mat_Truck_ArmoredSteel", (0.22, 0.25, 0.20, 1.0), metallic=0.7, roughness=0.6) # Olive green armor
@@ -140,32 +133,31 @@ def generate_apocalypse_truck():
     mat_tire = get_or_create_material("Mat_Truck_Tire", (0.08, 0.08, 0.08, 1.0), roughness=0.9)
     mat_bullbar = get_or_create_material("Mat_Truck_BullBar", (0.12, 0.12, 0.12, 1.0), metallic=0.9, roughness=0.4)
 
-    # 1. Cab & Bed (5.2m long, 2.1m wide, 1.9m high)
+    # Cab & Bed (5.2m long, 2.1m wide, 1.9m high)
     cab = create_box("TruckCab", (0, 0.6, 1.15), (2.1, 2.2, 1.2), mat_truck_cab)
     bed = create_box("TruckBed", (0, -1.4, 0.75), (2.05, 2.4, 0.65), mat_truck_cab)
     parts.extend([cab, bed])
 
-    # 2. Armored Window Slits
+    # Armored Window Slits
     visor = create_box("ArmoredVisor", (0, 1.72, 1.35), (1.8, 0.25, 0.28), mat_armor_plate)
     parts.append(visor)
 
-    # 3. Heavy Front Bull-Bar Ram Grill
+    # Heavy Front Bull-Bar Ram Grill
     bull_grill = create_box("BullBarMain", (0, 2.45, 0.75), (2.2, 0.25, 0.8), mat_bullbar)
     spikes1 = create_cone("RamSpikeL", (-0.6, 2.65, 0.75), 0.08, 0.01, 0.35, vertices=8, material=mat_bullbar, rotation=(math.radians(90), 0, 0))
     spikes2 = create_cone("RamSpikeR", (0.6, 2.65, 0.75), 0.08, 0.01, 0.35, vertices=8, material=mat_bullbar, rotation=(math.radians(90), 0, 0))
     parts.extend([bull_grill, spikes1, spikes2])
 
-    # 4. Large Heavy Wheels
+    # Large Heavy Wheels
     for idx, (wx, wy) in enumerate([(-1.1, 1.5), (1.1, 1.5), (-1.1, -1.4), (1.1, -1.4)]):
         wheel = create_cylinder(f"HeavyWheel_{idx}", (wx, wy, 0.45), 0.46, 0.32, vertices=14, material=mat_tire, rotation=(0, math.radians(90), 0))
         parts.append(wheel)
 
     final_mesh = join_objects(parts, "Vehicle_Apocalypse_Truck")
-    set_origin_to_bottom(final_mesh)
-    export_fbx(os.path.join(MODELS_DIR, "Vehicle_Apocalypse_Truck.fbx"))
+    return final_mesh
 
-def generate_dumpster():
-    reset_scene()
+
+def build_dumpster(ctx):
     parts = []
 
     mat_dumpster = get_or_create_material("Mat_Dumpster_Green", (0.18, 0.35, 0.24, 1.0), metallic=0.6, roughness=0.7)
@@ -187,12 +179,11 @@ def generate_dumpster():
     parts.extend([lid_closed, lid_open])
 
     final_mesh = join_objects(parts, "Prop_Dumpster")
-    set_origin_to_bottom(final_mesh)
-    export_fbx(os.path.join(MODELS_DIR, "Prop_Dumpster.fbx"))
+    return final_mesh
 
-def generate_barrels():
-    # 1. Red Explosive Fuel Drum
-    reset_scene()
+
+def build_barrel_explosive(ctx):
+    # Red Explosive Fuel Drum
     mat_red = get_or_create_material("Mat_Barrel_ExplosiveRed", (0.78, 0.14, 0.12, 1.0), metallic=0.7, roughness=0.45)
     mat_hazard = get_or_create_material("Mat_Hazard_Stripe", (0.85, 0.75, 0.12, 1.0), roughness=0.6)
     
@@ -203,11 +194,11 @@ def generate_barrels():
     parts_r.extend([drum, ring1, ring2])
     
     final_r = join_objects(parts_r, "Prop_Barrel_Red_Explosive")
-    set_origin_to_bottom(final_r)
-    export_fbx(os.path.join(MODELS_DIR, "Prop_Barrel_Red_Explosive.fbx"))
+    return final_r
 
-    # 2. Toxic Biohazard Drum
-    reset_scene()
+
+def build_barrel_toxic(ctx):
+    # Toxic Biohazard Drum
     mat_toxic = get_or_create_material("Mat_Barrel_ToxicYellow", (0.65, 0.72, 0.18, 1.0), metallic=0.65, roughness=0.5)
     mat_bio_symbol = get_or_create_material("Mat_Biohazard_Black", (0.12, 0.12, 0.12, 1.0), roughness=0.7)
     
@@ -217,19 +208,18 @@ def generate_barrels():
     parts_t.extend([drum_t, ring_t])
     
     final_t = join_objects(parts_t, "Prop_Barrel_Toxic")
-    set_origin_to_bottom(final_t)
-    export_fbx(os.path.join(MODELS_DIR, "Prop_Barrel_Toxic.fbx"))
+    return final_t
 
-    # 3. Rusted Oil Drum
-    reset_scene()
+
+def build_barrel_oil(ctx):
+    # Rusted Oil Drum
     mat_oil = get_or_create_material("Mat_Barrel_OilBlue", (0.18, 0.26, 0.36, 1.0), metallic=0.7, roughness=0.6)
     drum_oil = create_cylinder("OilDrum", (0, 0, 0.48), 0.30, 0.94, vertices=16, material=mat_oil)
-    set_origin_to_bottom(drum_oil)
-    export_fbx(os.path.join(MODELS_DIR, "Prop_Barrel_Oil.fbx"))
+    return drum_oil
 
-def generate_crates():
-    # 1. Wooden Cargo Crate (1.2m x 1.2m x 1.2m)
-    reset_scene()
+
+def build_crate_wood(ctx):
+    # Wooden Cargo Crate (1.2m x 1.2m x 1.2m)
     parts_w = []
     mat_wood = get_or_create_material("Mat_Crate_Lumber", (0.52, 0.38, 0.24, 1.0), roughness=0.88)
     mat_trim = get_or_create_material("Mat_Crate_Bracing", (0.38, 0.28, 0.18, 1.0), roughness=0.9)
@@ -243,11 +233,11 @@ def generate_crates():
     parts_w.extend([brace1, brace2])
 
     final_w = join_objects(parts_w, "Prop_Crate_Wood")
-    set_origin_to_bottom(final_w)
-    export_fbx(os.path.join(MODELS_DIR, "Prop_Crate_Wood.fbx"))
+    return final_w
 
-    # 2. Military Ammo Crate
-    reset_scene()
+
+def build_crate_military(ctx):
+    # Military Ammo Crate
     parts_m = []
     mat_mil_green = get_or_create_material("Mat_Mil_OliveDrab", (0.24, 0.28, 0.18, 1.0), roughness=0.75)
     mat_latches = get_or_create_material("Mat_Mil_Latches", (0.12, 0.12, 0.14, 1.0), metallic=0.9, roughness=0.3)
@@ -258,12 +248,11 @@ def generate_crates():
     parts_m.extend([box_mil, latch_l, latch_r])
 
     final_m = join_objects(parts_m, "Prop_Crate_Military")
-    set_origin_to_bottom(final_m)
-    export_fbx(os.path.join(MODELS_DIR, "Prop_Crate_Military.fbx"))
+    return final_m
 
-def generate_street_furniture():
-    # 1. Street Lamp
-    reset_scene()
+
+def build_street_lamp(ctx):
+    # Street Lamp
     parts_l = []
     mat_lamp_post = get_or_create_material("Mat_Lamp_Metal", (0.20, 0.22, 0.24, 1.0), metallic=0.85, roughness=0.4)
     mat_light_head = get_or_create_material("Mat_Lamp_Bulb", (0.95, 0.95, 0.85, 1.0), roughness=0.2)
@@ -276,11 +265,11 @@ def generate_street_furniture():
     parts_l.extend([base_plate, pole, arm, fixture, bulb])
 
     final_l = join_objects(parts_l, "Prop_StreetLamp")
-    set_origin_to_bottom(final_l)
-    export_fbx(os.path.join(MODELS_DIR, "Prop_StreetLamp.fbx"))
+    return final_l
 
-    # 2. Park Bench
-    reset_scene()
+
+def build_street_bench(ctx):
+    # Park Bench
     parts_b = []
     mat_cast_iron = get_or_create_material("Mat_Bench_CastIron", (0.12, 0.13, 0.14, 1.0), metallic=0.9, roughness=0.5)
     mat_slats = get_or_create_material("Mat_Bench_Wood", (0.48, 0.32, 0.20, 1.0), roughness=0.8)
@@ -292,18 +281,9 @@ def generate_street_furniture():
     parts_b.extend([leg_l, leg_r, seat, back])
 
     final_b = join_objects(parts_b, "Prop_StreetBench")
-    set_origin_to_bottom(final_b)
-    export_fbx(os.path.join(MODELS_DIR, "Prop_StreetBench.fbx"))
+    return final_b
+
 
 if __name__ == "__main__":
-    print("[PropsGenerator] Generating urban props, barricades & vehicles...")
-    generate_jersey_barrier()
-    generate_wood_wire_barricade()
-    generate_sandbags()
-    generate_wrecked_sedan()
-    generate_apocalypse_truck()
-    generate_dumpster()
-    generate_barrels()
-    generate_crates()
-    generate_street_furniture()
-    print("[PropsGenerator] Props generated successfully!")
+    import pipeline
+    sys.exit(pipeline.main(["--category", "Props"]))

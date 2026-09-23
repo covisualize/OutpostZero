@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace OutpostZero.Items
 {
     /// <summary>
@@ -36,6 +38,24 @@ namespace OutpostZero.Items
             return trimmed;
         }
 
+        public static Stack[] Put(Stack[] stacks, string id, int count)
+        {
+            if (stacks == null) stacks = new Stack[0];
+            if (string.IsNullOrEmpty(id) || count <= 0) return stacks;
+            var next = new Stack[stacks.Length];
+            for (int i = 0; i < stacks.Length; i++)
+            {
+                next[i] = stacks[i];
+                if (next[i].Id != id) continue;
+                next[i].Count += count;
+                return next;
+            }
+            var grown = new Stack[stacks.Length + 1];
+            for (int i = 0; i < stacks.Length; i++) grown[i] = stacks[i];
+            grown[stacks.Length] = new Stack { Id = id, Count = count };
+            return grown;
+        }
+
         public static Stack[] TakeAll(Stack[] stacks, out Stack[] moved)
         {
             if (stacks == null || stacks.Length == 0)
@@ -68,6 +88,36 @@ namespace OutpostZero.Items
                 text += stacks[i].Id + "*" + stacks[i].Count;
             }
             return text;
+        }
+
+        public static string Encode(Stack[] stacks)
+        {
+            if (stacks == null || stacks.Length == 0) return "";
+            string text = "";
+            for (int i = 0; i < stacks.Length; i++)
+            {
+                if (string.IsNullOrEmpty(stacks[i].Id) || stacks[i].Count <= 0) continue;
+                if (text.Length > 0) text += ";";
+                text += stacks[i].Id + "*" + stacks[i].Count;
+            }
+            return text;
+        }
+
+        public static Stack[] Decode(string body)
+        {
+            if (string.IsNullOrEmpty(body)) return new Stack[0];
+            var bits = body.Split(';');
+            var list = new List<Stack>();
+            for (int i = 0; i < bits.Length; i++)
+            {
+                if (string.IsNullOrEmpty(bits[i])) continue;
+                var pair = bits[i].Split('*');
+                if (pair.Length < 2 || string.IsNullOrEmpty(pair[0])) continue;
+                int.TryParse(pair[1], out int count);
+                if (count <= 0) continue;
+                list.Add(new Stack { Id = pair[0], Count = count });
+            }
+            return list.ToArray();
         }
 
         public static string Offer(Stack stack)

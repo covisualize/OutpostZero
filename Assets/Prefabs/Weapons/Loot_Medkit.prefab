@@ -56,6 +56,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Loot_Medkit
       objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 03875f9aa0529ff4fadcf04e03628849, type: 3}
+      propertyPath: m_Layer
+      value: 9
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -63,6 +67,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 03875f9aa0529ff4fadcf04e03628849, type: 3}
       insertIndex: -1
       addedObject: {fileID: 569657796541711018}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 03875f9aa0529ff4fadcf04e03628849, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 939721050852531534}
   m_SourcePrefab: {fileID: 100100000, guid: 03875f9aa0529ff4fadcf04e03628849, type: 3}
 --- !u!1 &967485224772501163 stripped
 GameObject:
@@ -90,3 +97,16 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.34, y: 0.274, z: 0.14899999}
   m_Center: {x: 0, y: 0.137, z: -0.004499998}
+--- !u!114 &939721050852531534
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 967485224772501163}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c75b34f8091a2b3c4d5e6f708192a462, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  kind: 2

@@ -108,6 +108,102 @@ namespace OutpostZero.Shell
             return map;
         }
 
+        /// <summary>
+        /// Neighbouring lots merged into one building plot. X and Z are the south-west cell; the plot covers
+        /// <see cref="Cols"/> cells east and <see cref="Rows"/> cells north. Front is the face that meets a road.
+        /// </summary>
+        public struct Block
+        {
+            public float X;
+            public float Z;
+            public int Cols;
+            public int Rows;
+            public string Front;
+        }
+
+        private static readonly int[][] Wide = { new[] { 2, 1 }, new[] { 1, 2 } };
+        private static readonly int[][] Deep = { new[] { 1, 2 }, new[] { 2, 2 }, new[] { 2, 1 } };
+        private static readonly int[][] Hall = { new[] { 2, 2 }, new[] { 2, 1 }, new[] { 1, 2 } };
+
+        /// <summary>Shapes a footprint tries, largest first: storefront rows run along the street, apartments go deep, halls take the block.</summary>
+        public static int[][] Shapes(string footprint)
+        {
+            if (footprint == "warehouse" || footprint == "hospital" || footprint == "station") return Hall;
+            if (footprint == "apartment") return Deep;
+            return Wide;
+        }
+
+        /// <summary>Every lot belongs to exactly one block. A quarter of the lots stay single for variety.</summary>
+        public static Block[] Blocks(Map map)
+        {
+            var cells = map.Cells;
+            var list = new List<Block>();
+            if (cells == null) return list.ToArray();
+            var claimed = new HashSet<long>();
+            var shapes = Shapes(map.Footprint);
+            for (int i = 0; i < cells.Length; i++)
+            {
+                if (cells[i].Kind != "lot" || claimed.Contains(Key(cells[i].X, cells[i].Z))) continue;
+                float x = cells[i].X;
+                float z = cells[i].Z;
+                int cols = 1;
+                int rows = 1;
+                if (Mix(map.Seed, map.Id, 100 + i) % 4u != 0u)
+                {
+                    foreach (var shape in shapes)
+                    {
+                        if (!FreeLots(cells, claimed, x, z, shape[0], shape[1])) continue;
+                        cols = shape[0];
+                        rows = shape[1];
+                        break;
+                    }
+                }
+                for (int c = 0; c < cols; c++)
+                    for (int r = 0; r < rows; r++) claimed.Add(Key(x + c * Step, z + r * Step));
+                list.Add(new Block { X = x, Z = z, Cols = cols, Rows = rows, Front = FrontOf(cells, x, z, cols, rows) });
+            }
+            return list.ToArray();
+        }
+
+        private static bool FreeLots(Cell[] cells, HashSet<long> claimed, float x, float z, int cols, int rows)
+        {
+            for (int c = 0; c < cols; c++)
+            {
+                for (int r = 0; r < rows; r++)
+                {
+                    float cx = x + c * Step;
+                    float cz = z + r * Step;
+                    if (claimed.Contains(Key(cx, cz)) || KindOf(cells, cx, cz) != "lot") return false;
+                }
+            }
+            return true;
+        }
+
+        private static string FrontOf(Cell[] cells, float x, float z, int cols, int rows)
+        {
+            for (int c = 0; c < cols; c++) if (OpenAt(cells, x + c * Step, z - Step)) return "south";
+            for (int r = 0; r < rows; r++) if (OpenAt(cells, x - Step, z + r * Step)) return "west";
+            for (int r = 0; r < rows; r++) if (OpenAt(cells, x + cols * Step, z + r * Step)) return "east";
+            for (int c = 0; c < cols; c++) if (OpenAt(cells, x + c * Step, z + rows * Step)) return "north";
+            return "south";
+        }
+
+        private static string KindOf(Cell[] cells, float x, float z)
+        {
+            for (int i = 0; i < cells.Length; i++)
+            {
+                if (Close(cells[i].X, x) && Close(cells[i].Z, z)) return cells[i].Kind;
+            }
+            return "";
+        }
+
+        private static long Key(float x, float z)
+        {
+            long gx = (long)System.Math.Round(x / Step);
+            long gz = (long)System.Math.Round(z / Step);
+            return gx * 100000L + gz;
+        }
+
         public static bool Navigable(Map map)
         {
             var cells = map.Cells;
@@ -234,9 +330,24 @@ namespace OutpostZero.Shell
         {
             uint roll = Mix(seed, id, col * 8 + row);
             int pick = (int)(roll % 5u);
-            if (pick == 0 || !Touches(cells, x, z)) return "hole";
+            if (pick == 0) return "hole";
+            if (!Touches(cells, x, z)) return pick >= 2 && BacksOntoFrontage(cells, x, z) ? "lot" : "hole";
             if (pick == 1) return "alley";
             return "lot";
+        }
+
+        /// <summary>A lot away from the road can still join the block of a neighbouring lot that fronts one.</summary>
+        private static bool BacksOntoFrontage(List<Cell> cells, float x, float z)
+        {
+            for (int i = 0; i < cells.Count; i++)
+            {
+                if (cells[i].Kind != "lot") continue;
+                float dx = System.Math.Abs(cells[i].X - x);
+                float dz = System.Math.Abs(cells[i].Z - z);
+                if (dx + dz > Step + 0.05f || dx + dz < 0.05f) continue;
+                if (Touches(cells, cells[i].X, cells[i].Z)) return true;
+            }
+            return false;
         }
 
         private static bool Touches(List<Cell> cells, float x, float z)

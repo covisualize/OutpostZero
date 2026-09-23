@@ -1,6 +1,5 @@
 using System.Collections;
 using System.Collections.Generic;
-using System.Text;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UIElements;
@@ -17,8 +16,9 @@ using OutpostZero.Shell;
 namespace OutpostZero.UI
 {
     /// <summary>
-    /// Runtime UI Toolkit surface for the HUD, pack, camp, and menus.
-    /// Refreshes on unscaled time so pause, succession, and the main menu stay interactive.
+    /// Runtime UI Toolkit surface for the pack, camp board, and menus; the street HUD is <see cref="HudController"/>.
+    /// Refreshes on unscaled time so pause, succession, and the main menu stay interactive. During play with no
+    /// panel open the refresh compares cached or hashed keys, so it allocates nothing.
     /// </summary>
     public class OutpostInterface : MonoBehaviour
     {
@@ -26,41 +26,33 @@ namespace OutpostZero.UI
         private VisualElement root;
         private VisualElement menu;
         private VisualElement camp;
+        private readonly List<VisualElement> campLit = new List<VisualElement>();
+        private VisualElement guideBox;
+        private string campMark = "";
         private VisualElement pack;
-        private VisualElement damageLayer;
-        private Label vitals;
-        private Label objectives;
-        private Label weapon;
-        private Label tutorial;
-        private Label toast;
-        private Label compass;
-        private Label hurt;
-        private Label feed;
-        private Label threats;
-        private Label watch;
-        private VisualElement veil;
-        private VisualElement noiseFill;
-        private Label noiseMark;
-        private VisualElement healthFill;
-        private VisualElement ghostFill;
-        private float ghostRatio = 1f;
         private string menuKey = "";
-        private string campKey = "";
-        private string packKey = "";
-        private readonly List<Label> popups = new List<Label>();
+        private int campKey = int.MinValue + 1;
+        private int packKey = int.MinValue + 1;
+        private GameShellUI shell;
         private int listening = -1;
         private int padListen = -1;
-        private string settingsBaseline = "";
+        private bool askKeep;
+        private string bindNote = "";
         private bool settingsWasOpen;
-        private bool credits;
-        private bool slotsOpen;
-        private bool codexOpen;
+        private readonly ScreenStack screens = new ScreenStack();
+        private GameState screensState = GameState.MainMenu;
+        private string seedText = "";
         private string codexId = "";
+        private bool skipTutorial;
         private string inspected = "";
+        private int packFilter = PackFilter.All;
+        private BuildMenu.Tab buildTab = BuildMenu.Tab.Defence;
 
         private void Update()
         {
+            InputGlyphs.Poll();
             if (ExpeditionInput.WatchPressed) AiWatch.Toggle();
+            if (listening < 0 && padListen < 0 && ExpeditionInput.PausePressed) Back();
 
             if (padListen >= 0)
             {
@@ -87,8 +79,12 @@ namespace OutpostZero.UI
                 if (key == Key.None) continue;
                 var control = Keyboard.current[key];
                 if (control == null || !control.wasPressedThisFrame) continue;
-                if (key != Key.Escape) ControlBindings.TryRebind((ControlBindings.Action)listening, key);
-                if (key != Key.Escape) SettingsService.Instance?.NoteBindings();
+                if (key != Key.Escape)
+                {
+                    var action = (ControlBindings.Action)listening;
+                    bindNote = BindNote.For(ControlBindings.Check(action, key), key, ControlBindings.Holder(action, key), null);
+                    if (ControlBindings.TryRebind(action, key)) SettingsService.Instance?.NoteBindings();
+                }
                 listening = -1;
                 menuKey = "";
                 return;
@@ -100,139 +96,18 @@ namespace OutpostZero.UI
             var panel = ScriptableObject.CreateInstance<PanelSettings>();
             panel.scaleMode = PanelScaleMode.ScaleWithScreenSize;
             panel.referenceResolution = new Vector2Int(1920, 1080);
+            panel.screenMatchMode = PanelScreenMatchMode.MatchWidthOrHeight;
+            panel.match = 1f;
             panel.sortingOrder = 20;
-            document = gameObject.GetComponent<UIDocument>() ?? gameObject.AddComponent<UIDocument>();
+            document = Attach.Ensure<UIDocument>(gameObject);
             document.panelSettings = panel;
+            PanelScale.Track(panel);
             root = document.rootVisualElement;
             if (root == null) return;
+            FontFallback.Dress(root);
 
             root.style.flexGrow = 1;
             root.pickingMode = PickingMode.Position;
-
-            veil = new VisualElement();
-            veil.pickingMode = PickingMode.Ignore;
-            veil.style.position = Position.Absolute;
-            veil.style.left = 0;
-            veil.style.top = 0;
-            veil.style.right = 0;
-            veil.style.bottom = 0;
-            veil.style.backgroundColor = new Color(0.02f, 0.02f, 0.04f, 0.28f);
-            veil.style.display = DisplayStyle.None;
-            root.Add(veil);
-
-            var left = Column(16, 16, 420);
-            vitals = Body();
-            objectives = Body();
-            var healthTrack = new VisualElement();
-            healthTrack.style.height = 8;
-            healthTrack.style.width = Length.Percent(40);
-            healthTrack.style.marginBottom = 6;
-            healthTrack.style.backgroundColor = new Color(0.12f, 0.12f, 0.12f);
-            ghostFill = new VisualElement();
-            ghostFill.style.position = Position.Absolute;
-            ghostFill.style.left = 0;
-            ghostFill.style.top = 0;
-            ghostFill.style.height = 8;
-            ghostFill.style.backgroundColor = new Color(0.45f, 0.18f, 0.14f);
-            healthFill = new VisualElement();
-            healthFill.style.position = Position.Absolute;
-            healthFill.style.left = 0;
-            healthFill.style.top = 0;
-            healthFill.style.height = 8;
-            healthFill.style.backgroundColor = new Color(0.75f, 0.2f, 0.16f);
-            healthTrack.Add(ghostFill);
-            healthTrack.Add(healthFill);
-            left.Add(vitals);
-            left.Add(healthTrack);
-            left.Add(objectives);
-            root.Add(left);
-
-            var bottom = Column(16, 0, 420);
-            bottom.style.bottom = 16;
-            bottom.style.top = StyleKeyword.Auto;
-            weapon = Body();
-            noiseFill = Bar();
-            noiseMark = Body();
-            noiseMark.style.unityFontStyleAndWeight = FontStyle.Bold;
-            noiseMark.style.display = DisplayStyle.None;
-            threats = Body();
-            threats.style.unityFontStyleAndWeight = FontStyle.Bold;
-            threats.style.display = DisplayStyle.None;
-            bottom.Add(weapon);
-            bottom.Add(threats);
-            bottom.Add(noiseMark);
-            bottom.Add(noiseFill);
-            root.Add(bottom);
-
-            tutorial = Body();
-            tutorial.style.position = Position.Absolute;
-            tutorial.style.bottom = 72;
-            tutorial.style.left = Length.Percent(20);
-            tutorial.style.width = Length.Percent(60);
-            tutorial.style.unityTextAlign = TextAnchor.MiddleCenter;
-            tutorial.style.backgroundColor = new Color(0.08f, 0.08f, 0.08f, 0.8f);
-            tutorial.pickingMode = PickingMode.Ignore;
-            root.Add(tutorial);
-
-            toast = Body();
-            toast.style.position = Position.Absolute;
-            toast.style.top = 80;
-            toast.style.left = Length.Percent(30);
-            toast.style.width = Length.Percent(40);
-            toast.style.unityTextAlign = TextAnchor.MiddleCenter;
-            toast.style.backgroundColor = new Color(0.12f, 0.1f, 0.08f, 0.9f);
-            toast.pickingMode = PickingMode.Ignore;
-            root.Add(toast);
-
-            compass = Body();
-            compass.style.position = Position.Absolute;
-            compass.style.top = 12;
-            compass.style.left = Length.Percent(28);
-            compass.style.width = Length.Percent(44);
-            compass.style.unityTextAlign = TextAnchor.MiddleCenter;
-            compass.pickingMode = PickingMode.Ignore;
-            root.Add(compass);
-
-            watch = Body();
-            watch.style.position = Position.Absolute;
-            watch.style.top = 12;
-            watch.style.right = 16;
-            watch.style.width = 280;
-            watch.style.whiteSpace = WhiteSpace.PreWrap;
-            watch.style.backgroundColor = new Color(0.05f, 0.06f, 0.08f, 0.82f);
-            watch.style.display = DisplayStyle.None;
-            watch.pickingMode = PickingMode.Ignore;
-            root.Add(watch);
-
-            hurt = Body();
-            hurt.style.position = Position.Absolute;
-            hurt.style.top = Length.Percent(42);
-            hurt.style.left = Length.Percent(36);
-            hurt.style.width = Length.Percent(28);
-            hurt.style.unityTextAlign = TextAnchor.MiddleCenter;
-            hurt.style.backgroundColor = new Color(0.45f, 0.08f, 0.06f, 0.82f);
-            hurt.pickingMode = PickingMode.Ignore;
-            hurt.style.display = DisplayStyle.None;
-            root.Add(hurt);
-
-            feed = Body();
-            feed.style.position = Position.Absolute;
-            feed.style.top = 16;
-            feed.style.right = 16;
-            feed.style.width = 180;
-            feed.style.unityTextAlign = TextAnchor.UpperRight;
-            feed.style.whiteSpace = WhiteSpace.PreWrap;
-            feed.pickingMode = PickingMode.Ignore;
-            root.Add(feed);
-
-            damageLayer = new VisualElement();
-            damageLayer.pickingMode = PickingMode.Ignore;
-            damageLayer.style.position = Position.Absolute;
-            damageLayer.style.left = 0;
-            damageLayer.style.top = 0;
-            damageLayer.style.right = 0;
-            damageLayer.style.bottom = 0;
-            root.Add(damageLayer);
 
             menu = Overlay();
             camp = Overlay();
@@ -265,208 +140,137 @@ namespace OutpostZero.UI
         {
             if (root == null) return;
             float scale = SettingsService.Instance != null ? SettingsService.Instance.TextScale : 1f;
+            PanelScale.Apply(SettingsService.Instance != null ? SettingsService.Instance.UiScale : 1f);
+            FontFallback.Apply(SettingsService.Instance != null ? SettingsService.Instance.Language : "en");
             root.style.fontSize = Mathf.RoundToInt(14 * scale);
-            root.style.opacity = SettingsService.Instance != null ? SettingsService.Instance.HudOpacity : 1f;
-            var player = PlayerRegistry.Current;
-            var hud = FindFirstObjectByType<SurvivalHUD>();
-            var life = player != null ? player.GetComponent<HealthSystem>() : null;
-            var needs = player != null ? player.GetComponent<SurvivalNeeds>() : null;
-            var effects = player != null ? player.GetComponent<StatusEffectController>() : null;
-            var visibility = player != null ? player.GetComponent<PlayerVisibility>() : null;
-            var tracker = ObjectiveTracker.Instance;
-
-            var vitalText = new StringBuilder();
-            vitalText.AppendLine(Loc.T("hud.expedition"));
-            if (life != null)
-            {
-                vitalText.AppendLine(Loc.T("hud.health") + " " + Mathf.CeilToInt(life.CurrentHealth) + " / " + Mathf.CeilToInt(life.MaxHealth));
-                float actual = life.CurrentHealth / Mathf.Max(1f, life.MaxHealth);
-                ghostRatio = HealthGhost.Follow(ghostRatio, actual, 0.05f);
-                ghostFill.style.width = Length.Percent(ghostRatio * 100f);
-                healthFill.style.width = Length.Percent(actual * 100f);
-            }
-            if (player != null) vitalText.AppendLine(Loc.T("hud.stamina") + " " + Mathf.CeilToInt(player.CurrentStamina));
-            if (needs != null)
-            {
-                vitalText.AppendLine("Hunger " + Mathf.RoundToInt(needs.Hunger) + "  Thirst " + Mathf.RoundToInt(needs.Thirst) + "  Fatigue " + Mathf.RoundToInt(needs.Fatigue));
-                if (NeedsPressure.Hungry(needs.Hunger)) vitalText.Append("  Hungry");
-                if (NeedsPressure.Dry(needs.Thirst)) vitalText.Append("  Thirsty");
-                if (NeedsPressure.Tired(needs.Fatigue)) vitalText.Append("  Exhausted");
-            }
-            if (veil != null) veil.style.display = needs != null && NeedsPressure.Tired(needs.Fatigue) ? DisplayStyle.Flex : DisplayStyle.None;
-            if (visibility != null) vitalText.Append("Exposure " + Mathf.RoundToInt(visibility.Exposure * 100f) + "%");
-            if (effects != null)
-            {
-                if (effects.IsBleeding) vitalText.Append("  Bleeding");
-                if (effects.IsPoisoned) vitalText.Append("  Poison");
-                if (effects.InfectionStage > 0) vitalText.Append("  " + Affliction.Label(effects.InfectionStage));
-                if (effects.SprintBonus > 1f) vitalText.Append("  Adrenaline");
-            }
-            var services = CampServices.Instance;
-            if (services != null && services.Contacts > 0) vitalText.Append("  Watchtower " + services.Contacts);
-            vitals.text = vitalText.ToString();
-
-            var objectiveText = new StringBuilder();
-            if (tracker != null)
-            {
-                objectiveText.AppendLine("Kills " + tracker.Kills + "/" + tracker.KillGoal + "   Scrap " + tracker.Scrap + "/" + tracker.ScrapGoal);
-                if (!string.IsNullOrEmpty(tracker.PoiLine())) objectiveText.AppendLine(tracker.PoiLine());
-            }
-            if (!string.IsNullOrEmpty(RescueFollower.Status())) objectiveText.AppendLine(RescueFollower.Status());
-            var district = WorldMapService.Instance != null ? WorldMapService.Instance.Current : null;
-            if (district != null) objectiveText.AppendLine(district.displayName + " — " + district.encounter);
-            if (HordeDirector.Instance != null) objectiveText.AppendLine("Tension " + Mathf.RoundToInt(HordeDirector.Instance.Tension) + "  " + HordeDirector.Instance.State);
-            if (WorldClock.Instance != null) objectiveText.AppendLine(WorldClock.Instance.Label);
-            var interactor = player != null ? player.GetComponent<PlayerInteractor>() : null;
-            if (interactor != null && !string.IsNullOrEmpty(interactor.Prompt)) objectiveText.Append("[E] " + interactor.Prompt);
-            var raid = NightRaidController.Instance;
-            if (raid != null && raid.Running) objectiveText.Append("   Raid " + Mathf.CeilToInt(raid.Remaining) + "s");
-            var gate = ExtractionZone.Current;
-            if (gate != null && gate.Holding) objectiveText.AppendLine("Hold to extract " + Mathf.CeilToInt(ExtractWatch.HoldSeconds - gate.Hold) + "s");
-            objectives.text = objectiveText.ToString();
-
-            var flow = GameManager.Instance != null ? GameManager.Instance.CurrentState : GameState.ExpeditionActive;
-            bool street = flow == GameState.ExpeditionActive || flow == GameState.RaidActive;
-            compass.style.display = street ? DisplayStyle.Flex : DisplayStyle.None;
-            if (street && player != null)
-            {
-                var poi = FindFirstObjectByType<DistrictPoi>();
-                bool showPoi = poi != null && (tracker == null || !tracker.PoiFound);
-                var face = player.transform.forward;
-                var at = player.transform.position;
-                compass.text = StreetHeading.Readout(
-                    face.x, face.z, at.x, at.z,
-                    showPoi, showPoi ? poi.transform.position.x : 0f, showPoi ? poi.transform.position.z : 0f,
-                    gate != null, gate != null ? gate.transform.position.x : 0f, gate != null ? gate.transform.position.z : 0f);
-            }
-            else compass.text = "";
-
-            hurt.style.display = DisplayStyle.None;
-            if (street && life != null && player != null && Time.time - life.LastHitTime < 1.2f)
-            {
-                var hit = life.LastHitDirection;
-                if (hit.sqrMagnitude > 0.0001f)
-                {
-                    var face = player.transform.forward;
-                    string sector = StreetHeading.Sector(StreetHeading.Incoming(face.x, face.z, hit.x, hit.z));
-                    hurt.text = sector == "front" ? "Hit from the front"
-                        : sector == "back" ? "Hit from behind"
-                        : sector == "left" ? "Hit from the left"
-                        : "Hit from the right";
-                    hurt.style.display = DisplayStyle.Flex;
-                }
-            }
-
-            feed.text = GameManager.Instance != null ? GameManager.Instance.KillFeed : "";
-            feed.style.display = string.IsNullOrEmpty(feed.text) ? DisplayStyle.None : DisplayStyle.Flex;
-
-            if (player != null && player.WheelOpen)
-            {
-                weapon.style.whiteSpace = WhiteSpace.PreWrap;
-                weapon.style.color = new Color(0.82f, 0.9f, 1f);
-                weapon.style.opacity = 1f;
-                weapon.text = player.WheelLine();
-            }
-            else if (player != null && player.ActiveWeapon is FirearmWeapon gun)
-            {
-                bool low = MagPulse.Low(gun.CurrentAmmo, gun.MaxMagazine, gun.IsReloading);
-                string reload = gun.IsReloading ? "  reload " + Mathf.RoundToInt(gun.ReloadFill * 100f) + "%" : low ? "  low" : "";
-                weapon.text = gun.WeaponName + "   " + gun.CurrentAmmo + " / " + gun.ReserveAmmo + reload;
-                weapon.style.color = low ? new Color(0.95f, 0.55f, 0.25f) : Color.white;
-                weapon.style.opacity = MagPulse.Alpha(Time.unscaledTime, low);
-            }
-            else if (player != null && player.ActiveWeapon != null)
-            {
-                weapon.text = player.ActiveWeapon.WeaponName;
-                weapon.style.color = Color.white;
-                weapon.style.opacity = 1f;
-            }
-            else
-            {
-                weapon.text = "No weapon";
-                weapon.style.color = Color.white;
-                weapon.style.opacity = 1f;
-            }
-            var carried = player != null ? player.GetComponent<PlayerInventory>() : null;
-            if (carried != null)
-            {
-                weapon.style.whiteSpace = WhiteSpace.PreWrap;
-                weapon.text += "\n" + carried.BeltLine;
-            }
-
-            float noise = hud != null ? hud.NoiseLevel : 0f;
-            int bangs = 0;
-            int questions = 0;
-            if (player != null) ZombieAI.CountAlerts(player.transform.position.x, player.transform.position.z, out bangs, out questions);
-            threats.text = ThreatMark.Line(bangs, questions);
-            threats.style.display = string.IsNullOrEmpty(threats.text) ? DisplayStyle.None : DisplayStyle.Flex;
-            threats.style.color = bangs > 0 ? new Color(0.95f, 0.35f, 0.28f) : new Color(0.95f, 0.8f, 0.35f);
-            noiseFill.style.width = Length.Percent(noise * 100f);
-            int vision = SettingsService.Instance != null ? SettingsService.Instance.ColorblindMode : 0;
-            if (vision == 1) noiseFill.style.backgroundColor = Color.Lerp(new Color(0.2f, 0.45f, 0.95f), new Color(0.95f, 0.85f, 0.15f), noise);
-            else if (vision == 2) noiseFill.style.backgroundColor = Color.Lerp(new Color(0.1f, 0.1f, 0.1f), Color.white, noise);
-            else noiseFill.style.backgroundColor = Color.Lerp(new Color(0.2f, 0.7f, 0.3f), new Color(0.8f, 0.15f, 0.1f), noise);
-            noiseFill.style.height = NoiseCue.Height(vision, noise);
-            noiseMark.text = NoiseCue.Mark(vision, noise);
-            noiseMark.style.display = string.IsNullOrEmpty(noiseMark.text) ? DisplayStyle.None : DisplayStyle.Flex;
-            if (watch != null)
-            {
-                if (!AiWatch.Open)
-                {
-                    watch.style.display = DisplayStyle.None;
-                }
-                else
-                {
-                    var rows = new string[12];
-                    int count = ZombieAI.CopyWatch(rows, Time.time);
-                    var shown = new string[count];
-                    for (int i = 0; i < count; i++) shown[i] = rows[i];
-                    watch.text = AiWatch.Page(shown, 6);
-                    watch.style.display = DisplayStyle.Flex;
-                }
-            }
-            toast.text = hud != null ? hud.Toast ?? "" : "";
-            toast.style.display = string.IsNullOrEmpty(toast.text) ? DisplayStyle.None : DisplayStyle.Flex;
-
-            var tutorialDirector = TutorialDirector.Instance;
-            bool showTutorial = tutorialDirector != null && !tutorialDirector.Finished && !string.IsNullOrEmpty(tutorialDirector.Current)
-                && (SettingsService.Instance == null || SettingsService.Instance.Subtitles);
-            tutorial.text = showTutorial ? tutorialDirector.Current : "";
-            tutorial.style.display = showTutorial ? DisplayStyle.Flex : DisplayStyle.None;
-
-            var shell = FindFirstObjectByType<GameShellUI>();
+            if (shell == null) shell = FindFirstObjectByType<GameShellUI>();
             bool inventory = shell != null && shell.InventoryOpen;
             var state = GameManager.Instance != null ? GameManager.Instance.CurrentState : GameState.ExpeditionActive;
+            if (state != screensState)
+            {
+                screensState = state;
+                screens.Clear();
+                codexId = "";
+            }
             bool settings = SettingsService.Instance != null && SettingsService.Instance.ShowSettings;
-            if (settings && !settingsWasOpen) settingsBaseline = SettingsService.Instance.ExportSettings();
-            if (!settings) settingsBaseline = "";
+            if (settings && !settingsWasOpen) SettingsService.Instance.BeginEdit();
+            if (!settings) askKeep = false;
             settingsWasOpen = settings;
             bool trade = FactionTrade.Instance != null && FactionTrade.Instance.Open;
-            string language = SettingsService.Instance != null ? SettingsService.Instance.Language : "en";
-            string discrete = SettingsService.Instance != null ? SettingsService.Instance.DiscreteKey : "";
-            string tradeKey = FactionTrade.Instance != null ? FactionTrade.Instance.Signature : "";
-            string nextMenu = state + "|" + settings + "|" + trade + "|" + language + "|" + discrete + "|" + ControlBindings.Signature() + "|" + PadBindings.Signature() + "|" + listening + "|" + padListen + "|" + credits + "|" + slotsOpen + "|" + codexOpen + "|" + codexId + "|" + tradeKey;
+            string nextMenu;
+            if (!settings && !trade && MenuQuiet(state)) nextMenu = QuietKey(state);
+            else
+            {
+                string language = SettingsService.Instance != null ? SettingsService.Instance.Language : "en";
+                string discrete = SettingsService.Instance != null ? SettingsService.Instance.DiscreteKey : "";
+                string tradeKey = FactionTrade.Instance != null ? FactionTrade.Instance.Signature : "";
+                nextMenu = state + "|" + settings + "|" + trade + "|" + language + "|" + discrete + "|" + ControlBindings.Signature() + "|" + PadBindings.Signature() + "|" + listening + "|" + padListen + "|" + screens.Signature() + "|" + NewGameSignature() + "|" + codexId + "|" + tradeKey + "|" + askKeep + "|" + bindNote + "|" + InputGlyphs.UsingPad;
+            }
             if (nextMenu != menuKey)
             {
                 menuKey = nextMenu;
                 RebuildMenu(state, settings, trade);
             }
 
-            string nextCamp = state == GameState.CampManagement ? CampSignature() : "";
+            int nextCamp = state == GameState.CampManagement ? CampKey() : Closed;
             if (nextCamp != campKey)
             {
                 campKey = nextCamp;
                 RebuildCamp(state == GameState.CampManagement);
             }
 
-            string nextPack = inventory ? PackSignature() + "|" + inspected : "";
+            int nextPack = inventory ? PackKey() : Closed;
             if (nextPack != packKey)
             {
                 packKey = nextPack;
                 RebuildPack(inventory);
             }
 
-            DrawPopups();
+        }
+
+        /// <summary>States whose menu panel is empty unless settings or a trade stall is open.</summary>
+        public static bool MenuQuiet(GameState state)
+        {
+            return state == GameState.ExpeditionActive || state == GameState.RaidActive || state == GameState.CampManagement;
+        }
+
+        private static readonly string[] quietKeys = new string[16];
+
+        private static string QuietKey(GameState state)
+        {
+            int slot = (int)state & 15;
+            return quietKeys[slot] ?? (quietKeys[slot] = "quiet|" + state);
+        }
+
+        private void Back()
+        {
+            var gm = GameManager.Instance;
+            var state = gm != null ? gm.CurrentState : GameState.ExpeditionActive;
+            bool settings = SettingsService.Instance != null && SettingsService.Instance.ShowSettings;
+            bool trade = FactionTrade.Instance != null && FactionTrade.Instance.Open;
+            bool pausable = gm != null && (state == GameState.Paused || state == GameState.ExpeditionActive || state == GameState.RaidActive || state == GameState.CampManagement);
+            switch (BackRoute.For(settings, trade, screens.Depth, pausable))
+            {
+                case BackAction.CloseSettings:
+                    CloseSettings();
+                    break;
+                case BackAction.CloseTrade:
+                    FactionTrade.Instance.Toggle();
+                    break;
+                case BackAction.Pop:
+                    if (screens.Pop() == MenuScreen.CodexEntry) codexId = "";
+                    break;
+                case BackAction.TogglePause:
+                    gm.TogglePause();
+                    break;
+            }
+        }
+
+        private void CloseSettings()
+        {
+            var settings = SettingsService.Instance;
+            if (settings == null) return;
+            switch (SettingsDraft.OnClose(settings.HasUnsaved, askKeep))
+            {
+                case SettingsClose.Ask:
+                    askKeep = true;
+                    break;
+                case SettingsClose.StayOpen:
+                    askKeep = false;
+                    break;
+                default:
+                    FinishSettings(false);
+                    break;
+            }
+        }
+
+        private void FinishSettings(bool revert)
+        {
+            var settings = SettingsService.Instance;
+            if (settings == null) return;
+            if (revert) settings.RevertEdits();
+            else settings.KeepEdits();
+            askKeep = false;
+            bindNote = "";
+            listening = -1;
+            padListen = -1;
+            if (settings.ShowSettings) settings.TogglePanel();
+        }
+
+        private void Open(MenuScreen screen) => screens.Push(screen);
+
+        private void Close()
+        {
+            if (screens.Pop() == MenuScreen.CodexEntry) codexId = "";
+        }
+
+        private static void Quit()
+        {
+#if UNITY_EDITOR
+            UnityEditor.EditorApplication.isPlaying = false;
+#else
+            Application.Quit();
+#endif
         }
 
         private void DrawCodex(VisualElement parent)
@@ -479,9 +283,12 @@ namespace OutpostZero.UI
                 {
                     if (CodexBook.Entries[i].Id == codexId) selected = CodexBook.Entries[i];
                 }
-                parent.Add(Title(selected != null && CodexBook.Visible(selected, packed) ? Loc.EntryTitle(selected.Id, selected.Title) : Loc.T("camp.unknown")));
-                parent.Add(Body(selected != null && CodexBook.Visible(selected, packed) ? Loc.EntryBody(selected.Id, selected.Body) : Loc.T("camp.unseen")));
-                parent.Add(Button(Loc.T("menu.back"), () => codexId = ""));
+                bool shown = selected != null && CodexBook.Visible(selected, packed);
+                var portrait = shown ? CodexIcons.For(selected) : null;
+                if (portrait != null) parent.Add(Picture(portrait, 96));
+                parent.Add(Title(shown ? Loc.EntryTitle(selected.Id, selected.Title) : Loc.T("camp.unknown")));
+                parent.Add(Body(shown ? Loc.EntryBody(selected.Id, selected.Body) : Loc.T("camp.unseen")));
+                parent.Add(Button(Loc.T("menu.back"), Close));
                 return;
             }
             parent.Add(Title(Loc.T("menu.codex")));
@@ -490,52 +297,108 @@ namespace OutpostZero.UI
                 var entry = CodexBook.Entries[i];
                 string id = entry.Id;
                 bool visible = CodexBook.Visible(entry, packed);
-                parent.Add(Button(visible ? Loc.EntryTitle(entry.Id, entry.Title) : Loc.T("camp.unknown"), () => codexId = id));
+                var line = new VisualElement { style = { flexDirection = FlexDirection.Row, alignItems = Align.Center } };
+                var thumb = visible ? CodexIcons.For(entry) : null;
+                if (thumb != null) line.Add(Picture(thumb, 28));
+                line.Add(Button(visible ? Loc.EntryTitle(entry.Id, entry.Title) : Loc.T("camp.unknown"), () => { codexId = id; Open(MenuScreen.CodexEntry); }));
+                parent.Add(line);
             }
-            parent.Add(Button(Loc.T("set.close"), () => codexOpen = false));
+            parent.Add(Button(Loc.T("codex.replay"), () => CodexDirector.Instance?.ReplayHints()));
+            parent.Add(Button(Loc.T("set.close"), Close));
         }
 
-        private static void Go(FlowStep step, System.Action arrived)
+        private static void Go(FlowStep step, System.Action arrived = null)
         {
-            if (SceneFlow.Instance != null) SceneFlow.Instance.Travel(step, arrived);
-            else arrived?.Invoke();
+            if (SceneFlow.Instance != null)
+            {
+                SceneFlow.Instance.Travel(step, arrived);
+                return;
+            }
+            if (arrived != null) arrived();
+            else GameManager.Instance?.Arrive(new FlowContext(step, step, false));
         }
 
         private static void DrawTrade(VisualElement parent, FactionTrade faction)
         {
             string id = faction.ActiveId;
             int standing = faction.StandingOf(id);
-            parent.Add(Title(faction.Faction + "  " + standing));
+            string name = StallVoice.Name(id, null);
+            parent.Add(Title(name + "  " + standing));
             if (CaravanBook.Refuses(id, standing))
             {
-                parent.Add(Body(faction.Faction + " will not trade"));
+                parent.Add(Body(StallVoice.Refuse(name, null)));
             }
             else
             {
-                string[] stock = CaravanBook.Stock(id);
-                for (int i = 0; i < stock.Length; i++)
+                var panes = new VisualElement { style = { flexDirection = FlexDirection.Row, alignItems = Align.FlexStart } };
+                var ours = new VisualElement { style = { flexGrow = 1, flexBasis = 0, marginRight = 12 } };
+                var theirs = new VisualElement { style = { flexGrow = 1, flexBasis = 0 } };
+                panes.Add(ours);
+                panes.Add(theirs);
+                parent.Add(panes);
+
+                int scrap = ColonyStorage.Instance != null ? ColonyStorage.Instance.Scrap : 0;
+                ours.Add(Title(Loc.T("stall.yours") + "  " + scrap + " " + Loc.T("bill.scrap")));
+                int sellable = 0;
+                var pack = PlayerRegistry.Current != null ? PlayerRegistry.Current.GetComponent<PlayerInventory>() : null;
+                if (pack != null)
                 {
-                    string itemId = stock[i];
-                    var record = ItemCatalog.Find(itemId);
-                    string label = record != null ? record.DisplayName : itemId;
-                    parent.Add(Button("Buy " + label + " (" + faction.Price(itemId) + ")", () => faction.Buy(itemId)));
+                    foreach (var carried in pack.Items)
+                    {
+                        if (carried == null || carried.Quantity <= 0 || !CaravanBook.Sellable(carried.ItemId)) continue;
+                        string sold = carried.ItemId;
+                        ours.Add(Button(Loc.T("stall.sell_item") + " " + Loc.Item(sold) + " x" + carried.Quantity + "  +" + faction.Offer(sold), () => faction.Sell(sold)));
+                        sellable++;
+                    }
                 }
-                parent.Add(Button("Sell bandage", () => faction.SellBandage()));
+                if (sellable == 0) ours.Add(Body(Loc.T("stall.nothing")));
+
+                theirs.Add(Title(Loc.T("stall.theirs")));
+                foreach (var row in faction.Shelf)
+                {
+                    string itemId = row.Key;
+                    int left = faction.Left(itemId);
+                    string label = Loc.Item(itemId) + " x" + left;
+                    if (itemId == CaravanBook.Premium(id)) label += "  " + Loc.T("stall.trusted");
+                    if (left <= 0) label += "  " + StallVoice.SoldOut(null);
+                    var buy = Button(StallVoice.Buy(label, faction.Price(itemId), null), () => faction.Buy(itemId));
+                    if (left <= 0 || scrap < faction.Price(itemId)) buy.style.color = new Color(0.55f, 0.5f, 0.48f);
+                    theirs.Add(buy);
+                }
+                if (standing < CaravanBook.Trusted) theirs.Add(Body(Loc.T("stall.trust_at") + " " + CaravanBook.Trusted));
             }
-            parent.Add(Body(QuestLine(id, faction.Quests)));
-            if (id == "clinic" && !CaravanBook.QuestDone(faction.Quests, "clinic"))
+            parent.Add(Body(StallVoice.Quest(id, CaravanBook.QuestDone(faction.Quests, id), null)));
+            if (id == "clinic" && faction.MedsWanted > 0 && !CaravanBook.QuestDone(faction.Quests, "clinic"))
             {
-                parent.Add(Button("Deliver 4 medkits", () => faction.DeliverMedkits()));
+                var bag = PlayerRegistry.Current != null ? PlayerRegistry.Current.GetComponent<PlayerInventory>() : null;
+                int carried = (bag != null ? bag.CarriedMeds : 0) + (ColonyStorage.Instance != null ? ColonyStorage.Instance.Meds : 0);
+                parent.Add(Button(Loc.T("stall.deliver") + "  " + carried + "/" + faction.MedsWanted, () => faction.DeliverMeds()));
             }
-            parent.Add(Button("Leave", faction.Toggle));
+            parent.Add(Button(Loc.T("stall.leave"), faction.Toggle));
         }
 
-        private static string QuestLine(string id, string quests)
+        private static string Marks(Survivor survivor)
         {
-            if (id == "clinic") return CaravanBook.QuestDone(quests, "clinic") ? "Field dressings learned" : "The Clinic wants 4 medkits";
-            if (id == "farmers") return CaravanBook.QuestDone(quests, "farmers") ? "Farmers remember the nest" : "Clear a district for the farmers";
-            if (id == "militia") return "Iron Militia sells rifle and shell ammo";
-            return CaravanBook.QuestDone(quests, "caravan") ? "Escort complete" : "Extract on a visit day and the caravan pays";
+            if (survivor == null) return "";
+            string marks = Loc.Trait(survivor.trait);
+            if (!string.IsNullOrEmpty(survivor.aside)) marks += " · " + Loc.Trait(survivor.aside);
+            if (!string.IsNullOrEmpty(survivor.mark)) marks += " · " + Loc.Trait(survivor.mark);
+            return marks;
+        }
+
+        private static string Bonds(string kin)
+        {
+            string text = "";
+            string closeId = KinBoard.Closest(kin);
+            if (closeId.Length > 0)
+            {
+                string kind = BondMark.Kind(KinBoard.Read(kin, closeId));
+                string key = kind == "Partner" ? "bond.partner" : "bond.friend";
+                text += "  " + Loc.T(key) + " " + closeId;
+            }
+            string bitter = KinBoard.Bitter(kin);
+            if (bitter.Length > 0) text += "  " + Loc.T("bond.rival") + " " + bitter;
+            return text;
         }
 
         private void RebuildMenu(GameState state, bool settings, bool trade)
@@ -555,20 +418,32 @@ namespace OutpostZero.UI
             switch (state)
             {
                 case GameState.Paused:
-                    if (codexOpen)
+                    if (screens.Top == MenuScreen.Codex || screens.Top == MenuScreen.CodexEntry)
                     {
                         DrawCodex(menu);
                         break;
                     }
                     menu.Add(Title(Loc.T("menu.pause")));
                     menu.Add(Button(Loc.T("menu.resume"), () => GameManager.Instance.TogglePause()));
-                    menu.Add(Button(Loc.T("menu.save"), () => SaveSystem.Instance?.Save()));
-                    menu.Add(Button(Loc.T("menu.codex"), () => { codexOpen = true; codexId = ""; }));
-                    menu.Add(Button(Loc.T("menu.skip"), () => TutorialDirector.Instance?.Dismiss()));
-                    menu.Add(Button(Loc.T("menu.camp"), () => Go(FlowStep.Sanctuary, () => GameManager.Instance.EnterCamp())));
                     menu.Add(Button(Loc.T("menu.settings"), () => SettingsService.Instance?.TogglePanel()));
-                    menu.Add(Button(Loc.T("menu.main"), () => Go(FlowStep.MainMenu, () => GameManager.Instance.SetState(GameState.MainMenu))));
-                    menu.Add(Button(Loc.T("menu.restart"), () => Go(FlowStep.Boot, () => GameManager.Instance.RestartCurrentScene())));
+                    bool canSave = SaveSystem.CanSaveManually;
+                    var saveButton = Button(Loc.T(canSave ? "menu.save" : "menu.save_camp"), () => SaveSystem.Instance?.Save());
+                    if (!canSave) saveButton.style.opacity = TutorialMark.Dim;
+                    menu.Add(saveButton);
+                    menu.Add(Button(Loc.T("menu.codex"), () => { codexId = ""; Open(MenuScreen.Codex); }));
+                    menu.Add(Button(Loc.T("menu.skip"), () => TutorialDirector.Instance?.Dismiss()));
+                    menu.Add(Button(Loc.T("menu.camp"), () => Go(FlowStep.Sanctuary)));
+                    menu.Add(Button(Loc.T("menu.restart"), () => Go(FlowStep.Boot, () => GameManager.Instance.ReturnToBoot())));
+                    menu.Add(Button(Loc.T(canSave ? "menu.save_quit" : "menu.quit_menu"), () =>
+                    {
+                        if (canSave) SaveSystem.Instance?.Save();
+                        Go(FlowStep.MainMenu);
+                    }));
+                    menu.Add(Button(Loc.T("menu.quit"), () =>
+                    {
+                        if (canSave) SaveSystem.Instance?.Save();
+                        Quit();
+                    }));
                     break;
                 case GameState.SuccessionScreen:
                     menu.Add(Title(Loc.T("menu.leader")));
@@ -580,11 +455,15 @@ namespace OutpostZero.UI
                     menu.Add(Body(Loc.T("menu.choose")));
                     if (SurvivorRoster.Instance != null)
                     {
+                        var heir = SurvivorRoster.Instance.SuggestedHeir();
                         foreach (var survivor in SurvivorRoster.Instance.Survivors)
                         {
                             if (!survivor.alive) continue;
                             string id = survivor.id;
-                            menu.Add(Button(survivor.displayName + " — " + survivor.trait + "  " + ColonyDay.Mood(survivor.morale), () => GameManager.Instance.AcceptSuccessor(id)));
+                            bool suggested = heir != null && heir.id == id;
+                            var pick = Button((suggested ? "> " : "") + survivor.displayName + " — " + Marks(survivor) + "  " + Loc.Mood(ColonyDay.Mood(survivor.morale, survivor.trait, survivor.aside, survivor.mark)) + (suggested ? "  " + Loc.T("menu.heir") : ""), () => GameManager.Instance.AcceptSuccessor(id));
+                            if (suggested) pick.style.backgroundColor = new Color(0.32f, 0.26f, 0.14f);
+                            menu.Add(pick);
                         }
                     }
                     menu.Add(Button(Loc.T("menu.falls"), () => GameManager.Instance.SetState(GameState.GameOver)));
@@ -592,8 +471,9 @@ namespace OutpostZero.UI
                 case GameState.Victory:
                     menu.Add(Title(Loc.T("menu.holds")));
                     menu.Add(Body(Loc.T("menu.broadcast")));
+                    DrawHaul(menu);
                     DrawBoard(menu);
-                    menu.Add(Button(Loc.T("menu.enter"), () => Go(FlowStep.Sanctuary, () => GameManager.Instance.EnterCamp())));
+                    menu.Add(Button(Loc.T("menu.enter"), () => Go(FlowStep.Sanctuary)));
                     menu.Add(Button(Loc.T("menu.endless"), () => Go(FlowStep.Sanctuary, () =>
                     {
                         WorldMapService.Instance?.TryBeginEndless();
@@ -605,8 +485,11 @@ namespace OutpostZero.UI
                     menu.Add(Title(Loc.T("result.title")));
                     var map = WorldMapService.Instance;
                     menu.Add(Body(map != null && map.CampaignWon ? Loc.T("menu.air") : Loc.T("menu.supplies")));
-                    if (map != null && map.Current != null) menu.Add(Body(Loc.T("menu.next") + " " + map.Current.displayName));
-                    menu.Add(Button(Loc.T("menu.enter"), () => Go(FlowStep.Sanctuary, () => GameManager.Instance.EnterCamp())));
+                    DrawHaul(menu);
+                    if (map != null && map.Current != null) menu.Add(Body(Loc.T("menu.next") + " " + Loc.District(map.Current.id)));
+                    menu.Add(Button(Loc.T("menu.enter"), () => Go(FlowStep.Sanctuary)));
+                    if (map != null && ResultsRetry.Open(map.Current != null, map.Current != null && map.Current.cleared, map.Endless, map.CampaignWon))
+                        menu.Add(Button(Loc.T("menu.retry"), () => Go(FlowStep.Expedition, () => GameManager.Instance.HeadOutAgain())));
                     break;
                 case GameState.GameOver:
                     menu.Add(Title(Loc.T("gameover.title")));
@@ -616,36 +499,101 @@ namespace OutpostZero.UI
                     menu.Add(Button(Loc.T("menu.new"), () => Go(FlowStep.Sanctuary, () => GameManager.Instance.BeginNewOutpost())));
                     break;
                 case GameState.MainMenu:
-                    if (credits)
+                    if (screens.Top == MenuScreen.Credits)
                     {
                         menu.Add(Title(Loc.T("menu.credits")));
-                        menu.Add(Body(Loc.T("menu.brand") + " " + SceneRoute.Version));
+                        menu.Add(Body(Loc.T("menu.brand") + " " + BuildStamp.Version));
                         menu.Add(Body(Loc.T("menu.blurb")));
-                        menu.Add(Button(Loc.T("menu.back"), () => credits = false));
+                        menu.Add(Body(Loc.T("menu.tones")));
+                        menu.Add(Body(SoundCredit.Count + " " + Loc.T("menu.tones_n")));
+                        menu.Add(Button(Loc.T("menu.back"), Close));
                         break;
                     }
-                    if (slotsOpen)
+                    if (screens.Top == MenuScreen.Saves)
                     {
                         DrawSlots(menu);
                         break;
                     }
+                    if (screens.Top == MenuScreen.NewGame)
+                    {
+                        DrawNewGame(menu);
+                        break;
+                    }
                     menu.Add(Title(Loc.T("menu.title")));
-                    menu.Add(Body(Loc.T("menu.version") + " " + SceneRoute.Version));
+                    menu.Add(Body(Loc.T("menu.version") + " " + BuildStamp.Version));
                     menu.Add(Button(Loc.T("menu.continue"), () => Go(FlowStep.Sanctuary, () =>
                     {
                         if (SaveSystem.Instance == null || !SaveSystem.Instance.Load())
                             GameManager.Instance.SetState(GameState.MainMenu);
                     })));
-                    menu.Add(Button(Loc.T("menu.saves"), () => slotsOpen = true));
-                    menu.Add(Button(Loc.T("set.next") + " " + Loc.Difficulty(SettingsService.Instance != null ? SettingsService.Instance.NextDifficulty : 2), () => SettingsService.Instance?.CycleDifficulty()));
-                    menu.Add(Button(Loc.T("menu.new"), () => Go(FlowStep.Sanctuary, () => GameManager.Instance.BeginNewOutpost())));
+                    menu.Add(Button(Loc.T("menu.saves"), () => Open(MenuScreen.Saves)));
+                    menu.Add(Button(Loc.T("menu.new"), () => Open(MenuScreen.NewGame)));
                     menu.Add(Button(Loc.T("menu.settings"), () => SettingsService.Instance?.TogglePanel()));
-                    menu.Add(Button(Loc.T("menu.credits"), () => credits = true));
-                    menu.Add(Button(Loc.T("menu.skip"), () => TutorialDirector.Instance?.Dismiss()));
-                    menu.Add(Button(Loc.T("menu.street"), () => Go(FlowStep.Expedition, () => GameManager.Instance.BeginExpedition())));
+                    menu.Add(Button(Loc.T("menu.credits"), () => Open(MenuScreen.Credits)));
+                    menu.Add(Button(Loc.T("menu.street"), () => Go(FlowStep.Expedition)));
+                    menu.Add(Button(Loc.T("menu.quit"), Quit));
                     break;
             }
             menu.style.display = menu.childCount > 0 ? DisplayStyle.Flex : DisplayStyle.None;
+        }
+
+        private string NewGameSignature()
+        {
+            var settings = SettingsService.Instance;
+            return (settings != null ? settings.NextDifficulty + ":" + settings.Merciful : "") + ":" + skipTutorial;
+        }
+
+        private void DrawNewGame(VisualElement menu)
+        {
+            var settings = SettingsService.Instance;
+            menu.Add(Title(Loc.T("new.title")));
+            menu.Add(Button(Loc.T("set.next") + " " + Loc.Difficulty(settings != null ? settings.NextDifficulty : 2), () => settings?.CycleDifficulty()));
+            if (settings != null) menu.Add(Button(settings.Merciful ? Loc.T("set.merciful") : Loc.T("set.perma"), settings.ToggleMerciful));
+            menu.Add(Button(skipTutorial ? Loc.T("new.tut_off") : Loc.T("new.tut_on"), () => skipTutorial = !skipTutorial));
+            menu.Add(Body(Loc.T("new.seed")));
+            var seed = new TextField { value = seedText, maxLength = NewGamePlan.MaxLength };
+            seed.style.width = 260;
+            seed.style.marginBottom = 6;
+            seed.RegisterValueChangedCallback(evt => seedText = evt.newValue ?? "");
+            menu.Add(seed);
+            menu.Add(Button(Loc.T("new.start"), () =>
+            {
+                screens.Clear();
+                string chosen = seedText;
+                bool skip = skipTutorial;
+                Go(FlowStep.Sanctuary, () => GameManager.Instance.BeginNewOutpost(chosen, skip));
+            }));
+            menu.Add(Button(Loc.T("menu.back"), Close));
+        }
+
+        private void DrawHaul(VisualElement menu)
+        {
+            var gm = GameManager.Instance;
+            var tracker = ObjectiveTracker.Instance;
+            var outcome = gm != null ? gm.LastOutcome : default;
+            bool closed = outcome.end != ExpeditionEnd.None;
+            string district = ExtractSlip.Place(gm != null ? gm.LastStreet : "", null);
+            int kills = closed ? outcome.kills : gm != null ? gm.ZombiesKilled : 0;
+            int scrap = closed ? outcome.scrap : gm != null ? gm.ScrapLooted : 0;
+            int killGoal = closed ? outcome.killGoal : tracker != null ? tracker.KillGoal : 1;
+            int scrapGoal = closed ? outcome.scrapGoal : tracker != null ? tracker.ScrapGoal : 1;
+            menu.Add(Body(ExtractSlip.Line(district, kills, killGoal, scrap, scrapGoal, Loc.T("result.kills"), Loc.T("result.scrap"))));
+            if (closed) menu.Add(Body(ExpeditionLedger.TimeLine(outcome, null)));
+            if (closed && outcome.objectivesTotal > 0) menu.Add(Body(ResultsSheet.ObjectivesLine(outcome, null)));
+            if (tracker != null && tracker.PoiLine().Length > 0) menu.Add(Body(tracker.PoiLine()));
+            if (!closed) return;
+            var player = PlayerRegistry.Current;
+            var pack = new List<KeyValuePair<string, int>>();
+            var inventory = player != null ? player.GetComponent<PlayerInventory>() : null;
+            if (inventory != null)
+                foreach (var item in inventory.Items) pack.Add(new KeyValuePair<string, int>(item.ItemId, item.Quantity));
+            menu.Add(Body(ResultsSheet.BroughtLine(ResultsSheet.Brought(outcome.loadout, pack), null)));
+            var health = player != null ? player.GetComponent<HealthSystem>() : null;
+            var effects = player != null ? player.GetComponent<StatusEffectController>() : null;
+            var leader = SurvivorRoster.Instance != null ? SurvivorRoster.Instance.Leader : null;
+            if (health != null)
+                menu.Add(Body(ResultsSheet.ConditionLine(leader != null ? leader.displayName : "", health.CurrentHealth, health.MaxHealth, effects != null && effects.IsBleeding, leader != null ? leader.injury : 0, null)));
+            menu.Add(Body(ResultsSheet.PracticeLine(outcome, null)));
         }
 
         private void DrawBoard(VisualElement menu)
@@ -658,13 +606,22 @@ namespace OutpostZero.UI
                 return;
             }
             int count = runs.Length < 4 ? runs.Length : 4;
-            for (int i = 0; i < count; i++) menu.Add(Body(RunBoard.Line(runs[i])));
+            for (int i = 0; i < count; i++) menu.Add(Body(RunBoard.Line(runs[i], null)));
         }
 
         private void BuildSettings(VisualElement parent)
         {
             var settings = SettingsService.Instance;
             parent.Add(Title(Loc.T("set.title")));
+            if (askKeep)
+            {
+                parent.Add(Body(Loc.T("set.unsaved")));
+                parent.Add(Button(Loc.T("set.keep"), () => FinishSettings(false)));
+                parent.Add(Button(Loc.T("set.revert"), () => FinishSettings(true)));
+                parent.Add(Button(Loc.T("set.back"), () => askKeep = false));
+                parent.style.display = DisplayStyle.Flex;
+                return;
+            }
             parent.Add(SliderRow(Loc.T("set.shake"), settings.ScreenShake, settings.SetShake));
             parent.Add(SliderRow(Loc.T("set.volume"), settings.MasterVolume, settings.SetVolume));
             parent.Add(SliderRow(Loc.T("set.effects"), settings.SfxVolume, settings.SetSfx));
@@ -673,21 +630,27 @@ namespace OutpostZero.UI
             parent.Add(SliderRow(Loc.T("set.ui"), settings.UiVolume, settings.SetUi));
             parent.Add(SliderRow(Loc.T("set.fov"), settings.FieldOfView, 40f, 75f, settings.SetFieldOfView));
             parent.Add(SliderRow(Loc.T("set.text"), settings.TextScale, 0.8f, 1.6f, settings.SetTextScale));
+            parent.Add(SliderRow(Loc.T("set.ui_scale"), settings.UiScale, PlayOptions.UiScaleMin, PlayOptions.UiScaleMax, settings.SetUiScale));
             parent.Add(SliderRow(Loc.T("set.hud"), settings.HudOpacity, 0.45f, 1f, settings.SetHudOpacity));
-            parent.Add(SliderRow(Loc.T("set.bright"), settings.Brightness, 0.6f, 1.4f, settings.SetBrightness));
+            parent.Add(BrightnessRow(settings));
             parent.Add(Button(settings.Subtitles ? Loc.T("set.subs_on") : Loc.T("set.subs_off"), () => settings.SetSubtitles(!settings.Subtitles)));
             parent.Add(Button(settings.QuietFlash ? Loc.T("set.flash_off") : Loc.T("set.flash_on"), settings.ToggleQuietFlash));
-            parent.Add(Button(Loc.T("set.color") + " " + settings.ColorblindMode, settings.CycleColorblind));
-            parent.Add(Button(settings.Language == "es" ? "Idioma: ES" : "Language: EN", () => settings.SetLanguage(settings.Language == "es" ? "en" : "es")));
+            parent.Add(Button(Loc.T("set.color") + " " + Loc.T(HudPalette.Name(settings.ColorblindMode)), settings.CycleColorblind));
+            parent.Add(Button(settings.EnemyOutline ? Loc.T("set.outline_on") : Loc.T("set.outline_off"), settings.ToggleEnemyOutline));
+            bool devTongue = DevCheats.Allowed(Application.isEditor, Debug.isDebugBuild);
+            parent.Add(Button(PseudoLoc.Label(settings.Language), () => settings.SetLanguage(PseudoLoc.Next(settings.Language, devTongue))));
             int tier = Mathf.Clamp(settings.Quality, 0, 3);
             parent.Add(Button(Loc.T("set.quality") + " " + Loc.T("set.tier" + tier), settings.CycleQuality));
             parent.Add(Button(settings.VSync ? Loc.T("set.vsync_on") : Loc.T("set.vsync_off"), settings.ToggleVSync));
-            parent.Add(Button(Loc.T("set.frame") + " " + PlayOptions.FrameName(settings.FrameCap), settings.CycleFrameCap));
+            parent.Add(Button(Loc.T("set.frame") + " " + PlayOptions.FrameName(settings.FrameCap, null), settings.CycleFrameCap));
             parent.Add(Button(Loc.T("set.resolution") + " " + DisplayModes.Name(settings.Resolution), settings.CycleResolution));
+            parent.Add(Button(Loc.T("set.render") + " " + PlayOptions.ScaleName(settings.RenderScaleStep, null), settings.CycleRenderScale));
             parent.Add(Button(settings.AimAssist == 0 ? Loc.T("set.aim_off") : settings.AimAssist == 2 ? Loc.T("set.aim_strong") : Loc.T("set.aim_light"), settings.CycleAim));
             parent.Add(Button(settings.InvertLook ? Loc.T("set.invert") : Loc.T("set.look"), settings.ToggleInvert));
+            parent.Add(SliderRow(Loc.T("set.sensitivity"), settings.Sensitivity, PlayOptions.SensitivityMin, PlayOptions.SensitivityMax, settings.SetSensitivity));
             parent.Add(Button(settings.CrouchMode == 1 ? Loc.T("set.crouch_toggle") : Loc.T("set.crouch_hold"), settings.ToggleCrouchMode));
             parent.Add(Button(settings.SprintMode == 1 ? Loc.T("set.sprint_toggle") : Loc.T("set.sprint_hold"), settings.ToggleSprintMode));
+            parent.Add(Button(settings.AimMode == 1 ? Loc.T("set.aim_toggle") : Loc.T("set.aim_hold"), settings.ToggleAimMode));
             parent.Add(Button(settings.Merciful ? Loc.T("set.merciful") : Loc.T("set.perma"), settings.ToggleMerciful));
             parent.Add(Button(Loc.T("set.next") + " " + Loc.Difficulty(settings.NextDifficulty), settings.CycleDifficulty));
             parent.Add(Button(Loc.T("set.gore") + " " + Presentation.GoreName(settings.Gore == 0 ? 3 : settings.Gore), settings.CycleGore));
@@ -696,11 +659,14 @@ namespace OutpostZero.UI
             parent.Add(Button(settings.MotionBlur ? Loc.T("set.blur_on") : Loc.T("set.blur_off"), settings.ToggleMotionBlur));
             parent.Add(Button(settings.WindowMode == 1 ? Loc.T("set.window") : settings.WindowMode == 2 ? Loc.T("set.full") : Loc.T("set.display"), settings.CycleWindow));
             parent.Add(Body(Loc.T("set.keys")));
+            if (bindNote.Length > 0) parent.Add(Body(bindNote));
             for (int i = 0; i < ControlBindings.Count; i++)
             {
                 var action = (ControlBindings.Action)i;
                 int index = i;
-                string caption = listening == index ? "Press a key for " + action : action + ": " + ControlBindings.Label(action);
+                string caption = listening == index
+                    ? MenuLine.KeyWait(action.ToString(), null)
+                    : MenuLine.KeyBound(action.ToString(), ControlBindings.Label(action), null);
                 parent.Add(Button(caption, () =>
                 {
                     listening = index;
@@ -719,7 +685,9 @@ namespace OutpostZero.UI
             {
                 var action = (PadBindings.Action)i;
                 int index = i;
-                string caption = padListen == index ? "Press a button for " + action : "Pad " + action + ": " + PadBindings.Label(action);
+                string caption = padListen == index
+                    ? MenuLine.PadWait(action.ToString(), null)
+                    : MenuLine.PadBound(action.ToString(), PadBindings.Label(action), null);
                 parent.Add(Button(caption, () =>
                 {
                     padListen = index;
@@ -735,12 +703,14 @@ namespace OutpostZero.UI
             }));
             parent.Add(Button(Loc.T("set.revert"), () =>
             {
-                if (!string.IsNullOrEmpty(settingsBaseline)) SettingsService.Instance?.ImportSettings(settingsBaseline);
+                settings.RevertEdits();
+                settings.BeginEdit();
                 listening = -1;
                 padListen = -1;
+                bindNote = "";
                 menuKey = "";
             }));
-            parent.Add(Button(Loc.T("set.close"), settings.TogglePanel));
+            parent.Add(Button(Loc.T("set.close"), CloseSettings));
             parent.style.display = DisplayStyle.Flex;
         }
 
@@ -750,44 +720,105 @@ namespace OutpostZero.UI
             camp.style.display = open ? DisplayStyle.Flex : DisplayStyle.None;
             if (!open) return;
             camp.Add(Title(Loc.T("camp.title")));
+            string picked = CampSelect.Instance != null ? CampSelect.Instance.Card(null) : "";
+            if (picked.Length > 0) camp.Add(Body(Loc.T("pick.title") + " " + picked));
+            var guide = TutorialDirector.Instance;
+            campMark = guide != null ? guide.CampMark : "";
+            campLit.Clear();
+            guideBox = null;
+            if (guide != null && !guide.CampFinished && guide.CampCurrent.Length > 0)
+            {
+                guideBox = new VisualElement();
+                guideBox.Add(Body(Loc.T("tut.day1") + " " + (guide.CampIndex + 1) + "/" + TutorialTrack.Camp.Length + ": " + guide.CampCurrent));
+                var row = new VisualElement { style = { flexDirection = FlexDirection.Row } };
+                if (guide.CampAwaitsRead) row.Add(Button(Loc.T("tut.next"), () => guide.Note(TutorialTrack.Read)));
+                row.Add(Button(Loc.T("menu.skip"), guide.Dismiss));
+                guideBox.Add(row);
+                camp.Add(guideBox);
+            }
             var storage = ColonyStorage.Instance;
             var services = CampServices.Instance;
             if (storage != null)
             {
-                camp.Add(Body(Loc.T("camp.scrap") + " " + storage.Scrap + "  " + Loc.T("camp.food") + " " + storage.Food + "  " + Loc.T("camp.water") + " " + storage.Water
+                camp.Add(Lit(Body(Loc.T("camp.scrap") + " " + storage.Scrap + "  " + Loc.T("camp.food") + " " + storage.Food + "  " + Loc.T("camp.water") + " " + storage.Water
                     + "  " + Loc.T("camp.cloth") + " " + storage.Cloth + "  " + Loc.T("camp.chem") + " " + storage.Chemicals                     + "  " + Loc.T("camp.tape") + " " + storage.Tape + "  " + Loc.T("camp.raw") + " " + storage.Raw + "  " + Loc.T("camp.rounds") + " " + storage.Rounds
                     + "  " + (services != null && services.GeneratorOnline ? Loc.T("camp.gen_on") : Loc.T("camp.gen_off"))
-                    + (services != null ? "  " + Loc.T("camp.fuel") + " " + FuelTank.Label(services.FuelHours) : "")));
+                    + (services != null ? "  " + Loc.T("camp.fuel") + " " + FuelTank.Label(services.FuelHours) + StormNote(services) : "")), TutorialMark.Stores));
                 camp.Add(Body(Loc.T("camp.room") + " " + storage.Used + "/" + storage.Room));
+                if (GridBuilder.Instance != null && services != null && services.GeneratorOnline)
+                    camp.Add(Body(Loc.T("camp.power") + " " + GridBuilder.Instance.PowerUsed + "/" + GridBuilder.Instance.PowerMade));
                 if (storage.Bodies > 0) camp.Add(Body(Loc.T("camp.bodies") + " " + storage.Bodies));
+                if (storage.Cells > 0)
+                {
+                    camp.Add(Button(Loc.T("camp.cell") + " " + storage.Cells, () =>
+                    {
+                        var pack = PlayerRegistry.Current != null ? PlayerRegistry.Current.GetComponent<PlayerInventory>() : null;
+                        var record = ItemCatalog.Find("cell");
+                        if (pack == null || record == null || ColonyStorage.Instance == null) return;
+                        if (!pack.TryAddItem(record.Id, record.DisplayName, record.Category, 1, record.Weight)) return;
+                        ColonyStorage.Instance.TakeCell();
+                    }));
+                }
+                if (storage.Meds > 0)
+                {
+                    camp.Add(Button(Loc.T("camp.meds") + " " + storage.Meds, () =>
+                    {
+                        var pack = PlayerRegistry.Current != null ? PlayerRegistry.Current.GetComponent<PlayerInventory>() : null;
+                        if (pack == null || ColonyStorage.Instance == null || ColonyStorage.Instance.Meds <= 0) return;
+                        pack.AddMedicalKits(1);
+                        ColonyStorage.Instance.TakeMeds(1);
+                    }));
+                }
             }
             var roster = SurvivorRoster.Instance;
             if (roster != null)
             {
                 camp.Add(Body(Loc.T("camp.morale") + " " + Mathf.RoundToInt(roster.AverageMorale())));
-                if (!string.IsNullOrEmpty(roster.DayNotes)) camp.Add(Body(roster.DayNotes));
+                if (!string.IsNullOrEmpty(roster.DayNotes)) camp.Add(Body(NoteSay.Read(roster.DayNotes, null)));
                 if (roster.Memorials.Count > 0)
                 {
                     camp.Add(Body(Loc.T("camp.memorial")));
                     for (int i = 0; i < roster.Memorials.Count; i++) camp.Add(Body(SuccessionLedger.Card(roster.Memorials[i])));
                 }
+                int mates = 0;
+                foreach (var survivor in roster.Survivors) mates++;
+                var mateIds = new string[mates];
+                var mateActs = new string[mates];
+                var mateHere = new bool[mates];
+                int mate = 0;
+                foreach (var survivor in roster.Survivors)
+                {
+                    mateIds[mate] = survivor.id;
+                    mateHere[mate] = survivor.alive && !survivor.leader;
+                    mateActs[mate] = CampRoutine.Choose(survivor.task, survivor.hunger, survivor.thirst, survivor.morale, survivor.injury, survivor.fatigue);
+                    mate++;
+                }
                 foreach (var survivor in roster.Survivors)
                 {
                     string flag = survivor.leader ? "*" : survivor.alive ? "" : "x";
-                    string mood = ColonyDay.Mood(survivor.morale);
-                    string doing = CampRoutine.Choose(survivor.task, survivor.hunger, survivor.thirst, survivor.morale, survivor.injury);
+                    if (CampSelect.Instance != null && CampSelect.Instance.SurvivorId == survivor.id) flag = ">" + flag;
+                    string mood = ColonyDay.Mood(survivor.morale, survivor.trait, survivor.aside, survivor.mark);
+                    string doing = CampRoutine.Choose(survivor.task, survivor.hunger, survivor.thirst, survivor.morale, survivor.injury, survivor.fatigue);
+                    string host = YardVisit.Host(survivor.id, doing, survivor.kin, survivor.fatigue, mateIds, mateActs, mateHere);
+                    if (host.Length > 0) doing = "Visit";
                     string post = doing == survivor.task ? Loc.Task(survivor.task) : Loc.Task(survivor.task) + " → " + Loc.Task(doing);
+                    if (survivor.ownCall) post += " (" + Loc.Task(TaskPick.Auto) + ")";
                     string skills = Practice.Line(survivor.combat, survivor.medicine, survivor.engineering, survivor.cooking, survivor.scavenge, null);
                     string leads = Heir.Line(survivor.leadership, null);
-                    camp.Add(Body(flag + " " + survivor.displayName + " (" + Loc.Trait(survivor.trait) + ") " + post
+                    string wound = WoundCard.Line(survivor.injury, null);
+                    camp.Add(Body(flag + " " + survivor.displayName + " (" + Marks(survivor) + ") " + post
                         + "  " + Loc.Mood(mood)
+                        + (wound.Length > 0 ? "  " + wound : "")
                         + "  " + Loc.T("camp.food") + " " + Mathf.RoundToInt(survivor.hunger)
                         + " " + Loc.T("camp.water") + " " + Mathf.RoundToInt(survivor.thirst)
+                        + (survivor.fatigue > 0f ? "  " + Loc.T("camp.wear") + " " + Mathf.RoundToInt(survivor.fatigue) + (NeedsPressure.Tired(survivor.fatigue) ? " " + Loc.T("camp.tired") : "") : "")
                         + "  " + survivor.bond
                         + "  " + Loc.T("camp.opinion") + " " + survivor.opinion
+                        + Bonds(survivor.kin)
                         + (skills.Length > 0 ? "  " + skills : "")
                         + (leads.Length > 0 ? "  " + leads : "")
-                        + "  \"" + Loc.Bark(doing, survivor.morale) + "\""));
+                        + (LifeLine.Line(survivor.age, survivor.past, null).Length > 0 ? "  " + LifeLine.Line(survivor.age, survivor.past, null) : "")
+                        + "  \"" + Loc.Bark(doing, survivor.morale, survivor.fatigue) + "\""));
                     if (!survivor.alive) continue;
                     string id = survivor.id;
                     var row = new VisualElement();
@@ -798,8 +829,32 @@ namespace OutpostZero.UI
                     row.Add(Button(Loc.Task("Cook"), () => roster.Assign(id, "Cook")));
                     row.Add(Button(Loc.Task("Medic"), () => roster.Assign(id, "Medic")));
                     row.Add(Button(Loc.Task("Build"), () => roster.Assign(id, "Build")));
+                    row.Add(Button(Loc.Task(CraftQueue.Task), () => roster.Assign(id, CraftQueue.Task)));
                     row.Add(Button(Loc.Task("Clear"), () => roster.Assign(id, "Clear")));
-                    camp.Add(row);
+                    if (!survivor.leader) row.Add(Button(Loc.Task(TaskPick.Auto), () => roster.Assign(id, TaskPick.Auto)));
+                    if (CompanionKit.Fit(survivor.alive, survivor.leader, survivor.injury)) row.Add(Button(Loc.Task(CompanionKit.Task), () => roster.Assign(id, CompanionKit.Task)));
+                    if (survivor.injury > 0) row.Add(Button(Loc.Task("Quarantine"), () => roster.Assign(id, "Quarantine")));
+                    if (FeverChoice.Offered(survivor.alive, survivor.leader, survivor.injury)) row.Add(Button(Loc.T("camp.mercy"), () => roster.Release(id)));
+                    if (!survivor.leader) row.Add(Button(Loc.T("camp.gift"), () => roster.OfferMeal(id)));
+                    camp.Add(Lit(row, TutorialMark.Task));
+                }
+            }
+            var events = CampEventDirector.Instance;
+            if (events != null)
+            {
+                if (events.Latest.Length > 0) camp.Add(Body(Loc.T("event.dawn") + " " + events.Latest));
+                if (events.StrangerWaiting)
+                {
+                    var answer = new VisualElement();
+                    answer.style.flexDirection = FlexDirection.Row;
+                    answer.Add(Button(Loc.T("event.take"), () => events.TakeStranger()));
+                    answer.Add(Button(Loc.T("event.turn"), () => events.TurnAway()));
+                    camp.Add(answer);
+                }
+                if (events.GeneratorBroken)
+                {
+                    camp.Add(Body(CampEventDirector.RepairNeed(null)));
+                    camp.Add(Button(Loc.T("event.repair"), () => events.Repair()));
                 }
             }
             if (FactionTrade.Instance != null)
@@ -824,27 +879,33 @@ namespace OutpostZero.UI
             int walls = GridBuilder.Instance != null ? GridBuilder.Instance.BarricadeCount() : 0;
             int difficulty = WorldMapService.Instance != null ? WorldMapService.Instance.Difficulty : 2;
             bool raidLikely = RaidCall.Likely(raidDay, raidSecurity, endlessNights, raidShots, generatorRunning, walls, difficulty);
-            camp.Add(Body((raidLikely ? Loc.T("camp.raid_yes") : Loc.T("camp.raid_no")) + "  " + Loc.T("camp.shots") + " " + raidShots));
+            int perimeter = GridBuilder.Instance != null ? GridBuilder.Instance.PerimeterScore : 0;
+            int reinforced = GridBuilder.Instance != null ? GridBuilder.Instance.Reinforced() : 0;
+            camp.Add(Body((raidLikely ? Loc.T("camp.raid_yes") : Loc.T("camp.raid_no")) + "  " + Loc.T("camp.shots") + " " + raidShots + "  " + Loc.T("camp.perimeter") + " " + perimeter + "%" + (reinforced > 0 ? "  " + Loc.T("camp.reinforced") + " " + reinforced : "")));
             camp.Add(Button(Loc.T("camp.endure"), () => NightRaidController.Instance?.Begin()));
             if (NightRaidController.Instance != null && NightRaidController.Instance.Warning)
                 camp.Add(Body(Loc.T("camp.warn") + " " + Mathf.CeilToInt(NightRaidController.Instance.WarningLeft)));
             camp.Add(Body(Loc.T("camp.build") + " " + (GridBuilder.Instance != null ? GridBuilder.Instance.Selected + "  " + GridBuilder.Instance.Facing : "")));
-            var build = new VisualElement { style = { flexDirection = FlexDirection.Row } };
-            build.Add(Button(Loc.T("camp.barricade"), () => GridBuilder.Instance?.Select(ModuleKind.Barricade)));
-            build.Add(Button(Loc.T("camp.cot"), () => GridBuilder.Instance?.Select(ModuleKind.Cot)));
-            build.Add(Button(Loc.T("camp.water"), () => GridBuilder.Instance?.Select(ModuleKind.Water)));
-            build.Add(Button(Loc.T("camp.tower"), () => GridBuilder.Instance?.Select(ModuleKind.Watchtower)));
-            build.Add(Button(Loc.T("camp.generator"), () => GridBuilder.Instance?.Select(ModuleKind.Generator)));
-            build.Add(Button(Loc.T("camp.bench"), () => GridBuilder.Instance?.Select(ModuleKind.Workbench)));
-            build.Add(Button(Loc.T("camp.post"), () => GridBuilder.Instance?.Select(ModuleKind.TradingPost)));
-            build.Add(Button(Loc.T("camp.farm"), () => GridBuilder.Instance?.Select(ModuleKind.Farm)));
-            build.Add(Button(Loc.T("camp.purifier"), () => GridBuilder.Instance?.Select(ModuleKind.Purifier)));
-            build.Add(Button(Loc.T("camp.turret"), () => GridBuilder.Instance?.Select(ModuleKind.Turret)));
-            build.Add(Button(Loc.T("camp.spikes"), () => GridBuilder.Instance?.Select(ModuleKind.Spikes)));
-            build.Add(Button(Loc.T("camp.oil"), () => GridBuilder.Instance?.Select(ModuleKind.Oil)));
-            build.Add(Button(Loc.T("camp.crate"), () => GridBuilder.Instance?.Select(ModuleKind.Crate)));
-            build.Add(Button(Loc.T("camp.lamp"), () => GridBuilder.Instance?.Select(ModuleKind.Lamp)));
-            build.Add(Button(Loc.T("camp.fire"), () => GridBuilder.Instance?.Select(ModuleKind.Campfire)));
+            if (TutorialDirector.Instance != null && TutorialDirector.Instance.CampMark == TutorialMark.Barricade) buildTab = BuildMenu.Tab.Defence;
+            var tabs = new VisualElement { style = { flexDirection = FlexDirection.Row } };
+            for (int t = 0; t < BuildMenu.TabCount; t++)
+            {
+                var tab = (BuildMenu.Tab)t;
+                var tabButton = Button(Loc.T(BuildMenu.TabKey(tab)), () => buildTab = tab);
+                if (tab == buildTab) tabButton.style.backgroundColor = new Color(0.32f, 0.3f, 0.22f);
+                tabs.Add(tabButton);
+            }
+            camp.Add(tabs);
+            var build = new VisualElement { style = { flexDirection = FlexDirection.Row, flexWrap = Wrap.Wrap } };
+            foreach (var kind in BuildMenu.Kinds(buildTab))
+            {
+                var pick = kind;
+                var bill = GridBuilder.Bill(kind);
+                var moduleButton = Button(bill.Button(Loc.T(BuildMenu.LabelKey(kind))), () => GridBuilder.Instance?.Select(pick));
+                if (!BuildMenu.Affordable(bill, ColonyStorage.Instance)) moduleButton.style.color = new Color(0.55f, 0.5f, 0.48f);
+                if (GridBuilder.Instance != null && GridBuilder.Instance.Selected == kind) moduleButton.style.backgroundColor = new Color(0.25f, 0.32f, 0.22f);
+                build.Add(kind == ModuleKind.Barricade ? Lit(moduleButton, TutorialMark.Barricade) : moduleButton);
+            }
             if (GridBuilder.Instance != null)
             {
                 int sprout = -1;
@@ -862,7 +923,7 @@ namespace OutpostZero.UI
                 foreach (var module in GridBuilder.Instance.Placed)
                 {
                     if (!MendBoard.Needs(module.site, module.integrity)) continue;
-                    camp.Add(Body(Loc.T("camp.mend") + " " + module.kind + " " + module.integrity));
+                    camp.Add(Body(Loc.T("camp.mend_module") + " " + module.kind + " " + module.integrity));
                 }
             }
             camp.Add(build);
@@ -884,53 +945,153 @@ namespace OutpostZero.UI
             if (carriedTier >= 2) camp.Add(Body(Loc.T("camp.pack_t2")));
             else if (bench && benchTier >= 2)
             {
-                camp.Add(Button(Loc.T("camp.pack_raise") + "  " + PackOps.RaiseScrap + "  " + Loc.T("camp.cloth") + " " + PackOps.RaiseCloth + "  " + Loc.T("camp.tape") + " " + PackOps.RaiseTape, () =>
+                camp.Add(Button(Loc.T("camp.pack_raise") + "  " + Loc.T("camp.cloth") + " " + PackOps.RaiseCloth + "  " + Loc.T("camp.tape") + " " + PackOps.RaiseTape, () =>
                 {
                     int tierNow = GridBuilder.Instance != null ? GridBuilder.Instance.BenchTier() : 1;
                     PlayerRegistry.Current?.GetComponent<PlayerInventory>()?.TryRaisePack(tierNow, ColonyStorage.Instance);
                 }));
             }
             if (bench && benchTier >= 2) camp.Add(Body(Loc.T("camp.bench_t2")));
+            var heldGun = PlayerRegistry.Current != null ? PlayerRegistry.Current.ActiveWeapon as FirearmWeapon : null;
+            string heldId = heldGun != null ? heldGun.CardId : "";
+            int stripScrap = StripYield.Scrap(heldId);
+            int stripCount = PlayerRegistry.Current != null ? PlayerRegistry.Current.WeaponCount : 0;
+            bool stripMelee = PlayerRegistry.Current != null && PlayerRegistry.Current.ActiveWeapon != null && PlayerRegistry.Current.ActiveWeapon.Type == WeaponType.Melee;
+            if (StripYield.Can(stripCount, stripMelee, bench) && stripScrap > 0)
+            {
+                camp.Add(Button(Loc.T("camp.strip") + "  " + stripScrap, () =>
+                {
+                    var who = PlayerRegistry.Current;
+                    var gun = who != null ? who.ActiveWeapon as FirearmWeapon : null;
+                    string card = gun != null ? gun.CardId : "";
+                    int due = StripYield.Scrap(card);
+                    int chem = StripYield.Chemicals(card);
+                    var bin = ColonyStorage.Instance;
+                    if (who == null || bin == null || due <= 0 || !StripYield.RoomFor(bin.Used, bin.Room, due, chem))
+                    {
+                        GameplayFeedback.Toast(Loc.T(due > 0 ? "camp.strip_full" : "camp.strip_none"));
+                        return;
+                    }
+                    if (!who.TryStrip())
+                    {
+                        GameplayFeedback.Toast(Loc.T("camp.strip_none"));
+                        return;
+                    }
+                    bin.AddScrap(due);
+                    if (chem > 0) bin.AddChemicals(chem);
+                    GameplayFeedback.Toast(Loc.T("camp.strip_ok"));
+                }));
+            }
             else if (bench && GridBuilder.Instance.BenchOrdered()) camp.Add(Body(Loc.T("camp.bench_raise") + " " + GridBuilder.Instance.BenchWork() + "/" + CraftGate.Hours));
             else if (bench) camp.Add(Button(Loc.T("camp.bench_raise") + "  " + CraftGate.UpgradeScrap, () => GridBuilder.Instance.OrderBench()));
+            var benchOrders = CraftingBench.Instance != null ? CraftingBench.Instance.Orders : null;
+            if (benchOrders != null && benchOrders.Count > 0)
+                camp.Add(Body(Loc.T("craft.orders") + " " + CraftQueue.Line(benchOrders, order => Loc.Recipe(order, order))));
             foreach (var recipe in CraftingBench.Recipes)
             {
                 string id = recipe.Id;
                 if (!CraftGate.Open(id, benchTier, prints)) continue;
                 if (!CraftBill.TryOf(id, out var bill)) continue;
                 int due = CraftingBench.Priced(bill.Scrap, bench, benchTier);
-                camp.Add(Button(CraftBill.Line(Loc.Recipe(id, recipe.Label), due, bill.Cloth, bill.Chemicals, bill.Tape), () => CraftingBench.Instance?.Craft(id)));
+                string line = CraftSay.Line(Loc.Recipe(id, recipe.Label), due, bill.Cloth, bill.Chemicals, bill.Tape, null);
+                if (bill.Raw > 0) line += "   " + Loc.T("camp.raw") + " " + bill.Raw;
+                if (bill.Level > 0) line += "   " + Loc.Task(bill.Know) + " " + bill.Level;
+                var craft = Button(line, () => CraftingBench.Instance?.Craft(id));
+                if (!CraftBill.Knows(bill.Know, bill.Level, CraftingBench.BestSkill(bill.Know))) craft.style.color = new Color(0.55f, 0.5f, 0.48f);
+                var recipeRow = new VisualElement();
+                recipeRow.style.flexDirection = FlexDirection.Row;
+                recipeRow.Add(id == TutorialMark.Bandage ? Lit(craft, TutorialMark.Bandage) : craft);
+                if (bench && CraftQueue.Orderable(id)) recipeRow.Add(Button(Loc.T("craft.queue"), () => CraftingBench.Instance?.Order(id)));
+                camp.Add(recipeRow);
+            }
+            if (bench && leaderPack != null)
+            {
+                foreach (var carried in leaderPack.Items)
+                {
+                    if (carried == null || carried.Quantity <= 0) continue;
+                    if (!CraftBill.Dismantle(carried.ItemId, out int bits, out int rags, out int chems, out int tapes)) continue;
+                    string itemId = carried.ItemId;
+                    string yield = CraftSay.Line(Loc.T("camp.dismantle") + " " + Loc.Recipe(itemId, carried.ItemName) + " x" + carried.Quantity, bits, rags, chems, tapes, null);
+                    camp.Add(Button(yield, () => CraftingBench.Instance?.Dismantle(itemId)));
+                }
             }
             var map = WorldMapService.Instance;
             if (map != null)
             {
                 camp.Add(Body(Loc.T("camp.radio") + " " + CampaignBoard.PartCount(map.Parts) + "/3  " + Loc.Difficulty(map.Difficulty) + "  " + Loc.T("camp.seed") + " " + map.WorldSeed));
                 camp.Add(Button(Loc.T("camp.reroll"), () => map.RerollSeed()));
+                var works = GridBuilder.Instance;
+                if (works != null && works.HasKind("Generator") && !map.Endless && !map.CampaignWon)
+                {
+                    if (works.GeneratorTier() >= 2) camp.Add(Body(Loc.T("camp.gen_t2")));
+                    else if (works.GeneratorOrdered()) camp.Add(Body(Loc.T("camp.gen_raise") + " " + works.GeneratorWork() + "/" + CraftGate.Hours));
+                    else camp.Add(Button(CraftSay.Line(Loc.T("camp.gen_raise"), GeneratorTune.Scrap, 0, GeneratorTune.Chemicals, GeneratorTune.Tape, null), () => GridBuilder.Instance?.OrderGenerator()));
+                }
                 if (map.Endless) camp.Add(Body(Loc.T("camp.broadcast_holds")));
                 else if (map.CampaignWon) camp.Add(Body(Loc.T("camp.tower_air")));
                 else if (map.ReadyToBroadcast) camp.Add(Button(Loc.T("camp.broadcast"), () => NightRaidController.Instance?.BeginBroadcast()));
                 else camp.Add(Body(Loc.T("camp.tower_needs")));
                 camp.Add(Body(Loc.T("camp.district")));
+                string[] charted = ClearedDistricts(map);
+                int day = WorldClock.Instance != null ? WorldClock.Instance.Day : 1;
+                int hidden = MapVeil.Hidden(charted);
                 foreach (var district in map.Districts)
                 {
+                    if (!MapVeil.Seen(district.id, charted)) continue;
+                    string cast = SkyCast(district.id, charted, day) + SiteCast(district.id, charted) + SearchedCast(map, district.id);
                     if (district.cleared && !map.Endless)
                     {
                         string part = CampaignBoard.PartFor(district.id);
-                        camp.Add(Body(Loc.District(district.id) + " — " + Loc.T("camp.clear") + (string.IsNullOrEmpty(part) ? "" : "  " + Loc.T("camp.part"))));
+                        camp.Add(Body(Loc.District(district.id) + " — " + Loc.T("camp.clear") + (string.IsNullOrEmpty(part) ? "" : "  " + Loc.T("camp.part")) + cast));
                         continue;
                     }
                     string id = district.id;
-                    if (!CampaignBoard.Reachable(id, ClearedDistricts(map)))
+                    if (!CampaignBoard.Reachable(id, charted))
                     {
-                        camp.Add(Body(Loc.District(id) + " — " + Loc.T("camp.closed")));
+                        camp.Add(Body(Loc.District(id) + " — " + Loc.T("camp.closed") + cast));
                         continue;
                     }
                     string mark = map.Current != null && map.Current.id == id ? "> " : "";
                     string hours = CampaignBoard.TravelHours(id).ToString("0");
-                    camp.Add(Button(mark + Loc.District(id) + "  " + hours + "h", () => map.Select(id)));
+                    string burn = FuelTank.Label(FuelTank.TripCost(CampaignBoard.TravelHours(id)));
+                    camp.Add(Button(mark + Loc.District(id) + "  " + hours + "h  " + Loc.T("camp.fuel") + " " + burn + cast, () => map.Select(id)));
                 }
+                if (hidden > 0) camp.Add(Body(Loc.T("camp.fog") + "  " + hidden));
             }
-            camp.Add(Button(Loc.T("camp.leave"), () => Go(FlowStep.Expedition, () => GameManager.Instance.BeginExpedition())));
+            camp.Add(Lit(Button(Loc.T("camp.leave"), () => Go(FlowStep.Expedition)), TutorialMark.Leave));
+            ShadeCamp();
+        }
+
+        private T Lit<T>(T element, string tag) where T : VisualElement
+        {
+            if (!TutorialMark.Lit(campMark, tag)) return element;
+            var ring = new Color(0.95f, 0.72f, 0.3f);
+            element.style.borderTopWidth = TutorialMark.Ring;
+            element.style.borderBottomWidth = TutorialMark.Ring;
+            element.style.borderLeftWidth = TutorialMark.Ring;
+            element.style.borderRightWidth = TutorialMark.Ring;
+            element.style.borderTopColor = ring;
+            element.style.borderBottomColor = ring;
+            element.style.borderLeftColor = ring;
+            element.style.borderRightColor = ring;
+            campLit.Add(element);
+            return element;
+        }
+
+        private void ShadeCamp()
+        {
+            var holders = new HashSet<VisualElement>();
+            foreach (var lit in campLit)
+            {
+                var node = lit;
+                while (node != null && node.parent != camp) node = node.parent;
+                if (node != null) holders.Add(node);
+            }
+            foreach (var child in camp.Children())
+                child.style.opacity = TutorialMark.Opacity(campLit.Count > 0, holders.Contains(child), child == guideBox);
+            if (campLit.Count == 0 || !InputGlyphs.UsingPad) return;
+            var first = campLit[0] as Button ?? campLit[0].Q<Button>();
+            first?.Focus();
         }
 
         private void RebuildPack(bool open)
@@ -951,9 +1112,33 @@ namespace OutpostZero.UI
             fill.style.width = Length.Percent(ratio * 100f);
             fill.style.height = 8;
             bool heavy = PackOps.Heavy(inventory.CurrentWeight, inventory.MaxWeightCapacity);
-            fill.style.backgroundColor = heavy ? new Color(0.75f, 0.2f, 0.16f) : new Color(0.35f, 0.62f, 0.38f);
+            int vision = SettingsService.Instance != null ? SettingsService.Instance.ColorblindMode : 0;
+            fill.style.backgroundColor = heavy ? HudPalette.Health(vision) : HudPalette.Safe(vision);
             track.Add(fill);
             pack.Add(track);
+            var gear = inventory.GetComponent<PlayerController>();
+            if (gear != null)
+            {
+                pack.Add(Body(Loc.T("pack.gear")));
+                int count = Mathf.Min(gear.SlotCount, WeaponWheel.Slots);
+                for (int i = 0; i < count; i++)
+                {
+                    int slot = i;
+                    var slotRow = new VisualElement { style = { flexDirection = FlexDirection.Row, alignItems = Align.Center } };
+                    var slotLabel = Body();
+                    slotLabel.text = gear.SlotLine(slot);
+                    slotLabel.style.flexGrow = 1;
+                    slotRow.Add(slotLabel);
+                    if (slot != gear.ActiveSlot && gear.WeaponAt(slot) != null) slotRow.Add(Button(Loc.T("pack.equip"), () => gear.SelectWeapon(slot)));
+                    if (slot > 0) slotRow.Add(Button(Loc.T("pack.up"), () => gear.SwapSlots(slot, slot - 1)));
+                    pack.Add(slotRow);
+                }
+                var slots = Body();
+                slots.style.whiteSpace = WhiteSpace.PreWrap;
+                slots.text = Loc.T("camp.belt") + " " + inventory.BeltLine + "\n" + Loc.T("pack.tier") + " " + inventory.PackTier;
+                pack.Add(slots);
+            }
+            pack.Add(Button(Loc.T("pack.filter") + ": " + Loc.T(PackFilter.Key(packFilter)), () => packFilter = PackFilter.Next(packFilter)));
             if (inventory.MedicalKits > 0)
             {
                 var medRow = new VisualElement { style = { flexDirection = FlexDirection.Row } };
@@ -961,8 +1146,17 @@ namespace OutpostZero.UI
                 medLabel.text = Loc.Item("medkit") + " x" + inventory.MedicalKits;
                 medLabel.style.flexGrow = 1;
                 medRow.Add(medLabel);
-                medRow.Add(Button(Loc.T("camp.use"), () => inventory.UseMedkit()));
+                medRow.Add(Button(Loc.T("camp.use"), () =>
+                {
+                    if (inventory.UseMedkit())
+                        GameplayFeedback.Toast(WoundEase.Note(FieldHand.Dose(inventory.LastDoseSkill, null), inventory.LastEase, null));
+                }));
                 medRow.Add(Button(Loc.T("camp.info"), () => Inspect("medkit")));
+                if (GameManager.Instance != null && GameManager.Instance.CurrentState == GameState.CampManagement && ColonyStorage.Instance != null)
+                    medRow.Add(Button(Loc.T("pack.stock"), () =>
+                    {
+                        if (inventory.TrySpendMedical(1)) ColonyStorage.Instance?.AddMeds(1);
+                    }));
                 string medMark = inventory.BeltMark("medkit");
                 medRow.Add(Button(string.IsNullOrEmpty(medMark) ? Loc.T("camp.belt") : Loc.T("camp.belt") + " " + medMark, () => inventory.ToggleBelt("medkit")));
                 pack.Add(medRow);
@@ -977,12 +1171,19 @@ namespace OutpostZero.UI
                 scrapRow.Add(Button(Loc.T("camp.info"), () => Inspect("scrap")));
                 pack.Add(scrapRow);
             }
+            var crate = LootContainer.Open;
             var scroll = new ScrollView();
             scroll.style.height = 220;
             foreach (var item in inventory.Items)
             {
+                if (!PackFilter.Shows(packFilter, item.Category)) continue;
                 string id = item.ItemId;
-                var row = new VisualElement { style = { flexDirection = FlexDirection.Row } };
+                var row = new VisualElement { style = { flexDirection = FlexDirection.Row, alignItems = Align.Center } };
+                var icon = ItemDatabase.Icon(id);
+                if (icon != null)
+                {
+                    row.Add(Picture(icon, 32));
+                }
                 var label = Body();
                 label.text = Loc.Item(id) + " x" + item.Quantity;
                 label.style.flexGrow = 1;
@@ -996,10 +1197,10 @@ namespace OutpostZero.UI
                     string mark = inventory.BeltMark(id);
                     row.Add(Button(string.IsNullOrEmpty(mark) ? Loc.T("camp.belt") : Loc.T("camp.belt") + " " + mark, () => inventory.ToggleBelt(id)));
                 }
+                if (crate != null && crate.HeldCount > 0) row.Add(Button(Loc.T("pack.stow"), () => crate.Stow(id, inventory)));
                 scroll.Add(row);
             }
             pack.Add(scroll);
-            var crate = LootContainer.Open;
             if (crate != null && crate.HeldCount > 0)
             {
                 pack.Add(Body(Loc.T("camp.container")));
@@ -1025,38 +1226,9 @@ namespace OutpostZero.UI
             inspected = inspected == id ? "" : id ?? "";
         }
 
-        private void DrawPopups()
-        {
-            var feedback = HitFeedback.Instance;
-            if (feedback == null || document.rootVisualElement.panel == null || Camera.main == null)
-            {
-                damageLayer.Clear();
-                return;
-            }
-            feedback.PrunePopups();
-            damageLayer.Clear();
-            int mode = SettingsService.Instance != null ? SettingsService.Instance.ColorblindMode : 0;
-            foreach (var popup in feedback.Popups)
-            {
-                Vector3 screen = Camera.main.WorldToScreenPoint(popup.World);
-                if (screen.z < 0f) continue;
-                Vector2 panelPos = RuntimePanelUtils.CameraTransformWorldToPanel(document.rootVisualElement.panel, popup.World, Camera.main);
-                var label = new Label(mode == 2 && popup.Crit ? popup.Text + " !" : popup.Text);
-                label.pickingMode = PickingMode.Ignore;
-                label.style.position = Position.Absolute;
-                label.style.left = panelPos.x;
-                label.style.top = panelPos.y;
-                label.style.color = popup.Crit
-                    ? (mode == 1 ? new Color(0.3f, 0.7f, 1f) : new Color(1f, 0.85f, 0.2f))
-                    : Color.white;
-                label.style.unityFontStyleAndWeight = FontStyle.Bold;
-                damageLayer.Add(label);
-            }
-        }
-
         private void DrawSlots(VisualElement menu)
         {
-            menu.Add(Title("SAVES"));
+            menu.Add(Title(MenuLine.Title(null)));
             var cards = SaveSystem.Instance != null ? SaveSystem.Instance.Cards() : System.Array.Empty<SaveSlots.Card>();
             for (int i = 0; i < SaveSlots.ManualCount; i++)
             {
@@ -1066,12 +1238,11 @@ namespace OutpostZero.UI
                     if (cards[c].Slot == i) card = cards[c];
                 }
                 int index = i;
-                string label = card.Occupied
-                    ? "Slot " + (i + 1) + "  day " + card.Day + "  " + card.Leader
-                    : "Slot " + (i + 1) + "  empty";
-                menu.Add(Button(label, () =>
+                string label = MenuLine.Slot(i + 1, card.Day, card.Leader, card.Occupied, null);
+                if (card.Occupied) label += "\n" + SaveStamp.Line(card.Playtime, card.SavedAt, null);
+                menu.Add(SlotRow(card, Button(label, () =>
                 {
-                    slotsOpen = false;
+                    screens.Clear();
                     if (card.Occupied)
                     {
                         Go(FlowStep.Sanctuary, () =>
@@ -1085,7 +1256,7 @@ namespace OutpostZero.UI
                         SaveSystem.Instance?.UseSlot(index);
                         Go(FlowStep.Sanctuary, () => GameManager.Instance.BeginNewOutpost());
                     }
-                }));
+                })));
             }
             SaveSlots.Card auto = default;
             for (int c = 0; c < cards.Length; c++)
@@ -1094,17 +1265,79 @@ namespace OutpostZero.UI
             }
             if (auto.Occupied)
             {
-                menu.Add(Button("Autosave  day " + auto.Day + "  " + auto.Leader, () =>
+                string autoLabel = MenuLine.Auto(auto.Day, auto.Leader, null) + "\n" + SaveStamp.Line(auto.Playtime, auto.SavedAt, null);
+                menu.Add(SlotRow(auto, Button(autoLabel, () =>
                 {
-                    slotsOpen = false;
+                    screens.Clear();
                     Go(FlowStep.Sanctuary, () =>
                     {
                         if (SaveSystem.Instance == null || !SaveSystem.Instance.LoadSlot(SaveSlots.AutoSlot))
                             GameManager.Instance.SetState(GameState.MainMenu);
                     });
-                }));
+                })));
             }
-            menu.Add(Button("Back", () => slotsOpen = false));
+            menu.Add(Button(Loc.T("menu.back"), Close));
+        }
+
+        private readonly Dictionary<int, KeyValuePair<string, Texture2D>> slotThumbs = new Dictionary<int, KeyValuePair<string, Texture2D>>();
+
+        /// <summary>A slot button with its save's picture on the left, or an empty frame of the same size.</summary>
+        private VisualElement SlotRow(SaveSlots.Card card, Button button)
+        {
+            var row = new VisualElement();
+            row.style.flexDirection = FlexDirection.Row;
+            row.style.alignItems = Align.Center;
+            var picture = Picture(SlotThumb(card), SlotThumbSide);
+            picture.style.backgroundColor = new Color(0.08f, 0.08f, 0.09f, 0.8f);
+            row.Add(picture);
+            button.style.whiteSpace = WhiteSpace.PreWrap;
+            button.style.flexGrow = 1;
+            row.Add(button);
+            return row;
+        }
+
+        private const float SlotThumbSide = 64f;
+
+        private Texture2D SlotThumb(SaveSlots.Card card)
+        {
+            string key = card.Occupied ? card.Thumbnail ?? "" : "";
+            if (slotThumbs.TryGetValue(card.Slot, out var held))
+            {
+                if (held.Key == key) return held.Value;
+                if (held.Value != null) Destroy(held.Value);
+            }
+            var texture = SaveThumb.Read(key);
+            slotThumbs[card.Slot] = new KeyValuePair<string, Texture2D>(key, texture);
+            return texture;
+        }
+
+        private static string StormNote(CampServices services)
+        {
+            if (services == null || !services.GeneratorOnline) return "";
+            var sky = WeatherController.Instance;
+            if (sky == null || sky.Kind != WeatherKind.Storm) return "";
+            return "  " + Loc.T("tank.storm");
+        }
+
+        private static string SkyCast(string id, string[] charted, int day)
+        {
+            string sky = MapVeil.Forecast(id, charted, day);
+            if (string.IsNullOrEmpty(sky)) return "";
+            return "  " + Loc.T("sky." + sky);
+        }
+
+        private static string SiteCast(string id, string[] charted)
+        {
+            string site = MapVeil.Site(id, charted);
+            if (string.IsNullOrEmpty(site)) return "";
+            return "  " + Loc.T("poi." + site);
+        }
+
+        private static string SearchedCast(WorldMapService map, string id)
+        {
+            int searched = StreetLedger.Count(map.Street, id);
+            if (searched <= 0) return "";
+            return "  " + searched + " " + Loc.T("camp.searched");
         }
 
         private static string[] ClearedDistricts(WorldMapService map)
@@ -1122,58 +1355,132 @@ namespace OutpostZero.UI
             return ids;
         }
 
-        private static string CampSignature()
+        private const int Closed = int.MinValue;
+
+        private int CampKey()
         {
-            var builder = new StringBuilder();
-            builder.Append(SettingsService.Instance != null ? SettingsService.Instance.Language : "en").Append('|');
-            if (WorldClock.Instance != null) builder.Append(WorldClock.Instance.Day);
-            if (ColonyStorage.Instance != null)
+            var key = new UiKey();
+            key.Add(SettingsService.Instance != null ? SettingsService.Instance.Language : "en");
+            if (TutorialDirector.Instance != null)
             {
-                builder.Append(ColonyStorage.Instance.Scrap).Append(ColonyStorage.Instance.Food).Append(ColonyStorage.Instance.Water).Append(ColonyStorage.Instance.Security);
-                builder.Append(ColonyStorage.Instance.Cloth).Append(ColonyStorage.Instance.Chemicals).Append(ColonyStorage.Instance.Tape).Append(ColonyStorage.Instance.Raw);
+                key.Add(TutorialDirector.Instance.CampIndex);
+                key.Add(InputGlyphs.UsingPad);
             }
-            if (SurvivorRoster.Instance != null)
+            if (WorldClock.Instance != null) key.Add(WorldClock.Instance.Day);
+            if (CampSelect.Instance != null)
             {
-                foreach (var survivor in SurvivorRoster.Instance.Survivors)
+                key.Add(CampSelect.Instance.Version);
+                key.Add(CampSelect.Instance.Card(null));
+            }
+            var storage = ColonyStorage.Instance;
+            if (storage != null)
+            {
+                key.Add(storage.Scrap);
+                key.Add((int)buildTab);
+                if (GridBuilder.Instance != null)
                 {
-                    builder.Append(survivor.id).Append(survivor.task).Append(survivor.alive).Append(survivor.leader);
-                    builder.Append(Mathf.RoundToInt(survivor.morale)).Append(Mathf.RoundToInt(survivor.hunger)).Append(survivor.opinion).Append(survivor.injury);
-                    builder.Append(survivor.leadership).Append(survivor.combat).Append(survivor.medicine).Append(survivor.engineering).Append(survivor.cooking).Append(survivor.scavenge);
+                    key.Add((int)GridBuilder.Instance.Selected);
+                    key.Add(GridBuilder.Instance.PerimeterScore);
+                    key.Add(GridBuilder.Instance.PowerUsed);
+                    key.Add(GridBuilder.Instance.Reinforced());
+                    key.Add(GridBuilder.Instance.BenchWork());
+                    key.Add(GridBuilder.Instance.GeneratorWork());
+                    key.Add(GridBuilder.Instance.GeneratorTier());
                 }
-                builder.Append(SurvivorRoster.Instance.DayNotes);
-                builder.Append(SurvivorRoster.Instance.PackMemorials());
+                key.Add(storage.Food);
+                key.Add(storage.Water);
+                key.Add(storage.Security);
+                key.Add(storage.Cloth);
+                key.Add(storage.Chemicals);
+                key.Add(storage.Tape);
+                key.Add(storage.Raw);
+                key.Add(storage.Rounds);
+                key.Add(storage.Cells);
+                key.Add(storage.Meds);
             }
-            if (GridBuilder.Instance != null)
+            var roster = SurvivorRoster.Instance;
+            if (roster != null)
             {
-                builder.Append(GridBuilder.Instance.Selected).Append(GridBuilder.Instance.Facing);
-                foreach (var module in GridBuilder.Instance.Placed) builder.Append(module.kind).Append(module.age).Append(module.integrity).Append(module.site).Append(module.hours);
+                var survivors = roster.Survivors;
+                for (int i = 0; i < survivors.Count; i++)
+                {
+                    var survivor = survivors[i];
+                    key.Add(survivor.id);
+                    key.Add(survivor.task);
+                    key.Add(survivor.alive);
+                    key.Add(survivor.leader);
+                    key.Add(Mathf.RoundToInt(survivor.morale));
+                    key.Add(Mathf.RoundToInt(survivor.hunger));
+                    key.Add(survivor.opinion);
+                    key.Add(survivor.injury);
+                    key.Add(survivor.leadership);
+                    key.Add(survivor.ownCall);
+                    key.Add(survivor.combat);
+                    key.Add(survivor.medicine);
+                    key.Add(survivor.engineering);
+                    key.Add(survivor.cooking);
+                    key.Add(survivor.scavenge);
+                }
+                key.Add(roster.DayNotes);
+                var memorials = roster.Memorials;
+                key.Add(memorials.Count);
+                for (int i = 0; i < memorials.Count; i++) key.Add(memorials[i] != null ? memorials[i].name : null);
             }
-            if (CampServices.Instance != null) builder.Append(CampServices.Instance.GeneratorOnline);
-            if (WorldMapService.Instance != null && WorldMapService.Instance.Current != null)
+            var grid = GridBuilder.Instance;
+            if (grid != null)
             {
-                builder.Append(WorldMapService.Instance.Current.id);
-                builder.Append(WorldMapService.Instance.Parts);
-                builder.Append(WorldMapService.Instance.BroadcastWon);
-                builder.Append(WorldMapService.Instance.ClearedCount);
-                builder.Append(WorldMapService.Instance.WorldSeed);
+                key.Add((int)grid.Selected);
+                key.Add(grid.Facing);
+                var placed = grid.Placed;
+                for (int i = 0; i < placed.Count; i++)
+                {
+                    var module = placed[i];
+                    key.Add(module.kind);
+                    key.Add(module.age);
+                    key.Add(module.integrity);
+                    key.Add(module.site);
+                    key.Add(module.hours);
+                }
             }
-            if (FactionTrade.Instance != null) builder.Append(FactionTrade.Instance.Signature);
-            return builder.ToString();
+            if (CampServices.Instance != null) key.Add(CampServices.Instance.GeneratorOnline);
+            var map = WorldMapService.Instance;
+            if (map != null && map.Current != null)
+            {
+                key.Add(map.Current.id);
+                key.Add(map.Parts);
+                key.Add(map.BroadcastWon);
+                key.Add(map.ClearedCount);
+                key.Add(map.WorldSeed);
+                key.Add(map.Street);
+            }
+            if (FactionTrade.Instance != null) key.Add(FactionTrade.Instance.Key);
+            if (CampEventDirector.Instance != null) key.Add(CampEventDirector.Instance.Log.Pack());
+            if (CraftingBench.Instance != null) key.Add(CraftingBench.Instance.PackedOrders);
+            return key.Value;
         }
 
-        private static string PackSignature()
+        private int PackKey()
         {
             var inventory = PlayerRegistry.Current != null ? PlayerRegistry.Current.GetComponent<PlayerInventory>() : null;
-            if (inventory == null) return "";
-            var builder = new StringBuilder();
-            builder.Append(SettingsService.Instance != null ? SettingsService.Instance.Language : "en").Append('|');
-            foreach (var item in inventory.Items) builder.Append(item.ItemId).Append(item.Quantity);
-            builder.Append(inventory.MedicalKits);
-            builder.Append(inventory.ScrapCount);
-            builder.Append(Mathf.RoundToInt(inventory.CurrentWeight * 10f));
-            if (LootContainer.Open != null) builder.Append(LootContainer.Open.Contents);
-            builder.Append(inventory.BeltLine);
-            return builder.ToString();
+            var key = new UiKey();
+            key.Add(inspected);
+            key.Add(packFilter);
+            if (inventory == null) return key.Value;
+            key.Add(SettingsService.Instance != null ? SettingsService.Instance.Language : "en");
+            var items = inventory.Items;
+            for (int i = 0; i < items.Count; i++)
+            {
+                key.Add(items[i].ItemId);
+                key.Add(items[i].Quantity);
+            }
+            key.Add(inventory.MedicalKits);
+            key.Add(inventory.ScrapCount);
+            key.Add(Mathf.RoundToInt(inventory.CurrentWeight * 10f));
+            if (LootContainer.Open != null) key.Add(LootContainer.Open.Contents);
+            key.Add(inventory.BeltLine);
+            var body = inventory.GetComponent<PlayerController>();
+            if (body != null) key.Add(body.GearLine());
+            return key.Value;
         }
 
         private static VisualElement Overlay()
@@ -1192,21 +1499,6 @@ namespace OutpostZero.UI
             return element;
         }
 
-        private static VisualElement Column(float left, float top, float width)
-        {
-            var element = new VisualElement();
-            element.pickingMode = PickingMode.Ignore;
-            element.style.position = Position.Absolute;
-            element.style.left = left;
-            element.style.top = top;
-            element.style.width = width;
-            element.style.backgroundColor = new Color(0.05f, 0.05f, 0.06f, 0.72f);
-            element.style.paddingTop = 8;
-            element.style.paddingLeft = 8;
-            element.style.paddingBottom = 8;
-            return element;
-        }
-
         private static Label Title(string text)
         {
             var label = Body();
@@ -1215,6 +1507,17 @@ namespace OutpostZero.UI
             label.style.fontSize = 18;
             label.style.marginBottom = 8;
             return label;
+        }
+
+        private static VisualElement Picture(Texture2D icon, float side)
+        {
+            var picture = new VisualElement();
+            picture.style.width = side;
+            picture.style.height = side;
+            picture.style.marginRight = 6;
+            picture.style.flexShrink = 0;
+            picture.style.backgroundImage = new StyleBackground(icon);
+            return picture;
         }
 
         private static Label Body(string text)
@@ -1231,16 +1534,6 @@ namespace OutpostZero.UI
             label.style.whiteSpace = WhiteSpace.Normal;
             label.style.marginBottom = 4;
             return label;
-        }
-
-        private static VisualElement Bar()
-        {
-            var bar = new VisualElement();
-            bar.style.height = 8;
-            bar.style.width = Length.Percent(40);
-            bar.style.backgroundColor = new Color(0.7f, 0.2f, 0.15f);
-            bar.style.marginBottom = 6;
-            return bar;
         }
 
         private static Button Button(string text, System.Action action)
@@ -1275,6 +1568,38 @@ namespace OutpostZero.UI
                 ((Label)row[0]).text = caption + " " + evt.newValue.ToString("0.00");
             });
             row.Add(slider);
+            return row;
+        }
+
+        private const float CalibrationMark = 36f;
+
+        private static VisualElement BrightnessRow(SettingsService settings)
+        {
+            var row = SliderRow(Loc.T("set.bright"), settings.Brightness, 0.6f, 1.4f, settings.SetBrightness);
+            var strip = new VisualElement();
+            strip.style.flexDirection = FlexDirection.Row;
+            strip.style.backgroundColor = Color.black;
+            strip.style.paddingLeft = strip.style.paddingRight = strip.style.paddingTop = strip.style.paddingBottom = 8f;
+            var marks = new VisualElement[BrightnessCheck.Marks.Length];
+            for (int i = 0; i < marks.Length; i++)
+            {
+                marks[i] = new VisualElement();
+                marks[i].style.width = marks[i].style.height = CalibrationMark;
+                marks[i].style.marginRight = 8f;
+                strip.Add(marks[i]);
+            }
+            void Paint(float stored)
+            {
+                for (int i = 0; i < marks.Length; i++)
+                {
+                    float shade = BrightnessCheck.Shade(BrightnessCheck.Marks[i], stored);
+                    marks[i].style.backgroundColor = new Color(shade, shade, shade, 1f);
+                }
+            }
+            Paint(settings.Brightness);
+            ((Slider)row[1]).RegisterValueChangedCallback(evt => Paint(evt.newValue));
+            row.Add(strip);
+            row.Add(Body(Loc.T("set.bright_hint")));
             return row;
         }
     }

@@ -17,11 +17,21 @@ namespace OutpostZero.Colony
 
         public static int TierOf(string recipe)
         {
-            if (recipe == "flare" || recipe == "repair_kit" || recipe == "barricade_kit" || recipe == "radio_spare") return 2;
-            return 1;
+            return RecipeTable.TryRow(recipe, out var row) ? row.Tier : CodeTier(recipe);
         }
 
         public static string PrintOf(string recipe)
+        {
+            return RecipeTable.TryRow(recipe, out var row) ? row.Print ?? "" : CodePrint(recipe);
+        }
+
+        public static int CodeTier(string recipe)
+        {
+            if (recipe == "antibiotics" || recipe == "flare" || recipe == "repair_kit" || recipe == "barricade_kit" || recipe == "radio_spare") return 2;
+            return 1;
+        }
+
+        public static string CodePrint(string recipe)
         {
             if (recipe == "dressing") return "dressing";
             if (recipe == "flare") return "flare";

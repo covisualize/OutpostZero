@@ -1,0 +1,35 @@
+{
+  "id": "Kit_stairs",
+  "category": "Kit",
+  "generator": "generate_kit.build_piece",
+  "generatorHash": "dc8542c6ba347077803b5264281c16bbec23a3f59fc666e0e0f38312002e4bda",
+  "gitSha": "edff058f31a908ed7de64edaf527c44ea12a41ff",
+  "blender": "4.2.11",
+  "tags": [
+    "kit",
+    "building"
+  ],
+  "pivot": "authored",
+  "collider": "box",
+  "rig": "",
+  "lods": [
+    1.0
+  ],
+  "tris": 144,
+  "lodTris": [
+    144
+  ],
+  "size": {
+    "width": 2.0,
+    "depth": 4.08,
+    "height": 3.0
+  },
+  "floor": 0.0,
+  "center": {
+    "x": 1.0,
+    "y": 2.04
+  },
+  "materials": [
+    "Mat_concrete"
+  ]
+}

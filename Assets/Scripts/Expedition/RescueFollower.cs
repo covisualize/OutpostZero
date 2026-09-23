@@ -1,8 +1,12 @@
 using UnityEngine;
+using OutpostZero.AI;
 using OutpostZero.Colony;
+using OutpostZero.Combat;
 using OutpostZero.Core;
 using OutpostZero.Items;
 using OutpostZero.Player;
+using OutpostZero.Sensory;
+using OutpostZero.Shell;
 
 namespace OutpostZero.Expedition
 {
@@ -17,17 +21,49 @@ namespace OutpostZero.Expedition
         private string personName = "";
         private bool following;
         private bool joined;
+        private float lastCry;
+        private float lastAid;
+        private float lastBite;
+        private int bites;
 
         public string Name => personName;
         public bool Following => following;
-        public string Prompt => joined || following ? string.Empty : "Bring " + personName + " along";
+        public string Prompt
+        {
+            get
+            {
+                if (joined) return string.Empty;
+                if (!following) return StreetAsk.Along(personName, null);
+                int kits = Kits(null);
+                return FollowEase.Helps(bites, kits) ? FollowEase.Prompt(null) : string.Empty;
+            }
+        }
+
+        /// <summary>Changes whenever <see cref="Status"/> would read differently, so the HUD rebuilds it only then.</summary>
+        public static int StatusKey()
+        {
+            var person = Current;
+            if (person == null) return 0;
+            return person.GetInstanceID() * 31 + (person.joined ? 1 : 0) + (person.following ? 2 : 0) + person.bites * 4;
+        }
 
         public static string Status()
         {
             var person = Current;
             if (person == null || person.joined) return "";
-            if (!person.following) return "Bring " + person.personName + " to the gate";
-            return person.personName + " is with you";
+            if (!person.following) return StreetAsk.ToGate(person.personName, null);
+            string with = StreetAsk.With(person.personName, null);
+            if (person.bites <= 0) return with;
+            string hurt = WoundCard.Line(person.bites, null);
+            if (hurt.Length == 0) return with;
+            return with + "  " + hurt;
+        }
+
+        private static int Kits(PlayerInventory inventory)
+        {
+            if (inventory == null && PlayerRegistry.Current != null)
+                inventory = PlayerRegistry.Current.GetComponent<PlayerInventory>();
+            return inventory != null ? inventory.MedicalKits : 0;
         }
 
         public void Configure(string id, string displayName)
@@ -46,13 +82,25 @@ namespace OutpostZero.Expedition
             if (Current == this) Current = null;
         }
 
-        public bool CanInteract(PlayerInventory inventory) => !joined && !following;
+        public bool CanInteract(PlayerInventory inventory)
+        {
+            if (joined) return false;
+            if (!following) return true;
+            return FollowEase.Helps(bites, Kits(inventory));
+        }
 
         public void Interact(PlayerInventory inventory)
         {
             if (!CanInteract(inventory)) return;
-            following = true;
-            GameplayFeedback.Toast(personName + " is with you");
+            if (!following)
+            {
+                following = true;
+                GameplayFeedback.Toast(StreetAsk.With(personName, null));
+                return;
+            }
+            if (inventory == null || !inventory.TrySpendMedical(1)) return;
+            bites = FollowEase.After(bites);
+            GameplayFeedback.Toast(FollowEase.Line(null));
         }
 
         private void Update()
@@ -61,8 +109,37 @@ namespace OutpostZero.Expedition
             var player = PlayerRegistry.Current;
             if (player == null) return;
             var lead = player.transform.position;
-            RescueBook.Step(transform.position.x, transform.position.z, lead.x, lead.z, 4.2f, Time.deltaTime, out float nextX, out float nextZ);
+            RescueBook.Step(transform.position.x, transform.position.z, lead.x, lead.z, FollowLimp.Pace(4.2f, bites), Time.deltaTime, out float nextX, out float nextZ);
             transform.position = new Vector3(nextX, transform.position.y, nextZ);
+            if (StraggleCall.Due(lastCry, Time.time, ZombieAI.Nearest(nextX, nextZ)))
+            {
+                lastCry = Time.time;
+                GameplayFeedback.Toast(StreetAsk.Cry(personName, null));
+                AudioManager.Instance?.PlayAt("scream", transform.position, 0.45f);
+                if (NoiseManager.Instance != null)
+                    NoiseManager.Instance.EmitNoise(transform.position, NoiseTable.Radius(NoiseTable.RescueCall), NoiseTable.Loud(NoiseTable.RescueCall), NoiseType.ZombieScream, gameObject);
+            }
+
+            if (FollowLimp.Swings(bites) && StreetAid.Due(lastAid, Time.time, ZombieAI.Nearest(nextX, nextZ)))
+            {
+                var foe = ZombieAI.Closest(nextX, nextZ, StreetAid.Reach);
+                if (foe != null)
+                {
+                    lastAid = Time.time;
+                    var health = foe.GetComponent<HealthSystem>();
+                    Vector3 aim = foe.transform.position - transform.position;
+                    aim.y = 0f;
+                    if (aim.sqrMagnitude < 0.0001f) aim = transform.forward;
+                    if (health != null && !health.IsDead)
+                        health.TakeDamage(StreetAid.Damage, foe.transform.position + Vector3.up, aim.normalized, gameObject);
+                    GameplayFeedback.Toast(StreetAid.Line(personName, null));
+                    if (NoiseManager.Instance != null)
+                        NoiseManager.Instance.EmitNoise(transform.position, NoiseTable.Radius(NoiseTable.StreetAid), NoiseTable.Loud(NoiseTable.StreetAid), NoiseType.MeleeSwing, gameObject);
+                }
+            }
+
+            if (FollowBite.Due(lastBite, Time.time, ZombieAI.Nearest(nextX, nextZ)))
+                ApplyBite(Time.time);
 
             var gate = ExtractionZone.Current;
             if (gate == null) return;
@@ -73,20 +150,52 @@ namespace OutpostZero.Expedition
             TryJoin();
         }
 
+        public void BiteFrom(float now)
+        {
+            if (joined || !following) return;
+            if (!FollowBite.Due(lastBite, now, 0f)) return;
+            ApplyBite(now);
+        }
+
+        private void ApplyBite(float now)
+        {
+            lastBite = now;
+            if (FollowFall.Drops(bites))
+            {
+                Fall();
+                return;
+            }
+            int before = bites;
+            bites = FollowBite.After(bites);
+            if (bites > before)
+                GameplayFeedback.Toast(bites >= FollowBite.Cap ? FollowLimp.Line(personName, null) : FollowBite.Line(personName, null));
+        }
+
+        private void Fall()
+        {
+            joined = true;
+            following = false;
+            GameplayFeedback.Toast(FollowFall.Line(personName, null));
+            SurvivorRoster.Instance?.Lose(personId, personName, Trait(), transform.position);
+            ObjectiveTracker.Instance?.Waive(ObjectiveKind.Rescue, personId);
+            gameObject.SetActive(false);
+        }
+
         private void TryJoin()
         {
             if (joined) return;
             var roster = SurvivorRoster.Instance;
-            if (roster == null || !roster.Adopt(personId, personName, Trait()))
+            if (roster == null || !roster.Adopt(personId, personName, Trait(), bites))
             {
-                GameplayFeedback.Toast("The roster is full");
+                GameplayFeedback.Toast(FightSay.Roster(null));
                 joined = true;
                 following = false;
                 return;
             }
             joined = true;
             following = false;
-            GameplayFeedback.Toast(personName + " stays at the sanctuary");
+            GameplayFeedback.Toast(StreetAsk.Stays(personName, null));
+            ObjectiveTracker.Instance?.Note(ObjectiveKind.Rescue, personId, 1);
             gameObject.SetActive(false);
         }
 

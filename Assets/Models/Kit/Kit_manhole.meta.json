@@ -1,0 +1,35 @@
+{
+  "id": "Kit_manhole",
+  "category": "Kit",
+  "generator": "generate_kit.build_piece",
+  "generatorHash": "d0ec4a0c3e1a3696642a2c10f4173700c44faa5569a5203f21a52425fca56a93",
+  "gitSha": "edff058f31a908ed7de64edaf527c44ea12a41ff",
+  "blender": "4.2.11",
+  "tags": [
+    "kit",
+    "road"
+  ],
+  "pivot": "authored",
+  "collider": "box",
+  "rig": "",
+  "lods": [
+    1.0
+  ],
+  "tris": 12,
+  "lodTris": [
+    12
+  ],
+  "size": {
+    "width": 1.0,
+    "depth": 1.0,
+    "height": 0.04
+  },
+  "floor": 0.0,
+  "center": {
+    "x": 0.5,
+    "y": 0.5
+  },
+  "materials": [
+    "Mat_metal"
+  ]
+}

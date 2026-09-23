@@ -3,7 +3,13 @@
 import json
 import os
 import tempfile
+import sys
 import unittest
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from pipeline_plan import asset_paths
+import icon_render
+from icon_render import ICON_RENDER_SIZE
 
 from texture_set import (
     ICON_SIZE,
@@ -102,7 +108,9 @@ class TextureSetTests(unittest.TestCase):
         self.assertEqual(manifest["textures"], list(SUFFIXES))
         self.assertEqual(manifest["textureSize"], SIZE)
         missing = []
-        for relative in manifest["assets"]:
+        rendered = {"Assets/Models/" + e["output"] for e in manifest["entries"] if icon_render.rendered(e.get("tags"))}
+        self.assertGreaterEqual(len(rendered), 26)
+        for relative in asset_paths(manifest):
             stem = relative[:-4]
             for suffix in SUFFIXES:
                 path = os.path.join(root, stem + "_" + suffix + ".png")
@@ -112,10 +120,35 @@ class TextureSetTests(unittest.TestCase):
                     continue
                 with open(path, "rb") as handle:
                     width, height, _pixels = decode_png(handle.read())
-                expected = ICON_SIZE if suffix == "Icon" else SIZE
+                icon_side = ICON_RENDER_SIZE if relative in rendered else ICON_SIZE
+                expected = icon_side if suffix == "Icon" else SIZE
                 if (width, height) != (expected, expected):
                     missing.append(stem + "_" + suffix + ":size")
         self.assertEqual(missing, [])
+
+    def test_metas_compress_per_platform_and_stream_by_role(self):
+        import re
+        import texture_set
+        path = "Assets/Models/Props/Prop_Dumpster_Normal.png"
+        normal = texture_set.meta_text(path, "Normal")
+        albedo = texture_set.meta_text(path, "Albedo")
+        icon = texture_set.meta_text(path, "Icon")
+
+        def fmt(text, target):
+            match = re.search(r"buildTarget: " + target + r"\n(?:    .*\n)*?    textureFormat: (-?\d+)\n(?:    .*\n)*?    overridden: (\d)", text)
+            self.assertIsNotNone(match, target)
+            return int(match.group(1)), match.group(2)
+
+        self.assertEqual(fmt(normal, "Standalone"), (texture_set.FORMAT_BC5, "1"))
+        self.assertEqual(fmt(albedo, "Standalone"), (texture_set.FORMAT_BC7, "1"))
+        self.assertEqual(fmt(normal, "Android"), (texture_set.FORMAT_ASTC_4X4, "1"))
+        self.assertEqual(fmt(albedo, "iPhone"), (texture_set.FORMAT_ASTC_6X6, "1"))
+        self.assertEqual(fmt(albedo, "DefaultTexturePlatform"), (-1, "0"))
+        self.assertIn("  streamingMipmaps: 1\n", albedo)
+        self.assertIn("  streamingMipmaps: 0\n", icon)
+        self.assertIn("    enableMipMap: 1\n", icon)
+        import decal_atlas
+        self.assertIn("  streamingMipmaps: 0\n", decal_atlas.meta_text())
 
 
 if __name__ == "__main__":

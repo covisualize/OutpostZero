@@ -1,0 +1,35 @@
+{
+  "id": "Kit_spike",
+  "category": "Kit",
+  "generator": "generate_kit.build_piece",
+  "generatorHash": "e7ede9b4b0008e797c8a5077ba3a188e149710930c93025578019a4e933c11eb",
+  "gitSha": "edff058f31a908ed7de64edaf527c44ea12a41ff",
+  "blender": "4.2.11",
+  "tags": [
+    "kit",
+    "fort"
+  ],
+  "pivot": "authored",
+  "collider": "box",
+  "rig": "",
+  "lods": [
+    1.0
+  ],
+  "tris": 12,
+  "lodTris": [
+    12
+  ],
+  "size": {
+    "width": 2.0,
+    "depth": 0.4,
+    "height": 0.25
+  },
+  "floor": 0.0,
+  "center": {
+    "x": 1.0,
+    "y": 0.2
+  },
+  "materials": [
+    "Mat_metal"
+  ]
+}

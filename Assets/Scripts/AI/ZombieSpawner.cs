@@ -28,6 +28,7 @@ namespace OutpostZero.AI
         private Transform playerTransform;
         private ZombiePool pool;
         private string preferredName = "";
+        private string[] variantNames;
 
         public void Prefer(string nameFragment)
         {
@@ -40,24 +41,91 @@ namespace OutpostZero.AI
             directorOwnsSpawns = true;
         }
 
-        public int MaxAlive => maxAliveZombies;
+        private int scriptedCap;
+
+        public int MaxAlive => scriptedCap > 0 ? scriptedCap : maxAliveZombies;
+        public int Alive => activeZombies.Count;
 
         public void ApplyCap(int max)
         {
             maxAliveZombies = Mathf.Max(4, max);
         }
 
+        public void Script(int cap)
+        {
+            scriptedCap = Mathf.Max(0, cap);
+        }
+
+        public void Clear()
+        {
+            for (int i = activeZombies.Count - 1; i >= 0; i--)
+            {
+                var zombie = activeZombies[i];
+                if (zombie == null) continue;
+                if (pool != null) pool.Release(zombie, 0f);
+                else Destroy(zombie);
+            }
+            activeZombies.Clear();
+        }
+
+        public IReadOnlyList<GameObject> Active => activeZombies;
+
+        public bool SpawnAt(float x, float z, string variant) => SpawnAt(x, z, variant, out _);
+
+        public bool SpawnAt(float x, float z, string variant, out GameObject zombie)
+        {
+            zombie = null;
+            if (activeZombies.Count >= MaxAlive) return false;
+            GameObject fallback = zombiePrefab;
+            if (fallback == null && zombiePrefabVariants != null && zombiePrefabVariants.Length > 0) fallback = zombiePrefabVariants[0];
+            if (fallback == null) return false;
+            GameObject chosen = Named(variant) ?? fallback;
+            Vector3 pos = new Vector3(x, 0f, z);
+            if (NavMesh.SamplePosition(pos, out NavMeshHit hit, 6f, NavMesh.AllAreas)) pos = hit.position;
+            Quaternion rotation = Quaternion.Euler(0f, Random.Range(0f, 360f), 0f);
+            zombie = pool != null ? pool.Rent(chosen, pos, rotation) : Instantiate(chosen, pos, rotation);
+            if (zombie == null) return false;
+            zombie.SetActive(true);
+            activeZombies.Add(zombie);
+            return true;
+        }
+
+        public float Nearest(Vector3 point)
+        {
+            float best = float.MaxValue;
+            for (int i = 0; i < activeZombies.Count; i++)
+            {
+                var zombie = activeZombies[i];
+                if (zombie == null || !zombie.activeInHierarchy) continue;
+                float d = (zombie.transform.position - point).sqrMagnitude;
+                if (d < best) best = d;
+            }
+            return best == float.MaxValue ? best : Mathf.Sqrt(best);
+        }
+
+        private GameObject Named(string fragment)
+        {
+            if (string.IsNullOrEmpty(fragment) || zombiePrefabVariants == null) return null;
+            for (int i = 0; i < zombiePrefabVariants.Length; i++)
+            {
+                var candidate = zombiePrefabVariants[i];
+                if (candidate != null && candidate.name.IndexOf(fragment, System.StringComparison.Ordinal) >= 0) return candidate;
+            }
+            return null;
+        }
+
         public void Configure(GameObject prefab, GameObject[] variants, int initial, int maxAlive)
         {
             zombiePrefab = prefab;
             zombiePrefabVariants = variants;
+            variantNames = null;
             initialCount = initial;
             maxAliveZombies = maxAlive;
         }
 
         private void Awake()
         {
-            pool = GetComponent<ZombiePool>() ?? gameObject.AddComponent<ZombiePool>();
+            pool = Attach.Ensure<ZombiePool>(gameObject);
         }
 
         private void Start()
@@ -229,8 +297,19 @@ namespace OutpostZero.AI
                 if (pick != null) return pick;
             }
 
-            var chosen = zombiePrefabVariants[Random.Range(0, zombiePrefabVariants.Length)];
+            int index = DifficultyTable.Pick(VariantNames(), DifficultyTable.Of(DifficultyProfile.Active), Random.value);
+            if (index < 0) index = Random.Range(0, zombiePrefabVariants.Length);
+            var chosen = zombiePrefabVariants[index];
             return chosen != null ? chosen : fallback;
+        }
+
+        private string[] VariantNames()
+        {
+            if (variantNames != null && variantNames.Length == zombiePrefabVariants.Length) return variantNames;
+            variantNames = new string[zombiePrefabVariants.Length];
+            for (int i = 0; i < zombiePrefabVariants.Length; i++)
+                variantNames[i] = zombiePrefabVariants[i] != null ? zombiePrefabVariants[i].name : "";
+            return variantNames;
         }
 
         private void HandleLoudNoiseAlert(Vector3 origin, float radius, NoiseType type)

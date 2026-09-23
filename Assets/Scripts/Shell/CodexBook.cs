@@ -1,7 +1,7 @@
 namespace OutpostZero.Shell
 {
     /// <summary>
-    /// Codex pages and the twelve one-time hints. Seen ids are packed as id|id so the save stays schema 1.
+    /// Codex pages and the thirteen one-time hints. Seen ids are packed as id|id so the save stays schema 1.
     /// </summary>
     public static class CodexBook
     {
@@ -11,6 +11,7 @@ namespace OutpostZero.Shell
             public string Title;
             public string Body;
             public bool LockedUntilSeen;
+            public string Model;
         }
 
         public sealed class Hint
@@ -22,34 +23,57 @@ namespace OutpostZero.Shell
 
         public static readonly Entry[] Entries =
         {
-            new Entry { Id = "zombie.walker", Title = "Walker", Body = "Slow, loud, and enough of them to pin you. A scream pulls the ones you have not seen.", LockedUntilSeen = true },
-            new Entry { Id = "zombie.runner", Title = "Runner", Body = "Closes the gap with a lunge. Crouch and a corner buy you the reload.", LockedUntilSeen = true },
-            new Entry { Id = "zombie.brute", Title = "Brute", Body = "A charge that knocks you down. Barrels and a clear lane do more than a pistol.", LockedUntilSeen = true },
+            new Entry { Id = "zombie.walker", Model = "Zombie_Walker", Title = "Walker", Body = "Slow, loud, and enough of them to pin you. A scream pulls the ones you have not seen.", LockedUntilSeen = true },
+            new Entry { Id = "zombie.runner", Model = "Zombie_Runner", Title = "Runner", Body = "Closes the gap with a lunge. Crouch and a corner buy you the reload.", LockedUntilSeen = true },
+            new Entry { Id = "zombie.brute", Model = "Zombie_Brute", Title = "Brute", Body = "A charge that knocks you down. Barrels and a clear lane do more than a pistol.", LockedUntilSeen = true },
             new Entry { Id = "item.medkit", Title = "Medkit", Body = "Stops bleeding and puts health back. Q uses the one in your hands.", LockedUntilSeen = false },
-            new Entry { Id = "module.generator", Title = "Generator", Body = "Keeps the sanctuary lamps lit. It drinks fuel after dusk.", LockedUntilSeen = false },
-            new Entry { Id = "module.barricade", Title = "Barricade", Body = "The night raid hits the nearest boards. A guard slows the damage.", LockedUntilSeen = false },
-            new Entry { Id = "module.cot", Title = "Medical cot", Body = "Rest and a medic close wounds faster than waiting the night out.", LockedUntilSeen = false },
-            new Entry { Id = "faction.market", Title = "Ash Market", Body = "The merchant trades medkits, rifle ammo, and water for camp scrap.", LockedUntilSeen = false },
+            new Entry { Id = "module.generator", Model = "Base_Generator_Diesel", Title = "Generator", Body = "Keeps the sanctuary lamps lit. It drinks fuel after dusk.", LockedUntilSeen = false },
+            new Entry { Id = "module.barricade", Model = "Barricade_Wood_Wire", Title = "Barricade", Body = "The night raid hits the nearest boards. A guard slows the damage.", LockedUntilSeen = false },
+            new Entry { Id = "module.cot", Model = "Base_MedicalCot", Title = "Medical cot", Body = "Rest and a medic close wounds faster than waiting the night out.", LockedUntilSeen = false },
+            new Entry { Id = "faction.market", Model = "NPC_Merchant", Title = "Ash Market", Body = "The merchant trades medkits, rifle ammo, and water for camp scrap.", LockedUntilSeen = false },
+            new Entry { Id = "item.bandage", Title = "Bandage", Body = "Stops a bleed. It will not close a deep wound on its own.", LockedUntilSeen = false },
+            new Entry { Id = "item.street_bottle", Title = "Street bottle", Body = "Throw it and it breaks loud enough to pull a group off your path.", LockedUntilSeen = false },
+            new Entry { Id = "item.pipe_bomb", Title = "Pipe bomb", Body = "A short fuse and a wide blast. It scorches the road and wakes the block.", LockedUntilSeen = false },
+            new Entry { Id = "item.antibiotics", Title = "Antibiotics", Body = "Clears infection a medkit cannot. The clinic keeps them for friends.", LockedUntilSeen = false },
+            new Entry { Id = "module.workbench", Model = "Base_CraftingWorkbench", Title = "Workbench", Body = "Crafts gear and weapon mods, and takes apart what you carry home.", LockedUntilSeen = false },
+            new Entry { Id = "module.campfire", Model = "Base_Campfire_Cooker", Title = "Campfire", Body = "Cooks raw food into meals and boils water clean.", LockedUntilSeen = false },
+            new Entry { Id = "module.watchtower", Model = "Base_Watchtower", Title = "Watchtower", Body = "A guard up here sees the raid coming sooner.", LockedUntilSeen = false },
+            new Entry { Id = "module.water", Model = "Base_WaterCollector", Title = "Water collector", Body = "Fills the stores a little every day, more in the rain.", LockedUntilSeen = false },
+            new Entry { Id = "module.farm", Model = "Base_HydroponicFarm", Title = "Hydroponic farm", Body = "Three days to take root, then two food every morning.", LockedUntilSeen = false },
+            new Entry { Id = "module.turret", Model = "Base_AutoTurret", Title = "Auto-turret", Body = "Shoots the nearest raider in range. It needs the generator, stored rounds and a tier 2 bench.", LockedUntilSeen = false },
+            new Entry { Id = "faction.militia", Model = "NPC_Merchant", Title = "Iron Militia", Body = "Rifle rounds and shells, at a price. Trusted camps get pipe bombs.", LockedUntilSeen = false },
+            new Entry { Id = "faction.clinic", Model = "NPC_Merchant", Title = "The Clinic", Body = "Medkits and bandages. Earn their trust and they part with antibiotics.", LockedUntilSeen = false },
+            new Entry { Id = "faction.farmers", Model = "NPC_Merchant", Title = "Free Farmers", Body = "Food and water, cheaper than anyone. Friends get raw food by the sack.", LockedUntilSeen = false },
             new Entry { Id = "mechanic.noise", Title = "Noise", Body = "Shots, sprints, and breaking barrels carry. Crouching cuts the footfall.", LockedUntilSeen = false },
             new Entry { Id = "mechanic.exposure", Title = "Exposure", Body = "Lamplight and the flashlight make you easier to spot. Dark is cover.", LockedUntilSeen = false },
             new Entry { Id = "mechanic.infection", Title = "Infection", Body = "A dirty wound worsens until a medkit or the cot clears it.", LockedUntilSeen = false },
             new Entry { Id = "mechanic.extract", Title = "Extraction", Body = "Finish the quota, then stand in the sanctuary gate. The bag stays if you fall.", LockedUntilSeen = false }
         };
 
+        public const string ItemPrefix = "item.";
+
+        public static string ItemOf(string entryId)
+        {
+            return !string.IsNullOrEmpty(entryId) && entryId.StartsWith(ItemPrefix, System.StringComparison.Ordinal)
+                ? entryId.Substring(ItemPrefix.Length)
+                : "";
+        }
+
         public static readonly Hint[] Hints =
         {
             new Hint { Id = "hint.move", Signal = "move", Text = "WASD moves. The mouse aims." },
-            new Hint { Id = "hint.fire", Signal = "fire", Text = "Left click fires. R reloads." },
-            new Hint { Id = "hint.crouch", Signal = "crouch", Text = "Crouch cuts exposure. Noise still travels." },
+            new Hint { Id = "hint.fire", Signal = "fire", Text = "Left click fires. {key:Reload} reloads." },
+            new Hint { Id = "hint.crouch", Signal = "near", Text = "One is close. {key:Crouch} crouches: it cuts exposure, but noise still travels." },
             new Hint { Id = "hint.loot", Signal = "loot", Text = "Scrap and supplies go into the pack." },
-            new Hint { Id = "hint.pack", Signal = "pack", Text = "Tab opens the pack. Use what you are carrying." },
-            new Hint { Id = "hint.reload", Signal = "reload", Text = "An empty magazine does not fire. Reload before the click." },
-            new Hint { Id = "hint.flashlight", Signal = "flashlight", Text = "The flashlight shows the street and shows you." },
+            new Hint { Id = "hint.pack", Signal = "pack", Text = "{key:Inventory} opens the pack. Use what you are carrying." },
+            new Hint { Id = "hint.reload", Signal = "empty", Text = "The magazine is empty. {key:Reload} reloads. Do it before the click." },
+            new Hint { Id = "hint.flashlight", Signal = "dark", Text = "It is dark inside. {key:Flashlight} lights the room, and shows you to it." },
             new Hint { Id = "hint.medkit", Signal = "medkit", Text = "A medkit closes a bleed. It will not refill itself." },
             new Hint { Id = "hint.sprint", Signal = "sprint", Text = "Sprint is loud and spends stamina." },
             new Hint { Id = "hint.aim", Signal = "aim", Text = "Aim tightens the shot and narrows what you can see." },
             new Hint { Id = "hint.extract", Signal = "extract", Text = "The gate is the way home. Unfinished work will not let you through." },
-            new Hint { Id = "hint.weight", Signal = "weight", Text = "The pack is near its limit. Drop or use something." }
+            new Hint { Id = "hint.weight", Signal = "weight", Text = "The pack is near its limit. Drop or use something." },
+            new Hint { Id = "hint.throw", Signal = "throwable", Text = "{key:Throw} throws it. The noise pulls them to where it lands." }
         };
 
         public static bool Has(string packed, string id)
@@ -81,6 +105,17 @@ namespace OutpostZero.Shell
                 return true;
             }
             return false;
+        }
+
+        public const string HintPrefix = "hint.";
+
+        public static string ForgetHints(string packed)
+        {
+            if (string.IsNullOrEmpty(packed)) return "";
+            var kept = new System.Collections.Generic.List<string>();
+            foreach (var id in packed.Split('|'))
+                if (id.Length > 0 && !id.StartsWith(HintPrefix, System.StringComparison.Ordinal)) kept.Add(id);
+            return string.Join("|", kept);
         }
 
         public static bool Visible(Entry entry, string packed)

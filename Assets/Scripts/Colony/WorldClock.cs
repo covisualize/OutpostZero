@@ -13,7 +13,14 @@ namespace OutpostZero.Colony
 
         public int Day => day;
         public float Hour => hour;
+        public DayPhase Phase => ClockPhase.Of(hour);
         public event Action OnClockChanged;
+
+        /// <summary>Raised when the clock runs from one phase into the next. Loading or jumping with <see cref="Set"/> does not raise it.</summary>
+        public static event Action<DayPhase, DayPhase> PhaseTurned;
+
+        /// <summary>Raised with the day that ended and the day that began.</summary>
+        public static event Action<int, int> DayTurned;
 
         private void Awake()
         {
@@ -36,6 +43,7 @@ namespace OutpostZero.Colony
         public void Advance(float hours)
         {
             int from = day;
+            var phase = Phase;
             hour += hours;
             while (hour >= 24f)
             {
@@ -44,18 +52,30 @@ namespace OutpostZero.Colony
             }
             if (day != from && ColonyStorage.Instance != null)
                 ColonyStorage.Instance.SetShots(RaidCall.Carry(ColonyStorage.Instance.Shots, from, day));
+            if (day != from) DayTurned?.Invoke(from, day);
+            Turn(phase);
             OnClockChanged?.Invoke();
+        }
+
+        private void Turn(DayPhase from)
+        {
+            var now = Phase;
+            if (now != from) PhaseTurned?.Invoke(from, now);
         }
 
         public void SleepUntilMorning()
         {
             int from = day;
+            var phase = Phase;
             day++;
             hour = 6.5f;
             if (ColonyStorage.Instance != null)
                 ColonyStorage.Instance.SetShots(RaidCall.Carry(ColonyStorage.Instance.Shots, from, day));
+            DayTurned?.Invoke(from, day);
+            if (phase == DayPhase.Morning) PhaseTurned?.Invoke(phase, DayPhase.Morning);
+            else Turn(phase);
             OnClockChanged?.Invoke();
-            GameplayFeedback.Toast("Day " + day + "  morning watch");
+            GameplayFeedback.Toast(ClockFace.Morning(day, null));
         }
 
         public void Set(int nextDay, float nextHour)
@@ -65,6 +85,6 @@ namespace OutpostZero.Colony
             OnClockChanged?.Invoke();
         }
 
-        public string Label => "Day " + day + "  " + Mathf.FloorToInt(hour).ToString("00") + ":" + Mathf.FloorToInt((hour % 1f) * 60f).ToString("00");
+        public string Label => ClockFace.Read(day, hour, null) + "  " + ClockPhase.Name(Phase, null);
     }
 }

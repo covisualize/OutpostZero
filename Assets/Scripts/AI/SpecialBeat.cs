@@ -6,18 +6,21 @@ namespace OutpostZero.AI
     /// </summary>
     public static class SpecialBeat
     {
-        public const float LungeNear = 2.2f;
-        public const float LungeFar = 5.5f;
-        public const float ChargeNear = 3f;
-        public const float ChargeFar = 8f;
+        public const float LungeNear = 3f;
+        public const float LungeFar = 5f;
+        public const float ChargeNear = 6f;
+        public const float ChargeFar = 12f;
         public const float Windup = 0.4f;
         public const float ChargeWindup = 0.8f;
         public const float Dash = 0.45f;
         public const float WallStun = 1.5f;
         public const float LungeSpeed = 8f;
         public const float ChargeSpeed = 6.5f;
-        public const float Cooldown = 4.5f;
+        public const float Cooldown = 4f;
         public const float LungeDamage = 30f;
+        public const float ChargeKnockdown = 1.2f;
+        /// <summary>The charge runs long enough to cover its whole line-up, so a brute that starts at 12 m arrives.</summary>
+        public const float ChargeDash = ChargeFar / ChargeSpeed + 0.15f;
 
         public struct Clock
         {
@@ -54,7 +57,12 @@ namespace OutpostZero.AI
             z = aimZ / len;
         }
 
-        public static Clock Advance(Clock clock, bool inReach, float now, float dt, bool charge = false)
+        public static Clock Advance(Clock clock, bool inReach, float now, float dt, bool charge = false, float cooldown = Cooldown)
+        {
+            return Advance(clock, inReach, now, dt, charge ? ChargeWindup : Windup, charge ? ChargeDash : Dash, cooldown);
+        }
+
+        public static Clock Advance(Clock clock, bool inReach, float now, float dt, float windup, float dash, float cooldown)
         {
             if (dt < 0f) dt = 0f;
             if (clock.Phase == 2)
@@ -64,7 +72,7 @@ namespace OutpostZero.AI
                 {
                     clock.Phase = 0;
                     clock.Left = 0f;
-                    clock.Ready = now + Cooldown;
+                    clock.Ready = now + cooldown;
                 }
                 return clock;
             }
@@ -75,7 +83,7 @@ namespace OutpostZero.AI
                 if (clock.Left <= 0f)
                 {
                     clock.Phase = 2;
-                    clock.Left = Dash;
+                    clock.Left = dash;
                     clock.Struck = false;
                 }
                 return clock;
@@ -83,7 +91,7 @@ namespace OutpostZero.AI
 
             if (!inReach || now < clock.Ready) return clock;
             clock.Phase = 1;
-            clock.Left = charge ? ChargeWindup : Windup;
+            clock.Left = windup;
             return clock;
         }
     }

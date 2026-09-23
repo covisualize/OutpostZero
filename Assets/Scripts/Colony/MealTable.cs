@@ -48,7 +48,8 @@ namespace OutpostZero.Colony
             if (eased < 1 && drop > 0) eased = 1;
             if (Practice.Bonus(leadership) <= 0) return eased;
             int cut = eased - 1;
-            return cut < 0 ? 0 : cut;
+            if (cut < 0) cut = 0;
+            return LeadDepth.Ease(cut, leadership);
         }
 
         public static bool Argument(bool volatilePresent, int living, bool leaderPresent)

@@ -1,4 +1,4 @@
-"""Export every snap-kit piece. Run inside Blender."""
+"""Snap-kit pieces: one manifest entry per piece in kit_catalog. Run inside Blender."""
 
 import os
 import sys
@@ -9,9 +9,8 @@ if script_dir not in sys.path:
 
 import bpy
 
-from blender_paths import models_dir
-from blender_utils import create_box, export_fbx, get_or_create_material, join_objects, reset_scene
-from kit_catalog import all_pieces, fbx_relative, repo_root
+from blender_utils import create_box, get_or_create_material, join_objects
+from kit_catalog import all_pieces
 
 COLORS = {
     "concrete": (0.45, 0.43, 0.4, 1.0),
@@ -19,6 +18,16 @@ COLORS = {
     "wood": (0.4, 0.26, 0.14, 1.0),
     "glass": (0.55, 0.7, 0.75, 1.0),
 }
+
+PREFIX = "Kit_"
+
+
+def piece_for(asset_id):
+    wanted = asset_id[len(PREFIX):] if asset_id.startswith(PREFIX) else asset_id
+    for item in all_pieces():
+        if item["id"] == wanted:
+            return item
+    raise KeyError("No kit piece named " + wanted)
 
 
 def set_origin_at_world_zero(obj):
@@ -29,8 +38,8 @@ def set_origin_at_world_zero(obj):
     bpy.ops.object.origin_set(type="ORIGIN_CURSOR")
 
 
-def generate_piece(item):
-    reset_scene()
+def build_piece(ctx):
+    item = piece_for(ctx.id)
     material = get_or_create_material(
         "Mat_{0}".format(item["surface"]),
         COLORS[item["surface"]],
@@ -48,35 +57,13 @@ def generate_piece(item):
         parts.append(create_box("{0}_{1}".format(item["id"], index), center, size, material))
     if len(parts) == 1:
         mesh = parts[0]
-        mesh.name = "Kit_{0}".format(item["id"])
+        mesh.name = PREFIX + item["id"]
     else:
-        mesh = join_objects(parts, "Kit_{0}".format(item["id"]))
+        mesh = join_objects(parts, PREFIX + item["id"])
     set_origin_at_world_zero(mesh)
-    destination = os.path.join(models_dir("Kit"), "Kit_{0}.fbx".format(item["id"]))
-    export_fbx(destination)
-    return destination
-
-
-def generate_all():
-    written = []
-    for item in all_pieces():
-        written.append(generate_piece(item))
-    register_manifest()
-    return written
-
-
-def register_manifest():
-    import json
-    path = os.path.join(repo_root(), "BlenderScripts", "assets.manifest.json")
-    with open(path, encoding="utf-8") as handle:
-        manifest = json.load(handle)
-    assets = [entry for entry in manifest["assets"] if "/Kit/" not in entry.replace("\\", "/")]
-    assets.extend(fbx_relative(item["id"]) for item in all_pieces())
-    manifest["assets"] = assets
-    with open(path, "w", encoding="utf-8", newline="\n") as handle:
-        json.dump(manifest, handle, indent=2)
-        handle.write("\n")
+    return mesh
 
 
 if __name__ == "__main__":
-    generate_all()
+    import pipeline
+    sys.exit(pipeline.main(["--category", "Kit"]))

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using OutpostZero.Core;
+using OutpostZero.Graphics;
 using OutpostZero.Player;
 using OutpostZero.Shell;
 
@@ -13,11 +14,15 @@ namespace OutpostZero.Colony
         public string id;
         public string displayName;
         public string trait;
+        public string aside = "";
+        public string mark = "";
         public bool alive = true;
         public bool leader;
         public float morale = 70f;
         public float hunger = 78f;
         public float thirst = 78f;
+        public float fatigue;
+        public int fatigueKnown;
         public int opinion = 18;
         public int injury;
         public int combat;
@@ -26,8 +31,18 @@ namespace OutpostZero.Colony
         public int cooking;
         public int scavenge;
         public int leadership;
+        public int combatXp;
+        public int medicineXp;
+        public int engineeringXp;
+        public int cookingXp;
+        public int scavengeXp;
+        public int leadershipXp;
         public string task = "Rest";
+        public bool ownCall;
         public string bond = "";
+        public string kin = "";
+        public int age;
+        public string past = "";
     }
 
     public class SurvivorRoster : MonoBehaviour
@@ -35,9 +50,21 @@ namespace OutpostZero.Colony
         public static SurvivorRoster Instance { get; private set; }
 
         [SerializeField] private List<Survivor> survivors = new List<Survivor>();
+        [SerializeField] private bool wentOut;
         public IReadOnlyList<Survivor> Survivors => survivors;
         public event Action OnRosterChanged;
         public string DayNotes { get; private set; } = "";
+        public bool WentOut => wentOut;
+
+        public void MarkOuting()
+        {
+            wentOut = true;
+        }
+
+        public void SetWentOut(bool value)
+        {
+            wentOut = value;
+        }
         private readonly List<SuccessionLedger.Memorial> memorials = new List<SuccessionLedger.Memorial>();
         private readonly List<SuccessionLedger.CorpseMark> corpses = new List<SuccessionLedger.CorpseMark>();
         public IReadOnlyList<SuccessionLedger.Memorial> Memorials => memorials;
@@ -64,12 +91,43 @@ namespace OutpostZero.Colony
             return 0;
         }
 
+        public static string LeaderTrait()
+        {
+            var leader = Instance != null ? Instance.Leader : null;
+            if (leader == null || string.IsNullOrEmpty(leader.trait)) return "";
+            return leader.trait;
+        }
+
+        public static string LeaderAside()
+        {
+            var leader = Instance != null ? Instance.Leader : null;
+            if (leader == null || string.IsNullOrEmpty(leader.aside)) return "";
+            return leader.aside;
+        }
+
+        public static string LeaderMark()
+        {
+            var leader = Instance != null ? Instance.Leader : null;
+            if (leader == null || string.IsNullOrEmpty(leader.mark)) return "";
+            return leader.mark;
+        }
+
         public void CopyLeaderNeeds(float hunger, float thirst)
+        {
+            CopyLeaderNeeds(hunger, thirst, -1f);
+        }
+
+        public void CopyLeaderNeeds(float hunger, float thirst, float fatigue)
         {
             var leader = Leader;
             if (leader == null) return;
             leader.hunger = Mathf.Clamp(hunger, 0f, 100f);
             leader.thirst = Mathf.Clamp(thirst, 0f, 100f);
+            if (fatigue >= 0f)
+            {
+                leader.fatigue = BodyCarry.Clamp(fatigue);
+                leader.fatigueKnown = 1;
+            }
             OnRosterChanged?.Invoke();
         }
 
@@ -87,6 +145,18 @@ namespace OutpostZero.Colony
             return true;
         }
 
+        public bool LeaderFatigue(out float fatigue)
+        {
+            var leader = Leader;
+            if (leader == null || leader.fatigueKnown == 0)
+            {
+                fatigue = 0f;
+                return false;
+            }
+            fatigue = BodyCarry.Clamp(leader.fatigue);
+            return true;
+        }
+
         private void Awake()
         {
             if (Instance != null && Instance != this)
@@ -95,6 +165,7 @@ namespace OutpostZero.Colony
                 return;
             }
             Instance = this;
+            TraitBook.Ensure();
             if (survivors.Count == 0) Seed();
         }
 
@@ -121,6 +192,8 @@ namespace OutpostZero.Colony
                 id = draft.Id,
                 displayName = draft.Name,
                 trait = draft.Trait,
+                aside = draft.Aside ?? "",
+                mark = draft.Mark ?? "",
                 leader = draft.Leader,
                 morale = 72f,
                 hunger = 78f,
@@ -132,7 +205,9 @@ namespace OutpostZero.Colony
                 cooking = draft.Cooking,
                 scavenge = draft.Scavenge,
                 task = draft.Leader ? "Lead" : "Rest",
-                bond = draft.Bond
+                bond = draft.Bond,
+                age = LifeLine.YearsOf(draft.Id),
+                past = LifeLine.Past(draft.Id)
             };
         }
 
@@ -164,7 +239,7 @@ namespace OutpostZero.Colony
                 leader.task = "Fallen";
             }
             var days = Snapshot();
-            SuccessionLedger.Grieve(days, fallen);
+            SuccessionLedger.Grieve(days, fallen, HasMemorial());
             for (int i = 0; i < days.Count && i < survivors.Count; i++) survivors[i].morale = days[i].morale;
             string district = OutpostZero.Shell.WorldMapService.Instance != null && OutpostZero.Shell.WorldMapService.Instance.Current != null
                 ? OutpostZero.Shell.WorldMapService.Instance.Current.id
@@ -173,6 +248,18 @@ namespace OutpostZero.Colony
             int kills = GameManager.Instance != null ? GameManager.Instance.ZombiesKilled : 0;
             var carried = PlayerRegistry.Current != null ? PlayerRegistry.Current.GetComponent<PlayerInventory>() : null;
             string gear = carried != null ? carried.TakeGear() : "";
+            var hands = PlayerRegistry.Current != null ? PlayerRegistry.Current.GetComponent<PlayerController>() : null;
+            if (hands != null)
+            {
+                var arms = hands.PackArms();
+                int personal = SuccessionLedger.Personal(arms, hands.ActiveSlot);
+                if (personal >= 0)
+                {
+                    gear = SuccessionLedger.WithArm(gear, arms[personal]);
+                    arms.RemoveAt(personal);
+                    hands.RestoreArms(arms, 0);
+                }
+            }
             memorials.Add(new SuccessionLedger.Memorial
             {
                 name = fallen,
@@ -209,11 +296,50 @@ namespace OutpostZero.Colony
             return true;
         }
 
+        public bool BringFever(int stage)
+        {
+            var leader = Leader;
+            if (leader == null || !HomeSick.Rises(leader.injury, stage)) return false;
+            leader.injury = HomeSick.Carry(leader.injury, stage);
+            OnRosterChanged?.Invoke();
+            return true;
+        }
+
+        public bool EaseLeader()
+        {
+            var leader = Leader;
+            if (leader == null || !WoundEase.Helps(leader.injury)) return false;
+            leader.injury = WoundEase.After(leader.injury);
+            OnRosterChanged?.Invoke();
+            return true;
+        }
+
         public void Recover(int index)
         {
             if (index < 0 || index >= corpses.Count) return;
-            corpses[index].recovered = true;
+            var mark = corpses[index];
+            if (mark == null || mark.recovered) return;
+            mark.recovered = true;
+            if (StreetBody(mark.name))
+            {
+                for (int i = 0; i < survivors.Count; i++)
+                {
+                    if (survivors[i] == null || !survivors[i].alive) continue;
+                    survivors[i].morale = StreetMourn.Lift(survivors[i].morale);
+                }
+                GameplayFeedback.Toast(StreetMourn.Line(null));
+            }
             OnRosterChanged?.Invoke();
+        }
+
+        private bool StreetBody(string name)
+        {
+            for (int i = 0; i < memorials.Count; i++)
+            {
+                var row = memorials[i];
+                if (row != null && StreetMourn.Named(row.cause, name, row.name)) return true;
+            }
+            return false;
         }
 
         public void RestoreStory(string memorialPacked, string corpsePacked)
@@ -245,6 +371,10 @@ namespace OutpostZero.Colony
         }
 
         public Survivor PromoteNext() => Promote(null);
+
+        public Survivor SuggestedHeir() => ChooseHeir();
+
+        private static bool HasMemorial() => GridBuilder.Instance != null && GridBuilder.Instance.HasKind("Memorial");
 
         public Survivor Promote(string id)
         {
@@ -288,7 +418,7 @@ namespace OutpostZero.Colony
             person.alive = false;
             person.task = "Fallen";
             var days = Snapshot();
-            SuccessionLedger.Grieve(days, person.displayName);
+            SuccessionLedger.Grieve(days, person.displayName, HasMemorial());
             for (int i = 0; i < days.Count && i < survivors.Count; i++) survivors[i].morale = days[i].morale;
             string district = WorldMapService.Instance != null && WorldMapService.Instance.Current != null
                 ? WorldMapService.Instance.Current.id
@@ -307,6 +437,100 @@ namespace OutpostZero.Colony
             GameplayFeedback.Toast(person.displayName + " " + Loc.T("camp.fell"));
             OnRosterChanged?.Invoke();
             if (CampEnd.Wiped(LivingCount())) EndCamp();
+        }
+
+        public bool HasRoom => survivors.Count < RescueBook.RosterCap;
+
+        public int BestEngineering()
+        {
+            int best = 0;
+            foreach (var survivor in survivors)
+                if (survivor.alive && survivor.engineering > best) best = survivor.engineering;
+            return best;
+        }
+
+        public bool HasFeud() => FeudPair(0, out _, out _);
+
+        /// <summary>A living pair where either side's opinion of the other is at or below the feud line.</summary>
+        public bool FeudPair(int salt, out Survivor first, out Survivor second)
+        {
+            first = null;
+            second = null;
+            var pairs = new List<KeyValuePair<Survivor, Survivor>>();
+            for (int i = 0; i < survivors.Count; i++)
+                for (int j = i + 1; j < survivors.Count; j++)
+                {
+                    var a = survivors[i];
+                    var b = survivors[j];
+                    if (!a.alive || !b.alive || a.task == "Fallen" || b.task == "Fallen") continue;
+                    if (KinBoard.Read(a.kin, b.id) <= CampEventTable.FeudAt || KinBoard.Read(b.kin, a.id) <= CampEventTable.FeudAt)
+                        pairs.Add(new KeyValuePair<Survivor, Survivor>(a, b));
+                }
+            if (pairs.Count == 0) return false;
+            var pick = pairs[(salt & 0x7fffffff) % pairs.Count];
+            first = pick.Key;
+            second = pick.Value;
+            return true;
+        }
+
+        public bool FlareFeud(int salt, out string firstName, out string secondName)
+        {
+            firstName = "";
+            secondName = "";
+            if (!FeudPair(salt, out var a, out var b)) return false;
+            a.morale = Mathf.Max(0f, a.morale - CampEventTable.ArgumentMood);
+            b.morale = Mathf.Max(0f, b.morale - CampEventTable.ArgumentMood);
+            a.kin = KinBoard.Shift(a.kin, b.id, -CampEventTable.ArgumentKin);
+            b.kin = KinBoard.Shift(b.kin, a.id, -CampEventTable.ArgumentKin);
+            firstName = a.displayName;
+            secondName = b.displayName;
+            OnRosterChanged?.Invoke();
+            return true;
+        }
+
+        public bool HasHealthy() => Healthy().Count > 0;
+
+        private List<Survivor> Healthy()
+        {
+            var list = new List<Survivor>();
+            foreach (var survivor in survivors)
+                if (survivor.alive && !survivor.leader && survivor.injury <= 0 && survivor.task != "Fallen" && survivor.task != "Left") list.Add(survivor);
+            return list;
+        }
+
+        /// <summary>Stage 1 of the fever for one healthy colonist, never the leader. Returns their name.</summary>
+        public string Sicken(int salt)
+        {
+            var list = Healthy();
+            if (list.Count == 0) return "";
+            var person = list[(salt & 0x7fffffff) % list.Count];
+            person.injury = 1;
+            OnRosterChanged?.Invoke();
+            return person.displayName;
+        }
+
+        public bool Release(string id)
+        {
+            var person = Find(id);
+            if (person == null || !FeverChoice.Offered(person.alive, person.leader, person.injury)) return false;
+            person.alive = false;
+            person.task = "Fallen";
+            var days = Snapshot();
+            FeverChoice.Mourn(days, person.displayName, HasMemorial());
+            for (int i = 0; i < days.Count && i < survivors.Count; i++) survivors[i].morale = days[i].morale;
+            memorials.Add(new SuccessionLedger.Memorial
+            {
+                name = person.displayName,
+                day = WorldClock.Instance != null ? WorldClock.Instance.Day : 1,
+                kills = 0,
+                cause = FeverChoice.Cause,
+                district = "camp"
+            });
+            ColonyStorage.Instance?.AddBodies(1);
+            GameplayFeedback.Toast(person.displayName + " " + Loc.T("camp.released"));
+            OnRosterChanged?.Invoke();
+            if (CampEnd.Wiped(LivingCount())) EndCamp();
+            return true;
         }
 
         public int LivingCount()
@@ -349,14 +573,71 @@ namespace OutpostZero.Colony
         {
             var survivor = Find(id);
             if (survivor == null || !survivor.alive) return;
+            if (task == TaskPick.Auto)
+            {
+                if (survivor.leader) return;
+                survivor.ownCall = true;
+                survivor.task = TaskPick.Choose(survivor, CampNeeds());
+                OnRosterChanged?.Invoke();
+                CodexDirector.Hear("assign");
+                return;
+            }
+            if (task == CompanionKit.Task)
+            {
+                if (!CompanionKit.Fit(survivor.alive, survivor.leader, survivor.injury)) return;
+                for (int i = 0; i < survivors.Count; i++)
+                    if (survivors[i] != survivor && survivors[i].task == CompanionKit.Task) survivors[i].task = "Rest";
+            }
+            survivor.ownCall = false;
+            if (task == "Quarantine")
+            {
+                if (!CotPull.Holds(survivor.injury))
+                {
+                    GameplayFeedback.Toast(CotPull.Refuse(null));
+                    return;
+                }
+                GameplayFeedback.Toast(CotPull.Bed(null));
+            }
             survivor.task = task;
             OnRosterChanged?.Invoke();
+            CodexDirector.Hear("assign");
+        }
+
+        public bool OfferMeal(string toId)
+        {
+            Survivor from = null;
+            Survivor to = null;
+            for (int i = 0; i < survivors.Count; i++)
+            {
+                if (survivors[i].leader && survivors[i].alive) from = survivors[i];
+                if (survivors[i].id == toId) to = survivors[i];
+            }
+            var storage = ColonyStorage.Instance;
+            int meals = storage != null ? storage.Food : 0;
+            if (!GiftBond.Can(from != null ? from.id : "", to != null ? to.id : "", from != null && from.alive, to != null && to.alive, meals))
+            {
+                GameplayFeedback.Toast(Loc.T("camp.gift_none"));
+                return false;
+            }
+            if (storage.TakeFood(GiftBond.Cost) < GiftBond.Cost)
+            {
+                GameplayFeedback.Toast(Loc.T("camp.gift_none"));
+                return false;
+            }
+            from.kin = GiftBond.Give(from.kin, to.id);
+            to.kin = GiftBond.Give(to.kin, from.id);
+            from.opinion = GiftBond.Score(from.opinion);
+            to.opinion = GiftBond.Score(to.opinion);
+            OnRosterChanged?.Invoke();
+            GameplayFeedback.Toast(Loc.T("camp.gift_ok"));
+            return true;
         }
 
         public void TickTasks()
         {
             var storage = ColonyStorage.Instance;
             int day = WorldClock.Instance != null ? WorldClock.Instance.Day : 1;
+            WeatherKind sky = WeatherController.Instance != null ? WeatherController.Instance.Kind : WeatherKind.Clear;
             int index = 0;
             foreach (var survivor in survivors)
             {
@@ -365,75 +646,114 @@ namespace OutpostZero.Colony
                 switch (survivor.task)
                 {
                     case "Scavenge":
-                        int scrap = Pay(4 + (survivor.trait == "Scrounger" ? 3 : 0), survivor.morale);
+                        bool scrounge = TraitHook.Holds(survivor.trait, survivor.aside, survivor.mark, "Scrounger");
+                        int scrap = Pay(4 + TraitHook.Haul(survivor.trait, survivor.aside, survivor.mark), survivor.morale, survivor.trait, survivor.aside, survivor.mark, survivor.fatigue);
                         if (scrap > 0)
                         {
-                            survivor.scavenge = Practice.Gain(survivor.scavenge);
+                            Practice.Train(ref survivor.scavenge, ref survivor.scavengeXp);
                             scrap += Practice.Bonus(survivor.scavenge);
+                            scrap += ScrapDepth.Extra(survivor.scavenge);
                         }
+                        scrap = YardSoak.Keep(scrap, survivor.task, sky);
                         if (scrap > 0 && storage != null) storage.AddScrap(scrap);
                         if (scrap > 0) survivor.morale = Mathf.Max(0f, survivor.morale - 4f);
                         if (storage != null)
                         {
-                            CraftBill.Salvage(day * 17 + index, survivor.trait == "Scrounger", out int cloth, out int chemicals, out int tape);
+                            CraftBill.Salvage(day * 17 + index, scrounge, out int cloth, out int chemicals, out int tape);
                             storage.AddCloth(cloth);
                             if (chemicals > 0) storage.AddChemicals(chemicals);
                             if (tape > 0) storage.AddTape(tape);
                             if (scrap > 0) storage.AddRaw(1);
-                            if (scrap > 0) storage.AddRounds(GuardVolley.Brought(survivor.trait == "Scrounger"));
+                            if (scrap > 0) storage.AddRounds(GuardVolley.Brought(scrounge));
+                            if (scrap > 0 && HaulCell.Due(day * 17 + index, survivor.scavenge)) storage.AddCells(1);
                         }
                         break;
                     case "Cook":
-                        int hands = Pay(2, survivor.morale);
+                        int hands = Pay(2, survivor.morale, survivor.trait, survivor.aside, survivor.mark, survivor.fatigue);
                         bool fire = GridBuilder.Instance != null && GridBuilder.Instance.HasKind("Campfire");
                         int raw = storage != null ? storage.Raw : 0;
                         CookPot.Serve(fire, raw, hands, out int spent, out int served, out int lift);
                         if (hands > 0)
                         {
-                            survivor.cooking = Practice.Gain(survivor.cooking);
+                            Practice.Train(ref survivor.cooking, ref survivor.cookingXp);
                             served += Practice.Bonus(survivor.cooking);
+                            if (spent > 0) served += PotDepth.Plate(survivor.cooking);
                         }
                         if (spent > 0 && storage != null) storage.TakeRaw(spent);
                         if (served > 0 && storage != null) storage.AddFood(served);
-                        if (lift > 0) survivor.morale = Mathf.Min(100f, survivor.morale + lift);
+                        if (lift > 0) survivor.morale = Mathf.Min(100f, survivor.morale + lift + TraitHook.CookPlate(survivor.trait, survivor.aside, survivor.mark, spent > 0));
                         break;
                     case "Guard":
-                        int watch = Pay(1, survivor.morale);
+                        int watch = Pay(1, survivor.morale, survivor.trait, survivor.aside, survivor.mark, survivor.fatigue);
                         if (watch > 0)
                         {
-                            survivor.combat = Practice.Gain(survivor.combat);
+                            Practice.Train(ref survivor.combat, ref survivor.combatXp);
                             watch += Practice.Bonus(survivor.combat);
-                            survivor.morale = Mathf.Max(0f, survivor.morale - 2f);
+                            watch += GuardDepth.Post(survivor.combat);
+                            survivor.morale = Mathf.Max(0f, survivor.morale - TraitHook.WatchCost(survivor.trait, survivor.aside, survivor.mark));
                         }
+                        watch = TraitHook.WatchPay(survivor.trait, survivor.aside, survivor.mark, watch);
+                        watch = YardSoak.Keep(watch, survivor.task, sky);
                         if (watch > 0 && storage != null) storage.AddSecurity(watch);
                         break;
                     case "Rest":
-                        survivor.morale = Mathf.Min(100f, survivor.morale + 8f);
+                        survivor.morale = Mathf.Min(100f, survivor.morale + TraitHook.RestGain(survivor.trait, survivor.aside, survivor.mark, LifeLine.Rest(survivor.age)));
                         break;
                     case "Medic":
-                        if (ColonyDay.OutputScale(survivor.morale) <= 0f) break;
-                        survivor.medicine = Practice.Gain(survivor.medicine);
+                        if (ColonyDay.OutputScale(survivor.morale, survivor.trait, survivor.aside, survivor.mark) <= 0f) break;
+                        Practice.Train(ref survivor.medicine, ref survivor.medicineXp);
                         survivor.morale = Mathf.Min(100f, survivor.morale + 2f);
                         var leader = PlayerRegistry.Current;
-                        leader?.GetComponent<Combat.HealthSystem>()?.Heal(12f + Practice.Bonus(survivor.medicine) * 6f);
+                        var leaderHealth = leader?.GetComponent<Combat.HealthSystem>();
+                        leaderHealth?.Heal(12f + Practice.Bonus(survivor.medicine) * 6f + MedDepth.Mend(survivor.medicine));
                         leader?.GetComponent<StatusEffectController>()?.ClearInjury();
+                        var hurt = new int[survivors.Count];
                         for (int i = 0; i < survivors.Count; i++)
                         {
                             if (survivors[i].alive && survivors[i].injury > 0) survivors[i].injury--;
+                            hurt[i] = survivors[i].alive ? survivors[i].injury : 0;
+                        }
+                        int worst = MedStock.Worst(hurt);
+                        float missing = leaderHealth != null && !leaderHealth.IsDead ? leaderHealth.MaxHealth - leaderHealth.CurrentHealth : 0f;
+                        if (storage != null && MedStock.Open(storage.Meds, worst >= 0 ? hurt[worst] : 0, missing) && storage.TakeMeds(1) > 0)
+                        {
+                            if (worst >= 0) survivors[worst].injury--;
+                            if (missing > 0.5f) leaderHealth.Heal(MedStock.Heal);
                         }
                         break;
                     case "Build":
                         int pace = BuildSite.Shift(survivor.trait, survivor.morale);
+                        int asidePace = BuildSite.Shift(survivor.aside, survivor.morale);
+                        int markPace = BuildSite.Shift(survivor.mark, survivor.morale);
+                        if (asidePace > pace) pace = asidePace;
+                        if (markPace > pace) pace = markPace;
                         if (pace > 0)
                         {
-                            survivor.engineering = Practice.Gain(survivor.engineering);
+                            Practice.Train(ref survivor.engineering, ref survivor.engineeringXp);
                             pace += Practice.Bonus(survivor.engineering);
+                            pace += BuildDepth.Raise(survivor.engineering);
+                            pace = ShiftWear.Short(pace, survivor.fatigue);
                         }
+                        pace = YardSoak.Keep(pace, survivor.task, sky);
                         if (pace > 0 && GridBuilder.Instance != null && (GridBuilder.Instance.Raise(pace) || GridBuilder.Instance.Patch(pace) || GridBuilder.Instance.Lift(pace)))
                             survivor.morale = Mathf.Max(0f, survivor.morale - 2f);
                         break;
+                    case CraftQueue.Task:
+                        bool bench = GridBuilder.Instance != null && GridBuilder.Instance.HasKind("Workbench");
+                        int orders = CraftingBench.Instance != null ? CraftingBench.Instance.Orders.Count : 0;
+                        int crafts = orders > 0 ? CraftQueue.Hands(survivor.morale, survivor.engineering, bench) : 0;
+                        crafts = ShiftWear.Short(crafts, survivor.fatigue);
+                        int made = crafts > 0 ? CraftingBench.Instance.WorkOrders(crafts) : 0;
+                        if (made > 0)
+                        {
+                            Practice.Train(ref survivor.engineering, ref survivor.engineeringXp);
+                            survivor.morale = Mathf.Max(0f, survivor.morale - 1f);
+                            GameplayFeedback.Toast(survivor.displayName + " " + Loc.T("craft.done") + " " + made);
+                        }
+                        break;
                     case "Clear":
-                        int haul = YardDead.Hands(survivor.morale);
+                        int haul = ShiftWear.Short(YardDead.Hands(survivor.morale), survivor.fatigue);
+                        haul = YardSoak.Keep(haul, survivor.task, sky);
                         if (haul > 0 && storage != null && storage.TakeBodies(haul) > 0)
                             survivor.morale = Mathf.Max(0f, survivor.morale - 2f);
                         break;
@@ -456,15 +776,97 @@ namespace OutpostZero.Colony
             bool cot = CampServices.Instance != null && CampServices.Instance.CotOnline;
             int bodies = ColonyStorage.Instance != null ? ColonyStorage.Instance.Bodies : 0;
             int raw = ColonyStorage.Instance != null ? ColonyStorage.Instance.Raw : 0;
-            var notes = ColonyDay.Simulate(days, ref food, ref water, cot, expeditionWon, fallenName, bodies, ref raw);
+            WeatherKind sky = WeatherController.Instance != null ? WeatherController.Instance.Kind : WeatherKind.Clear;
+            int endedDay = WorldClock.Instance != null ? WorldClock.Instance.Day - 1 : 1;
+            bool idle = IdleDay.Idle(wentOut || expeditionWon, endedDay);
+            wentOut = false;
+            var notes = ColonyDay.Simulate(days, ref food, ref water, cot, expeditionWon, fallenName, bodies, ref raw, sky, idle);
             ApplySnapshot(days);
             Spend(food, water);
             if (ColonyStorage.Instance != null) ColonyStorage.Instance.SetRaw(raw);
+            PickOwnCalls();
             Publish(notes);
             var held = Leader;
-            if (held != null) held.leadership = Practice.Gain(held.leadership);
+            if (held != null) Practice.Train(ref held.leadership, ref held.leadershipXp);
             FactionTrade.Instance?.OnMorning(WorldClock.Instance != null ? WorldClock.Instance.Day : 1);
+            CampEventDirector.Instance?.Dawn(WorldClock.Instance != null ? WorldClock.Instance.Day : 1);
             AudioManager.Instance?.Sting("dawn");
+        }
+
+        private void PickOwnCalls()
+        {
+            var camp = CampNeeds();
+            for (int i = 0; i < survivors.Count; i++)
+            {
+                var survivor = survivors[i];
+                if (!survivor.alive || survivor.leader || !survivor.ownCall) continue;
+                if (System.Array.IndexOf(TaskPick.Tasks, survivor.task) < 0) continue;
+                survivor.task = TaskPick.Choose(survivor, camp);
+            }
+        }
+
+        private TaskPick.Camp CampNeeds()
+        {
+            var storage = ColonyStorage.Instance;
+            int living = System.Math.Max(1, LivingCount());
+            int injured = 0;
+            for (int i = 0; i < survivors.Count; i++)
+                if (survivors[i].alive && survivors[i].injury > 0) injured++;
+            return new TaskPick.Camp
+            {
+                FoodPerHead = storage != null ? storage.Food / living : 0,
+                Raw = storage != null ? storage.Raw : 0,
+                Scrap = storage != null ? storage.Scrap : 0,
+                Injured = injured,
+                RaidLikely = NightRaidController.Instance != null && NightRaidController.Instance.RaidLikely,
+                WorkWaiting = GridBuilder.Instance != null && GridBuilder.Instance.WorkWaiting(),
+                Orders = CraftingBench.Instance != null ? CraftingBench.Instance.Orders.Count : 0,
+                Bench = GridBuilder.Instance != null && GridBuilder.Instance.HasKind("Workbench")
+            };
+        }
+
+        public Survivor Companion
+        {
+            get
+            {
+                for (int i = 0; i < survivors.Count; i++)
+                {
+                    var survivor = survivors[i];
+                    if (survivor.task == CompanionKit.Task && CompanionKit.Fit(survivor.alive, survivor.leader, survivor.injury)) return survivor;
+                }
+                return null;
+            }
+        }
+
+        /// <summary>The companion packs a ration from storage at the gate; with none to take they leave hungry.</summary>
+        public Survivor PackCompanion()
+        {
+            var mate = Companion;
+            if (mate == null) return null;
+            var storage = ColonyStorage.Instance;
+            bool packed = CompanionKit.Pack(storage != null ? storage.Food : 0, storage != null ? storage.Water : 0, out int food, out int water);
+            if (storage != null && food > 0) storage.AddFood(-food);
+            if (storage != null && water > 0) storage.AddWater(-water);
+            if (!packed)
+            {
+                mate.morale = Mathf.Max(0f, mate.morale - CompanionKit.HungryMorale);
+                GameplayFeedback.Toast(mate.displayName + " " + Loc.T("companion.hungry"));
+            }
+            OnRosterChanged?.Invoke();
+            return mate;
+        }
+
+        public void CompanionHome(string id, int bites, bool fell, bool cameHome)
+        {
+            var mate = Find(id);
+            if (mate == null || !mate.alive) return;
+            mate.injury = CompanionKit.Wounds(mate.injury, bites, fell);
+            if (!fell) Practice.Train(ref mate.combat, ref mate.combatXp);
+            int haul = CompanionKit.Haul(mate.scavenge, cameHome && !fell);
+            if (haul > 0) ColonyStorage.Instance?.AddScrap(haul);
+            if (!CompanionKit.Fit(mate.alive, mate.leader, mate.injury)) mate.task = "Rest";
+            GameplayFeedback.Toast(CompanionKit.Line(mate.displayName, fell, haul, null));
+            OnRosterChanged?.Invoke();
         }
 
         public void RewardReturn()
@@ -477,11 +879,32 @@ namespace OutpostZero.Colony
 
         private static int Pay(int amount, float morale)
         {
-            float scale = ColonyDay.OutputScale(morale);
+            return Pay(amount, morale, null);
+        }
+
+        private static int Pay(int amount, float morale, string trait)
+        {
+            return Pay(amount, morale, trait, null);
+        }
+
+        private static int Pay(int amount, float morale, string trait, string aside)
+        {
+            return Pay(amount, morale, trait, aside, null);
+        }
+
+        private static int Pay(int amount, float morale, string trait, string aside, string mark)
+        {
+            return Pay(amount, morale, trait, aside, mark, 0f);
+        }
+
+        private static int Pay(int amount, float morale, string trait, string aside, string mark, float fatigue)
+        {
+            float scale = ColonyDay.OutputScale(morale, trait, aside, mark);
             if (scale <= 0f) return 0;
-            if (scale > 1f) return amount + 1;
-            if (scale < 1f) return Math.Max(1, amount - 1);
-            return amount;
+            int paid = amount;
+            if (scale > 1f) paid = amount + 1;
+            else if (scale < 1f) paid = Math.Max(1, amount - 1);
+            return ShiftWear.Short(paid, fatigue);
         }
 
         private List<ColonistDay> Snapshot()
@@ -494,8 +917,12 @@ namespace OutpostZero.Colony
                 {
                     id = survivor.id,
                     trait = survivor.trait,
+                    aside = survivor.aside,
+                    mark = survivor.mark,
                     task = survivor.task,
                     bond = survivor.bond,
+                    kin = survivor.kin ?? "",
+                    name = survivor.displayName,
                     alive = survivor.alive,
                     leader = survivor.leader,
                     morale = survivor.morale,
@@ -503,7 +930,8 @@ namespace OutpostZero.Colony
                     thirst = survivor.thirst,
                     opinion = survivor.opinion,
                     injury = survivor.injury,
-                    leadership = survivor.leadership
+                    leadership = survivor.leadership,
+                    fatigue = survivor.fatigue
                 });
             }
             return days;
@@ -522,7 +950,9 @@ namespace OutpostZero.Colony
                 survivor.hunger = day.hunger;
                 survivor.thirst = day.thirst;
                 survivor.opinion = day.opinion;
+                survivor.kin = day.kin ?? "";
                 survivor.injury = day.injury;
+                survivor.fatigue = day.fatigue;
             }
         }
 
@@ -540,7 +970,7 @@ namespace OutpostZero.Colony
         {
             DayNotes = notes == null || notes.Length == 0 ? "" : string.Join(", ", notes);
             OnRosterChanged?.Invoke();
-            if (DayNotes.Length > 0) GameplayFeedback.Toast(DayNotes);
+            if (DayNotes.Length > 0) GameplayFeedback.Toast(NoteSay.Read(DayNotes, null));
         }
 
         public float AverageMorale()
@@ -569,9 +999,57 @@ namespace OutpostZero.Colony
 
         public bool Adopt(string id, string name, string trait)
         {
+            return Adopt(id, name, trait, 0);
+        }
+
+        public bool Adopt(string id, string name, string trait, int injury)
+        {
             if (string.IsNullOrEmpty(id) || Has(id)) return false;
             if (survivors.Count >= RescueBook.RosterCap) return false;
-            survivors.Add(Make(id, name, trait, false, "Found on the street"));
+            var person = Make(id, name, trait, false, "Found on the street");
+            person.injury = OutpostZero.Expedition.FollowBite.Bring(injury);
+            survivors.Add(person);
+            OnRosterChanged?.Invoke();
+            return true;
+        }
+
+        public bool Lose(string id, string name, string trait, Vector3 where)
+        {
+            if (string.IsNullOrEmpty(id) || Has(id)) return false;
+            if (survivors.Count >= RescueBook.RosterCap) return false;
+            for (int i = 0; i < survivors.Count; i++)
+            {
+                if (survivors[i] == null || !survivors[i].alive) continue;
+                survivors[i].morale = StreetMourn.After(survivors[i].morale);
+            }
+            var person = Make(id, name, trait, false, "Lost on the street");
+            person.alive = false;
+            person.injury = OutpostZero.Expedition.FollowBite.Cap;
+            person.task = "Fallen";
+            survivors.Add(person);
+            string district = WorldMapService.Instance != null && WorldMapService.Instance.Current != null
+                ? WorldMapService.Instance.Current.id
+                : "ash_market";
+            int day = WorldClock.Instance != null ? WorldClock.Instance.Day : 1;
+            memorials.Add(new SuccessionLedger.Memorial
+            {
+                name = person.displayName,
+                day = day,
+                kills = 0,
+                cause = StreetMourn.Cause(),
+                district = district
+            });
+            corpses.Add(new SuccessionLedger.CorpseMark
+            {
+                district = district,
+                x = where.x,
+                y = where.y,
+                z = where.z,
+                name = person.displayName,
+                gear = "",
+                recovered = false
+            });
+            SpawnCorpse(where, corpses.Count - 1, "");
             OnRosterChanged?.Invoke();
             return true;
         }
@@ -621,6 +1099,7 @@ namespace OutpostZero.Colony
             corpse.name = "Corpse_Leader";
             corpse.transform.position = position + Vector3.up * 0.2f;
             corpse.transform.localScale = new Vector3(0.6f, 0.35f, 0.6f);
+            MaterialLibrary.Dress(corpse.GetComponent<Renderer>(), SurfaceFamily.Cloth);
             corpse.layer = GameLayers.Interactable;
             corpse.AddComponent<FallenGear>().Configure(index, gear);
         }

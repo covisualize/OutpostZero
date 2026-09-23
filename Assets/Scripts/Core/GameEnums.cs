@@ -23,7 +23,13 @@ namespace OutpostZero.Core
         GunshotLoud,       // Rifle / Shotgun
         Explosion,
         ObjectBroken,
-        ZombieScream
+        ZombieScream,
+        Thunder,
+        BleedDrip,
+        DoorSwing,
+        ShellClink,
+        RationBite,
+        Cough
     }
 
     public enum WeaponType

@@ -3,6 +3,7 @@ using System.IO;
 using UnityEditor;
 using UnityEngine;
 using OutpostZero.Core;
+using OutpostZero.Items;
 
 namespace OutpostZero.EditorTools
 {
@@ -52,6 +53,7 @@ namespace OutpostZero.EditorTools
                 weapon.noiseType = NoiseType.GunshotLoud;
                 weapon.useProjectile = true;
                 weapon.modelPath = ModelPaths.Shotgun;
+                weapon.holdOffset = new Vector3(0f, 0f, 0.1f);
             });
 
             SaveWeapon("Machete", weapon =>
@@ -67,6 +69,7 @@ namespace OutpostZero.EditorTools
                 weapon.noiseType = NoiseType.MeleeSwing;
                 weapon.isMelee = true;
                 weapon.modelPath = ModelPaths.Machete;
+                weapon.holdOffset = new Vector3(0f, 0f, 0.15f);
             });
 
             SaveWeapon("Rifle_Assault", weapon =>
@@ -99,6 +102,7 @@ namespace OutpostZero.EditorTools
                 zombie.attackDamage = 18f;
                 zombie.attackCooldown = 1.4f;
                 zombie.specialAbility = ZombieSpecialAbility.None;
+                zombie.lootTable = LootTables.Walker;
             });
 
             SaveZombie("Runner", zombie =>
@@ -113,6 +117,7 @@ namespace OutpostZero.EditorTools
                 zombie.attackCooldown = 1.0f;
                 zombie.sightRange = 16f;
                 zombie.specialAbility = ZombieSpecialAbility.Lunge;
+                zombie.lootTable = LootTables.Runner;
             });
 
             SaveZombie("Brute", zombie =>
@@ -128,10 +133,25 @@ namespace OutpostZero.EditorTools
                 zombie.attackRange = 2.1f;
                 zombie.sightRange = 12f;
                 zombie.specialAbility = ZombieSpecialAbility.Charge;
+                zombie.lootTable = LootTables.Brute;
             });
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
+            foreach (var problem in ItemDatabaseSync.Sync()) Debug.LogWarning("[DefaultDataGenerator] " + problem);
+            RecipeBookSync.Sync();
+            ModuleBookSync.Sync();
+            DifficultyBookSync.Sync();
+            StatusBookSync.Sync();
+            NoiseBookSync.Sync();
+            ThrowableBookSync.Sync();
+            WeaponModBookSync.Sync();
+            FactionBookSync.Sync();
+            TraitBookSync.Sync();
+            TutorialBookSync.Sync();
+            ExpeditionBookSync.Sync();
+            CampEventBookSync.Sync();
+            SyncWeaponSet();
         }
 
         public static WeaponDefinition LoadWeapon(string assetName)
@@ -155,7 +175,34 @@ namespace OutpostZero.EditorTools
             }
             fill(asset);
             asset.name = assetName;
+            if (asset.muzzleVfx == VfxEvent.None) asset.muzzleVfx = VfxBook.MuzzleFor(asset.weaponType);
+            if (string.IsNullOrEmpty(asset.fireSfx) && asset.weaponType != WeaponType.Melee) asset.fireSfx = OutpostZero.Shell.ClipBook.Fire(asset.weaponType);
+            if (asset.heldPrefab == null && !string.IsNullOrEmpty(asset.modelPath))
+            {
+                asset.heldPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/Weapons/" + PrefabCatalog.Id(asset.modelPath) + ".prefab");
+            }
             EditorUtility.SetDirty(asset);
+        }
+
+        /// <summary>Lists every weapon definition in Resources/WeaponSet so runtime weapons find their model.</summary>
+        public static void SyncWeaponSet()
+        {
+            const string path = "Assets/Resources/" + WeaponSet.ResourcePath + ".asset";
+            var set = AssetDatabase.LoadAssetAtPath<WeaponSet>(path);
+            if (set == null)
+            {
+                set = ScriptableObject.CreateInstance<WeaponSet>();
+                AssetDatabase.CreateAsset(set, path);
+            }
+            var found = new System.Collections.Generic.List<WeaponDefinition>();
+            foreach (string guid in AssetDatabase.FindAssets("t:WeaponDefinition", new[] { WeaponsDir }))
+            {
+                var weapon = AssetDatabase.LoadAssetAtPath<WeaponDefinition>(AssetDatabase.GUIDToAssetPath(guid));
+                if (weapon != null) found.Add(weapon);
+            }
+            set.weapons = found.ToArray();
+            EditorUtility.SetDirty(set);
+            AssetDatabase.SaveAssets();
         }
 
         private static void SaveZombie(string assetName, System.Action<ZombieArchetype> fill)

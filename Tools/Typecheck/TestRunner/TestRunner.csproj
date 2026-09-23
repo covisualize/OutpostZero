@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><TargetFramework>netstandard2.1</TargetFramework><AssemblyName>UnityEngine.TestRunner</AssemblyName><ExtraDefines>UNITY_INCLUDE_TESTS</ExtraDefines></PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(PkgRoot)/com.unity.test-framework/package/UnityEngine.TestRunner/**/*.cs" />
+    <Reference Include="$(UnityData)/Resources/PackageManager/BuiltInPackages/com.unity.ext.nunit/net40/unity-custom/nunit.framework.dll" />
+  </ItemGroup>
+</Project>

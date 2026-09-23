@@ -1,7 +1,9 @@
 using UnityEngine;
+using OutpostZero.AI;
 using OutpostZero.Colony;
 using OutpostZero.Core;
 using OutpostZero.Player;
+using OutpostZero.Shell;
 
 namespace OutpostZero.Items
 {
@@ -10,13 +12,15 @@ namespace OutpostZero.Items
         [SerializeField] private string tableId = "crate";
         [SerializeField] private bool looted;
         private bool rolled;
+        private string stamp = "";
         private ContainerHold.Stack[] stacks = new ContainerHold.Stack[0];
 
         public static LootContainer Open { get; private set; }
 
         public string Contents => ContainerHold.Signature(stacks);
+        public string StampId => stamp ?? "";
         public int HeldCount => stacks == null ? 0 : stacks.Length;
-        public string Prompt => looted ? string.Empty : rolled ? "Take from container" : "Search container";
+        public string Prompt => looted ? string.Empty : rolled ? StreetAsk.Take(null) : StreetAsk.Search(null);
 
         public string HeldId(int index)
         {
@@ -35,6 +39,41 @@ namespace OutpostZero.Items
             tableId = string.IsNullOrEmpty(table) ? "crate" : table;
         }
 
+        public void Stamp(string mark)
+        {
+            stamp = mark ?? "";
+        }
+
+        public void MarkEmpty()
+        {
+            looted = true;
+            rolled = true;
+            stacks = new ContainerHold.Stack[0];
+            if (Open == this) Open = null;
+        }
+
+        public void Restore(string body)
+        {
+            stacks = ContainerHold.Decode(body);
+            rolled = true;
+            looted = stacks.Length == 0;
+            if (looted && Open == this) Open = null;
+        }
+
+        public static void Sweep()
+        {
+            if (OutpostZero.Shell.WorldMapService.Instance == null) return;
+            var boxes = Object.FindObjectsByType<LootContainer>(FindObjectsSortMode.None);
+            for (int i = 0; i < boxes.Length; i++)
+            {
+                if (boxes[i] == null || string.IsNullOrEmpty(boxes[i].StampId)) continue;
+                string left = OutpostZero.Shell.WorldMapService.Instance.StreetLeft(boxes[i].StampId);
+                if (left == null) continue;
+                if (left.Length == 0) boxes[i].MarkEmpty();
+                else boxes[i].Restore(left);
+            }
+        }
+
         public bool CanInteract(PlayerInventory inventory) => !looted && inventory != null;
 
         public void Interact(PlayerInventory inventory)
@@ -43,8 +82,9 @@ namespace OutpostZero.Items
             if (!rolled) Roll();
             Open = this;
             PackView.AskOpen();
-            GameplayFeedback.Toast(stacks.Length > 0 ? "Container open" : "Empty");
+            GameplayFeedback.Toast(stacks.Length > 0 ? GateLine.Open(null) : GateLine.Empty(null));
             if (stacks.Length == 0) Finish();
+            else Remember();
         }
 
         public bool Take(string id, PlayerInventory inventory)
@@ -55,10 +95,25 @@ namespace OutpostZero.Items
             if (!Give(inventory, id, moved))
             {
                 stacks = PutBack(stacks, id, moved);
-                GameplayFeedback.Toast("Pack is too heavy");
+                GameplayFeedback.Toast(GateLine.Heavy(null));
                 return false;
             }
             if (stacks.Length == 0) Finish();
+            else Remember();
+            return true;
+        }
+
+        public bool Stow(string id, PlayerInventory inventory)
+        {
+            if (inventory == null || looted || ItemCatalog.Find(id) == null) return false;
+            int count = 0;
+            foreach (var item in inventory.Items)
+            {
+                if (item.ItemId == id) count = item.Quantity;
+            }
+            if (count <= 0 || !inventory.TryConsume(id, count)) return false;
+            stacks = ContainerHold.Put(stacks, id, count);
+            Remember();
             return true;
         }
 
@@ -79,9 +134,10 @@ namespace OutpostZero.Items
                 var kept = new ContainerHold.Stack[remain];
                 for (int i = 0; i < remain; i++) kept[i] = left[i];
                 stacks = kept;
-                GameplayFeedback.Toast("Left some loot behind");
+                GameplayFeedback.Toast(GateLine.Left(null));
             }
             if (stacks.Length == 0) Finish();
+            else Remember();
             return given;
         }
 
@@ -89,6 +145,9 @@ namespace OutpostZero.Items
         {
             rolled = true;
             var grants = LootTables.Roll(tableId, GetInstanceID());
+            float scarcity = DifficultyTable.Of(DifficultyProfile.Active).LootScale;
+            for (int i = 0; i < grants.Length; i++)
+                grants[i].Count = DifficultyTable.Scarce(grants[i].Count, scarcity, GetInstanceID() * 31 + i);
             int count = 0;
             for (int i = 0; i < grants.Length; i++)
             {
@@ -102,7 +161,8 @@ namespace OutpostZero.Items
                 if (ItemCatalog.Find(grants[i].ItemId) == null) continue;
                 stacks[write++] = new ContainerHold.Stack { Id = grants[i].ItemId, Count = grants[i].Count };
             }
-            int extra = FieldHand.Scrap(SurvivorRoster.LeaderPractice("Scavenge"));
+            int scavenge = SurvivorRoster.LeaderPractice("Scavenge");
+            int extra = FieldHand.Scrap(scavenge) + HandDepth.Scrap(scavenge);
             if (extra > 0) stacks = Pile(stacks, "scrap", extra);
         }
 
@@ -123,7 +183,8 @@ namespace OutpostZero.Items
             return next;
         }
 
-        private static bool Give(PlayerInventory inventory, string id, int count)
+        /// <summary>Hands one grant to the leader: rounds feed the matching gun, scrap goes to the count, the rest to the pack.</summary>
+        public static bool Give(PlayerInventory inventory, string id, int count)
         {
             var record = ItemCatalog.Find(id);
             if (record == null || count <= 0) return false;
@@ -144,10 +205,17 @@ namespace OutpostZero.Items
             return next;
         }
 
+        private void Remember()
+        {
+            if (string.IsNullOrEmpty(stamp)) return;
+            OutpostZero.Shell.WorldMapService.Instance?.NoteHold(stamp, ContainerHold.Encode(stacks));
+        }
+
         private void Finish()
         {
             looted = true;
             if (Open == this) Open = null;
+            if (!string.IsNullOrEmpty(stamp)) OutpostZero.Shell.WorldMapService.Instance?.NoteStreet(stamp);
         }
     }
 }

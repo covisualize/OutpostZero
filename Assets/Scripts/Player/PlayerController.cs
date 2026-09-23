@@ -45,6 +45,10 @@ namespace OutpostZero.Player
         [Header("Tactical Equipment")]
         [SerializeField] private Light flashlight;
         [SerializeField] private bool flashlightOn = false;
+        [SerializeField] private float lampCell = LampCell.Full;
+        private Light railLight;
+        private Texture2D lampCookie;
+        private GameObject lampShaft;
 
         // Components
         private CharacterController characterController;
@@ -56,8 +60,24 @@ namespace OutpostZero.Player
         public bool IsSprinting { get; private set; }
         public bool IsCrouching { get; private set; }
         public bool IsAimingDownSights { get; private set; }
+        /// <summary>Where the leader is aiming on the ground plane, for the rig's spine and head turn.</summary>
+        public Vector3 AimPoint { get; private set; }
         private bool sprintLatch;
+        private bool aimLatch;
         public bool FlashlightOn => flashlightOn;
+        public bool ActiveHasRail
+        {
+            get
+            {
+                var weapon = ActiveWeapon;
+                if (weapon == null) return false;
+                var mod = weapon.GetComponent<WeaponMod>();
+                return mod != null && mod.HasRail;
+            }
+        }
+        public bool RailLit => RailLamp.Lit(IsAimingDownSights, ActiveHasRail, LampCell.Live(lampCell));
+        public float LampCellCharge => lampCell;
+        public float LampSpent => LampCell.Spent(lampCell);
         public bool WheelOpen { get; private set; }
         public int WheelSlot { get; private set; } = -1;
         private float wheelHold;
@@ -67,6 +87,50 @@ namespace OutpostZero.Player
         public float CurrentStamina => currentStamina;
         public float MaxStamina => maxStamina;
         public WeaponBase ActiveWeapon => (equippedWeapons != null && equippedWeapons.Length > activeWeaponIndex) ? equippedWeapons[activeWeaponIndex] : null;
+        public int ActiveSlot => activeWeaponIndex;
+
+        public WeaponBase WeaponAt(int slot)
+        {
+            if (equippedWeapons == null || slot < 0 || slot >= equippedWeapons.Length) return null;
+            return equippedWeapons[slot];
+        }
+
+        public int WeaponCount
+        {
+            get
+            {
+                if (equippedWeapons == null) return 0;
+                int count = 0;
+                for (int i = 0; i < equippedWeapons.Length; i++)
+                {
+                    if (equippedWeapons[i] != null) count++;
+                }
+                return count;
+            }
+        }
+
+        public bool TryStrip()
+        {
+            var weapon = ActiveWeapon;
+            if (weapon == null) return false;
+            string card = weapon is FirearmWeapon gun ? gun.CardId : "";
+            if (!StripYield.Can(WeaponCount, weapon.Type == WeaponType.Melee, true)) return false;
+            if (StripYield.Scrap(card) <= 0) return false;
+            var keep = new System.Collections.Generic.List<WeaponBase>();
+            if (equippedWeapons != null)
+            {
+                for (int i = 0; i < equippedWeapons.Length; i++)
+                {
+                    if (equippedWeapons[i] != null && equippedWeapons[i] != weapon) keep.Add(equippedWeapons[i]);
+                }
+            }
+            equippedWeapons = keep.ToArray();
+            Destroy(weapon.gameObject);
+            activeWeaponIndex = 0;
+            if (equippedWeapons.Length > 0) SelectWeapon(0);
+            else OnActiveWeaponChanged?.Invoke(null);
+            return true;
+        }
 
         public event Action<float, float> OnStaminaChanged; // current, max
         public event Action<WeaponBase> OnActiveWeaponChanged;
@@ -76,10 +140,12 @@ namespace OutpostZero.Player
             characterController = GetComponent<CharacterController>();
             healthSystem = GetComponent<HealthSystem>();
             inventory = GetComponent<PlayerInventory>();
+            if (inventory != null) Attach.Ensure<LeaderKitSave>(gameObject);
             mainCamera = Camera.main;
             currentStamina = maxStamina;
 
             healthSystem.OnDeath += HandlePlayerDeath;
+            healthSystem.OnDamaged += HandleHurt;
             GameLayers.ApplyRecursively(gameObject, GameLayers.Player);
         }
 
@@ -121,6 +187,65 @@ namespace OutpostZero.Player
                 }
                 mod.Restore(slot);
             }
+        }
+
+        public static string ArmId(WeaponBase weapon)
+        {
+            if (weapon == null) return "";
+            return weapon is FirearmWeapon gun ? gun.CardId : WeaponCard.IdFor(weapon.Type);
+        }
+
+        public System.Collections.Generic.List<LeaderKit.Arm> PackArms()
+        {
+            var arms = new System.Collections.Generic.List<LeaderKit.Arm>();
+            if (equippedWeapons == null) return arms;
+            for (int i = 0; i < equippedWeapons.Length; i++)
+            {
+                var weapon = equippedWeapons[i];
+                if (weapon == null) continue;
+                var gun = weapon as FirearmWeapon;
+                arms.Add(new LeaderKit.Arm { Id = ArmId(weapon), Magazine = gun != null ? gun.CurrentAmmo : 0, Reserve = gun != null ? gun.ReserveAmmo : 0 });
+            }
+            return arms;
+        }
+
+        /// <summary>
+        /// Rebuilds the slots in saved order: a held weapon of the same id keeps its object and takes the
+        /// saved rounds, a missing one is built from its card, and one the save lacks is dropped.
+        /// </summary>
+        public void RestoreArms(System.Collections.Generic.List<LeaderKit.Arm> arms, int active)
+        {
+            if (arms == null || arms.Count == 0) return;
+            var spare = new System.Collections.Generic.List<WeaponBase>();
+            if (equippedWeapons != null)
+                for (int i = 0; i < equippedWeapons.Length; i++)
+                    if (equippedWeapons[i] != null) spare.Add(equippedWeapons[i]);
+            var next = new System.Collections.Generic.List<WeaponBase>();
+            foreach (var arm in arms)
+            {
+                WeaponBase held = null;
+                for (int i = 0; i < spare.Count; i++)
+                {
+                    if (ArmId(spare[i]) != arm.Id) continue;
+                    held = spare[i];
+                    spare.RemoveAt(i);
+                    break;
+                }
+                if (held == null)
+                {
+                    var spec = WeaponCard.Find(arm.Id);
+                    if (string.IsNullOrEmpty(spec.Id)) continue;
+                    held = SpawnWeapon(spec, arm.Magazine, arm.Reserve);
+                    if (held == null) continue;
+                }
+                if (held is FirearmWeapon gun) gun.SetAmmo(arm.Magazine, arm.Reserve);
+                held.gameObject.SetActive(false);
+                next.Add(held);
+            }
+            if (next.Count == 0) return;
+            foreach (var left in spare) Destroy(left.gameObject);
+            equippedWeapons = next.ToArray();
+            SelectWeapon(Mathf.Clamp(active, 0, equippedWeapons.Length - 1));
         }
 
         public void Configure(WeaponBase[] weapons, Light tacticalLight)
@@ -187,10 +312,12 @@ namespace OutpostZero.Player
                 definition.isMelee = true;
                 var melee = weaponObject.AddComponent<MeleeWeapon>();
                 melee.Configure(definition);
+                HeldModel.Mount(weaponObject.transform, WeaponSet.Find(spec.Id, spec.Type));
                 return melee;
             }
             var gun = weaponObject.AddComponent<FirearmWeapon>();
             gun.LoadCard(spec, magazine, reserve);
+            HeldModel.Mount(weaponObject.transform, WeaponSet.Find(spec.Id, spec.Type));
             return gun;
         }
 
@@ -211,10 +338,69 @@ namespace OutpostZero.Player
                 SelectWeapon(0);
             }
 
-            if (flashlight != null)
+            ApplyLamp();
+            ApplyRail();
+        }
+
+        public void AddLamp(float amount)
+        {
+            lampCell = LampCell.Fill(lampCell, amount);
+            ApplyLamp();
+            ApplyRail();
+        }
+
+        public void RestoreLamp(float spent)
+        {
+            lampCell = LampCell.FromSpent(spent);
+            if (!LampCell.Live(lampCell)) flashlightOn = false;
+            ApplyLamp();
+            ApplyRail();
+        }
+
+        private void ApplyLamp()
+        {
+            if (flashlight == null) return;
+            if (lampCookie == null) lampCookie = LampCookie.Bake();
+            if (flashlight.cookie == null) flashlight.cookie = lampCookie;
+            flashlight.type = LightType.Spot;
+            flashlight.spotAngle = LampCookie.Outer;
+            flashlight.innerSpotAngle = LampCookie.Inner;
+            flashlight.shadows = LightShadows.Soft;
+            flashlight.shadowNearPlane = OutpostZero.Graphics.ShadowRig.Near;
+            bool shine = flashlightOn && LampCell.Live(lampCell);
+            flashlight.enabled = shine;
+            if (shine) flashlight.intensity = LampCell.Intensity(lampCell);
+            if (lampShaft == null) lampShaft = OutpostZero.Graphics.LampShaft.Raise(flashlight.transform);
+            if (lampShaft != null) lampShaft.SetActive(shine);
+        }
+
+        private void ApplyRail()
+        {
+            if (railLight == null)
             {
-                flashlight.enabled = flashlightOn;
+                var holder = new GameObject("Rail_Lamp");
+                holder.transform.SetParent(transform, false);
+                holder.transform.localPosition = new Vector3(0.18f, 1.35f, 0.55f);
+                railLight = holder.AddComponent<Light>();
+                railLight.type = LightType.Spot;
+                railLight.spotAngle = RailLamp.Cone;
+                railLight.range = RailLamp.Reach;
+                railLight.color = new Color(0.92f, 0.96f, 1f);
+                railLight.shadows = LightShadows.None;
             }
+            bool shine = RailLit;
+            railLight.enabled = shine;
+            if (shine) railLight.intensity = RailLamp.Peak * LampCell.Beam(lampCell);
+        }
+
+        private float lastCough;
+
+        private static int LeaderWound()
+        {
+            var roster = SurvivorRoster.Instance;
+            var leader = roster != null ? roster.Leader : null;
+            if (leader == null) return 0;
+            return leader.injury;
         }
 
         private void Update()
@@ -231,11 +417,35 @@ namespace OutpostZero.Player
             if (healthSystem.IsDead) return;
 
             HandleInput();
-            healthSystem.Shielded = DodgeClock.Untouchable(Time.time - lastDodge);
+            bool railSpend = RailLamp.Lit(IsAimingDownSights, ActiveHasRail, LampCell.Live(lampCell));
+            bool spending = flashlightOn || railSpend;
+            lampCell = LampCell.Tick(lampCell, spending, Time.deltaTime);
+            if (spending && !LampCell.Live(lampCell))
+            {
+                flashlightOn = false;
+                AudioManager.Instance?.Play("clack");
+            }
+            ApplyLamp();
+            ApplyRail();
+            healthSystem.Shielded = OutpostZero.Shell.DevCheats.Shielded(DodgeClock.Untouchable(Time.time - lastDodge));
             HandleAiming();
             HandleMovement();
             HandleStamina();
             HandleWeapons();
+            Cough();
+        }
+
+        private void Cough()
+        {
+            if (GameManager.Instance == null || GameManager.Instance.CurrentState != GameState.ExpeditionActive) return;
+            var sky = OutpostZero.Graphics.WeatherController.Instance;
+            bool ash = sky != null && OutpostZero.Graphics.AshFall.Falls(sky.District);
+            if (!OutpostZero.Graphics.AshCough.Due(ash, IsCrouching, lastCough, Time.time)) return;
+            lastCough = Time.time;
+            float radius = OutpostZero.Graphics.AshCough.Carry(IsCrouching, NoiseTable.Radius(NoiseTable.Cough));
+            AudioManager.Instance?.PlayAt("cough", transform.position, IsCrouching ? 0.15f : 0.4f);
+            if (NoiseManager.Instance != null)
+                NoiseManager.Instance.EmitNoise(transform.position, radius, NoiseTable.Loud(NoiseTable.Cough), NoiseType.Cough, gameObject);
         }
 
         private void HandleInput()
@@ -243,16 +453,23 @@ namespace OutpostZero.Player
             // Flashlight Toggle (F)
             if (ExpeditionInput.FlashlightPressed)
             {
-                flashlightOn = !flashlightOn;
-                if (flashlight != null) flashlight.enabled = flashlightOn;
-                if (flashlightOn) CodexDirector.Hear("flashlight");
+                if (!flashlightOn && !LampCell.Live(lampCell))
+                {
+                    AudioManager.Instance?.Play("clack");
+                }
+                else
+                {
+                    flashlightOn = !flashlightOn;
+                    if (flashlightOn) CodexDirector.Hear("flashlight");
+                }
+                ApplyLamp();
             }
 
             if (ExpeditionInput.MedkitPressed)
             {
                 if (inventory != null && inventory.UseMedkit())
                 {
-                    GameplayFeedback.Toast(FieldHand.Dose(inventory.LastDoseSkill));
+                    GameplayFeedback.Toast(WoundEase.Note(FieldHand.Dose(inventory.LastDoseSkill, null), inventory.LastEase, null));
                     CodexDirector.Hear("medkit");
                 }
             }
@@ -263,7 +480,9 @@ namespace OutpostZero.Player
                 if (firearm.IsReloading) CodexDirector.Hear("reload");
             }
 
-            IsAimingDownSights = ExpeditionInput.AimHeld && !WheelOpen && Time.time >= dodgeUntil;
+            int aimMode = SettingsService.Instance != null ? SettingsService.Instance.AimMode : 0;
+            aimLatch = PlayOptions.Stance(ExpeditionInput.AimHeld, ExpeditionInput.AimPressed, aimLatch, aimMode);
+            IsAimingDownSights = aimLatch && !WheelOpen && Time.time >= dodgeUntil;
             if (IsAimingDownSights) CodexDirector.Hear("aim");
 
             if (!TrackWheel())
@@ -285,7 +504,8 @@ namespace OutpostZero.Player
             TryDodge();
             if (WheelOpen) return;
 
-            float scroll = ExpeditionInput.Scroll;
+            bool zooming = GridBuilder.Instance != null && GridBuilder.Instance.BuildMode;
+            float scroll = zooming ? 0f : ExpeditionInput.Scroll;
             if (scroll > 0.05f) CycleWeapon(1);
             else if (scroll < -0.05f) CycleWeapon(-1);
             int padCycle = ExpeditionInput.WeaponCycle;
@@ -343,14 +563,41 @@ namespace OutpostZero.Player
 
         public string WheelLine()
         {
-            if (!WheelOpen || equippedWeapons == null) return "";
+            if (!WheelOpen) return "";
+            return SlotLines(WheelSlot);
+        }
+
+        public string GearLine()
+        {
+            return SlotLines(activeWeaponIndex);
+        }
+
+        public int SlotCount => equippedWeapons != null ? equippedWeapons.Length : 0;
+
+        /// <summary>One slot's wheel row, marked when it is the weapon in hand.</summary>
+        public string SlotLine(int slot)
+        {
+            if (equippedWeapons == null || slot < 0 || slot >= equippedWeapons.Length) return "";
+            return WeaponWheel.Row(slot, SlotName(slot), slot == activeWeaponIndex, null);
+        }
+
+        private string SlotName(int slot)
+        {
+            var held = equippedWeapons[slot];
+            if (held == null) return "";
+            string id = held is FirearmWeapon gun ? gun.CardId : WeaponCard.IdFor(held.Type);
+            return FightSay.Gun(id, held.WeaponName, null);
+        }
+
+        private string SlotLines(int hot)
+        {
+            if (equippedWeapons == null) return "";
             var builder = new StringBuilder();
             int count = equippedWeapons.Length < WeaponWheel.Slots ? equippedWeapons.Length : WeaponWheel.Slots;
             for (int i = 0; i < count; i++)
             {
                 if (i > 0) builder.Append('\n');
-                string name = equippedWeapons[i] != null ? equippedWeapons[i].WeaponName : "";
-                builder.Append(WeaponWheel.Row(i, name, i == WheelSlot));
+                builder.Append(WeaponWheel.Row(i, SlotName(i), i == hot, null));
             }
             return builder.ToString();
         }
@@ -371,9 +618,9 @@ namespace OutpostZero.Player
             currentStamina = Mathf.Max(0f, currentStamina - DodgeClock.Cost);
             lastStaminaDrainTime = Time.time;
             IsAimingDownSights = false;
+            aimLatch = false;
             IsSprinting = false;
-            var needs = GetComponent<SurvivalNeeds>();
-            float cap = needs != null ? needs.StaminaCap(maxStamina) : maxStamina;
+            float cap = StaminaPool();
             OnStaminaChanged?.Invoke(currentStamina, cap);
         }
 
@@ -417,9 +664,11 @@ namespace OutpostZero.Player
             sprintLatch = PlayOptions.Stance(ExpeditionInput.SprintHeld, ExpeditionInput.SprintPressed, sprintLatch, sprintMode);
             if (IsCrouching) CodexDirector.Hear("crouch");
             if (IsSprinting) CodexDirector.Hear("sprint");
-            bool wantsToSprint = sprintLatch && !IsCrouching && currentStamina > 5f;
+            bool wantsToSprint = AimPace.AllowsSprint(IsAimingDownSights) && StreetLimp.AllowsSprint(LeaderWound()) && sprintLatch && !IsCrouching && currentStamina > 5f
+                && (inventory == null || OutpostZero.Items.PackOps.AllowsSprint(inventory.CurrentWeight, inventory.MaxWeightCapacity));
 
             IsSprinting = isMoving && wantsToSprint;
+            if (IsSprinting && ActiveWeapon is FirearmWeapon sprintGun) sprintGun.TryAbortReload(true, false);
 
             // Speed evaluation
             float currentSpeed = walkSpeed;
@@ -427,6 +676,14 @@ namespace OutpostZero.Player
             else if (IsSprinting) currentSpeed = sprintSpeed * (effects != null ? effects.SprintBonus : 1f);
             if (inventory != null) currentSpeed *= Mathf.Lerp(1f, 0.72f, inventory.WeightRatio);
             if (effects != null) currentSpeed *= effects.SlowMultiplier;
+            float groundWet = 0f;
+            var sky = OutpostZero.Graphics.WeatherController.Instance;
+            if (sky != null) groundWet = OutpostZero.Graphics.WeatherSurface.Wetness(sky.Kind);
+            bool inPuddle = OutpostZero.Graphics.PuddleStep.Inside(transform.position.x, transform.position.z, groundWet);
+            currentSpeed = OutpostZero.Graphics.WetStride.Pace(currentSpeed, groundWet, inPuddle);
+            currentSpeed = AimPace.Pace(currentSpeed, IsAimingDownSights);
+            currentSpeed = StreetSlick.Speed(currentSpeed, OilPatch.Covers(transform.position.x, transform.position.z));
+            currentSpeed = StreetLimp.Pace(currentSpeed, LeaderWound());
 
             Vector3 moveVector = inputDirection * currentSpeed;
 
@@ -443,36 +700,71 @@ namespace OutpostZero.Player
             characterController.Move(moveVector * Time.deltaTime);
 
             // Footstep noise generation
-            if (isMoving && characterController.isGrounded && Time.time >= nextFootstepTime)
+            if (isMoving && characterController.isGrounded && Time.time >= nextFootstepTime
+                && StepGate.TimerOwnsNoise(Time.time, lastClipStep, footstepInterval))
             {
                 GenerateFootstepNoise();
             }
         }
 
+        private float lastClipStep = -1f;
+
+        /// <summary>Footfall event from the walk clips; noise lands on the planted foot at the designed pace.</summary>
+        public void PlayFootstep()
+        {
+            if (characterController == null || !characterController.isGrounded) return;
+            if (characterController.velocity.magnitude < 0.2f) return;
+            lastClipStep = Time.time;
+            if (!StepGate.EventSpeaks(Time.time, nextFootstepTime)) return;
+            GenerateFootstepNoise();
+        }
+
         private void GenerateFootstepNoise()
         {
             float interval = footstepInterval;
-            float radius = walkNoiseRadius;
+            float radius = StepNoise.Base(walkNoiseRadius, NoiseTable.StepWalk);
             NoiseType nType = NoiseType.WalkFootstep;
+            string stepRow = NoiseTable.StepWalk;
 
             if (IsSprinting)
             {
                 interval = footstepInterval * 0.65f;
-                radius = sprintNoiseRadius;
+                radius = StepNoise.Base(sprintNoiseRadius, NoiseTable.StepSprint);
                 nType = NoiseType.SprintFootstep;
+                stepRow = NoiseTable.StepSprint;
             }
             else if (IsCrouching)
             {
                 interval = footstepInterval * 1.35f;
-                radius = crouchNoiseRadius;
+                radius = StepNoise.Base(crouchNoiseRadius, NoiseTable.StepCrouch);
                 nType = NoiseType.SneakFootstep;
+                stepRow = NoiseTable.StepCrouch;
             }
 
             nextFootstepTime = Time.time + interval;
 
+            float wetness = 0f;
+            var sky = OutpostZero.Graphics.WeatherController.Instance;
+            if (sky != null) wetness = OutpostZero.Graphics.WeatherSurface.Wetness(sky.Kind);
+            bool splash = OutpostZero.Graphics.PuddleStep.Inside(transform.position.x, transform.position.z, wetness);
+            radius = OutpostZero.Graphics.PuddleStep.Radius(radius, splash, IsCrouching);
+            string surface = "";
+            if (Physics.Raycast(transform.position + Vector3.up, Vector3.down, out RaycastHit ground, 2.2f, GameLayers.VisionOcclusionMask, QueryTriggerInteraction.Ignore))
+                surface = ground.collider != null ? ground.collider.name : "";
+            bool crunch = OutpostZero.Expedition.GlassShard.Covers(transform.position.x, transform.position.z);
+            string stepId = crunch ? "step_glass" : AudioMix.StepId(surface);
+            radius = StepReach.Radius(radius, stepId);
+            radius = LimpStep.Radius(radius, LeaderWound());
+            if (crunch && OutpostZero.Expedition.GlassShard.BiteAt(transform.position.x, transform.position.z))
+            {
+                var life = GetComponent<HealthSystem>();
+                if (life != null) life.TakeDamage(OutpostZero.Expedition.GlassCrunch.Nick, transform.position, Vector3.up, null);
+                GameplayFeedback.Toast(Loc.T("pane.cut"));
+            }
+
             if (NoiseManager.Instance != null && radius > 0f)
             {
-                NoiseManager.Instance.EmitNoise(transform.position, radius, 0.7f, nType, gameObject);
+                NoiseManager.Instance.EmitNoise(transform.position, radius, NoiseTable.Loud(stepRow), nType, gameObject);
             }
         }
 
@@ -484,7 +776,9 @@ namespace OutpostZero.Player
             if (aimStick.sqrMagnitude > 0.04f)
             {
                 Vector3 stickDir = new Vector3(aimStick.x, 0f, aimStick.y);
-                transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(stickDir), AimBlend());
+                AimPoint = transform.position + stickDir.normalized * 6f;
+                float sense = SettingsService.Instance != null ? SettingsService.Instance.Sensitivity : 1f;
+                transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(stickDir), Mathf.Clamp01(AimBlend() * sense));
                 NudgeAim();
                 return;
             }
@@ -492,6 +786,7 @@ namespace OutpostZero.Player
             if (mainCamera == null) mainCamera = Camera.main;
             if (mainCamera == null)
             {
+                AimPoint = transform.position + transform.forward * 6f;
                 NudgeAim();
                 return;
             }
@@ -504,6 +799,7 @@ namespace OutpostZero.Player
             if (groundPlane.Raycast(ray, out float enter))
             {
                 Vector3 hitPoint = ray.GetPoint(enter);
+                AimPoint = hitPoint;
                 Vector3 lookDirection = (hitPoint - transform.position);
                 lookDirection.y = 0f;
 
@@ -534,12 +830,15 @@ namespace OutpostZero.Player
             if (yaw > 0.01f || yaw < -0.01f) transform.Rotate(0f, yaw, 0f, Space.World);
         }
 
+        private static readonly Collider[] threats = new Collider[64];
+
         private Transform NearestThreat()
         {
-            var hits = Physics.OverlapSphere(transform.position, 18f, GameLayers.EnemyMask);
+            var hits = threats;
+            int count = Physics.OverlapSphereNonAlloc(transform.position, 18f, hits, GameLayers.EnemyMask);
             Transform best = null;
             float bestDist = 18f * 18f;
-            for (int i = 0; i < hits.Length; i++)
+            for (int i = 0; i < count; i++)
             {
                 var zombie = hits[i].GetComponentInParent<ZombieAI>();
                 if (zombie == null || zombie.CurrentState == ZombieAI.ZombieState.Dead) continue;
@@ -555,10 +854,17 @@ namespace OutpostZero.Player
             return best;
         }
 
+        private float StaminaPool()
+        {
+            float pool = NeedsPressure.Pool(SurvivorRoster.LeaderPractice("Guard"), maxStamina);
+            var needs = GetComponent<SurvivalNeeds>();
+            return needs != null ? needs.StaminaCap(pool) : pool;
+        }
+
         private void HandleStamina()
         {
             var needs = GetComponent<SurvivalNeeds>();
-            float cap = needs != null ? needs.StaminaCap(maxStamina) : maxStamina;
+            float cap = StaminaPool();
             if (currentStamina > cap) currentStamina = cap;
             if (IsSprinting)
             {
@@ -586,7 +892,7 @@ namespace OutpostZero.Player
 
         private void HandleWeapons()
         {
-            if (WheelOpen || Time.time < dodgeUntil || TakingDown() || ActiveWeapon == null) return;
+            if (WheelOpen || OutpostZero.Items.PackView.Showing || Time.time < dodgeUntil || TakingDown() || ActiveWeapon == null) return;
 
             bool automatic = ActiveWeapon is FirearmWeapon gun && gun.Automatic;
             bool fire = ActiveWeapon is FirearmWeapon
@@ -594,10 +900,25 @@ namespace OutpostZero.Player
                 : ExpeditionInput.FireHeld;
             if (fire && GameManager.Instance != null && GameManager.Instance.CurrentState != GameState.CampManagement)
             {
-                if (ActiveWeapon.TryAttack(transform.forward))
+                if (!SwingCost.Pays(currentStamina, ActiveWeapon.Type))
                 {
+                    if (ExpeditionInput.FirePressed) GameplayFeedback.Toast(SwingCost.Line(null));
+                }
+                else if (ActiveWeapon.TryAttack(transform.forward))
+                {
+                    if (SwingCost.Of(ActiveWeapon.Type) > 0f)
+                    {
+                        currentStamina = SwingCost.After(currentStamina, ActiveWeapon.Type);
+                        lastStaminaDrainTime = Time.time;
+                        OnStaminaChanged?.Invoke(currentStamina, StaminaPool());
+                    }
                     CodexDirector.Hear("fire");
                     GetComponent<SurvivorLocomotion>()?.NotifyAttack();
+                    GetComponent<ProceduralSurvivorMotion>()?.Strike();
+                }
+                else if (ActiveWeapon is FirearmWeapon dry && dry.CurrentAmmo <= 0)
+                {
+                    CodexDirector.Hear("empty");
                 }
             }
         }
@@ -624,11 +945,31 @@ namespace OutpostZero.Player
             OnActiveWeaponChanged?.Invoke(ActiveWeapon);
         }
 
+        /// <summary>Trades two weapon slots from the pack screen; the weapon in hand stays in hand.</summary>
+        public bool SwapSlots(int a, int b)
+        {
+            if (equippedWeapons == null || a == b) return false;
+            if (a < 0 || b < 0 || a >= equippedWeapons.Length || b >= equippedWeapons.Length) return false;
+            var held = equippedWeapons[a];
+            equippedWeapons[a] = equippedWeapons[b];
+            equippedWeapons[b] = held;
+            activeWeaponIndex = WeaponWheel.AfterSwap(activeWeaponIndex, a, b);
+            OnActiveWeaponChanged?.Invoke(ActiveWeapon);
+            return true;
+        }
+
         public void CycleWeapon(int direction)
         {
             if (equippedWeapons == null || equippedWeapons.Length <= 1) return;
             int nextIndex = (activeWeaponIndex + direction + equippedWeapons.Length) % equippedWeapons.Length;
             SelectWeapon(nextIndex);
+        }
+
+        private void HandleHurt(float amount, Vector3 point)
+        {
+            if (ActiveWeapon is FirearmWeapon hurtGun) hurtGun.TryAbortReload(false, true);
+            if (!Combat.ContactCue.Pain(true, healthSystem.CurrentHealth)) return;
+            Shell.AudioManager.Instance?.Play("pained", 0.4f, 0.92f);
         }
 
         private void HandlePlayerDeath(Vector3 hitPoint, Vector3 hitDir, GameObject killer)

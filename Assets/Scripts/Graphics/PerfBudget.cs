@@ -20,7 +20,7 @@ namespace OutpostZero.Graphics
         {
             var tier = QualityProfile.For(SettingsService.Instance != null ? SettingsService.Instance.Quality : 1);
             float ms = Time.unscaledDeltaTime * 1000f;
-            int zombies = FindObjectsByType<ZombieAI>(FindObjectsSortMode.None).Length;
+            int zombies = ZombieAI.AliveCount();
             if (ms > tier.FrameMs * 1.5f || zombies > tier.Zombies) overFrames++;
             else overFrames = 0;
             if (!reported && overFrames > 90)

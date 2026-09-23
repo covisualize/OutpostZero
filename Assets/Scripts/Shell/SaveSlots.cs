@@ -19,6 +19,22 @@ namespace OutpostZero.Shell
             public string Leader;
             public bool Occupied;
             public bool Auto;
+            public float Playtime;
+            public string SavedAt;
+            public string Thumbnail;
+        }
+
+        /// <summary>Manual saves are made in camp only, so a save taken on the street can't undo what happens there.</summary>
+        public static bool ManualAllowed(OutpostZero.Core.GameState state, OutpostZero.Core.GameState resume)
+        {
+            var at = state == OutpostZero.Core.GameState.Paused ? resume : state;
+            return at == OutpostZero.Core.GameState.CampManagement;
+        }
+
+        /// <summary>Merciful also saves a living leader's street run, which loads back onto the same street.</summary>
+        public static bool ManualAllowed(OutpostZero.Core.GameState state, OutpostZero.Core.GameState resume, bool merciful, bool leaderAlive)
+        {
+            return ManualAllowed(state, resume) || StreetSnapshot.Keeps(merciful, state, resume, leaderAlive);
         }
 
         public static int Manual(int slot)

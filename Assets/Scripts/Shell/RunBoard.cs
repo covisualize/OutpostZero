@@ -69,8 +69,22 @@ namespace OutpostZero.Shell
 
         public static string Line(Run run)
         {
-            string mark = run.Won == 1 ? "Held" : "Fell";
-            return mark + "  day " + run.Day + "  kills " + run.Kills + "  lost " + run.Lost + "  streets " + run.Cleared;
+            return Line(run, "en");
+        }
+
+        public static string Line(Run run, string language)
+        {
+            string mark = run.Won == 1 ? Word("board.held", language) : Word("board.fell", language);
+            return mark + "  " + Word("board.day", language) + " " + run.Day
+                + "  " + Word("board.kills", language) + " " + run.Kills
+                + "  " + Word("board.lost", language) + " " + run.Lost
+                + "  " + Word("board.streets", language) + " " + run.Cleared;
+        }
+
+        private static string Word(string key, string language)
+        {
+            if (string.IsNullOrEmpty(language)) return Loc.T(key);
+            return Loc.T(key, language);
         }
 
         public static string Pack(Run[] runs)

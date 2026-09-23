@@ -1,0 +1,35 @@
+{
+  "id": "Kit_tower_segment",
+  "category": "Kit",
+  "generator": "generate_kit.build_piece",
+  "generatorHash": "9298f8b1c3f0922bee5371fa40db41d80efad6ad644080b10efc75fdeba90710",
+  "gitSha": "edff058f31a908ed7de64edaf527c44ea12a41ff",
+  "blender": "4.2.11",
+  "tags": [
+    "kit",
+    "fort"
+  ],
+  "pivot": "authored",
+  "collider": "box",
+  "rig": "",
+  "lods": [
+    1.0
+  ],
+  "tris": 60,
+  "lodTris": [
+    60
+  ],
+  "size": {
+    "width": 2.0,
+    "depth": 2.0,
+    "height": 2.0
+  },
+  "floor": 0.0,
+  "center": {
+    "x": 1.0,
+    "y": 1.0
+  },
+  "materials": [
+    "Mat_wood"
+  ]
+}

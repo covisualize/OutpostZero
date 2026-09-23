@@ -11,9 +11,10 @@ namespace OutpostZero.Items
         public const float HeavyLine = 0.9f;
         public const float BaseLimit = 35f;
         public const float RaisedLimit = 50f;
-        public const int RaiseScrap = 12;
-        public const int RaiseCloth = 3;
-        public const int RaiseTape = 1;
+        public const int RaiseScrap = 0;
+        public const int RaiseCloth = 6;
+        public const int RaiseTape = 3;
+        public const float SweepHold = 0.5f;
 
         public static int Tier(int stored)
         {
@@ -45,6 +46,16 @@ namespace OutpostZero.Items
         {
             if (max <= 0.01f) return current > 0f;
             return current / max > HeavyLine;
+        }
+
+        public static bool AllowsSprint(float current, float max)
+        {
+            return !Heavy(current, max);
+        }
+
+        public static bool Swept(float heldFor)
+        {
+            return heldFor >= SweepHold;
         }
 
         public static bool Fits(float current, float max, float added)

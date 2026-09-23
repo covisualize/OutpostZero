@@ -1,6 +1,7 @@
 using UnityEngine;
 using OutpostZero.AI;
 using OutpostZero.Core;
+using OutpostZero.Shell;
 
 namespace OutpostZero.Expedition
 {
@@ -50,7 +51,7 @@ namespace OutpostZero.Expedition
             inside = true;
             if (GameManager.Instance == null || GameManager.Instance.CurrentState != GameState.ExpeditionActive) return;
             var tracker = ObjectiveTracker.Instance;
-            if (tracker != null && !tracker.ReadyToExtract) GameplayFeedback.Toast("Objectives unfinished");
+            if (tracker != null && !tracker.ReadyToExtract) GameplayFeedback.Toast(GateLine.Quota(null));
         }
 
         private void OnTriggerExit(Collider other)
@@ -68,7 +69,7 @@ namespace OutpostZero.Expedition
             bool ready = tracker != null && tracker.ReadyToExtract;
             bool threatened = inside && live && ZombiesNear();
             float next = ExtractWatch.Advance(held, Time.deltaTime, inside && live && ready, threatened);
-            if (threatened && held > 0.2f) GameplayFeedback.Toast("They're too close");
+            if (threatened && held > 0.2f) GameplayFeedback.Toast(GateLine.Close(null));
             held = next;
             if (!ExtractWatch.Ready(held) || GameManager.Instance == null) return;
             finished = true;
@@ -83,10 +84,13 @@ namespace OutpostZero.Expedition
             return other.CompareTag("Player") || other.GetComponentInParent<Player.PlayerController>() != null;
         }
 
+        private static readonly Collider[] near = new Collider[64];
+
         private bool ZombiesNear()
         {
-            var hits = Physics.OverlapSphere(transform.position, ExtractWatch.ThreatRadius, GameLayers.EnemyMask);
-            for (int i = 0; i < hits.Length; i++)
+            var hits = near;
+            int count = Physics.OverlapSphereNonAlloc(transform.position, ExtractWatch.ThreatRadius, hits, GameLayers.EnemyMask);
+            for (int i = 0; i < count; i++)
             {
                 var zombie = hits[i].GetComponentInParent<ZombieAI>();
                 if (zombie == null || zombie.CurrentState != ZombieAI.ZombieState.Dead) return true;

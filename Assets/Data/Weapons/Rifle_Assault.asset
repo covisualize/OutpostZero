@@ -31,3 +31,9 @@ MonoBehaviour:
   automatic: 1
   useProjectile: 1
   modelPath: Assets/Models/Weapons/Weapon_AssaultRifle.fbx
+  heldPrefab: {fileID: 3250870778558825364, guid: 69a924fb5f5c7f7499e0d1da4d071040, type: 3}
+  holdOffset: {x: 0, y: 0, z: 0}
+  holdEuler: {x: 0, y: 90, z: 0}
+  muzzleVfx: 3
+  fireSfx: rifle
+  icon: {fileID: 2800000, guid: 8333f638ea4988dac1aa79ebbcb532f9, type: 3}

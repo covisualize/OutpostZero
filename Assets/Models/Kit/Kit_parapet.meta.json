@@ -1,0 +1,35 @@
+{
+  "id": "Kit_parapet",
+  "category": "Kit",
+  "generator": "generate_kit.build_piece",
+  "generatorHash": "3f87f3419b830d8190a10efc18deba509e96bc6e90fc33f442aa0d887c6fb1c3",
+  "gitSha": "edff058f31a908ed7de64edaf527c44ea12a41ff",
+  "blender": "4.2.11",
+  "tags": [
+    "kit",
+    "building"
+  ],
+  "pivot": "authored",
+  "collider": "box",
+  "rig": "",
+  "lods": [
+    1.0
+  ],
+  "tris": 12,
+  "lodTris": [
+    12
+  ],
+  "size": {
+    "width": 2.0,
+    "depth": 0.2,
+    "height": 0.4
+  },
+  "floor": 0.0,
+  "center": {
+    "x": 1.0,
+    "y": 0.1
+  },
+  "materials": [
+    "Mat_concrete"
+  ]
+}

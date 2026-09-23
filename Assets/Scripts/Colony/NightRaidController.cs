@@ -28,7 +28,9 @@ namespace OutpostZero.Colony
         private float nextGuard;
         private int calledDay = -1;
         private bool breached;
+        private bool bittenTold;
         private int fronts = 1;
+        private int sightedDay = -1;
 
         public string Approach => approach;
         public int Fronts => fronts;
@@ -65,6 +67,7 @@ namespace OutpostZero.Colony
         {
             if (running || warning) return;
             float hold = TraitHook.Warning(TowerCount(), GuardCount(), TraitCount("Watchful"), TraitCount("Light Sleeper"));
+            hold = TraitHook.NightStretch(hold, TraitCount("Night Owl"));
             if (hold <= 0f)
             {
                 Open(false);
@@ -85,7 +88,7 @@ namespace OutpostZero.Colony
             if (GameManager.Instance == null) return;
             if (tower && (WorldMapService.Instance == null || !WorldMapService.Instance.ReadyToBroadcast))
             {
-                GameplayFeedback.Toast("The tower is not ready");
+                GameplayFeedback.Toast(FightSay.Tower(null));
                 return;
             }
             int day = WorldClock.Instance != null ? WorldClock.Instance.Day : 1;
@@ -103,11 +106,13 @@ namespace OutpostZero.Colony
             nextTurret = Time.time + TurretBeat.Interval;
             nextTrap = Time.time + TrapHit.Gap;
             nextGuard = Time.time + GuardVolley.Interval;
+            bittenTold = false;
             GameManager.Instance.SetState(GameState.RaidActive);
             AudioManager.Instance?.Sting("raid");
             int difficulty = WorldMapService.Instance != null ? WorldMapService.Instance.Difficulty : 2;
             fronts = RaidPlan.Fronts(day, difficulty);
-            int spawn = RaidPlan.SpawnCount(day, towers) + (tower ? 4 : 0);
+            int perimeter = GridBuilder.Instance != null ? GridBuilder.Instance.PerimeterScore : 0;
+            int spawn = Perimeter.Crowd(RaidPlan.SpawnCount(day, towers) + (tower ? 4 : 0), perimeter);
             if (HordeDirector.Instance != null)
             {
                 for (int i = 0; i < fronts; i++)
@@ -116,11 +121,12 @@ namespace OutpostZero.Colony
                     if (share > 0) HordeDirector.Instance.BeginRaid(share, RaidPlan.Side(day, towers, i));
                 }
             }
-            string openLine = tower ? "Broadcast night — hold the tower" : "Night raid from the " + approach;
+            string openLine = RaidSay.Open(tower, approach, null);
             if (fronts > 1) openLine += "  " + fronts + " " + Loc.T("camp.sides");
             openLine += "  " + Loc.T("camp.dark");
             if (GridBuilder.Instance != null && GridBuilder.Instance.BarricadeCount() > 0)
                 openLine += "  " + Loc.T("camp.chew");
+            openLine += "  " + Loc.T("camp.perimeter") + " " + perimeter + "%";
             if (GuardsOnTheLine() > 0) openLine += "  " + Loc.T("camp.line");
             GameplayFeedback.Toast(openLine);
         }
@@ -154,9 +160,18 @@ namespace OutpostZero.Colony
             return true;
         }
 
+        public bool RaidLikely => LikelyNow();
+
+        /// <summary>A pack seen near the fence comes that night, whatever the odds said.</summary>
+        public void Sight(int day)
+        {
+            sightedDay = day;
+        }
+
         private bool LikelyNow()
         {
             int day = WorldClock.Instance != null ? WorldClock.Instance.Day : 1;
+            if (sightedDay == day) return true;
             int security = ColonyStorage.Instance != null ? ColonyStorage.Instance.Security : 0;
             int shots = ColonyStorage.Instance != null ? ColonyStorage.Instance.Shots : 0;
             bool endless = WorldMapService.Instance != null && WorldMapService.Instance.Endless;
@@ -236,7 +251,7 @@ namespace OutpostZero.Colony
                 return;
             }
             int walls = GridBuilder.Instance != null ? GridBuilder.Instance.BarricadeCount() : 0;
-            int lights = GridBuilder.Instance != null ? GridBuilder.Instance.CountKind("Lamp") : 0;
+            int lights = GridBuilder.Instance != null ? GridBuilder.Instance.FedCount("Lamp") : 0;
             bool held = RaidOutcome.Holds(raidDay, walls, GuardsOnTheLine(), lights, breached);
             int dropped = YardDead.Dropped(pressure, held);
             if (dropped > 0) ColonyStorage.Instance?.AddBodies(dropped);
@@ -251,7 +266,7 @@ namespace OutpostZero.Colony
                     }
                 }
                 int left = ColonyStorage.Instance != null ? ColonyStorage.Instance.Bodies : dropped;
-                string heldLine = broadcast ? "The broadcast went out" : "The gate held";
+                string heldLine = RaidSay.Held(broadcast, null);
                 if (left > 0) heldLine += "  " + Loc.T("camp.bodies") + " " + left;
                 GameplayFeedback.Toast(heldLine);
                 if (broadcast && WorldMapService.Instance != null && WorldMapService.Instance.GeneratorBuilt)
@@ -271,7 +286,7 @@ namespace OutpostZero.Colony
                 int lostFood = breached ? RaidSpoil.Meals(true, food) : 0;
                 if (lostScrap > 0) ColonyStorage.Instance?.AddScrap(-lostScrap);
                 if (lostFood > 0) ColonyStorage.Instance?.AddFood(-lostFood);
-                string broke = breached ? Loc.T("camp.spoiled") : "The raid broke the stores";
+                string broke = breached ? Loc.T("camp.spoiled") : RaidSay.Broke(null);
                 if (breached && lostScrap > 0) broke += "  " + Loc.T("camp.scrap") + " -" + lostScrap;
                 if (breached && lostFood > 0) broke += "  " + Loc.T("camp.food") + " -" + lostFood;
                 if (dropped > 0) broke += "  " + Loc.T("camp.bodies") + " " + dropped;
@@ -289,7 +304,7 @@ namespace OutpostZero.Colony
         private void TickTurret()
         {
             if (Time.time < nextTurret) return;
-            int guns = GridBuilder.Instance != null ? GridBuilder.Instance.CountKind("Turret") : 0;
+            int guns = GridBuilder.Instance != null ? GridBuilder.Instance.FedCount("Turret") : 0;
             bool powered = CampServices.Instance != null && CampServices.Instance.GeneratorOnline;
             int tier = GridBuilder.Instance != null ? GridBuilder.Instance.BenchTier() : 1;
             int stored = ColonyStorage.Instance != null ? ColonyStorage.Instance.Rounds : 0;
@@ -318,7 +333,7 @@ namespace OutpostZero.Colony
             if (health != null)
                 health.TakeDamage(TurretBeat.Damage, target.transform.position, (origin - target.transform.position).normalized, gameObject);
             if (Sensory.NoiseManager.Instance != null)
-                Sensory.NoiseManager.Instance.EmitNoise(origin, 18f, 0.7f, NoiseType.GunshotLoud, gameObject);
+                Sensory.NoiseManager.Instance.EmitNoise(origin, Sensory.NoiseTable.Radius(Sensory.NoiseTable.RaidTurret), Sensory.NoiseTable.Loud(Sensory.NoiseTable.RaidTurret), NoiseType.GunshotLoud, gameObject);
             nextTurret = Time.time + TurretBeat.Interval;
         }
 
@@ -389,7 +404,7 @@ namespace OutpostZero.Colony
             int shots = 0;
             for (int g = 0; g < crew.Count && shots < budget; g++)
             {
-                Vector3 origin = GuardPost(g);
+                Vector3 origin = GuardPost(g, out bool perched);
                 var distance = new float[living.Count];
                 for (int i = 0; i < living.Count; i++)
                 {
@@ -397,20 +412,30 @@ namespace OutpostZero.Colony
                     float dz = living[i].transform.position.z - origin.z;
                     distance[i] = (float)System.Math.Sqrt(dx * dx + dz * dz);
                 }
+                float reach = TowerPerch.Range(PostBite.Range(crew[g].injury), perched);
+                for (int i = 0; i < distance.Length; i++)
+                {
+                    if (distance[i] > reach) distance[i] = -1f;
+                }
                 int mark = GuardVolley.Pick(distance);
                 if (mark < 0) continue;
                 if (ColonyStorage.Instance == null || ColonyStorage.Instance.TakeRounds(1) <= 0) break;
                 shots++;
+                if (crew[g].injury > 0 && !bittenTold)
+                {
+                    bittenTold = true;
+                    GameplayFeedback.Toast(PostBite.Line(null));
+                }
                 var target = living[mark];
                 Vector3 aim = target.transform.position + Vector3.up * 1.1f;
                 Vector3 direction = aim - origin;
                 var health = target.GetComponent<HealthSystem>();
                 if (health != null && !health.IsDead)
-                    health.TakeDamage(GuardVolley.Damage, aim, direction.normalized, gameObject);
+                    health.TakeDamage(PostBite.Damage(crew[g].injury), aim, direction.normalized, gameObject);
                 Vector3 eject = Vector3.Cross(direction.sqrMagnitude > 0.01f ? direction.normalized : Vector3.forward, Vector3.up);
                 CombatVfx.Shot(origin, direction, aim, eject);
                 if (Sensory.NoiseManager.Instance != null)
-                    Sensory.NoiseManager.Instance.EmitNoise(origin, 14f, 0.45f, NoiseType.GunshotQuiet, gameObject);
+                    Sensory.NoiseManager.Instance.EmitNoise(origin, Sensory.NoiseTable.Radius(Sensory.NoiseTable.RaidGuard), Sensory.NoiseTable.Loud(Sensory.NoiseTable.RaidGuard), NoiseType.GunshotQuiet, gameObject);
             }
             nextGuard = Time.time + GuardVolley.Interval;
         }
@@ -427,7 +452,7 @@ namespace OutpostZero.Colony
             return count;
         }
 
-        private Vector3 GuardPost(int slot)
+        private Vector3 GuardPost(int slot, out bool perched)
         {
             var grid = GridBuilder.Instance;
             int count = grid != null ? grid.Placed.Count : 0;
@@ -448,7 +473,8 @@ namespace OutpostZero.Colony
             string side = SideAt(slot);
             int post = PostOnSide(slot);
             GuardStand.Mark(side, post, kinds, xs, zs, sites, integrity, out float x, out float z);
-            return new Vector3(x, 1.6f, z);
+            perched = GuardStand.Perched(side, post, kinds, xs, zs, sites, integrity);
+            return new Vector3(x, TowerPerch.Height(perched), z);
         }
 
         private static Vector3 TurretOrigin()
@@ -488,7 +514,7 @@ namespace OutpostZero.Colony
             if (SurvivorRoster.Instance == null || string.IsNullOrEmpty(trait)) return 0;
             foreach (var survivor in SurvivorRoster.Instance.Survivors)
             {
-                if (survivor.alive && survivor.trait == trait) count++;
+                if (survivor.alive && (survivor.trait == trait || survivor.aside == trait || survivor.mark == trait)) count++;
             }
             return count;
         }
@@ -497,19 +523,22 @@ namespace OutpostZero.Colony
         {
             if (GridBuilder.Instance == null) return 0;
             bool powered = CampServices.Instance != null && CampServices.Instance.GeneratorOnline;
+            var fed = GridBuilder.Instance.Fed();
+            var modules = GridBuilder.Instance.Placed;
             int count = 0;
-            foreach (var module in GridBuilder.Instance.Placed)
+            for (int i = 0; i < modules.Count; i++)
             {
-                if (module.kind == "Lamp") count++;
+                if (modules[i].kind == "Lamp" && fed[i]) count++;
             }
             var x = new float[count];
             var z = new float[count];
             var sites = new int[count];
             var integrity = new int[count];
             int cursor = 0;
-            foreach (var module in GridBuilder.Instance.Placed)
+            for (int i = 0; i < modules.Count; i++)
             {
-                if (module.kind != "Lamp") continue;
+                var module = modules[i];
+                if (module.kind != "Lamp" || !fed[i]) continue;
                 x[cursor] = module.x;
                 z[cursor] = module.z;
                 sites[cursor] = module.site;
@@ -526,6 +555,7 @@ namespace OutpostZero.Colony
             bool generator = GridBuilder.Instance != null && GridBuilder.Instance.HasKind("Generator");
             int walls = GridBuilder.Instance != null ? GridBuilder.Instance.BarricadeCount() : 0;
             pressure = CampYield.RaidPressure(wave.Pressure + (broadcast ? 4 : 0), generator, walls);
+            if (GridBuilder.Instance != null) pressure = Perimeter.Pressure(pressure, Perimeter.Side(approach, GridBuilder.Instance.Walls()));
             strikeInterval = broadcast && index == 0 ? 1.2f : wave.Interval;
             int lamps = LampsOn(approach);
             pressure = FloodBeam.ApproachPressure(pressure, lamps);
@@ -533,7 +563,7 @@ namespace OutpostZero.Colony
             phase = index;
             breached = false;
             if (!announce) return;
-            string line = "They come from the " + approach;
+            string line = RaidSay.Coming(approach, null);
             if (RaidBreach.Brute(index)) line += "  " + Loc.T("camp.brute");
             if (lamps > 0) line += "  " + Loc.T("camp.lamps");
             GameplayFeedback.Toast(line);

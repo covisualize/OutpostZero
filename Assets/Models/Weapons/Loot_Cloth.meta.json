@@ -1,0 +1,37 @@
+{
+  "id": "Loot_Cloth",
+  "category": "Weapons",
+  "generator": "generate_items.build_cloth",
+  "generatorHash": "437ad9089bb0f4271355e8c2ea5d16f7397648520b1a8caa5dede58f88223bf6",
+  "gitSha": "edff058f31a908ed7de64edaf527c44ea12a41ff",
+  "blender": "4.2.11",
+  "tags": [
+    "loot",
+    "item"
+  ],
+  "pivot": "bottom",
+  "collider": "box",
+  "rig": "",
+  "lods": [
+    1.0
+  ],
+  "tris": 324,
+  "lodTris": [
+    324
+  ],
+  "size": {
+    "width": 0.2155,
+    "depth": 0.1813,
+    "height": 0.066
+  },
+  "floor": 0.0,
+  "center": {
+    "x": 0.008,
+    "y": -0.006
+  },
+  "materials": [
+    "Mat_Item_Cloth0",
+    "Mat_Item_Cloth1",
+    "Mat_Item_Cloth2"
+  ]
+}

@@ -1,0 +1,38 @@
+{
+  "id": "Loot_GeneratorPart",
+  "category": "Weapons",
+  "generator": "generate_items.build_generator_part",
+  "generatorHash": "f15870937d8222b50d251fa1a496a3416f6edf1553d4cdda1031ad9f922af7c2",
+  "gitSha": "edff058f31a908ed7de64edaf527c44ea12a41ff",
+  "blender": "4.2.11",
+  "tags": [
+    "loot",
+    "item"
+  ],
+  "pivot": "bottom",
+  "collider": "box",
+  "rig": "",
+  "lods": [
+    1.0
+  ],
+  "tris": 536,
+  "lodTris": [
+    536
+  ],
+  "size": {
+    "width": 0.189,
+    "depth": 0.157,
+    "height": 0.161
+  },
+  "floor": -0.0,
+  "center": {
+    "x": 0.0245,
+    "y": 0.0025
+  },
+  "materials": [
+    "Mat_Item_AlternatorCopper",
+    "Mat_Item_AlternatorRust",
+    "Mat_Item_AlternatorSteel",
+    "Mat_Item_AlternatorStrap"
+  ]
+}

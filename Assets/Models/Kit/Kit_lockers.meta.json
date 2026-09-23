@@ -1,0 +1,35 @@
+{
+  "id": "Kit_lockers",
+  "category": "Kit",
+  "generator": "generate_kit.build_piece",
+  "generatorHash": "0996d471600b7fea8c37a797902a71e80477b9e573c32deabb97c51c01d7c4cf",
+  "gitSha": "edff058f31a908ed7de64edaf527c44ea12a41ff",
+  "blender": "4.2.11",
+  "tags": [
+    "kit",
+    "interior"
+  ],
+  "pivot": "authored",
+  "collider": "box",
+  "rig": "",
+  "lods": [
+    1.0
+  ],
+  "tris": 12,
+  "lodTris": [
+    12
+  ],
+  "size": {
+    "width": 1.5,
+    "depth": 0.5,
+    "height": 1.9
+  },
+  "floor": 0.0,
+  "center": {
+    "x": 0.75,
+    "y": 0.25
+  },
+  "materials": [
+    "Mat_metal"
+  ]
+}

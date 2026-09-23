@@ -1,0 +1,37 @@
+{
+  "id": "Base_Watchtower",
+  "category": "BaseBuilding",
+  "generator": "generate_base_building.build_watchtower",
+  "generatorHash": "04d60700199304ae8b5c1a0f89b1c8ecdedcdc2526cd5446968e2ec71f84bcca",
+  "gitSha": "edff058f31a908ed7de64edaf527c44ea12a41ff",
+  "blender": "4.2.11",
+  "tags": [
+    "camp",
+    "module",
+    "codex"
+  ],
+  "pivot": "bottom",
+  "collider": "box",
+  "rig": "",
+  "lods": [
+    1.0
+  ],
+  "tris": 184,
+  "lodTris": [
+    184
+  ],
+  "size": {
+    "width": 3.6,
+    "depth": 3.5733,
+    "height": 5.4802
+  },
+  "floor": 0.0,
+  "center": {
+    "x": -0.0,
+    "y": 0.0
+  },
+  "materials": [
+    "Mat_Tower_Timber",
+    "Mat_Tower_TinRoof"
+  ]
+}

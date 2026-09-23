@@ -12,6 +12,7 @@ namespace OutpostZero.Colony
         public const int Any = 0;
         public const int Workbench = 1;
         public const int Cot = 2;
+        public const int Campfire = 3;
 
         public struct Cost
         {
@@ -19,24 +20,41 @@ namespace OutpostZero.Colony
             public int Cloth;
             public int Chemicals;
             public int Tape;
+            public int Raw;
             public int Station;
             public string Skill;
+            /// <summary>Skill someone living in camp must hold, named by its task ("Build", "Medic", "Cook"), or empty.</summary>
+            public string Know;
+            public int Level;
         }
 
         public static bool TryOf(string id, out Cost cost)
         {
+            if (RecipeTable.TryRow(id, out var row))
+            {
+                cost = row.Cost;
+                return true;
+            }
+            return CodeOf(id, out cost);
+        }
+
+        /// <summary>The built-in bill, ignoring any loaded recipe book.</summary>
+        public static bool CodeOf(string id, out Cost cost)
+        {
             cost = new Cost();
             if (id == "bandage") cost = Make(1, 2, 0, 0, Any, "");
             else if (id == "medkit") cost = Make(8, 1, 1, 1, Cot, "Medic");
-            else if (id == "antibiotics") cost = Make(10, 0, 2, 0, Cot, "Medic");
+            else if (id == "antibiotics") cost = Make(10, 0, 3, 0, Cot, "Medic");
             else if (id == "painkillers") cost = Make(5, 0, 1, 0, Any, "");
             else if (id == "ammo_9mm") cost = Make(4, 0, 1, 0, Workbench, "");
             else if (id == "ammo_shells") cost = Make(5, 0, 1, 0, Workbench, "");
             else if (id == "ammo_rifle") cost = Make(7, 0, 1, 0, Workbench, "");
+            else if (id == "ammo_smg") cost = Make(6, 0, 1, 0, Workbench, "");
             else if (id == "noise_lure") cost = Make(2, 0, 0, 0, Any, "");
             else if (id == "molotov") cost = Make(6, 1, 0, 0, Any, "");
             else if (id == "pipe_bomb") cost = Make(8, 0, 1, 1, Workbench, "");
-            else if (id == "suppressor") cost = Make(12, 0, 0, 0, Workbench, "");
+            else if (id == "suppressor") cost = Make(8, 0, 0, 2, Workbench, "");
+            else if (id == "rail") cost = Make(5, 0, 0, 0, Workbench, "");
             else if (id == "optic") cost = Make(9, 0, 0, 0, Workbench, "");
             else if (id == "extended_mag") cost = Make(8, 0, 0, 0, Workbench, "");
             else if (id == "dressing") cost = Make(2, 2, 0, 0, Any, "");
@@ -44,8 +62,43 @@ namespace OutpostZero.Colony
             else if (id == "repair_kit") cost = Make(6, 0, 1, 1, Workbench, "");
             else if (id == "barricade_kit") cost = Make(8, 0, 0, 2, Workbench, "");
             else if (id == "radio_spare") cost = Make(12, 0, 2, 1, Workbench, "");
+            else if (id == "cell") cost = Make(3, 0, 1, 0, Workbench, "");
+            else if (id == "cooked_meal") { cost = Make(1, 0, 0, 0, Campfire, ""); cost.Raw = 2; }
+            else if (id == "purified_water") cost = Make(1, 0, 1, 0, Campfire, "");
+            else if (id == "bottle") cost = Make(1, 0, 0, 0, Any, "");
             else return false;
+            CodeKnow(id, out cost.Know, out cost.Level);
             return true;
+        }
+
+        public static void CodeKnow(string id, out string know, out int level)
+        {
+            know = "";
+            level = 0;
+            switch (id)
+            {
+                case "medkit": know = "Medic"; level = 1; break;
+                case "antibiotics": know = "Medic"; level = 5; break;
+                case "pipe_bomb":
+                case "repair_kit": know = "Build"; level = 2; break;
+                case "optic":
+                case "extended_mag": know = "Build"; level = 3; break;
+                case "suppressor": know = "Build"; level = 4; break;
+                case "radio_spare": know = "Build"; level = 5; break;
+            }
+        }
+
+        public static int SkillFor(string know, int medicine, int engineering, int cooking)
+        {
+            if (know == "Medic") return medicine;
+            if (know == "Build") return engineering;
+            if (know == "Cook") return cooking;
+            return 0;
+        }
+
+        public static bool Knows(string know, int level, int best)
+        {
+            return string.IsNullOrEmpty(know) || level <= 0 || best >= level;
         }
 
         public static int ScrapDue(int scrap, bool workbench)
@@ -54,10 +107,13 @@ namespace OutpostZero.Colony
             return scrap <= 1 ? 1 : scrap - 1;
         }
 
-        public static bool StationReady(int station, bool workbench, bool cot)
+        public static bool StationReady(int station, bool workbench, bool cot) => StationReady(station, workbench, cot, false);
+
+        public static bool StationReady(int station, bool workbench, bool cot, bool campfire)
         {
             if (station == Workbench) return workbench;
             if (station == Cot) return cot;
+            if (station == Campfire) return campfire;
             return true;
         }
 
@@ -78,6 +134,7 @@ namespace OutpostZero.Colony
             {
                 if (station == Workbench) return "Need a workbench";
                 if (station == Cot) return "Need a medical cot";
+                if (station == Campfire) return "Need a campfire";
                 return "Need a station";
             }
             if (!skillOk) return "Need a medic on duty";
@@ -98,6 +155,35 @@ namespace OutpostZero.Colony
             if (chemicals > 0) builder.Append("   chem ").Append(chemicals);
             if (tape > 0) builder.Append("   tape ").Append(tape);
             return builder.ToString();
+        }
+
+        /// <summary>
+        /// Dismantling a carried item at the workbench returns half of what its recipe spends,
+        /// rounded down, so no craft-then-dismantle loop can gain material.
+        /// Items with no camp recipe, stores and ammo break down into nothing.
+        /// </summary>
+        public static bool Dismantle(string id, out int scrap, out int cloth, out int chemicals, out int tape)
+        {
+            scrap = cloth = chemicals = tape = 0;
+            if (id == "bottle" || id == "cooked_meal" || id == "purified_water") return false;
+            if (!TryOf(id, out var cost)) return false;
+            if (id.StartsWith("ammo_", StringComparison.Ordinal)) return false;
+            scrap = cost.Scrap / 2;
+            cloth = cost.Cloth / 2;
+            chemicals = cost.Chemicals / 2;
+            tape = cost.Tape / 2;
+            return scrap + cloth + chemicals + tape > 0;
+        }
+
+        public static bool Fits(int used, int room, int scrap, int cloth, int chemicals, int tape)
+        {
+            return used + CampRoom.Bulk(scrap, 0, 0, cloth, chemicals, tape) <= room;
+        }
+
+        public static int Value(string id)
+        {
+            if (!TryOf(id, out var cost)) return 0;
+            return cost.Scrap + cost.Cloth * 2 + cost.Chemicals * 3 + cost.Tape * 3 + cost.Raw;
         }
 
         public static void Salvage(int salt, bool scrounger, out int cloth, out int chemicals, out int tape)

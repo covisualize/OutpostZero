@@ -1,0 +1,35 @@
+{
+  "id": "Prop_Crate_Wood",
+  "category": "Props",
+  "generator": "generate_props.build_crate_wood",
+  "generatorHash": "f15aca665d53870f2d649ca82b1d6b08225dcdb511f0db5897ced368464cac1e",
+  "gitSha": "edff058f31a908ed7de64edaf527c44ea12a41ff",
+  "blender": "4.2.11",
+  "tags": [
+    "container"
+  ],
+  "pivot": "bottom",
+  "collider": "box",
+  "rig": "",
+  "lods": [
+    1.0
+  ],
+  "tris": 36,
+  "lodTris": [
+    36
+  ],
+  "size": {
+    "width": 1.18,
+    "depth": 1.24,
+    "height": 1.18
+  },
+  "floor": 0.0,
+  "center": {
+    "x": 0.0,
+    "y": 0.0
+  },
+  "materials": [
+    "Mat_Crate_Bracing",
+    "Mat_Crate_Lumber"
+  ]
+}

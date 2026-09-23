@@ -7,13 +7,11 @@ script_dir = os.path.dirname(os.path.abspath(__file__))
 if script_dir not in sys.path:
     sys.path.append(script_dir)
 
-from blender_paths import models_dir
 from blender_utils import (
-    reset_scene, get_or_create_material, create_box, create_cylinder, 
-    create_sphere, create_cone, join_objects, set_origin_to_bottom, export_fbx, prepare_character
+    get_or_create_material, create_box, create_cylinder, 
+    create_sphere, create_cone, join_objects
 )
 
-MODELS_DIR = models_dir("Characters")
 
 def attach_readability(parts, head, hands, role):
     from character_detail import eye_color, eye_strength, face_parts, thumb_box
@@ -37,8 +35,8 @@ def attach_readability(parts, head, hands, role):
         loc, size = thumb_box(hand, side)
         parts.append(create_box("Thumb" + side, loc, size, thumb_mat, bevel_radius=0.004))
 
-def generate_player_leader():
-    reset_scene()
+
+def build_player_leader(ctx):
     parts = []
     
     # Materials
@@ -106,12 +104,10 @@ def generate_player_leader():
     attach_readability(parts, (0, 0.02, 1.62), [((-0.38, 0.08, 0.90), "L"), ((0.36, 0.28, 1.02), "R")], "survivor")
 
     final_mesh = join_objects(parts, "Survivor_Leader")
-    set_origin_to_bottom(final_mesh)
-    prepare_character(final_mesh)
-    export_fbx(os.path.join(MODELS_DIR, "Survivor_Leader.fbx"), animated=True)
+    return final_mesh
 
-def generate_zombie_walker():
-    reset_scene()
+
+def build_zombie_walker(ctx):
     parts = []
 
     mat_rot_flesh = get_or_create_material("Mat_Zombie_RotFlesh", (0.42, 0.48, 0.38, 1.0), roughness=0.9)
@@ -154,12 +150,10 @@ def generate_zombie_walker():
     attach_readability(parts, (0.05, 0.16, 1.54), [((-0.30, 0.48, 1.35), "L"), ((0.32, -0.04, 0.78), "R")], "walker")
 
     final_mesh = join_objects(parts, "Zombie_Walker")
-    set_origin_to_bottom(final_mesh)
-    prepare_character(final_mesh)
-    export_fbx(os.path.join(MODELS_DIR, "Zombie_Walker.fbx"), animated=True)
+    return final_mesh
 
-def generate_zombie_runner():
-    reset_scene()
+
+def build_zombie_runner(ctx):
     parts = []
 
     mat_pale_flesh = get_or_create_material("Mat_Zombie_RunnerSkin", (0.50, 0.52, 0.48, 1.0), roughness=0.6)
@@ -192,12 +186,10 @@ def generate_zombie_runner():
     attach_readability(parts, (0, 0.48, 1.10), [((-0.42, 0.56, 0.62), "L"), ((0.38, -0.05, 0.60), "R")], "runner")
 
     final_mesh = join_objects(parts, "Zombie_Runner")
-    set_origin_to_bottom(final_mesh)
-    prepare_character(final_mesh)
-    export_fbx(os.path.join(MODELS_DIR, "Zombie_Runner.fbx"), animated=True)
+    return final_mesh
 
-def generate_zombie_brute():
-    reset_scene()
+
+def build_zombie_brute(ctx):
     parts = []
 
     mat_mutant_flesh = get_or_create_material("Mat_Zombie_BruteFlesh", (0.36, 0.32, 0.30, 1.0), roughness=0.85)
@@ -239,12 +231,10 @@ def generate_zombie_brute():
     attach_readability(parts, (0, 0.10, 1.95), [((-0.58, 0.06, 0.96), "L"), ((0.66, 0.26, 0.72), "R")], "brute")
 
     final_mesh = join_objects(parts, "Zombie_Brute")
-    set_origin_to_bottom(final_mesh)
-    prepare_character(final_mesh)
-    export_fbx(os.path.join(MODELS_DIR, "Zombie_Brute.fbx"), animated=True)
+    return final_mesh
 
-def generate_npc_merchant():
-    reset_scene()
+
+def build_npc_merchant(ctx):
     parts = []
 
     mat_skin = get_or_create_material("Mat_Skin_Merchant", (0.76, 0.62, 0.50, 1.0), roughness=0.7)
@@ -285,12 +275,10 @@ def generate_npc_merchant():
     attach_readability(parts, (0, 0.02, 1.58), [((-0.30, 0.04, 1.15), "L"), ((0.30, 0.04, 1.15), "R")], "merchant")
 
     final_mesh = join_objects(parts, "NPC_Merchant")
-    set_origin_to_bottom(final_mesh)
-    prepare_character(final_mesh)
-    export_fbx(os.path.join(MODELS_DIR, "NPC_Merchant.fbx"), animated=True)
+    return final_mesh
 
-def generate_colonist():
-    reset_scene()
+
+def build_colonist(ctx):
     parts = []
 
     mat_skin = get_or_create_material("Mat_Skin_Colonist", (0.82, 0.68, 0.55, 1.0), roughness=0.7)
@@ -314,16 +302,9 @@ def generate_colonist():
     attach_readability(parts, (0, 0.02, 1.58), [((-0.28, 0, 1.15), "L"), ((0.28, 0, 1.15), "R")], "colonist")
 
     final_mesh = join_objects(parts, "Colonist_Survivor")
-    set_origin_to_bottom(final_mesh)
-    prepare_character(final_mesh)
-    export_fbx(os.path.join(MODELS_DIR, "Colonist_Survivor.fbx"), animated=True)
+    return final_mesh
+
 
 if __name__ == "__main__":
-    print("[CharacterGenerator] Generating characters...")
-    generate_player_leader()
-    generate_zombie_walker()
-    generate_zombie_runner()
-    generate_zombie_brute()
-    generate_npc_merchant()
-    generate_colonist()
-    print("[CharacterGenerator] All characters generated successfully!")
+    import pipeline
+    sys.exit(pipeline.main(["--category", "Characters"]))

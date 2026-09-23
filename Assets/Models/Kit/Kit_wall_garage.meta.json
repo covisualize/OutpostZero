@@ -1,0 +1,35 @@
+{
+  "id": "Kit_wall_garage",
+  "category": "Kit",
+  "generator": "generate_kit.build_piece",
+  "generatorHash": "a702fef23fae7ea9933ef6f68665f8d83697d8c24888e2ee7cccce33db3fb659",
+  "gitSha": "edff058f31a908ed7de64edaf527c44ea12a41ff",
+  "blender": "4.2.11",
+  "tags": [
+    "kit",
+    "building"
+  ],
+  "pivot": "authored",
+  "collider": "box",
+  "rig": "",
+  "lods": [
+    1.0
+  ],
+  "tris": 36,
+  "lodTris": [
+    36
+  ],
+  "size": {
+    "width": 4.0,
+    "depth": 0.2,
+    "height": 3.0
+  },
+  "floor": 0.0,
+  "center": {
+    "x": 2.0,
+    "y": 0.1
+  },
+  "materials": [
+    "Mat_concrete"
+  ]
+}

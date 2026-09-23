@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c75ba3f8091a2b3c4d5e6f708192a4d1, type: 3}
+  m_Name: painkillers
+  m_EditorClassIdentifier: OutpostZero::OutpostZero.Colony.CraftingRecipe
+  id: painkillers
+  label: Painkillers
+  outputId: painkillers
+  outputCount: 1
+  scrap: 5
+  cloth: 0
+  chemicals: 1
+  tape: 0
+  raw: 0
+  station: 0
+  skill: 
+  know: 
+  level: 0
+  tier: 1
+  blueprint: 

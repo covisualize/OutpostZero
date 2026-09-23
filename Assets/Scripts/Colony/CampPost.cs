@@ -15,6 +15,7 @@ namespace OutpostZero.Colony
             if (action == "Guard") return "Watchtower";
             if (action == "Medic") return "Cot";
             if (action == "Scavenge") return "Crate";
+            if (action == CraftQueue.Task) return "Workbench";
             return "";
         }
 
@@ -34,7 +35,7 @@ namespace OutpostZero.Colony
                 int jobsCount = count < jobs.Length ? count : jobs.Length;
                 for (int i = 0; i < jobsCount; i++)
                 {
-                    if (kinds[i] == "Workbench" && sites[i] == 0 && integrity[i] > 0 && jobs[i] > 0 && jobs[i] < CraftGate.Done)
+                    if (GeneratorTune.Raises(kinds[i]) && sites[i] == 0 && integrity[i] > 0 && jobs[i] > 0 && jobs[i] < CraftGate.Done)
                         return i;
                 }
                 return -1;

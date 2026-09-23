@@ -90,13 +90,18 @@ namespace OutpostZero.Combat
 
         protected void EmitWeaponNoise()
         {
-            if (NoiseManager.Instance != null && noiseRadius > 0f)
-            {
-                Vector3 origin = ownerTransform != null ? ownerTransform.position : transform.position;
-                var mod = GetComponent<WeaponMod>();
-                NoiseType kind = WeaponMod.Report(noiseType, mod != null && mod.HasSuppressor);
-                NoiseManager.Instance.EmitNoise(origin, ModifiedNoiseRadius, noiseIntensity, kind, ownerGameObject);
-            }
+            EmitWeaponNoise(1f);
+        }
+
+        protected void EmitWeaponNoise(float scale)
+        {
+            if (scale < 0f) scale = 0f;
+            float radius = ModifiedNoiseRadius * scale;
+            if (NoiseManager.Instance == null || radius <= 0f) return;
+            Vector3 origin = ownerTransform != null ? ownerTransform.position : transform.position;
+            var mod = GetComponent<WeaponMod>();
+            NoiseType kind = WeaponMod.Report(noiseType, mod != null && mod.Quiet);
+            NoiseManager.Instance.EmitNoise(origin, radius, noiseIntensity, kind, ownerGameObject);
         }
 
         protected void TriggerAttackEvent()

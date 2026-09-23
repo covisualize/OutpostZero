@@ -1,0 +1,39 @@
+name: Typecheck
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  typecheck:
+    name: Compile against Unity 6 and run EditMode tests on .NET
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Release tool tests
+        run: python3 -m unittest discover -s Tools/Release -v
+      - name: Balance tool tests
+        run: python3 -m unittest discover -s Tools/Balance -v
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - uses: actions/cache@v4
+        with:
+          path: .typecheck/unity
+          key: unity-managed-${{ hashFiles('ProjectSettings/ProjectVersion.txt') }}
+      - uses: actions/cache@v4
+        with:
+          path: .typecheck/pkgs
+          key: unity-packages-${{ hashFiles('Packages/manifest.json') }}
+      - run: Tools/Typecheck/run.sh
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: typecheck-results
+          path: |
+            .typecheck/results
+            .typecheck/build-*.log

@@ -50,6 +50,8 @@ namespace OutpostZero.Core
         public const string MedicalCot = Root + "/BaseBuilding/Base_MedicalCot.fbx";
         public const string Watchtower = Root + "/BaseBuilding/Base_Watchtower.fbx";
         public const string WaterCollector = Root + "/BaseBuilding/Base_WaterCollector.fbx";
+        public const string HydroponicFarm = Root + "/BaseBuilding/Base_HydroponicFarm.fbx";
+        public const string AutoTurret = Root + "/BaseBuilding/Base_AutoTurret.fbx";
 
         public static readonly string[] All =
         {
@@ -58,7 +60,7 @@ namespace OutpostZero.Core
             RoadStraight, RoadIntersection, Storefront, Warehouse, RuinCorner,
             JerseyBarrier, WoodWire, Sandbags, Sedan, Truck, Dumpster,
             BarrelExplosive, BarrelToxic, BarrelOil, CrateWood, CrateMilitary, StreetBench,
-            Workbench, Campfire, Generator, MedicalCot, Watchtower, WaterCollector
+            Workbench, Campfire, Generator, MedicalCot, Watchtower, WaterCollector, HydroponicFarm, AutoTurret
         };
 
         public static string Relative(string assetPath)

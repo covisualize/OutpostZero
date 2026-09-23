@@ -3,9 +3,16 @@
 import json
 import os
 import struct
+import sys
 import zlib
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import fbx_uv  # noqa: E402
+from icon_render import rendered as icon_rendered  # noqa: E402
+
 TEXTURES = ("Albedo", "Normal", "AO", "Mask", "Icon")
+RENDERED_ICON = 64
+MIN_ICON_COVERAGE = 0.08
 BUDGETS = (
     ("/Characters/", 6000),
     ("/Kit/", 1500),
@@ -86,6 +93,15 @@ def _triangles(values):
     return count
 
 
+def icon_coverage(path):
+    from icon_render import coverage
+    from texture_set import decode_png
+
+    with open(path, "rb") as handle:
+        _w, _h, pixels = decode_png(handle.read())
+    return coverage(pixels)
+
+
 def budget_for(relative):
     for fragment, limit in BUDGETS:
         if fragment in relative.replace("\\", "/"):
@@ -101,7 +117,30 @@ def png_size(path):
     return struct.unpack(">II", header[16:24])
 
 
+def sidecar_problems(relative, path, entry, tris):
+    """The sidecar must describe the FBX beside it: same id, settings, and triangle total."""
+    sidecar = path[:-4] + ".meta.json"
+    if not os.path.isfile(sidecar):
+        return [relative + " missing sidecar"]
+    problems = []
+    if not os.path.isfile(sidecar + ".meta"):
+        problems.append(relative + " missing sidecar meta")
+    with open(sidecar, encoding="utf-8") as handle:
+        record = json.load(handle)
+    for field in ("id", "category", "generator", "collider", "pivot", "lods"):
+        if record.get(field) != entry.get(field):
+            problems.append(relative + " sidecar " + field + " is stale")
+    lod_tris = record.get("lodTris") or []
+    if len(lod_tris) != len(entry.get("lods") or [1.0]):
+        problems.append(relative + " sidecar lod count")
+    if tris is not None and sum(lod_tris) != tris:
+        problems.append(relative + " sidecar tris " + str(sum(lod_tris)) + " but fbx has " + str(tris))
+    return problems
+
+
 def audit(root=None, manifest=None):
+    from pipeline_plan import entries
+
     root = root or repo_root()
     if manifest is None:
         manifest = load_manifest(root)
@@ -111,8 +150,9 @@ def audit(root=None, manifest=None):
     full = int(manifest.get("textureSize") or 128)
     icon = 32
 
-    for relative in manifest.get("assets") or []:
-        listed.add(relative.replace("\\", "/"))
+    for entry in entries(manifest):
+        relative = "Assets/Models/" + entry["output"]
+        listed.add(relative)
         path = os.path.join(root, relative)
         if not os.path.isfile(path):
             problems.append(relative + " missing fbx")
@@ -124,6 +164,9 @@ def audit(root=None, manifest=None):
         text = blob.decode("latin1", errors="ignore")
         if "LayerElementUV" not in text:
             problems.append(relative + " missing uvs")
+        elif (entry.get("bake") or {}).get("uv", True):
+            problems.extend(fbx_uv.problems(path, relative))
+        problems.extend(fbx_uv.colour_problems(path, relative))
         if "/Characters/" in relative and "Hips" not in text:
             problems.append(relative + " missing hips")
         tris = triangle_count(path)
@@ -132,6 +175,7 @@ def audit(root=None, manifest=None):
             problems.append(relative + " unreadable mesh")
         elif tris > limit:
             problems.append(relative + " tris " + str(tris) + " over " + str(limit))
+        problems.extend(sidecar_problems(relative, path, entry, tris))
         stem = relative[:-4]
         for suffix in textures:
             map_path = os.path.join(root, stem + "_" + suffix + ".png")
@@ -140,9 +184,13 @@ def audit(root=None, manifest=None):
                 problems.append(stem + "_" + suffix + " missing texture")
                 continue
             size = png_size(map_path)
-            expected = (icon, icon) if suffix == "Icon" else (full, full)
+            rendered = suffix == "Icon" and icon_rendered(entry.get("tags"))
+            side = RENDERED_ICON if rendered else icon
+            expected = (side, side) if suffix == "Icon" else (full, full)
             if size != expected:
                 problems.append(stem + "_" + suffix + " size " + str(size))
+            elif rendered and icon_coverage(map_path) < MIN_ICON_COVERAGE:
+                problems.append(stem + "_Icon blank render")
             if not os.path.isfile(meta_path):
                 problems.append(stem + "_" + suffix + " missing meta")
                 continue

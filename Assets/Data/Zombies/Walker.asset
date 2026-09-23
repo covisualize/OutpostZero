@@ -27,3 +27,11 @@ MonoBehaviour:
   hearingSensitivity: 1
   hordeAlertRadius: 10
   specialAbility: 0
+  hitVfx: 11
+  vocals: walker
+  deathVfx: 14
+  lootTable: walker
+  onHitEffects:
+  - kind: 2
+    chance: 0.2
+    seconds: 8

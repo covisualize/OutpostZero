@@ -1,0 +1,35 @@
+{
+  "id": "Kit_curb_ramp",
+  "category": "Kit",
+  "generator": "generate_kit.build_piece",
+  "generatorHash": "26dfc40d1d3936658d4d0b1e2b5a4802711a29de6f20dc403d9476b049514800",
+  "gitSha": "edff058f31a908ed7de64edaf527c44ea12a41ff",
+  "blender": "4.2.11",
+  "tags": [
+    "kit",
+    "road"
+  ],
+  "pivot": "authored",
+  "collider": "box",
+  "rig": "",
+  "lods": [
+    1.0
+  ],
+  "tris": 12,
+  "lodTris": [
+    12
+  ],
+  "size": {
+    "width": 2.0,
+    "depth": 1.0,
+    "height": 0.08
+  },
+  "floor": 0.0,
+  "center": {
+    "x": 1.0,
+    "y": 0.5
+  },
+  "materials": [
+    "Mat_concrete"
+  ]
+}

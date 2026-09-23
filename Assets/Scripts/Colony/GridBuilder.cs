@@ -26,7 +26,8 @@ namespace OutpostZero.Colony
         Oil,
         Crate,
         Lamp,
-        Campfire
+        Campfire,
+        Memorial
     }
 
     [Serializable]
@@ -56,6 +57,9 @@ namespace OutpostZero.Colony
         private bool buildMode;
         private int facing;
         private float nextOil;
+        private GameObject ghost;
+        private MaterialPropertyBlock ghostBlock;
+        private string ghostKind = "";
 
         public bool BuildMode => buildMode;
         public ModuleKind Selected => selected;
@@ -70,6 +74,7 @@ namespace OutpostZero.Colony
                 return;
             }
             Instance = this;
+            ModuleBook.Ensure();
         }
 
         private void Update()
@@ -77,53 +82,104 @@ namespace OutpostZero.Colony
             TickOil(Time.time);
             TickLamps();
             TickFires();
-            if (GameManager.Instance == null || GameManager.Instance.CurrentState != GameState.CampManagement) return;
+            if (GameManager.Instance == null || GameManager.Instance.CurrentState != GameState.CampManagement)
+            {
+                HideGhost();
+                return;
+            }
             if (Player.ExpeditionInput.BuildPressed)
             {
                 buildMode = !buildMode;
-                GameplayFeedback.Toast(buildMode ? "Build mode: click the yard" : "Build mode off");
+                GameplayFeedback.Toast(YardSay.Mode(buildMode, null));
             }
-            if (!buildMode) return;
-            var keyboard = UnityEngine.InputSystem.Keyboard.current;
-            if (keyboard != null && keyboard.rKey.wasPressedThisFrame)
+            if (!buildMode)
+            {
+                HideGhost();
+                return;
+            }
+            ShowGhost();
+            if (Player.ExpeditionInput.BuildTurnPressed)
             {
                 facing = ScrapRefund.Turn(facing);
-                GameplayFeedback.Toast("Facing " + facing);
+                GameplayFeedback.Toast(YardSay.Facing(facing, null));
             }
             if (Player.ExpeditionInput.Pointer.x > Screen.width - 400f) return;
             if (PointerRight()) TryDemolishAtPointer();
             else if (PointerPressed()) TryPlaceAtPointer();
         }
 
-        private static bool PointerPressed()
-        {
-            return UnityEngine.InputSystem.Mouse.current != null && UnityEngine.InputSystem.Mouse.current.leftButton.wasPressedThisFrame;
-        }
+        private static bool PointerPressed() => Player.ExpeditionInput.BuildPlacePressed;
 
-        private static bool PointerRight()
-        {
-            return UnityEngine.InputSystem.Mouse.current != null && UnityEngine.InputSystem.Mouse.current.rightButton.wasPressedThisFrame;
-        }
+        private static bool PointerRight() => Player.ExpeditionInput.BuildRemovePressed;
 
         public void Select(ModuleKind kind) => selected = kind;
+
+        private void ShowGhost()
+        {
+            var cam = Camera.main;
+            if (cam == null) return;
+            Ray ray = cam.ScreenPointToRay(Player.ExpeditionInput.Pointer);
+            var plane = new Plane(Vector3.up, Vector3.zero);
+            if (!plane.Raycast(ray, out float enter))
+            {
+                HideGhost();
+                return;
+            }
+            Vector3 point = ray.GetPoint(enter);
+            float x = BuildGhost.Snap(point.x, cell);
+            float z = BuildGhost.Snap(point.z, cell);
+            var verdict = BuildGhost.Check(placed, selected, facing, x, z, Bill(selected), ColonyStorage.Instance);
+            if (ghost == null)
+            {
+                ghost = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                ghost.name = "BuildGhost";
+                Destroy(ghost.GetComponent<Collider>());
+                var renderer = ghost.GetComponent<Renderer>();
+                renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                ghostBlock = new MaterialPropertyBlock();
+                ghostKind = "";
+            }
+            string kind = selected.ToString();
+            if (kind != ghostKind)
+            {
+                ghostKind = kind;
+                ghost.transform.localScale = Scale(kind, 100);
+            }
+            float y = ghost.transform.localScale.y * 0.5f;
+            ghost.transform.SetPositionAndRotation(new Vector3(x, y, z), Quaternion.Euler(0f, facing, 0f));
+            var paint = ghost.GetComponent<Renderer>();
+            paint.GetPropertyBlock(ghostBlock);
+            Color tint = BuildGhost.Tint(verdict);
+            ghostBlock.SetColor("_BaseColor", tint);
+            ghostBlock.SetColor("_Color", tint);
+            paint.SetPropertyBlock(ghostBlock);
+            if (!ghost.activeSelf) ghost.SetActive(true);
+        }
+
+        private void HideGhost()
+        {
+            if (ghost != null && ghost.activeSelf) ghost.SetActive(false);
+        }
 
         public bool TryDemolish(float worldX, float worldZ)
         {
             float x = Mathf.Round(worldX / cell) * cell;
             float z = Mathf.Round(worldZ / cell) * cell;
-            PlacedModule target = null;
-            for (int i = 0; i < placed.Count; i++)
-            {
-                var module = placed[i];
-                if (Mathf.Abs(module.x - x) < 0.01f && Mathf.Abs(module.z - z) < 0.01f) target = module;
-            }
+            PlacedModule target = Under(placed, x, z, worldX, worldZ);
             if (target == null) return false;
-            int refund = 0;
-            if (System.Enum.TryParse(target.kind, out ModuleKind kind)) refund = ScrapRefund.Half(Cost(kind));
+            var refund = new ModuleBill();
+            if (System.Enum.TryParse(target.kind, out ModuleKind kind)) refund = Bill(kind).Half();
             placed.Remove(target);
             RefreshViews();
-            if (refund > 0) ColonyStorage.Instance?.RestoreScrap(refund);
-            GameplayFeedback.Toast("Recovered " + refund + " scrap");
+            var storage = ColonyStorage.Instance;
+            if (storage != null)
+            {
+                if (refund.Scrap > 0) storage.RestoreScrap(refund.Scrap);
+                if (refund.Cloth > 0) storage.RestoreCloth(refund.Cloth);
+                if (refund.Chemicals > 0) storage.RestoreChemicals(refund.Chemicals);
+                if (refund.Tape > 0) storage.RestoreTape(refund.Tape);
+            }
+            GameplayFeedback.Toast(YardSay.Recovered(refund, null));
             return true;
         }
 
@@ -148,12 +204,27 @@ namespace OutpostZero.Colony
                 plots[i].Integrity = placed[i].integrity;
             }
             CampYield.Advance(plots);
-            bool rain = WeatherController.Instance != null && WeatherController.Instance.Kind == WeatherKind.Rain;
+            bool rain = WeatherController.Instance != null && SkyBand.Rains(WeatherController.Instance.Kind);
             CampYield.Produce(plots, rain, out int food, out int water);
+            WeatherKind sky = WeatherController.Instance != null ? WeatherController.Instance.Kind : WeatherKind.Clear;
+            int caught = 0;
+            for (int i = 0; i < placed.Count; i++)
+                caught += RainCatch.Extra(placed[i].kind, placed[i].integrity, placed[i].site, sky);
+            water += caught;
             for (int i = 0; i < placed.Count; i++) placed[i].age = plots[i].Age;
+            int worn = 0;
+            for (int i = 0; i < placed.Count; i++)
+            {
+                int next = StormWear.After(placed[i].integrity, placed[i].site, placed[i].kind, sky);
+                if (next < placed[i].integrity) next = ModuleHealth.Hit(placed[i].integrity, placed[i].integrity - next, HpOf(placed[i]));
+                if (next < placed[i].integrity) worn++;
+                placed[i].integrity = next;
+            }
+            if (worn > 0) GameplayFeedback.Toast(StormWear.Line(sky, null));
             if (ColonyStorage.Instance == null) return;
             if (food > 0) ColonyStorage.Instance.AddFood(food);
             if (water > 0) ColonyStorage.Instance.AddWater(water);
+            if (caught > 0) GameplayFeedback.Toast(RainCatch.Line(sky, null));
         }
 
         public void TryPlaceAtPointer()
@@ -169,24 +240,31 @@ namespace OutpostZero.Colony
 
         public bool TryPlace(ModuleKind kind, Vector3 world)
         {
-            float x = Mathf.Round(world.x / cell) * cell;
-            float z = Mathf.Round(world.z / cell) * cell;
-            if (Occupied(placed, x, z))
+            float x = BuildGhost.Snap(world.x, cell);
+            float z = BuildGhost.Snap(world.z, cell);
+            var area = ModuleFootprint.Of(kind.ToString(), facing, x, z);
+            if (!ModuleFootprint.Inside(area))
             {
-                GameplayFeedback.Toast("That square is taken");
+                GameplayFeedback.Toast(YardSay.Outside(null));
+                return false;
+            }
+            if (ModuleFootprint.Clashes(placed, area))
+            {
+                GameplayFeedback.Toast(YardSay.Taken(null));
                 return false;
             }
 
-            int cost = Cost(kind);
-            if (ColonyStorage.Instance == null || !ColonyStorage.Instance.TrySpendScrap(cost))
+            var bill = Bill(kind);
+            if (ColonyStorage.Instance == null || !ColonyStorage.Instance.TrySpendBill(bill.Scrap, bill.Cloth, bill.Chemicals, bill.Tape))
             {
-                GameplayFeedback.Toast("Need " + cost + " camp scrap");
+                GameplayFeedback.Toast(YardSay.Need(bill, null));
                 return false;
             }
             var record = new PlacedModule { kind = kind.ToString(), x = x, z = z, rotation = facing, integrity = 100, site = 1 };
             placed.Add(record);
             SpawnView(record);
-            GameplayFeedback.Toast("Site marked " + kind);
+            GameplayFeedback.Toast(YardSay.Marked(kind.ToString(), null));
+            if (kind == ModuleKind.Barricade) CodexDirector.Hear("barricade");
             return true;
         }
 
@@ -200,8 +278,19 @@ namespace OutpostZero.Colony
                 module.site = nextSite;
                 module.hours = nextHours;
                 RefreshViews();
-                if (finished) GameplayFeedback.Toast(module.kind + " is up");
+                if (finished) GameplayFeedback.Toast(YardSay.Up(module.kind, null));
                 return true;
+            }
+            return false;
+        }
+
+        /// <summary>An open site or a damaged module is waiting for a builder.</summary>
+        public bool WorkWaiting()
+        {
+            for (int i = 0; i < placed.Count; i++)
+            {
+                if (placed[i].site != 0 && placed[i].integrity > 0) return true;
+                if (MendBoard.Needs(placed[i].site, placed[i].integrity)) return true;
             }
             return false;
         }
@@ -223,7 +312,7 @@ namespace OutpostZero.Colony
             bool whole = next >= 100;
             module.integrity = next;
             RefreshViews();
-            GameplayFeedback.Toast((whole ? "Patched " : "Mended ") + module.kind);
+            GameplayFeedback.Toast(YardSay.Mend(module.kind, whole, null));
             return true;
         }
 
@@ -240,18 +329,38 @@ namespace OutpostZero.Colony
             ClearViews();
         }
 
+        private bool[] fedCache = new bool[0];
+        private float fedAt;
+
         private void TickLamps()
         {
-            bool powered = CampServices.Instance != null && CampServices.Instance.GeneratorOnline;
+            if (Time.time >= fedAt || fedCache.Length != placed.Count)
+            {
+                fedCache = Fed();
+                fedAt = Time.time + 0.5f;
+            }
+            var fed = fedCache;
             int count = placed.Count < views.Count ? placed.Count : views.Count;
             for (int i = 0; i < count; i++)
             {
                 if (placed[i].kind != "Lamp" || views[i] == null) continue;
-                bool on = powered && BuildSite.Ready(placed[i].site, placed[i].integrity);
+                bool on = i < fed.Length && fed[i];
                 var bulb = views[i].GetComponent<Light>();
                 if (bulb != null) bulb.enabled = on;
                 var source = views[i].GetComponent<LightSource>();
                 if (source != null) source.enabled = on;
+                var mote = views[i].GetComponent<YardMote>();
+                if (mote == null) mote = views[i].AddComponent<YardMote>();
+                if (YardGlow.SparksDue(placed[i].site, placed[i].integrity, Time.time, mote.Last))
+                {
+                    mote.Last = Time.time;
+                    CombatVfx.Sparks(views[i].transform.position);
+                    AudioManager.Instance?.PlayAt("spit", views[i].transform.position, YardGlow.Spit);
+                }
+                else if (!MendBoard.Needs(placed[i].site, placed[i].integrity))
+                {
+                    mote.Last = 0f;
+                }
             }
         }
 
@@ -261,21 +370,48 @@ namespace OutpostZero.Colony
             for (int i = 0; i < count; i++)
             {
                 if (placed[i].kind != "Campfire" || views[i] == null) continue;
+                bool ready = BuildSite.Ready(placed[i].site, placed[i].integrity);
                 var ember = views[i].GetComponent<Light>();
-                if (ember != null) ember.enabled = BuildSite.Ready(placed[i].site, placed[i].integrity);
+                if (ember != null)
+                {
+                    ember.enabled = ready;
+                    ember.intensity = FirePulse.Peak * FirePulse.Scale(Time.time, ready);
+                }
+                var mote = views[i].GetComponent<YardMote>();
+                if (mote == null) mote = views[i].AddComponent<YardMote>();
+                if (YardGlow.EmbersDue(ready, Time.time, mote.Last))
+                {
+                    mote.Last = Time.time;
+                    CombatVfx.Embers(views[i].transform.position);
+                }
+                else if (!ready)
+                {
+                    mote.Last = 0f;
+                }
             }
         }
 
         private void SpawnView(PlacedModule module)
         {
-            var view = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            view.name = "Module_" + module.kind;
+            var look = module.site == 0 ? ModuleLooks.For(module.kind) : null;
             bool flat = module.kind == "Spikes" || module.kind == "Oil" || module.kind == "Campfire";
             float y = flat ? 0.04f : module.kind == "Lamp" ? 1.2f : 0.6f;
+            GameObject view;
+            if (look != null)
+            {
+                view = new GameObject();
+                var box = view.AddComponent<BoxCollider>();
+                box.size = Scale(module.kind, module.integrity);
+            }
+            else view = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            view.name = "Module_" + module.kind;
             view.transform.position = new Vector3(module.x, y, module.z);
             view.transform.rotation = Quaternion.Euler(0f, module.rotation, 0f);
-            view.transform.localScale = Scale(module.kind, module.integrity);
-            if (module.site != 0)
+            if (look != null) Wear(view, look, y, module.integrity);
+            else view.transform.localScale = Scale(module.kind, module.integrity);
+            if (module.tier >= ModuleHealth.Reinforced && ModuleHealth.Upgrades(module.kind))
+                view.transform.localScale = Vector3.Scale(view.transform.localScale, ReinforcedLook);
+            if (look == null && module.site != 0)
             {
                 float bulk = BuildSite.Bulk(module.hours);
                 view.transform.localScale = new Vector3(
@@ -283,14 +419,16 @@ namespace OutpostZero.Colony
                     view.transform.localScale.y * bulk,
                     view.transform.localScale.z * bulk);
             }
-            var renderer = view.GetComponent<Renderer>();
+            var renderer = look == null ? view.GetComponent<Renderer>() : null;
             if (renderer != null)
             {
-                renderer.material.color = module.site != 0
+                var color = module.site != 0
                     ? Color.Lerp(ColorFor(module.kind), new Color(0.72f, 0.7f, 0.58f), module.hours > 0 ? 0.35f : 0.7f)
                     : module.kind == "Oil" && module.lit >= 0f
                     ? new Color(0.95f, 0.42f, 0.08f)
                     : ColorFor(module.kind);
+                var family = module.site != 0 ? SurfaceFamily.Plywood : FamilyFor(module.kind);
+                if (!MaterialLibrary.Dress(renderer, family, MaterialLibrary.TintFor(color))) renderer.material.color = color;
             }
             if (module.kind == "Spikes" || module.kind == "Oil" || module.kind == "Campfire")
             {
@@ -302,6 +440,7 @@ namespace OutpostZero.Colony
                 var obstacle = view.AddComponent<NavMeshObstacle>();
                 obstacle.carving = true;
                 obstacle.shape = NavMeshObstacleShape.Box;
+                obstacle.size = look != null ? Scale(module.kind, module.integrity) : Vector3.one;
             }
             if (module.kind == "Barricade")
             {
@@ -320,16 +459,40 @@ namespace OutpostZero.Colony
                 source.Configure(FloodBeam.Radius);
                 source.enabled = false;
             }
+            if (module.kind == "Generator") YardFlood.Raise(view);
             if (module.kind == "Campfire")
             {
                 var ember = view.AddComponent<Light>();
                 ember.type = LightType.Point;
                 ember.range = 6f;
-                ember.intensity = 1.6f;
+                ember.intensity = FirePulse.Peak;
                 ember.color = new Color(1f, 0.45f, 0.15f);
                 ember.enabled = false;
             }
             views.Add(view);
+        }
+
+        /// <summary>
+        /// Hangs the baked model under the collider root, feet on the ground. A battered module sits lower
+        /// and darker, the way the box stand-in shrank.
+        /// </summary>
+        private static void Wear(GameObject root, GameObject look, float y, int integrity)
+        {
+            var model = Instantiate(look, root.transform);
+            model.name = look.name;
+            float health = Mathf.Clamp01((integrity <= 0 ? 100 : integrity) / 100f);
+            model.transform.localPosition = new Vector3(0f, -y - (1f - health) * 0.15f, 0f);
+            model.transform.localRotation = Quaternion.identity;
+            foreach (var collider in model.GetComponentsInChildren<Collider>()) Destroy(collider);
+            if (health >= 0.99f) return;
+            var block = new MaterialPropertyBlock();
+            var shade = Color.Lerp(new Color(0.45f, 0.4f, 0.36f), Color.white, health);
+            foreach (var renderer in model.GetComponentsInChildren<Renderer>())
+            {
+                renderer.GetPropertyBlock(block);
+                block.SetColor("_Tint", shade);
+                renderer.SetPropertyBlock(block);
+            }
         }
 
         private void ClearViews()
@@ -394,7 +557,7 @@ namespace OutpostZero.Colony
                 target = module;
             }
             if (target == null) return false;
-            target.integrity = Mathf.Max(0, target.integrity - Mathf.Max(1, Mathf.RoundToInt(amount)));
+            target.integrity = ModuleHealth.Hit(target.integrity, Mathf.Max(1, Mathf.RoundToInt(amount)), HpOf(target));
             if (target.integrity > 0)
             {
                 RefreshViews();
@@ -402,7 +565,7 @@ namespace OutpostZero.Colony
             }
             placed.Remove(target);
             RefreshViews();
-            GameplayFeedback.Toast("A barricade gave way");
+            GameplayFeedback.Toast(YardSay.Barricade(null));
             return true;
         }
 
@@ -422,7 +585,7 @@ namespace OutpostZero.Colony
                 target = module;
             }
             if (target == null) return false;
-            target.integrity = Mathf.Max(0, target.integrity - Mathf.Max(1, amount));
+            target.integrity = ModuleHealth.Hit(target.integrity, Mathf.Max(1, amount), HpOf(target));
             if (target.integrity > 0)
             {
                 RefreshViews();
@@ -430,7 +593,7 @@ namespace OutpostZero.Colony
             }
             placed.Remove(target);
             RefreshViews();
-            GameplayFeedback.Toast("A barricade gave way");
+            GameplayFeedback.Toast(YardSay.Barricade(null));
             return true;
         }
 
@@ -494,7 +657,7 @@ namespace OutpostZero.Colony
         public bool Chip(PlacedModule module, int amount)
         {
             if (module == null || !placed.Contains(module)) return false;
-            module.integrity = TrapHit.WearDown(module.integrity, amount);
+            module.integrity = ModuleHealth.Hit(module.integrity, amount, HpOf(module));
             if (module.integrity > 0)
             {
                 RefreshViews();
@@ -502,7 +665,7 @@ namespace OutpostZero.Colony
             }
             placed.Remove(module);
             RefreshViews();
-            GameplayFeedback.Toast("The spikes broke");
+            GameplayFeedback.Toast(YardSay.Spikes(null));
             return true;
         }
 
@@ -520,7 +683,7 @@ namespace OutpostZero.Colony
             if (!caught) return;
             nextOil = now;
             RefreshViews();
-            GameplayFeedback.Toast("The oil catches");
+            GameplayFeedback.Toast(YardSay.Oil(null));
         }
 
         public void TickOil(float now)
@@ -575,60 +738,70 @@ namespace OutpostZero.Colony
             }
         }
 
-        public int BenchTier()
+        public int BenchTier() => TierOf("Workbench");
+        public bool BenchOrdered() => Ordered("Workbench");
+        public int BenchWork() => Worked("Workbench");
+        public bool OrderBench() => Order("Workbench", CraftGate.UpgradeScrap, CraftGate.UpgradeCloth, 0, CraftGate.UpgradeTape, "camp.bench_raise");
+
+        public int GeneratorTier() => TierOf("Generator");
+        public bool GeneratorOrdered() => Ordered("Generator");
+        public int GeneratorWork() => Worked("Generator");
+        public bool OrderGenerator() => Order("Generator", GeneratorTune.Scrap, 0, GeneratorTune.Chemicals, GeneratorTune.Tape, "camp.gen_raise");
+
+        private int TierOf(string kind)
         {
             for (int i = 0; i < placed.Count; i++)
             {
                 var module = placed[i];
-                if (module.kind != "Workbench" || !BuildSite.Ready(module.site, module.integrity)) continue;
-                if (module.tier >= 2 || module.job >= CraftGate.Done) return 2;
+                if (module.kind != kind || !BuildSite.Ready(module.site, module.integrity)) continue;
+                if (GeneratorTune.Tier(module.tier, module.job) >= 2) return 2;
             }
             return 1;
         }
 
-        public bool BenchOrdered()
+        private bool Ordered(string kind)
         {
             for (int i = 0; i < placed.Count; i++)
             {
                 var module = placed[i];
-                if (module.kind != "Workbench" || !BuildSite.Ready(module.site, module.integrity)) continue;
+                if (module.kind != kind || !BuildSite.Ready(module.site, module.integrity)) continue;
                 if (CraftGate.Ordered(module.job)) return true;
             }
             return false;
         }
 
-        public int BenchWork()
+        private int Worked(string kind)
         {
             for (int i = 0; i < placed.Count; i++)
             {
                 var module = placed[i];
-                if (module.kind != "Workbench" || !BuildSite.Ready(module.site, module.integrity)) continue;
+                if (module.kind != kind || !BuildSite.Ready(module.site, module.integrity)) continue;
                 if (CraftGate.Ordered(module.job) || module.job >= CraftGate.Done) return CraftGate.Worked(module.job);
             }
             return 0;
         }
 
-        public bool OrderBench()
+        private bool Order(string kind, int scrap, int cloth, int chemicals, int tape, string toast)
         {
-            if (BenchTier() >= 2 || BenchOrdered()) return false;
-            PlacedModule bench = null;
+            if (TierOf(kind) >= 2 || Ordered(kind)) return false;
+            PlacedModule target = null;
             for (int i = 0; i < placed.Count; i++)
             {
                 var module = placed[i];
-                if (module.kind != "Workbench" || !BuildSite.Ready(module.site, module.integrity)) continue;
+                if (module.kind != kind || !BuildSite.Ready(module.site, module.integrity)) continue;
                 if (module.job != 0 || module.tier >= 2) continue;
-                bench = module;
+                target = module;
                 break;
             }
-            if (bench == null) return false;
+            if (target == null) return false;
             var storage = ColonyStorage.Instance;
-            if (storage == null || !storage.TrySpendBill(CraftGate.UpgradeScrap, CraftGate.UpgradeCloth, 0, CraftGate.UpgradeTape))
+            if (storage == null || !storage.TrySpendBill(scrap, cloth, chemicals, tape))
             {
-                GameplayFeedback.Toast("Not enough camp supplies");
+                GameplayFeedback.Toast(YardSay.Short(null));
                 return false;
             }
-            bench.job = 1;
-            GameplayFeedback.Toast(Loc.T("camp.bench_raise"));
+            target.job = 1;
+            GameplayFeedback.Toast(Loc.T(toast));
             return true;
         }
 
@@ -637,14 +810,15 @@ namespace OutpostZero.Colony
             for (int i = 0; i < placed.Count; i++)
             {
                 var module = placed[i];
-                if (module.kind != "Workbench" || !BuildSite.Ready(module.site, module.integrity)) continue;
+                if (!GeneratorTune.Raises(module.kind) || !BuildSite.Ready(module.site, module.integrity)) continue;
                 if (!CraftGate.Ordered(module.job)) continue;
                 CraftGate.Advance(module.job, pace, out int next, out bool done);
                 if (next == module.job) return false;
                 module.job = next;
                 if (done) module.tier = 2;
                 RefreshViews();
-                GameplayFeedback.Toast(done ? Loc.T("camp.bench_t2") : Loc.T("camp.bench_raise"));
+                bool bench = module.kind == "Workbench";
+                GameplayFeedback.Toast(Loc.T(done ? (bench ? "camp.bench_t2" : "camp.gen_t2") : (bench ? "camp.bench_raise" : "camp.gen_raise")));
                 return true;
             }
             return false;
@@ -670,10 +844,37 @@ namespace OutpostZero.Colony
                 else scores[i] = module.integrity;
             }
             int mark = CraftGate.PickWorn(scores);
-            if (mark < 0) return false;
+            if (mark < 0) return generator ? false : Reinforce();
             placed[mark].integrity = generator ? CraftGate.MendGenerator(placed[mark].integrity) : CraftGate.BraceWall(placed[mark].integrity);
             RefreshViews();
             return true;
+        }
+
+        private static readonly Vector3 ReinforcedLook = new Vector3(1f, 1.25f, 1.3f);
+
+        private static int HpOf(PlacedModule module) => ModuleHealth.Of(module.kind, module.tier);
+
+        /// <summary>With no worn wall to brace, the kit raises a finished wall to the reinforced tier.</summary>
+        private bool Reinforce()
+        {
+            for (int i = 0; i < placed.Count; i++)
+            {
+                var module = placed[i];
+                if (!ModuleHealth.CanReinforce(module.kind, module.site, module.integrity, module.tier)) continue;
+                module.tier = ModuleHealth.Reinforced;
+                module.integrity = 100;
+                RefreshViews();
+                return true;
+            }
+            return false;
+        }
+
+        public int Reinforced()
+        {
+            int count = 0;
+            for (int i = 0; i < placed.Count; i++)
+                if (placed[i].kind == "Barricade" && placed[i].tier >= ModuleHealth.Reinforced && BuildSite.Ready(placed[i].site, placed[i].integrity)) count++;
+            return count;
         }
 
         public bool HasKind(string kind)
@@ -685,16 +886,24 @@ namespace OutpostZero.Colony
             return false;
         }
 
-        public static bool Occupied(IReadOnlyList<PlacedModule> modules, float x, float z)
+        /// <summary>The module anchored on the snapped cell, else the one whose footprint holds the clicked point.</summary>
+        public static PlacedModule Under(IReadOnlyList<PlacedModule> modules, float x, float z, float pointX, float pointZ)
         {
-            if (modules == null) return false;
+            if (modules == null) return null;
+            PlacedModule covering = null;
             for (int i = 0; i < modules.Count; i++)
             {
                 var module = modules[i];
                 if (module == null) continue;
-                if (Mathf.Abs(module.x - x) < 0.01f && Mathf.Abs(module.z - z) < 0.01f) return true;
+                if (Mathf.Abs(module.x - x) < 0.01f && Mathf.Abs(module.z - z) < 0.01f) return module;
+                if (covering == null && ModuleFootprint.Holds(ModuleFootprint.Of(module.kind, module.rotation, module.x, module.z), pointX, pointZ)) covering = module;
             }
-            return false;
+            return covering;
+        }
+
+        public static bool Occupied(IReadOnlyList<PlacedModule> modules, float x, float z)
+        {
+            return ModuleFootprint.Clashes(modules, ModuleFootprint.Box(x, z, ModuleFootprint.Unit, ModuleFootprint.Unit));
         }
 
         public int BarricadeCount()
@@ -707,6 +916,45 @@ namespace OutpostZero.Colony
             return count;
         }
 
+        public List<Perimeter.Wall> Walls()
+        {
+            var walls = new List<Perimeter.Wall>();
+            foreach (var module in placed)
+            {
+                if (module.kind != "Barricade") continue;
+                walls.Add(new Perimeter.Wall { X = module.x, Z = module.z, Integrity = module.integrity, Ready = BuildSite.Ready(module.site, module.integrity) });
+            }
+            return walls;
+        }
+
+        public int PerimeterScore => Perimeter.Score(Walls());
+
+        public List<PowerGrid.Plug> Plugs()
+        {
+            var plugs = new List<PowerGrid.Plug>(placed.Count);
+            foreach (var module in placed)
+                plugs.Add(new PowerGrid.Plug { Kind = module.kind, Ready = BuildSite.Ready(module.site, module.integrity) });
+            return plugs;
+        }
+
+        private static bool GeneratorRunning => CampServices.Instance != null && CampServices.Instance.GeneratorOnline;
+
+        /// <summary>One entry per placed module, true when it is finished and has the power it needs.</summary>
+        public bool[] Fed() => PowerGrid.Allot(Plugs(), GeneratorRunning);
+
+        public int PowerMade => PowerGrid.Supply(Plugs(), GeneratorRunning);
+
+        public int PowerUsed => PowerGrid.Used(Plugs(), GeneratorRunning);
+
+        public int FedCount(string kind)
+        {
+            var fed = Fed();
+            int count = 0;
+            for (int i = 0; i < placed.Count && i < fed.Length; i++)
+                if (fed[i] && placed[i].kind == kind) count++;
+            return count;
+        }
+
         private void RefreshViews()
         {
             var copy = placed.ToArray();
@@ -714,6 +962,40 @@ namespace OutpostZero.Colony
         }
 
         public static int Cost(ModuleKind kind)
+        {
+            return ModuleTable.TryRow(kind.ToString(), out var row) ? row.Scrap : CodeCost(kind);
+        }
+
+        public static ModuleBill Bill(ModuleKind kind)
+        {
+            if (ModuleTable.TryRow(kind.ToString(), out var row)) return new ModuleBill(row.Scrap, row.Cloth, row.Chemicals, row.Tape);
+            CodeSupplies(kind, out int cloth, out int chemicals, out int tape);
+            return new ModuleBill(CodeCost(kind), cloth, chemicals, tape);
+        }
+
+        /// <summary>Supplies a module needs beside its scrap: canvas for beds and banners, tape and chemicals for machines.</summary>
+        public static void CodeSupplies(ModuleKind kind, out int cloth, out int chemicals, out int tape)
+        {
+            cloth = 0;
+            chemicals = 0;
+            tape = 0;
+            switch (kind)
+            {
+                case ModuleKind.Cot: cloth = 1; break;
+                case ModuleKind.Water: tape = 1; break;
+                case ModuleKind.Watchtower: tape = 1; break;
+                case ModuleKind.Generator: chemicals = 1; tape = 1; break;
+                case ModuleKind.Workbench: tape = 1; break;
+                case ModuleKind.TradingPost: cloth = 2; break;
+                case ModuleKind.Farm: chemicals = 1; break;
+                case ModuleKind.Purifier: chemicals = 2; break;
+                case ModuleKind.Turret: chemicals = 1; tape = 2; break;
+                case ModuleKind.Lamp: tape = 1; break;
+                case ModuleKind.Memorial: cloth = 1; break;
+            }
+        }
+
+        public static int CodeCost(ModuleKind kind)
         {
             switch (kind)
             {
@@ -732,13 +1014,38 @@ namespace OutpostZero.Colony
                 case ModuleKind.Crate: return 10;
                 case ModuleKind.Lamp: return 13;
                 case ModuleKind.Campfire: return 7;
+                case ModuleKind.Memorial: return 6;
                 default: return 6;
             }
         }
 
-        private static Vector3 Scale(string kind, int integrity)
+        public static Vector3 Scale(string kind, int integrity)
         {
+            Vector3 size;
+            bool wears;
+            if (ModuleTable.TryRow(kind, out var row))
+            {
+                size = row.Size;
+                wears = row.Wears;
+            }
+            else
+            {
+                size = CodeSize(kind);
+                wears = CodeWears(kind);
+            }
+            if (!wears) return size;
             float health = Mathf.Clamp01((integrity <= 0 ? 100 : integrity) / 100f);
+            return new Vector3(size.x * health, size.y * Mathf.Lerp(0.35f, 1f, health), size.z);
+        }
+
+        /// <summary>Kinds with no entry of their own are walls: they shrink as they wear.</summary>
+        public static bool CodeWears(string kind)
+        {
+            return !System.Enum.TryParse(kind, out ModuleKind parsed) || parsed == ModuleKind.Barricade;
+        }
+
+        public static Vector3 CodeSize(string kind)
+        {
             switch (kind)
             {
                 case "Cot": return new Vector3(1.4f, 0.4f, 0.7f);
@@ -755,11 +1062,46 @@ namespace OutpostZero.Colony
                 case "Crate": return new Vector3(1.1f, 0.9f, 0.8f);
                 case "Lamp": return new Vector3(0.35f, 2.2f, 0.35f);
                 case "Campfire": return new Vector3(1.2f, 0.2f, 1.2f);
-                default: return new Vector3(1.8f * health, 1.1f * Mathf.Lerp(0.35f, 1f, health), 0.4f);
+                case "Memorial": return new Vector3(1.8f, 1.4f, 0.3f);
+                default: return new Vector3(1.8f, 1.1f, 0.4f);
             }
         }
 
-        private static Color ColorFor(string kind)
+        /// <summary>Library surface for a module stand-in; lamps and fires keep flat colour.</summary>
+        public static SurfaceFamily FamilyFor(string kind)
+        {
+            return ModuleTable.TryRow(kind, out var row) ? row.Family : CodeFamily(kind);
+        }
+
+        public static SurfaceFamily CodeFamily(string kind)
+        {
+            switch (kind)
+            {
+                case "Cot": return SurfaceFamily.Cloth;
+                case "Water":
+                case "Purifier": return SurfaceFamily.MetalPainted;
+                case "Watchtower":
+                case "Workbench":
+                case "TradingPost":
+                case "Memorial":
+                case "Crate": return SurfaceFamily.Plywood;
+                case "Generator":
+                case "Turret":
+                case "Spikes": return SurfaceFamily.MetalRusted;
+                case "Oil": return SurfaceFamily.Rubber;
+                case "Farm": return SurfaceFamily.TarpFabric;
+                case "Lamp":
+                case "Campfire": return SurfaceFamily.None;
+                default: return SurfaceFamily.ConcreteCracked;
+            }
+        }
+
+        public static Color ColorFor(string kind)
+        {
+            return ModuleTable.TryRow(kind, out var row) ? row.Tint : CodeColor(kind);
+        }
+
+        public static Color CodeColor(string kind)
         {
             switch (kind)
             {
@@ -777,6 +1119,7 @@ namespace OutpostZero.Colony
                 case "Crate": return new Color(0.42f, 0.3f, 0.18f);
                 case "Lamp": return new Color(0.85f, 0.8f, 0.55f);
                 case "Campfire": return new Color(0.72f, 0.28f, 0.12f);
+                case "Memorial": return new Color(0.5f, 0.45f, 0.38f);
                 default: return new Color(0.48f, 0.42f, 0.32f);
             }
         }

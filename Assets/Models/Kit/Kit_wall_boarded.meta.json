@@ -1,0 +1,35 @@
+{
+  "id": "Kit_wall_boarded",
+  "category": "Kit",
+  "generator": "generate_kit.build_piece",
+  "generatorHash": "2d44e7a8ee89b577373a29ec5c8f003ef4f6970e5763ea867f3d0f2bb053d983",
+  "gitSha": "edff058f31a908ed7de64edaf527c44ea12a41ff",
+  "blender": "4.2.11",
+  "tags": [
+    "kit",
+    "building"
+  ],
+  "pivot": "authored",
+  "collider": "box",
+  "rig": "",
+  "lods": [
+    1.0
+  ],
+  "tris": 12,
+  "lodTris": [
+    12
+  ],
+  "size": {
+    "width": 2.0,
+    "depth": 0.2,
+    "height": 3.0
+  },
+  "floor": 0.0,
+  "center": {
+    "x": 1.0,
+    "y": 0.1
+  },
+  "materials": [
+    "Mat_wood"
+  ]
+}

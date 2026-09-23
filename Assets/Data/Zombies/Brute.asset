@@ -27,3 +27,14 @@ MonoBehaviour:
   hearingSensitivity: 1
   hordeAlertRadius: 10
   specialAbility: 2
+  hitVfx: 11
+  vocals: brute
+  deathVfx: 14
+  lootTable: brute
+  onHitEffects:
+  - kind: 2
+    chance: 0.2
+    seconds: 8
+  - kind: 5
+    chance: 1
+    seconds: 0.7

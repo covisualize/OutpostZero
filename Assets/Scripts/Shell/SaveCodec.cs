@@ -8,18 +8,27 @@ namespace OutpostZero.Shell
         public string id;
         public string displayName;
         public string trait;
+        public string aside = "";
+        public string mark = "";
         public bool alive;
         public bool leader;
         public float morale;
         public float hunger;
         public float thirst;
+        public float fatigue;
+        public int fatigueKnown;
         public int opinion;
         public int injury;
         public bool needsTracked;
         public string task;
         public string bond;
+        public string kin = "";
         public string practice = "";
         public int leadership;
+        public string drill = "";
+        public bool ownCall;
+        public int age;
+        public string past = "";
     }
 
     [Serializable]
@@ -40,7 +49,7 @@ namespace OutpostZero.Shell
     [Serializable]
     public class SaveGameData
     {
-        public int schemaVersion = 1;
+        public int schemaVersion = SaveCodec.CurrentSchema;
         public int day = 1;
         public float hour = 18.5f;
         public int colonyScrap;
@@ -52,15 +61,20 @@ namespace OutpostZero.Shell
         public int raw;
         public int bodies;
         public int rounds;
+        public int cells;
+        public int meds;
+        public bool wentOut;
         public int fuel;
         public int fuelSet;
         public int shots;
         public int packTier;
         public int fatigue;
         public int fatigueSet;
+        public float lampSpent;
         public int bleed;
         public int infection;
         public string prints = "";
+        public string craftOrders = "";
         public int kills;
         public int lifetimeKills;
         public int districtsCleared;
@@ -82,9 +96,13 @@ namespace OutpostZero.Shell
         public int invertLook;
         public int crouchMode;
         public int sprintMode;
+        public int aimMode;
         public int frameCap;
         public int resolution;
         public int slot;
+        public float playtime;
+        public string savedAt = "";
+        public string thumbnail = "";
         public string seal = "";
         public float sfxVolume = 1f;
         public float musicVolume = 0.7f;
@@ -97,11 +115,13 @@ namespace OutpostZero.Shell
         public int factionStanding;
         public string factions = "";
         public string quests = "";
+        public string stallSold = "";
         public bool tutorialDone;
         public string codex = "";
         public string weaponMods = "";
         public string memorial = "";
         public string corpses = "";
+        public string street = "";
         public int mercy;
         public string language = "en";
         public float shake = 1f;
@@ -110,11 +130,12 @@ namespace OutpostZero.Shell
         public bool subtitles = true;
         public SurvivorSave[] survivors = Array.Empty<SurvivorSave>();
         public ModuleSave[] modules = Array.Empty<ModuleSave>();
+        public SaveBlob[] parts = Array.Empty<SaveBlob>();
     }
 
     public static class SaveCodec
     {
-        public const int CurrentSchema = 1;
+        public const int CurrentSchema = 3;
 
         public static string Serialize(SaveGameData data)
         {
@@ -144,12 +165,12 @@ namespace OutpostZero.Shell
                 error = ex.Message;
                 return false;
             }
-            if (data == null || data.schemaVersion != CurrentSchema)
+            if (data == null || !SaveMigrations.CanUpgrade(data.schemaVersion))
             {
                 error = "schema";
                 return false;
             }
-            if (!string.IsNullOrEmpty(data.seal))
+            if (!string.IsNullOrEmpty(data.seal) && !SealHolds(json))
             {
                 string claimed = data.seal;
                 data.seal = "";
@@ -161,7 +182,26 @@ namespace OutpostZero.Shell
                     return false;
                 }
             }
+            data = SaveMigrations.Upgrade(data);
             return true;
+        }
+
+        private static readonly System.Text.RegularExpressions.Regex SealField =
+            new System.Text.RegularExpressions.Regex("\"seal\": \"([0-9a-f]*)\"");
+
+        /// <summary>
+        /// Checks the seal against the file's own text with the seal emptied, which is exactly what
+        /// <see cref="Serialize"/> hashed. Re-serializing instead would add every field a newer build
+        /// declares and break the seal on any save written before that field existed.
+        /// </summary>
+        public static bool SealHolds(string json)
+        {
+            if (string.IsNullOrEmpty(json)) return false;
+            string text = json.Replace("\r\n", "\n");
+            var match = SealField.Match(text);
+            if (!match.Success || match.Groups[1].Value.Length == 0) return false;
+            string bare = text.Substring(0, match.Index) + "\"seal\": \"\"" + text.Substring(match.Index + match.Length);
+            return SaveSlots.Hash(bare) == match.Groups[1].Value;
         }
     }
 }

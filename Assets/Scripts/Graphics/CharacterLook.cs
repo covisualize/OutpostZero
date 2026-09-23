@@ -49,6 +49,43 @@ namespace OutpostZero.Graphics
             }
         }
 
+        public const float OutlinePower = 1.1f;
+        public static readonly Rgb RimWarm = new Rgb { R = 0.85f, G = 0.55f, B = 0.28f };
+        /// <summary>Faction rims with the colour-vision palette off: survivors cyan, zombies sickly green.</summary>
+        public static readonly Rgb RimSurvivor = new Rgb { R = 0.3f, G = 0.85f, B = 1f };
+        public static readonly Rgb RimZombie = new Rgb { R = 0.55f, G = 0.85f, B = 0.25f };
+
+        /// <summary>
+        /// Enemy eyes and rim in a colour-blind mode: amber for blue-yellow (1), white for mono (2),
+        /// pink-red for red-teal (3). Mode 0 keeps the per-archetype eyes and the warm rim.
+        /// </summary>
+        public static Rgb Enemy(int vision)
+        {
+            if (vision == 1) return new Rgb { R = 1f, G = 0.78f, B = 0.1f };
+            if (vision == 2) return new Rgb { R = 1f, G = 1f, B = 1f };
+            if (vision == 3) return new Rgb { R = 1f, G = 0.2f, B = 0.45f };
+            return RimWarm;
+        }
+
+        public static Rgb Eye(string role, int vision)
+        {
+            return vision > 0 && Glows(role) ? Enemy(vision) : Eye(role);
+        }
+
+        public static void Rim(string role, int vision, bool outline, out Rgb color, out float alpha, out float power)
+        {
+            if (!Glows(role))
+            {
+                color = RimSurvivor;
+                alpha = 0.35f;
+                power = 3.2f;
+                return;
+            }
+            color = vision > 0 ? Enemy(vision) : RimZombie;
+            alpha = outline ? 1f : 0.6f;
+            power = outline ? OutlinePower : 1.6f;
+        }
+
         public static float Strength(string role)
         {
             switch (RoleOf(role))
@@ -89,6 +126,30 @@ namespace OutpostZero.Graphics
                 G = tint.G * 0.45f + 0.28f * 0.55f,
                 B = tint.B * 0.45f + 0.24f * 0.55f
             };
+        }
+
+        public const float ZombieGore = 0.22f;
+        public const float WoundedGore = 0.6f;
+        public const float SurvivorWoundedGore = 0.4f;
+
+        /// <summary>
+        /// How much of the body the shader's blood mask covers: zombies always carry some, the
+        /// wounded state (the gore variant) soaks them, the gore setting scales or removes it.
+        /// </summary>
+        public static float GoreAmount(string role, bool wounded, int gore)
+        {
+            if (gore <= 0) return 0f;
+            float amount = Glows(role) ? (wounded ? WoundedGore : ZombieGore) : (wounded ? SurvivorWoundedGore : 0f);
+            if (gore >= 2) amount *= 1.25f;
+            return amount > 1f ? 1f : amount;
+        }
+
+        /// <summary>Where the splats land on this body, in [0, 100); neighbours in a horde differ.</summary>
+        public static float GoreSeed(int seed)
+        {
+            uint mixed = unchecked((uint)seed * 2654435761u ^ 0x9E3779B9u);
+            mixed ^= mixed >> 15;
+            return (mixed % 10000u) / 100f;
         }
 
         public static bool Wounded(float current, float maximum)

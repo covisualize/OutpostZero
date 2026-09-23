@@ -18,6 +18,221 @@ namespace OutpostZero.Tests.EditMode
     public class GameSystemsTests
     {
         [Test]
+        public void ExpeditionContextSortsAndDedupesTheLoadout()
+        {
+            var context = ExpeditionLedger.Open("old_market", "s1", "Mara", new[] { "Shotgun_Pump", null, "Bandage", "", "Shotgun_Pump" }, WeatherKind.Fog, 42, 0, 1);
+            CollectionAssert.AreEqual(new[] { "Bandage", "Shotgun_Pump" }, context.loadout);
+            Assert.AreEqual(1, context.day);
+            Assert.AreEqual(WeatherKind.Fog, context.weather);
+            Assert.AreEqual(42, context.seed);
+            Assert.IsTrue(context.Open);
+            Assert.IsFalse(default(ExpeditionContext).Open);
+            CollectionAssert.IsEmpty(ExpeditionLedger.Loadout(null));
+        }
+
+        [Test]
+        public void ExpeditionOutcomeClampsAndReadsTheQuota()
+        {
+            var context = ExpeditionLedger.Open("old_market", "s1", "Mara", null, WeatherKind.Clear, 1, 3, 1);
+            var outcome = ExpeditionLedger.Close(context, ExpeditionEnd.Extracted, -3, 0, 12, 10, -5f);
+            Assert.AreEqual(0, outcome.kills);
+            Assert.AreEqual(1, outcome.killGoal);
+            Assert.AreEqual(0f, outcome.seconds);
+            Assert.AreEqual("old_market", outcome.district);
+            Assert.IsFalse(outcome.QuotaMet);
+            Assert.IsTrue(ExpeditionLedger.Close(context, ExpeditionEnd.Victory, 5, 5, 10, 10, 1f).QuotaMet);
+
+            Assert.IsTrue(outcome.LeaderCameHome);
+            Assert.IsTrue(ExpeditionLedger.Close(context, ExpeditionEnd.Dragged, 0, 1, 0, 1, 0f).LeaderCameHome);
+            Assert.IsFalse(ExpeditionLedger.Close(context, ExpeditionEnd.Succession, 0, 1, 0, 1, 0f).LeaderCameHome);
+            Assert.IsFalse(ExpeditionLedger.Close(context, ExpeditionEnd.Wiped, 0, 1, 0, 1, 0f).LeaderCameHome);
+        }
+
+        [Test]
+        public void BalanceRowsMatchTheirHeadersAndStayInvariant()
+        {
+            var culture = System.Threading.Thread.CurrentThread.CurrentCulture;
+            try
+            {
+                System.Threading.Thread.CurrentThread.CurrentCulture = new System.Globalization.CultureInfo("de-DE");
+                var row = new BalanceLog.ExpeditionRow
+                {
+                    Run = BalanceLog.RunId(4821, 2), Day = 5, District = "old_market", Difficulty = 2, Weather = "Fog", Leader = "s1",
+                    End = "Extracted", Kills = 12, KillGoal = 10, Scrap = 40, ScrapGoal = 30, Seconds = 365.25f,
+                    AmmoStart = 60, AmmoEnd = 22, ItemsStart = 4, ItemsEnd = 9, Health = 71.5f, Hunger = 50f, Thirst = 40.125f, Fatigue = 12f, Infection = 0f, Alive = 4, Deaths = 1,
+                };
+                string line = BalanceLog.Line(row);
+                Assert.AreEqual(BalanceLog.ExpeditionHeader.Split(',').Length, line.Split(',').Length, line);
+                StringAssert.StartsWith("s4821-d2,5,old_market,2,Fog,s1,Extracted,12,10,40,30,365.25,60,22,4,9,71.5,50,40.13,", line);
+                Assert.AreEqual(38, row.AmmoSpent);
+                Assert.AreEqual(0, new BalanceLog.ExpeditionRow { AmmoStart = 5, AmmoEnd = 9 }.AmmoSpent);
+
+                string day = BalanceLog.Line(new BalanceLog.DayRow { Run = "s1-d2", Day = 3, Alive = 5, Deaths = 0, Morale = 66.666f, Food = 12, Water = 9, Scrap = 80, Shots = 2, Expeditions = 1, Kills = 30 });
+                Assert.AreEqual("s1-d2,3,5,0,66.67,12,9,80,2,1,30", day);
+                Assert.AreEqual(BalanceLog.DayHeader.Split(',').Length, day.Split(',').Length);
+            }
+            finally
+            {
+                System.Threading.Thread.CurrentThread.CurrentCulture = culture;
+            }
+            Assert.AreEqual("\"a, \"\"b\"\"\"", BalanceLog.Cell("a, \"b\""));
+            Assert.AreEqual("plain", BalanceLog.Cell("plain"));
+            Assert.AreEqual("", BalanceLog.Cell(null));
+        }
+
+        [Test]
+        public void SavesCanBePointedAtAScratchFolder()
+        {
+            try
+            {
+                SaveSystem.RootOverride = Path.Combine("scratch", "soak");
+                Assert.AreEqual(Path.Combine("scratch", "soak"), SaveSystem.Root);
+            }
+            finally
+            {
+                SaveSystem.RootOverride = null;
+            }
+        }
+
+        [Test]
+        public void ScreenStackPopsInnermostFirst()
+        {
+            var stack = new ScreenStack();
+            Assert.AreEqual(MenuScreen.None, stack.Top);
+            Assert.AreEqual(MenuScreen.None, stack.Pop());
+            stack.Push(MenuScreen.Codex);
+            stack.Push(MenuScreen.Codex);
+            stack.Push(MenuScreen.None);
+            Assert.AreEqual(1, stack.Depth);
+            stack.Push(MenuScreen.CodexEntry);
+            Assert.AreEqual("Codex>CodexEntry", stack.Signature());
+            Assert.AreEqual(MenuScreen.CodexEntry, stack.Pop());
+            Assert.AreEqual(MenuScreen.Codex, stack.Top);
+            Assert.IsTrue(stack.Contains(MenuScreen.Codex));
+            stack.Clear();
+            Assert.AreEqual("", stack.Signature());
+        }
+
+        [Test]
+        public void BackClosesOverlaysBeforeTogglingPause()
+        {
+            Assert.AreEqual(BackAction.CloseSettings, BackRoute.For(true, true, 2, true));
+            Assert.AreEqual(BackAction.CloseTrade, BackRoute.For(false, true, 2, true));
+            Assert.AreEqual(BackAction.Pop, BackRoute.For(false, false, 1, true));
+            Assert.AreEqual(BackAction.Pop, BackRoute.For(false, false, 1, false));
+            Assert.AreEqual(BackAction.TogglePause, BackRoute.For(false, false, 0, true));
+            Assert.AreEqual(BackAction.None, BackRoute.For(false, false, 0, false));
+        }
+
+        private sealed class EntryProbe : ISceneEntry
+        {
+            public readonly List<string> Log = new List<string>();
+            public bool Throws;
+
+            public void OnEnter(FlowContext context)
+            {
+                Log.Add("enter " + context.To + " from " + context.From + (context.Handled ? " handled" : ""));
+                if (Throws) throw new System.InvalidOperationException("probe");
+            }
+
+            public void OnExit(FlowContext context) => Log.Add("exit " + context.From + " to " + context.To);
+        }
+
+        [Test]
+        public void SceneEntriesExitThenEnterAndSurviveAFailingHook()
+        {
+            SceneEntries.Clear();
+            var broken = new EntryProbe { Throws = true };
+            var probe = new EntryProbe();
+            SceneEntries.Register(broken);
+            SceneEntries.Register(probe);
+            SceneEntries.Register(probe);
+            Assert.AreEqual(2, SceneEntries.Count);
+
+            int failures = 0;
+            int reached = SceneEntries.Dispatch(new FlowContext(FlowStep.MainMenu, FlowStep.Sanctuary, false), e => failures++);
+            Assert.AreEqual(1, reached);
+            Assert.AreEqual(1, failures);
+            CollectionAssert.AreEqual(new[] { "exit MainMenu to Sanctuary", "enter Sanctuary from MainMenu" }, probe.Log);
+
+            SceneEntries.Unregister(broken);
+            SceneEntries.Unregister(probe);
+            Assert.AreEqual(0, SceneEntries.Count);
+            SceneEntries.Clear();
+        }
+
+        [Test]
+        public void ABareHopSettlesTheStateAndAHandledOneIsLeftAlone()
+        {
+            FlowContext Bare(FlowStep from, FlowStep to) => new FlowContext(from, to, false);
+            Assert.AreEqual(ArrivalAction.Camp, FlowArrival.For(Bare(FlowStep.MainMenu, FlowStep.Sanctuary), GameState.MainMenu));
+            Assert.AreEqual(ArrivalAction.Camp, FlowArrival.For(Bare(FlowStep.Expedition, FlowStep.Sanctuary), GameState.Paused));
+            Assert.AreEqual(ArrivalAction.Camp, FlowArrival.For(Bare(FlowStep.Results, FlowStep.Sanctuary), GameState.ExpeditionResults));
+            Assert.AreEqual(ArrivalAction.None, FlowArrival.For(Bare(FlowStep.Sanctuary, FlowStep.Sanctuary), GameState.CampManagement));
+            Assert.AreEqual(ArrivalAction.None, FlowArrival.For(Bare(FlowStep.Sanctuary, FlowStep.Sanctuary), GameState.RaidActive));
+            Assert.AreEqual(ArrivalAction.Street, FlowArrival.For(Bare(FlowStep.Sanctuary, FlowStep.Expedition), GameState.CampManagement));
+            Assert.AreEqual(ArrivalAction.None, FlowArrival.For(Bare(FlowStep.Sanctuary, FlowStep.Expedition), GameState.ExpeditionActive));
+            Assert.AreEqual(ArrivalAction.Menu, FlowArrival.For(Bare(FlowStep.Expedition, FlowStep.MainMenu), GameState.Paused));
+            Assert.AreEqual(ArrivalAction.None, FlowArrival.For(Bare(FlowStep.Boot, FlowStep.MainMenu), GameState.MainMenu));
+            Assert.AreEqual(ArrivalAction.None, FlowArrival.For(Bare(FlowStep.Expedition, FlowStep.Results), GameState.ExpeditionResults));
+            Assert.AreEqual(ArrivalAction.None, FlowArrival.For(Bare(FlowStep.MainMenu, FlowStep.Boot), GameState.MainMenu));
+            Assert.AreEqual(ArrivalAction.None, FlowArrival.For(new FlowContext(FlowStep.MainMenu, FlowStep.Sanctuary, true), GameState.MainMenu));
+
+            Assert.IsTrue(FlowArrival.Frozen(GameState.MainMenu));
+            Assert.IsTrue(FlowArrival.Frozen(GameState.Paused));
+            Assert.IsTrue(FlowArrival.Frozen(GameState.Victory));
+            Assert.IsFalse(FlowArrival.Frozen(GameState.CampManagement));
+            Assert.IsFalse(FlowArrival.Frozen(GameState.ExpeditionActive));
+            Assert.IsFalse(FlowArrival.Frozen(GameState.RaidActive));
+        }
+
+        [Test]
+        public void MenuDriftCirclesThePivotAtAFixedHeight()
+        {
+            var pivot = new Vector3(4f, 0f, -2f);
+            for (int i = 0; i < 12; i++)
+            {
+                float t = i * 17.5f;
+                var at = MenuDrift.Position(pivot, t);
+                var flat = new Vector2(at.x - pivot.x, at.z - pivot.z);
+                Assert.AreEqual(MenuDrift.Radius, flat.magnitude, 0.001f);
+                Assert.That(at.y, Is.InRange(MenuDrift.Height - MenuDrift.Bob - 0.001f, MenuDrift.Height + MenuDrift.Bob + 0.001f));
+                Assert.Less(MenuDrift.Look(pivot, t).y, at.y);
+            }
+            Assert.AreEqual(0f, MenuDrift.Angle(MenuDrift.Period), 0.0001f);
+            Assert.AreNotEqual(MenuDrift.Position(pivot, 0f), MenuDrift.Position(pivot, 10f));
+            Assert.That(MenuDrift.Dusk, Is.InRange(0.3f, 0.8f));
+        }
+
+        [Test]
+        public void ExpeditionEndRoutesTheFlow()
+        {
+            Assert.AreEqual(FlowStep.Results, ExpeditionLedger.After(ExpeditionEnd.Extracted));
+            Assert.AreEqual(FlowStep.Results, ExpeditionLedger.After(ExpeditionEnd.Victory));
+            Assert.AreEqual(FlowStep.Sanctuary, ExpeditionLedger.After(ExpeditionEnd.Dragged));
+            Assert.AreEqual(FlowStep.Results, ExpeditionLedger.After(ExpeditionEnd.Wiped));
+        }
+
+        [Test]
+        public void ExpeditionCampLineReadsInBothLanguages()
+        {
+            Assert.AreEqual("0:00", ExpeditionLedger.Clock(-1f));
+            Assert.AreEqual("6:05", ExpeditionLedger.Clock(365.9f));
+            var outcome = ExpeditionLedger.Close(ExpeditionLedger.Open("", "s1", "Mara", null, WeatherKind.Clear, 1, 1, 1), ExpeditionEnd.Extracted, 12, 10, 40, 30, 365f);
+            string street = Loc.T("result.street", "en");
+            Assert.AreEqual("Back from " + street + ": 12 kills, 40 scrap, 6:05 out.", ExpeditionLedger.CampLine(outcome, "en"));
+            string es = ExpeditionLedger.CampLine(outcome, "es");
+            StringAssert.StartsWith("De vuelta de", es);
+            StringAssert.Contains("6:05", es);
+            Assert.AreEqual("Tiempo fuera 6:05", ExpeditionLedger.TimeLine(outcome, "es"));
+            foreach (var key in new[] { "run.home", "run.time", "menu.save_quit", "menu.quit" })
+            {
+                Assert.AreNotEqual(key, Loc.T(key, "en"), key);
+                Assert.AreNotEqual(key, Loc.T(key, "es"), key);
+            }
+        }
+
+        [Test]
         public void ItemCatalogCoversMedicalAmmoAndFood()
         {
             Assert.IsNotNull(ItemCatalog.Find("medkit"));
@@ -50,7 +265,7 @@ namespace OutpostZero.Tests.EditMode
             };
 
             Assert.IsTrue(SaveCodec.TryDeserialize(SaveCodec.Serialize(data), out var loaded, out var error), error);
-            Assert.AreEqual(1, loaded.schemaVersion);
+            Assert.AreEqual(SaveCodec.CurrentSchema, loaded.schemaVersion);
             Assert.AreEqual(4, loaded.day);
             Assert.AreEqual(22, loaded.colonyScrap);
             Assert.AreEqual(4, loaded.raw);
@@ -200,6 +415,88 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void BootStreamsTheOutpostAndReadsParkedProgressAsFull()
+        {
+            Assert.AreEqual("Boot", BootPlan.SceneFor(FlowStep.Boot));
+            Assert.AreEqual("PrototypeArena", BootPlan.SceneFor(FlowStep.MainMenu));
+            Assert.AreEqual("PrototypeArena", BootPlan.SceneFor(FlowStep.Expedition));
+            Assert.AreEqual(0f, BootPlan.Bar(0f));
+            Assert.AreEqual(0.5f, BootPlan.Bar(0.45f), 0.0001f);
+            Assert.AreEqual(1f, BootPlan.Bar(0.9f));
+            Assert.IsFalse(BootPlan.Loaded(0.89f));
+            Assert.IsTrue(BootPlan.Loaded(0.9f));
+            Assert.IsTrue(BootPlan.InBudget(4.9f));
+            Assert.IsFalse(BootPlan.InBudget(5f));
+        }
+
+        [Test]
+        public void BootSceneIsFirstInBuildAndRunsTheLoader()
+        {
+            string root = Directory.GetCurrentDirectory();
+            string build = File.ReadAllText(Path.Combine(root, "ProjectSettings", "EditorBuildSettings.asset"));
+            int boot = build.IndexOf("Assets/Scenes/Boot.unity");
+            int arena = build.IndexOf("Assets/Scenes/PrototypeArena.unity");
+            Assert.GreaterOrEqual(boot, 0);
+            Assert.Greater(arena, boot);
+            string scene = File.ReadAllText(Path.Combine(root, "Assets", "Scenes", "Boot.unity"));
+            string meta = File.ReadAllText(Path.Combine(root, "Assets", "Scripts", "UI", "BootLoader.cs.meta"));
+            string guid = meta.Substring(meta.IndexOf("guid: ") + 6, 32);
+            StringAssert.Contains("guid: " + guid, scene);
+            StringAssert.Contains("SceneRoots", scene);
+        }
+
+        [Test]
+        public void DevMenuStaysOutOfReleaseAndGodModeShields()
+        {
+            Assert.IsTrue(DevCheats.Allowed(true, false));
+            Assert.IsTrue(DevCheats.Allowed(false, true));
+            Assert.IsFalse(DevCheats.Allowed(false, false));
+            Assert.IsTrue(DevCheats.Toggle(true, false));
+            Assert.IsFalse(DevCheats.Toggle(true, true));
+            Assert.IsFalse(DevCheats.Toggle(false, false));
+            DevCheats.SetGod(false);
+            Assert.IsFalse(DevCheats.Shielded(false));
+            Assert.IsTrue(DevCheats.Shielded(true));
+            DevCheats.SetGod(true);
+            Assert.IsTrue(DevCheats.Shielded(false));
+            DevCheats.SetGod(false);
+            foreach (var id in DevCheats.Kit) Assert.IsNotNull(ItemCatalog.Find(id), id);
+            Assert.AreNotEqual(Loc.T("dev.title", "en"), Loc.T("dev.title", "es"));
+        }
+
+        [Test]
+        public void NewGameSeedTakesNumbersWordsOrRandom()
+        {
+            Assert.IsFalse(NewGamePlan.TryParse(null, out _));
+            Assert.IsFalse(NewGamePlan.TryParse("   ", out _));
+            Assert.IsFalse(NewGamePlan.TryParse("Random", out _));
+            Assert.IsTrue(NewGamePlan.TryParse(" 42 ", out int number));
+            Assert.AreEqual(42, number);
+            Assert.IsTrue(NewGamePlan.TryParse("0", out int zero));
+            Assert.AreEqual(DistrictGenerator.DefaultSeed, zero);
+            Assert.IsTrue(NewGamePlan.TryParse("Ashfall", out int word));
+            Assert.IsTrue(NewGamePlan.TryParse("ashfall", out int same));
+            Assert.AreEqual(word, same);
+            Assert.IsTrue(NewGamePlan.TryParse("lantern", out int other));
+            Assert.AreNotEqual(word, other);
+            Assert.AreNotEqual(0, NewGamePlan.Camp(word));
+            Assert.AreNotEqual(NewGamePlan.Roll(1000), NewGamePlan.Roll(1001));
+            Assert.AreNotEqual(0, NewGamePlan.Roll(0));
+        }
+
+        [Test]
+        public void VersionFileFeedsTheMenuStamp()
+        {
+            string path = Path.Combine(Directory.GetCurrentDirectory(), "Assets", "Resources", "version.json");
+            Assert.IsTrue(File.Exists(path), path);
+            Assert.AreEqual(SceneRoute.Version, BuildStamp.Parse(File.ReadAllText(path)));
+            Assert.AreEqual("1.2.3", BuildStamp.Parse("{ \"version\" : \"1.2.3\" }"));
+            Assert.AreEqual(SceneRoute.Version, BuildStamp.Parse("not json"));
+            Assert.AreEqual(SceneRoute.Version, BuildStamp.Parse(null));
+            Assert.AreNotEqual(Loc.T("new.title", "en"), Loc.T("new.title", "es"));
+        }
+
+        [Test]
         public void KitAssemblesAnEnterableThreeStoreyBlock()
         {
             string path = Path.Combine(Directory.GetCurrentDirectory(), "Assets", "Resources", "KitCatalog.json");
@@ -264,7 +561,7 @@ namespace OutpostZero.Tests.EditMode
             Assert.IsFalse(found[0].recovered);
             var saved = new SaveGameData { memorial = memorial, corpses = bodies, mercy = 0 };
             Assert.IsTrue(SaveCodec.TryDeserialize(SaveCodec.Serialize(saved), out var loaded, out var error), error);
-            Assert.AreEqual(1, loaded.schemaVersion);
+            Assert.AreEqual(SaveCodec.CurrentSchema, loaded.schemaVersion);
             Assert.AreEqual(memorial, loaded.memorial);
             Assert.AreEqual(bodies, loaded.corpses);
             Assert.AreEqual(0, loaded.mercy);
@@ -316,7 +613,9 @@ namespace OutpostZero.Tests.EditMode
         public void MedicalCacheRollsSupplies()
         {
             var grants = LootTables.Roll("medical", 3);
-            Assert.AreEqual(2, grants.Length);
+            Assert.AreEqual(3, grants.Length);
+            Assert.AreEqual("antibiotics", grants[2].ItemId);
+            Assert.LessOrEqual(grants[2].Count, 1);
             Assert.IsTrue(grants[0].ItemId == "medkit" || grants[0].ItemId == "bandage");
             Assert.AreEqual("water", grants[1].ItemId);
             Assert.AreEqual(1, grants[1].Count);
@@ -385,6 +684,8 @@ namespace OutpostZero.Tests.EditMode
             int water = 6;
             var friendship = ColonyDay.Simulate(friends, ref food, ref water, false, false, "");
             Assert.AreEqual(41, friends[0].opinion);
+            Assert.AreEqual("ellis:2", friends[0].kin);
+            Assert.AreEqual("jonas:2", friends[1].kin);
             Assert.Contains("friendship", friendship);
 
             var ward = new List<ColonistDay>
@@ -435,6 +736,54 @@ namespace OutpostZero.Tests.EditMode
             var healed = ColonyDay.Simulate(infected, ref food, ref water, true, false, "");
             Assert.AreEqual(0, infected[0].injury);
             Assert.Contains("recovery", healed);
+
+            Assert.IsFalse(FeverSpread.Source(1, "Guard", true));
+            Assert.IsTrue(FeverSpread.Source(2, "Guard", true));
+            Assert.IsFalse(FeverSpread.Source(3, "Quarantine", true));
+            Assert.IsFalse(FeverSpread.Source(2, "Medic", true));
+            Assert.IsFalse(FeverSpread.Catches(3, "Guard", true, "ellis", "jonas"));
+            Assert.IsFalse(FeverSpread.Catches(0, "Quarantine", true, "ellis", "jonas"));
+            Assert.AreEqual(1, FeverSpread.Apply(0));
+            Assert.AreEqual(3, FeverSpread.Apply(3));
+            var feverWard = new List<ColonistDay>
+            {
+                new ColonistDay { id = "jonas", task = "Guard", injury = 2, hunger = 78f, thirst = 78f, morale = 60f },
+                new ColonistDay { id = "ellis", task = "Scavenge", injury = 0, hunger = 78f, thirst = 78f, morale = 60f }
+            };
+            int wardFood = 4;
+            int wardWater = 4;
+            var fever = ColonyDay.Simulate(feverWard, ref wardFood, ref wardWater, false, false, "");
+            Assert.AreEqual(2, feverWard[0].injury);
+            Assert.AreEqual(1, feverWard[1].injury);
+            Assert.Contains("fever", fever);
+            var held = new List<ColonistDay>
+            {
+                new ColonistDay { id = "jonas", task = "Quarantine", injury = 3, hunger = 78f, thirst = 78f, morale = 60f },
+                new ColonistDay { id = "ellis", task = "Guard", injury = 0, hunger = 78f, thirst = 78f, morale = 60f }
+            };
+            Assert.IsFalse(FeverSpread.Try(held));
+            Assert.AreEqual(0, held[1].injury);
+        }
+
+        [Test]
+        public void TheCurtainFadesToBlackAndBackUnlessMotionIsReduced()
+        {
+            Assert.AreEqual(0f, Curtain.Rise(0f, Curtain.Down));
+            Assert.AreEqual(1f, Curtain.Rise(Curtain.Down, Curtain.Down));
+            Assert.AreEqual(0.5f, Curtain.Rise(Curtain.Down / 2f, Curtain.Down), 1e-5f);
+            float last = 0f;
+            for (int i = 1; i <= 10; i++)
+            {
+                float alpha = Curtain.Rise(Curtain.Down * i / 10f, Curtain.Down);
+                Assert.GreaterOrEqual(alpha, last);
+                last = alpha;
+            }
+            Assert.AreEqual(1f, Curtain.Fall(0f, Curtain.Up));
+            Assert.AreEqual(0f, Curtain.Fall(Curtain.Up, Curtain.Up));
+            Assert.AreEqual(1f, Curtain.Rise(0f, 0f), "no fade means already dark");
+            Assert.AreEqual(0f, Curtain.Length(Curtain.Down, true));
+            Assert.AreEqual(Curtain.Down, Curtain.Length(Curtain.Down, false));
+            Assert.Less(Curtain.Down + Curtain.Up, 1f, "the fade must not dominate a travel");
         }
 
         [Test]
@@ -466,7 +815,7 @@ namespace OutpostZero.Tests.EditMode
         [Test]
         public void CodexHintsShowOnceAndZombiesStayHiddenUntilAKill()
         {
-            Assert.AreEqual(12, CodexBook.Hints.Length);
+            Assert.AreEqual(13, CodexBook.Hints.Length);
             Assert.GreaterOrEqual(CodexBook.Entries.Length, 12);
 
             Assert.IsTrue(CodexBook.TryHint("", "move", out string first, out string packed));
@@ -526,22 +875,378 @@ namespace OutpostZero.Tests.EditMode
                 WeaponMod.PackFlags(false, false, true)
             });
             var stacked = WeaponMod.Combine(WeaponMod.SplitSlots(packed)[0]);
-            Assert.AreEqual(0.4f, stacked.noise);
+            Assert.AreEqual(0.35f, stacked.noise, 0.0001f);
             Assert.AreEqual(0.85f * 0.55f, stacked.spread, 0.0001f);
             Assert.AreEqual(0, stacked.magazineBonus);
             Assert.AreEqual(10, WeaponMod.Combine(WeaponMod.SplitSlots(packed)[2]).magazineBonus);
             Assert.AreEqual(1f, WeaponMod.Combine(null).damage);
             var saved = new SaveGameData { weaponMods = packed };
             Assert.IsTrue(SaveCodec.TryDeserialize(SaveCodec.Serialize(saved), out var loaded, out var error), error);
-            Assert.AreEqual(1, loaded.schemaVersion);
+            Assert.AreEqual(SaveCodec.CurrentSchema, loaded.schemaVersion);
             Assert.AreEqual(packed, loaded.weaponMods);
             Assert.AreEqual(0, WeaponMod.SplitSlots(null).Length);
+        }
+
+        [Test]
+        public void ACookTurnsRawFoodIntoMealsBeforeTheDayIsServed()
+        {
+            Assert.AreEqual(0, CookPot.Stew(0, 0, 2, true));
+            Assert.AreEqual(0, CookPot.Stew(3, 0, 2, false));
+            Assert.AreEqual(2, CookPot.Stew(5, 0, CampRoom.Food, true));
+            Assert.AreEqual(1, CookPot.Stew(1, 0, 2, true));
+            Assert.AreEqual(0, CookPot.Stew(4, 2, 2, true));
+            Assert.AreEqual(1, CookPot.Stew(4, 1, 2, true));
+            Assert.AreEqual(0, CookPot.Stew(-1, 0, 2, true));
+            var pot = new List<ColonistDay>
+            {
+                new ColonistDay { id = "cook", task = "Cook", hunger = 40f, thirst = 90f, morale = 50f }
+            };
+            int food = 0;
+            int raw = 3;
+            int water = 0;
+            var notes = ColonyDay.Simulate(pot, ref food, ref water, false, false, "", 0, ref raw);
+            Assert.AreEqual(1, raw);
+            Assert.AreEqual(1, food);
+            Assert.AreEqual(70f, pot[0].hunger, 0.001f);
+            Assert.Contains("stew", notes);
+            int plainFood = 0;
+            int plainRaw = 3;
+            int plainWater = 0;
+            var plain = new List<ColonistDay>
+            {
+                new ColonistDay { id = "ada", task = "Rest", hunger = 40f, thirst = 90f, morale = 50f }
+            };
+            ColonyDay.Simulate(plain, ref plainFood, ref plainWater, false, false, "", 0, ref plainRaw);
+            Assert.AreEqual(2, plainRaw);
+            Assert.AreEqual(0, plainFood);
+            Assert.AreEqual(44f, plain[0].hunger, 0.001f);
+        }
+
+        [Test]
+        public void ARestDayTakesTheWearOffAndATiredShiftPaysLess()
+        {
+            Assert.AreEqual(22f, ShiftWear.After(0f, "Guard", false), 0.001f);
+            Assert.AreEqual(8f, ShiftWear.After(0f, "Lead", false), 0.001f);
+            Assert.AreEqual(0f, ShiftWear.After(0f, "Fallen", false), 0.001f);
+            Assert.AreEqual(0f, ShiftWear.After(30f, "Rest", false), 0.001f);
+            Assert.AreEqual(40f, ShiftWear.After(80f, "Rest", false), 0.001f);
+            Assert.AreEqual(10f, ShiftWear.After(80f, "Rest", true), 0.001f);
+            Assert.AreEqual(100f, ShiftWear.After(90f, "Scavenge", false), 0.001f);
+            Assert.AreEqual(4, ShiftWear.Short(4, 75f));
+            Assert.AreEqual(3, ShiftWear.Short(4, 76f));
+            Assert.AreEqual(1, ShiftWear.Short(1, 90f));
+            Assert.AreEqual(0, ShiftWear.Short(0, 90f));
+            Assert.AreEqual("Worn out", Loc.T("camp.tired"));
+            Assert.AreEqual("Agotado", Loc.T("camp.tired", "es"));
+            Assert.AreEqual("Cansancio", Loc.T("camp.wear", "es"));
+            var worked = new List<ColonistDay>
+            {
+                new ColonistDay { id = "ada", task = "Guard", hunger = 90f, thirst = 90f, morale = 50f, fatigue = 80f }
+            };
+            int food = 2;
+            int water = 2;
+            int raw = 0;
+            ColonyDay.Simulate(worked, ref food, ref water, false, false, "", 0, ref raw);
+            Assert.AreEqual(100f, worked[0].fatigue, 0.001f);
+            var rested = new List<ColonistDay>
+            {
+                new ColonistDay { id = "ada", task = "Rest", hunger = 90f, thirst = 90f, morale = 50f, fatigue = 80f }
+            };
+            ColonyDay.Simulate(rested, ref food, ref water, true, false, "", 0, ref raw);
+            Assert.AreEqual(10f, rested[0].fatigue, 0.001f);
+        }
+
+        [Test]
+        public void ATiredColonistLeavesThePostAndWalksSlower()
+        {
+            Assert.AreEqual("Guard", CampRoutine.Choose("Guard", 80f, 80f, 60f, 0));
+            Assert.AreEqual("Guard", CampRoutine.Choose("Guard", 80f, 80f, 60f, 0, 75f));
+            Assert.AreEqual("Rest", CampRoutine.Choose("Guard", 80f, 80f, 60f, 0, 76f));
+            Assert.AreEqual("Rest", CampRoutine.Choose("Clear", 80f, 80f, 60f, 0, 90f));
+            Assert.AreEqual("Cook", CampRoutine.Choose("Guard", 20f, 80f, 60f, 0, 90f));
+            Assert.AreEqual("Medic", CampRoutine.Choose("Scavenge", 80f, 80f, 60f, 2, 90f));
+            Assert.AreEqual("Rest", CampRoutine.Choose("Guard", 80f, 80f, 5f, 0, 90f));
+            Assert.AreEqual("Resting.", CampRoutine.Bark("Rest", 50f));
+            Assert.AreEqual("My legs are done.", CampRoutine.Bark("Rest", 50f, 80f));
+            Assert.AreEqual("My legs are done.", Loc.Bark("Rest", 50f, 80f));
+            Assert.AreEqual("Las piernas no dan más.", Loc.T("bark.tired", "es"));
+            Assert.AreEqual(1.4f, ShiftWear.Stride(0f, false), 0.001f);
+            Assert.AreEqual(0.9f, ShiftWear.Stride(76f, false), 0.001f);
+            Assert.AreEqual(3.6f, ShiftWear.Stride(75f, true), 0.001f);
+            Assert.AreEqual(2.2f, ShiftWear.Stride(80f, true), 0.001f);
+        }
+
+        [Test]
+        public void ACloseFriendWalksOverWhenBothAreResting()
+        {
+            var ids = new[] { "ellis", "jonas", "mara" };
+            var rest = new[] { "Rest", "Rest", "Rest" };
+            var here = new[] { true, true, true };
+            Assert.AreEqual("", YardVisit.Host("ellis", "Rest", "jonas:40", 0f, ids, rest, here));
+            Assert.AreEqual("ellis", YardVisit.Host("jonas", "Rest", "ellis:40", 0f, ids, rest, here));
+            Assert.AreEqual("ellis", YardVisit.Host("jonas", "Rest", "ellis:40|mara:50", 0f, ids, rest, here));
+            Assert.AreEqual("ellis", YardVisit.Host("mara", "Rest", "ellis:40|jonas:40", 0f, ids, rest, here));
+            Assert.AreEqual("jonas", YardVisit.Host("mara", "Rest", "jonas:40", 0f, ids, rest, here));
+            Assert.AreEqual("", YardVisit.Host("jonas", "Guard", "ellis:40", 0f, ids, rest, here));
+            Assert.AreEqual("", YardVisit.Host("jonas", "Rest", "ellis:39", 0f, ids, rest, here));
+            Assert.AreEqual("", YardVisit.Host("jonas", "Rest", "ellis:40", 76f, ids, rest, here));
+            Assert.AreEqual("ellis", YardVisit.Host("jonas", "Rest", "ellis:40", 75f, ids, rest, here));
+            var working = new[] { "Guard", "Rest", "Rest" };
+            Assert.AreEqual("", YardVisit.Host("jonas", "Rest", "ellis:40", 0f, ids, working, here));
+            var gone = new[] { false, true, true };
+            Assert.AreEqual("", YardVisit.Host("jonas", "Rest", "ellis:40|mara:40", 0f, ids, rest, gone));
+            YardVisit.Stand(-14f, -15f, out float x, out float z);
+            Assert.AreEqual(-13.2f, x, 0.001f);
+            Assert.AreEqual(-15f, z, 0.001f);
+            Assert.AreEqual(0.8f, YardVisit.Beside, 0.001f);
+            Assert.AreEqual(6f, YardPose.Lean("Visit", 0f), 0.001f);
+            Assert.AreEqual(1f, YardPose.Scale("Visit"), 0.001f);
+            Assert.AreEqual(0.72f, YardPose.Scale("Rest"), 0.001f);
+            Assert.AreEqual("Good to see you.", CampRoutine.Bark("Visit", 50f));
+            Assert.AreEqual("Me alegra verte.", Loc.T("bark.visit", "es"));
+            Assert.AreEqual("Visita", Loc.Task("Visit", "es"));
+        }
+
+        [Test]
+        public void TheExtractScreenNamesTheStreetAndTheHaul()
+        {
+            Assert.AreEqual("Ash Market  kills 8/8  scrap 15/15", ExtractSlip.Line("Ash Market", 8, 8, 15, 15, "kills", "scrap"));
+            Assert.AreEqual("Street  kills 0/1  scrap 0/1", ExtractSlip.Line("", -2, 0, -4, 0, "", ""));
+            Assert.AreEqual("Rail Yard  bajas 3/8  chatarra 4/15", ExtractSlip.Line("Rail Yard", 3, 8, 4, 15, "bajas", "chatarra"));
+            Assert.AreEqual("bajas", Loc.T("result.kills", "es"));
+            Assert.AreEqual("chatarra", Loc.T("result.scrap", "es"));
+            Assert.AreEqual("kills", Loc.T("result.kills", "en"));
+        }
+
+        [Test]
+        public void AStepInAPuddleCarriesFartherUnlessYouCrouch()
+        {
+            Assert.IsTrue(PuddleStep.Inside(2.2f, 6f, 0.65f));
+            Assert.IsFalse(PuddleStep.Inside(2.2f, 6f, 0.64f));
+            Assert.IsFalse(PuddleStep.Inside(0f, 0f, 0.85f));
+            Assert.IsTrue(PuddleStep.Inside(2.9f, 6f, 0.65f));
+            Assert.IsFalse(PuddleStep.Inside(2.91f, 6f, 0.65f));
+            Assert.AreEqual(8.7f, PuddleStep.Radius(6f, true, false), 0.001f);
+            Assert.AreEqual(6f, PuddleStep.Radius(6f, true, true), 0.001f);
+            Assert.AreEqual(18.85f, PuddleStep.Radius(13f, true, false), 0.001f);
+            Assert.AreEqual(2f, PuddleStep.Radius(2f, false, false), 0.001f);
+            Assert.AreEqual(0f, PuddleStep.Radius(-1f, true, false), 0.001f);
+            Assert.AreEqual(1.45f, PuddleStep.Splash, 0.001f);
+            Assert.AreEqual(0.65f, WeatherSurface.Wetness(WeatherKind.Rain), 0.001f);
+        }
+
+        [Test]
+        public void AMetalStepCarriesFartherThanDirt()
+        {
+            Assert.AreEqual(1.35f, StepReach.Metal, 0.001f);
+            Assert.AreEqual(1.12f, StepReach.Hard, 0.001f);
+            Assert.AreEqual(0.9f, StepReach.Wood, 0.001f);
+            Assert.AreEqual(0.75f, StepReach.Gravel, 0.001f);
+            Assert.AreEqual(1.18f, StepReach.Water, 0.001f);
+            Assert.AreEqual(8.1f, StepReach.Radius(6f, "step_metal"), 0.001f);
+            Assert.AreEqual(6.72f, StepReach.Radius(6f, "step_hard"), 0.001f);
+            Assert.AreEqual(5.4f, StepReach.Radius(6f, "step_wood"), 0.001f);
+            Assert.AreEqual(4.5f, StepReach.Radius(6f, "step_gravel"), 0.001f);
+            Assert.AreEqual(7.08f, StepReach.Radius(6f, "step_water"), 0.001f);
+            Assert.AreEqual(6f, StepReach.Radius(6f, "step"), 0.001f);
+            Assert.AreEqual(6f, StepReach.Radius(6f, null), 0.001f);
+            Assert.AreEqual(17.55f, StepReach.Radius(13f, "step_metal"), 0.001f);
+            Assert.AreEqual(1.5f, StepReach.Radius(2f, "step_gravel"), 0.001f);
+            Assert.AreEqual(0f, StepReach.Radius(-1f, "step_metal"), 0.001f);
+            Assert.AreEqual(8.1f, StepReach.Radius(6f, AudioMix.StepId("Dress_manhole")), 0.001f);
+            Assert.AreEqual(4.5f, StepReach.Radius(6f, AudioMix.StepId("gravel_lot")), 0.001f);
+        }
+
+        [Test]
+        public void StreetWearComesHomeAndARestedCardGoesBackOut()
+        {
+            Assert.AreEqual(40f, BodyCarry.Clamp(40f), 0.001f);
+            Assert.AreEqual(0f, BodyCarry.Clamp(-5f), 0.001f);
+            Assert.AreEqual(100f, BodyCarry.Clamp(140f), 0.001f);
+            Assert.AreEqual(20f, BodyCarry.Carry(8f, 20f, false), 0.001f);
+            Assert.AreEqual(8f, BodyCarry.Carry(8f, 20f, true), 0.001f);
+            Assert.AreEqual(0f, BodyCarry.Carry(0f, 20f, true), 0.001f);
+            Assert.AreEqual(20f, BodyCarry.Carry(0f, 20f, false), 0.001f);
+            Assert.AreEqual(0f, BodyCarry.Carry(-4f, 20f, true), 0.001f);
+        }
+
+        [Test]
+        public void RainShortensAStepAndAPuddleShortensItAgain()
+        {
+            Assert.AreEqual(1f, WetStride.Scale(0f, false), 0.001f);
+            Assert.AreEqual(1f, WetStride.Scale(0.2f, true), 0.001f);
+            Assert.AreEqual(0.9f, WetStride.Scale(0.65f, false), 0.001f);
+            Assert.AreEqual(0.75f, WetStride.Scale(0.65f, true), 0.001f);
+            Assert.AreEqual(4.5f, WetStride.Pace(4.5f, 0f, false), 0.001f);
+            Assert.AreEqual(4.05f, WetStride.Pace(4.5f, 0.65f, false), 0.001f);
+            Assert.AreEqual(3.375f, WetStride.Pace(4.5f, 0.65f, true), 0.001f);
+            Assert.AreEqual(6.75f, WetStride.Pace(7.5f, 0.85f, false), 0.001f);
+            Assert.AreEqual(1.65f, WetStride.Pace(2.2f, 0.65f, true), 0.001f);
+            Assert.AreEqual(0f, WetStride.Pace(-1f, 0.85f, true), 0.001f);
+        }
+
+        [Test]
+        public void ABleedDripCallsNearbyAndGoreOffStaysQuiet()
+        {
+            Assert.IsTrue(BleedScent.Calls(true, true, 1));
+            Assert.IsFalse(BleedScent.Calls(true, true, 0));
+            Assert.IsFalse(BleedScent.Calls(false, true, 2));
+            Assert.IsFalse(BleedScent.Calls(true, false, 2));
+            Assert.AreEqual(4.5f, BleedScent.Radius, 0.001f);
+            Assert.AreEqual(0.35f, BleedScent.Loud, 0.001f);
+            Assert.Less(BleedScent.Radius, 6f);
+            Assert.Greater(BleedScent.Radius, 2f);
+            Assert.AreEqual("[Drip, north]", Presentation.Caption(NoiseType.BleedDrip, 0f, 1f, "en"));
+            Assert.AreEqual("[Goteo, norte]", Presentation.Caption(NoiseType.BleedDrip, 0f, 1f, "es"));
+            Assert.AreEqual("", Presentation.Caption(NoiseType.WalkFootstep, 0f, 1f, "en"));
+            Assert.IsTrue(ClipBook.Has("drip"));
+            Assert.AreEqual(6f, AudioSpace.MaxDistance("drip"), 0.001f);
+        }
+
+        [Test]
+        public void OpeningADoorCarriesFartherThanAWalk()
+        {
+            Assert.AreEqual(9f, DoorCreak.Radius, 0.001f);
+            Assert.AreEqual(0.8f, DoorCreak.Loud, 0.001f);
+            Assert.Greater(DoorCreak.Radius, 6f);
+            Assert.Less(DoorCreak.Radius, 13f);
+            Assert.AreEqual("[Door, east]", Presentation.Caption(NoiseType.DoorSwing, 1f, 0f, "en"));
+            Assert.AreEqual("[Puerta, este]", Presentation.Caption(NoiseType.DoorSwing, 1f, 0f, "es"));
+            Assert.AreEqual("", Presentation.Caption(NoiseType.SneakFootstep, 1f, 0f, "en"));
+            Assert.IsTrue(ClipBook.Has("creak"));
+            Assert.AreEqual(12f, AudioSpace.MaxDistance("creak"), 0.001f);
+        }
+
+        [Test]
+        public void ASprintOrAHitDropsAReloadBeforeTheRack()
+        {
+            Assert.IsFalse(ReloadBreak.Abort(false, false, 0f));
+            Assert.IsTrue(ReloadBreak.Abort(true, false, 0f));
+            Assert.IsTrue(ReloadBreak.Abort(false, true, 0.5f));
+            Assert.IsTrue(ReloadBreak.Abort(false, true, 0.71f));
+            Assert.IsFalse(ReloadBreak.Abort(true, false, 0.72f));
+            Assert.IsFalse(ReloadBreak.Abort(true, true, 1f));
+            Assert.IsTrue(ReloadBreak.Saves(0.72f));
+            Assert.IsFalse(ReloadBreak.Saves(0.719f));
+            Assert.AreEqual(0.72f, ReloadBreak.Rack, 0.001f);
+            Assert.AreEqual("rack", GunCue.Stage(0.72f, 2));
+        }
+
+        [Test]
+        public void AimingDownSightsShortensAStep()
+        {
+            Assert.AreEqual(4.5f, AimPace.Pace(4.5f, false), 0.001f);
+            Assert.AreEqual(2.475f, AimPace.Pace(4.5f, true), 0.001f);
+            Assert.AreEqual(1.21f, AimPace.Pace(2.2f, true), 0.001f);
+            Assert.AreEqual(2.2275f, AimPace.Pace(4.05f, true), 0.001f);
+            Assert.AreEqual(4.125f, AimPace.Pace(7.5f, true), 0.001f);
+            Assert.AreEqual(0f, AimPace.Pace(-1f, true), 0.001f);
+            Assert.AreEqual(0.55f, AimPace.Fraction, 0.001f);
+            Assert.IsTrue(AimPace.AllowsSprint(false));
+            Assert.IsFalse(AimPace.AllowsSprint(true));
+        }
+
+        [Test]
+        public void SightsPullAShotGroupTighter()
+        {
+            Assert.AreEqual(2.5f, SightGroup.Angle(2.5f, false), 0.001f);
+            Assert.AreEqual(1.55f, SightGroup.Angle(2.5f, true), 0.001f);
+            Assert.AreEqual(0f, SightGroup.Angle(-1f, true), 0.001f);
+            Assert.AreEqual(0.62f, SightGroup.Tight, 0.001f);
+            float open = RecoilBloom.Spread(2.5f, 1f, 80f);
+            Assert.AreEqual(5f, open, 0.001f);
+            Assert.AreEqual(3.1f, SightGroup.Angle(open, true), 0.001f);
+        }
+
+        [Test]
+        public void TheStreetBoardSpeaksSpanish()
+        {
+            Assert.AreEqual("Hunger 40  Thirst 55  Fatigue 80", StreetHud.Needs(40, 55, 80, "en"));
+            Assert.AreEqual("Hambre 40  Sed 55  Fatiga 80", StreetHud.Needs(40, 55, 80, "es"));
+            Assert.AreEqual("Hunger 0  Thirst 0  Fatigue 0", StreetHud.Needs(-1, -2, -3, "en"));
+            Assert.AreEqual("Kills 3/8   Scrap 4/15", StreetHud.Quota(3, 8, 4, 15, "en"));
+            Assert.AreEqual("Bajas 3/8   Chatarra 4/15", StreetHud.Quota(3, 8, 4, 15, "es"));
+            Assert.AreEqual("Tension 80  Peak", StreetHud.Tension(80, "Peak", "en"));
+            Assert.AreEqual("Tensión 50  Subida", StreetHud.Tension(50, "BuildUp", "es"));
+            Assert.AreEqual("Hold to extract 3s", StreetHud.Hold(3, "en"));
+            Assert.AreEqual("Mantén para extraer 0s", StreetHud.Hold(-4, "es"));
+            Assert.AreEqual("Hit from the front", StreetHud.Hit("front", "en"));
+            Assert.AreEqual("Golpe por detrás", StreetHud.Hit("back", "es"));
+            Assert.AreEqual("No weapon", StreetHud.None("en"));
+            Assert.AreEqual("Sin arma", StreetHud.None("es"));
+            Assert.AreEqual("Pistol   4 / 20  reload 40%", StreetHud.Ammo("Pistol", 4, 20, true, 40, true, "en"));
+            Assert.AreEqual("Pistol   2 / 20  bajo", StreetHud.Ammo("Pistol", 2, 20, false, 0, true, "es"));
+            Assert.AreEqual(Affliction.Label(2), StreetHud.Infection(2, "en"));
+            Assert.AreEqual("Infección II", StreetHud.Infection(2, "es"));
+            Assert.AreEqual("Raid 8s", StreetHud.Raid(8, "en"));
+            Assert.AreEqual("Asalto 8s", StreetHud.Raid(8, "es"));
+            Assert.IsTrue(Loc.T("hint.aim", "en").Contains("shortens the step"));
+            Assert.IsTrue(Loc.T("hint.aim", "es").Contains("acorta el paso"));
+        }
+
+        [Test]
+        public void TheStallSpeaksSpanish()
+        {
+            Assert.AreEqual("Use workbench", StallVoice.Prompt(StationKind.Workbench, "en"));
+            Assert.AreEqual("Usar el banco", StallVoice.Prompt(StationKind.Workbench, "es"));
+            Assert.AreEqual("Trade", StallVoice.Prompt(StationKind.Merchant, "en"));
+            Assert.AreEqual("Comerciar", StallVoice.Prompt(StationKind.Merchant, "es"));
+            Assert.AreEqual("Need a workbench", StallVoice.Block("Need a workbench", "en"));
+            Assert.AreEqual("Hace falta un banco", StallVoice.Block("Need a workbench", "es"));
+            Assert.AreEqual("Need a medic on duty", StallVoice.Block("Need a medic on duty", "en"));
+            Assert.AreEqual("Hace falta un médico de turno", StallVoice.Block("Need a medic on duty", "es"));
+            Assert.AreEqual("The Clinic wants 10 meds", StallVoice.Quest("clinic", false, "en"));
+            Assert.AreEqual("La Clínica pide 10 medicinas", StallVoice.Quest("clinic", false, "es"));
+            Assert.AreEqual("Field dressings learned", StallVoice.Quest("clinic", true, "en"));
+            Assert.AreEqual("Escort complete", StallVoice.Quest("caravan", true, "en"));
+            Assert.AreEqual("Escolta cumplida", StallVoice.Quest("caravan", true, "es"));
+            Assert.AreEqual("Iron Militia sells rifle and shell ammo", StallVoice.Quest("militia", true, "en"));
+            Assert.AreEqual("Iron Militia", StallVoice.Name("militia", "en"));
+            Assert.AreEqual("Milicia de Hierro", StallVoice.Name("militia", "es"));
+            Assert.AreEqual(CaravanBook.Display("clinic"), StallVoice.Name("clinic", "en"));
+            Assert.AreEqual("La Clínica", StallVoice.Name("clinic", "es"));
+            Assert.AreEqual("Buy Medkit (14)", StallVoice.Buy("Medkit", 14, "en"));
+            Assert.AreEqual("Comprar Botiquín (14)", StallVoice.Buy("Botiquín", 14, "es"));
+            Assert.AreEqual("The Caravan will not trade", StallVoice.Refuse("The Caravan", "en"));
+            Assert.AreEqual("La Caravana no comercia", StallVoice.Refuse("La Caravana", "es"));
+        }
+
+        [Test]
+        public void MistSitsOnTheStreetWhenTheAirIsThick()
+        {
+            Assert.IsTrue(MistBank.Shows(WeatherKind.Fog, 0f));
+            Assert.IsTrue(MistBank.Shows(WeatherKind.Storm, 0f));
+            Assert.IsFalse(MistBank.Shows(WeatherKind.Clear, 0f));
+            Assert.IsFalse(MistBank.Shows(WeatherKind.Clear, 0.69f));
+            Assert.IsTrue(MistBank.Shows(WeatherKind.Clear, 0.7f));
+            Assert.IsTrue(MistBank.Shows(WeatherKind.Clear, 1.4f));
+            Assert.IsFalse(MistBank.Shows(WeatherKind.Rain, 0f));
+            Assert.IsFalse(MistBank.Shows(WeatherKind.Overcast, 0.49f));
+            Assert.IsTrue(MistBank.Shows(WeatherKind.Overcast, 0.5f));
+            Assert.AreEqual(3, MistBank.Count);
+            Assert.AreEqual(0.8f, MistBank.Top, 0.001f);
+            Assert.Less(MistBank.Top, 1.6f);
+            for (int i = 0; i < MistBank.Count; i++)
+            {
+                var spot = MistBank.At(i);
+                Assert.IsTrue(DressingPlan.OnTheStreet(spot.X, spot.Z), i.ToString());
+            }
         }
 
         [Test]
         public void RainWetsTheGroundAndShotsSitInTheWorld()
         {
             Assert.AreEqual(0.65f, WeatherSurface.Wetness(WeatherKind.Rain));
+            Assert.IsTrue(RainPuddle.Shows(WeatherSurface.Wetness(WeatherKind.Rain)));
+            Assert.IsTrue(RainPuddle.Shows(WeatherSurface.Wetness(WeatherKind.Storm)));
+            Assert.IsFalse(RainPuddle.Shows(WeatherSurface.Wetness(WeatherKind.Fog)));
+            Assert.IsFalse(RainPuddle.Shows(WeatherSurface.Wetness(WeatherKind.Clear)));
+            Assert.AreEqual(4, RainPuddle.Count);
+            for (int i = 0; i < RainPuddle.Count; i++)
+            {
+                var spot = RainPuddle.At(i);
+                Assert.IsTrue(DressingPlan.OnTheStreet(spot.X, spot.Z));
+            }
             Assert.AreEqual(0.2f, WeatherSurface.Wetness(WeatherKind.Fog));
             Assert.AreEqual(0f, WeatherSurface.Wetness(WeatherKind.Clear));
             Assert.AreEqual(0.62f, WeatherSurface.Sight(WeatherKind.Fog));
@@ -549,6 +1254,120 @@ namespace OutpostZero.Tests.EditMode
             Assert.AreEqual(1f, AudioSpace.SpatialBlend("gun"));
             Assert.AreEqual(0.35f, AudioSpace.SpatialBlend("step"));
             Assert.Greater(AudioSpace.MaxDistance("boom"), AudioSpace.MaxDistance("hit"));
+        }
+
+        [Test]
+        public void FogHidesTheEdgeAndAshFallsOnTheMarket()
+        {
+            Assert.AreEqual(0.006f, GroundMist.Air(0f), 0.0001f);
+            Assert.AreEqual(0.014f, GroundMist.Air(1f), 0.0001f);
+            Assert.AreEqual(0.01f, GroundMist.Air(0.5f), 0.0001f);
+            Assert.AreEqual(0.006f, GroundMist.Air(-1f), 0.0001f);
+            Assert.AreEqual(0.014f, GroundMist.Air(2f), 0.0001f);
+            Assert.AreEqual(0f, GroundMist.Pool(2.4f), 0.0001f);
+            Assert.AreEqual(0.01f, GroundMist.Pool(0f), 0.0001f);
+            Assert.AreEqual(0.005f, GroundMist.Pool(1.2f), 0.0001f);
+            Assert.AreEqual(0f, GroundMist.Pool(8f), 0.0001f);
+            Assert.AreEqual(0.028f, GroundMist.Density(WeatherKind.Fog, 0f, 2.4f), 0.0001f);
+            Assert.IsTrue(GroundMist.Hides(GroundMist.Density(WeatherKind.Fog, 0f, 2.4f), GroundMist.Edge));
+            Assert.IsFalse(GroundMist.Hides(GroundMist.Density(WeatherKind.Clear, 0f, 2.4f), GroundMist.Edge));
+            Assert.AreEqual(0.65f, GroundMist.Wind(WeatherKind.Rain), 0.001f);
+            Assert.AreEqual(0.08f, GroundMist.Wind(WeatherKind.Clear), 0.001f);
+            Color day = GroundMist.Tint(WeatherKind.Clear, 0f);
+            Assert.AreEqual(0.55f, day.r, 0.001f);
+            Assert.AreEqual(0.62f, day.g, 0.001f);
+            Color dark = GroundMist.Tint(WeatherKind.Fog, 1f);
+            Assert.AreEqual(0.05f, dark.r, 0.001f);
+            Assert.AreEqual(0.12f, dark.b, 0.001f);
+            Assert.AreEqual(0.62f, WeatherSurface.Sight(WeatherKind.Fog), 0.001f);
+            Assert.AreEqual(0.75f, WeatherSurface.Sight(WeatherKind.Rain), 0.001f);
+            Assert.AreEqual(0.65f, WeatherSurface.Wetness(WeatherKind.Rain), 0.001f);
+            Assert.IsTrue(AshFall.Falls("ash_market"));
+            Assert.IsFalse(AshFall.Falls("rail_yard"));
+            Assert.IsFalse(AshFall.Falls(null));
+            Assert.IsFalse(AshFall.Falls(""));
+            Assert.AreEqual(WeatherKind.Clear, DistrictRules.For("ash_market").Weather);
+            Assert.AreEqual("rain", AshFall.Bed(WeatherKind.Rain, "ash_market"));
+            Assert.AreEqual("wind", AshFall.Bed(WeatherKind.Fog, "ash_market"));
+            Assert.AreEqual("ash", AshFall.Bed(WeatherKind.Clear, "ash_market"));
+            Assert.AreEqual("", AshFall.Bed(WeatherKind.Clear, "rail_yard"));
+            Assert.AreEqual(MixBus.Ambience, AudioMix.BusOf("ash"));
+            Assert.AreEqual(0f, AudioSpace.SpatialBlend("ash"), 0.001f);
+            Assert.AreEqual(36, AshFall.Flakes);
+        }
+
+        [Test]
+        public void AnEvenRainDayBecomesAStorm()
+        {
+            Assert.AreEqual(WeatherKind.Rain, SkyBand.Cast(WeatherKind.Rain, 1));
+            Assert.AreEqual(WeatherKind.Storm, SkyBand.Cast(WeatherKind.Rain, 2));
+            Assert.AreEqual(WeatherKind.Rain, SkyBand.Cast(WeatherKind.Rain, 0));
+            Assert.AreEqual(WeatherKind.Fog, SkyBand.Cast(WeatherKind.Fog, 2));
+            Assert.AreEqual(WeatherKind.Clear, SkyBand.Cast(WeatherKind.Clear, 4));
+            Assert.AreEqual(WeatherKind.Clear, DistrictRules.For("ash_market").Weather);
+            Assert.AreEqual(WeatherKind.Rain, DistrictRules.For("rail_yard").Weather);
+            Assert.AreEqual(0.75f, WeatherSurface.Sight(WeatherKind.Rain), 0.001f);
+            Assert.AreEqual(0.62f, WeatherSurface.Sight(WeatherKind.Fog), 0.001f);
+            Assert.AreEqual(1f, WeatherSurface.Sight(WeatherKind.Clear), 0.001f);
+            Assert.AreEqual(0.7f, WeatherSurface.Sight(WeatherKind.Storm), 0.001f);
+            Assert.AreEqual(0.9f, WeatherSurface.Sight(WeatherKind.Overcast), 0.001f);
+            Assert.AreEqual(0.65f, WeatherSurface.Wetness(WeatherKind.Rain), 0.001f);
+            Assert.AreEqual(0.2f, WeatherSurface.Wetness(WeatherKind.Fog), 0.001f);
+            Assert.AreEqual(0f, WeatherSurface.Wetness(WeatherKind.Clear), 0.001f);
+            Assert.AreEqual(0.85f, WeatherSurface.Wetness(WeatherKind.Storm), 0.001f);
+            Assert.AreEqual(0.1f, WeatherSurface.Wetness(WeatherKind.Overcast), 0.001f);
+            Assert.IsTrue(SkyBand.Rains(WeatherKind.Rain));
+            Assert.IsTrue(SkyBand.Rains(WeatherKind.Storm));
+            Assert.IsFalse(SkyBand.Rains(WeatherKind.Fog));
+            Assert.IsFalse(FlashCap.Due(false, 0f, 20f));
+            Assert.IsFalse(SkyBand.BoltDue(WeatherKind.Rain, 0f, 20f));
+            Assert.IsFalse(SkyBand.BoltDue(WeatherKind.Storm, 0f, 4.4f));
+            Assert.IsTrue(SkyBand.BoltDue(WeatherKind.Storm, 0f, 4.5f));
+            Assert.IsTrue(SkyBand.BoltDue(WeatherKind.Storm, 4.5f, 9f));
+            Assert.IsFalse(SkyBand.BoltDue(WeatherKind.Storm, 4.5f, 8.9f));
+            Assert.AreEqual(0.022f, GroundMist.Sheet(WeatherKind.Fog), 0.0001f);
+            Assert.AreEqual(0.012f, GroundMist.Sheet(WeatherKind.Rain), 0.0001f);
+            Assert.AreEqual(0.02f, GroundMist.Sheet(WeatherKind.Storm), 0.0001f);
+            Assert.AreEqual(0.65f, GroundMist.Wind(WeatherKind.Rain), 0.001f);
+            Assert.AreEqual(0.9f, GroundMist.Wind(WeatherKind.Storm), 0.001f);
+            Assert.AreEqual("rain", AshFall.Bed(WeatherKind.Rain, "ash_market"));
+            Assert.AreEqual("storm", AshFall.Bed(WeatherKind.Storm, "rail_yard"));
+            Assert.AreEqual("wind", AshFall.Bed(WeatherKind.Fog, "ash_market"));
+            Assert.AreEqual("wind", AshFall.Bed(WeatherKind.Overcast, "old_hospital"));
+            Assert.IsTrue(ClipBook.Has("storm"));
+            Assert.AreNotEqual(ClipBook.Mark("storm"), ClipBook.Mark("rain"));
+            Assert.AreEqual(MixBus.Ambience, AudioMix.BusOf("storm"));
+        }
+
+        [Test]
+        public void EveryPlayedSoundHasATone()
+        {
+            Assert.IsFalse(ClipBook.Has(null));
+            Assert.IsFalse(ClipBook.Has(""));
+            Assert.IsFalse(ClipBook.Has("nope"));
+            for (int i = 0; i < ClipBook.Ids.Length; i++)
+                Assert.IsTrue(ClipBook.Has(ClipBook.Ids[i]), ClipBook.Ids[i]);
+            Assert.AreEqual("gun", ClipBook.Fire(WeaponType.Pistol));
+            Assert.AreEqual("shotgun", ClipBook.Fire(WeaponType.Shotgun));
+            Assert.AreEqual("rifle", ClipBook.Fire(WeaponType.Rifle));
+            Assert.AreEqual("smg", ClipBook.Fire(WeaponType.SMG));
+            Assert.AreEqual("swing", ClipBook.Fire(WeaponType.Melee));
+            Assert.AreNotEqual(ClipBook.Mark("gun"), ClipBook.Mark("shotgun"));
+            Assert.AreNotEqual(ClipBook.Mark("gun"), ClipBook.Mark("rifle"));
+            Assert.AreNotEqual(ClipBook.Mark("rifle"), ClipBook.Mark("smg"));
+            Assert.AreNotEqual(ClipBook.Mark("shotgun"), ClipBook.Mark("smg"));
+            Assert.AreNotEqual(ClipBook.Mark("boom"), ClipBook.Mark("kill"));
+            Assert.AreNotEqual(ClipBook.Mark("step"), ClipBook.Mark("step_hard"));
+            Assert.AreNotEqual(ClipBook.Mark("step_metal"), ClipBook.Mark("step_wood"));
+            Assert.AreNotEqual(ClipBook.Mark("step_water"), ClipBook.Mark("step_gravel"));
+            Assert.AreNotEqual(ClipBook.Mark("step"), ClipBook.Mark("step_gravel"));
+            Assert.AreNotEqual(ClipBook.Mark("groan"), ClipBook.Mark("shriek"));
+            Assert.AreNotEqual(ClipBook.Mark("shriek"), ClipBook.Mark("roar"));
+            Assert.AreNotEqual(ClipBook.Mark("roar"), ClipBook.Mark("groan"));
+            Assert.AreEqual(32f, AudioSpace.MaxDistance("rifle"), 0.001f);
+            Assert.AreEqual(32f, AudioSpace.MaxDistance("smg"), 0.001f);
+            Assert.AreEqual(1f, ClipBook.Mark("nope"), 0.001f);
+            Assert.AreNotEqual(ClipBook.Mark("gun"), ClipBook.Mark("nope"));
         }
 
         [Test]
@@ -607,7 +1426,7 @@ namespace OutpostZero.Tests.EditMode
 
             var saved = new SaveGameData { factionStanding = 12, factions = packed, quests = quests };
             Assert.IsTrue(SaveCodec.TryDeserialize(SaveCodec.Serialize(saved), out var loaded, out var error), error);
-            Assert.AreEqual(1, loaded.schemaVersion);
+            Assert.AreEqual(SaveCodec.CurrentSchema, loaded.schemaVersion);
             Assert.AreEqual(packed, loaded.factions);
             Assert.AreEqual(quests, loaded.quests);
             Assert.AreEqual(12, loaded.factionStanding);
@@ -649,6 +1468,102 @@ namespace OutpostZero.Tests.EditMode
             }
             Assert.AreEqual(2, poles);
             Assert.IsTrue(gap);
+
+            var paint = LanePaint.Marks("ash_market");
+            var painted = LanePaint.Marks("ash_market");
+            var slid = LanePaint.Marks("rail_yard");
+            Assert.AreEqual(6, paint.Length);
+            Assert.AreEqual(0f, LanePaint.Shift("ash_market"), 0.001f);
+            Assert.AreEqual(0f, LanePaint.Shift(""), 0.001f);
+            Assert.Greater(LanePaint.Shift("rail_yard"), 0f);
+            Assert.AreEqual("stripe", paint[0].Role);
+            Assert.AreEqual("stripe", paint[3].Role);
+            Assert.AreEqual("manhole", paint[4].Role);
+            Assert.AreEqual("grate", paint[5].Role);
+            Assert.AreEqual(8f, paint[0].Z, 0.001f);
+            Assert.AreEqual(-1.2f, paint[0].X, 0.001f);
+            Assert.AreEqual(1.2f, paint[3].X, 0.001f);
+            Assert.AreEqual(paint[0].Z, painted[0].Z, 0.001f);
+            Assert.AreNotEqual(paint[0].Z, slid[0].Z);
+            for (int i = 0; i < paint.Length; i++) Assert.IsTrue(DressingPlan.OnTheStreet(paint[i].X, paint[i].Z));
+            for (int i = 0; i < slid.Length; i++) Assert.IsTrue(DressingPlan.OnTheStreet(slid[i].X, slid[i].Z));
+            Assert.AreEqual("step_metal", AudioMix.StepId("Dress_manhole"));
+            Assert.AreEqual("step_metal", AudioMix.StepId("Dress_grate"));
+        }
+
+        [Test]
+        public void ASharedMealLiftsBothSidesOfTheBook()
+        {
+            Assert.IsFalse(GiftBond.Can("ada", "ada", true, true, 1));
+            Assert.IsFalse(GiftBond.Can("ada", "ellis", true, true, 0));
+            Assert.IsFalse(GiftBond.Can("ada", "ellis", false, true, 1));
+            Assert.IsFalse(GiftBond.Can("", "ellis", true, true, 1));
+            Assert.IsTrue(GiftBond.Can("ada", "ellis", true, true, 1));
+            Assert.AreEqual(1, GiftBond.Cost);
+            Assert.AreEqual(8, GiftBond.Lift);
+            Assert.AreEqual(26, GiftBond.Score(18));
+            Assert.AreEqual(100, GiftBond.Score(96));
+            Assert.AreEqual(100, GiftBond.Score(100));
+            Assert.AreEqual(-32, GiftBond.Score(-40));
+            Assert.AreEqual(-92, GiftBond.Score(-100));
+            Assert.AreEqual("ellis:8", GiftBond.Give("", "ellis"));
+            Assert.AreEqual("ellis:100", GiftBond.Give("ellis:96", "ellis"));
+            Assert.AreEqual("ellis:-32", GiftBond.Give("ellis:-40", "ellis"));
+            Assert.AreEqual("Regalar comida", Loc.T("camp.gift", "es"));
+            Assert.AreEqual("No hay comida para regalar", Loc.T("camp.gift_none", "es"));
+            Assert.AreEqual("Comida compartida", Loc.T("camp.gift_ok", "es"));
+        }
+
+        [Test]
+        public void AnAimingRailThrowsAShortBeamAndLiftsExposure()
+        {
+            Assert.IsFalse(RailLamp.Lit(false, true, true));
+            Assert.IsFalse(RailLamp.Lit(true, false, true));
+            Assert.IsFalse(RailLamp.Lit(true, true, false));
+            Assert.IsTrue(RailLamp.Lit(true, true, true));
+            Assert.AreEqual(0.57f, RailLamp.Exposure(0.22f, true, false), 0.001f);
+            Assert.AreEqual(0.85f, RailLamp.Exposure(0.8f, true, false), 0.001f);
+            Assert.AreEqual(1f, RailLamp.Exposure(1f, true, true), 0.001f);
+            float dark = SpotRange.Exposure(true, false, false, 1f, 0f);
+            Assert.AreEqual(dark, RailLamp.Exposure(dark, false, false), 0.001f);
+            Assert.AreEqual(1f, SpotRange.Exposure(true, false, true, 1f, 0f), 0.001f);
+            Assert.IsTrue(RailLamp.Beam(8f, 12f, true));
+            Assert.IsFalse(RailLamp.Beam(8.01f, 0f, true));
+            Assert.IsFalse(RailLamp.Beam(5f, 12.1f, true));
+            Assert.IsFalse(RailLamp.Beam(5f, 0f, false));
+            Assert.IsTrue(SpotRange.Beam(5f, 10f, true));
+            Assert.IsFalse(SpotRange.Beam(5f, 10f, false));
+            var rail = WeaponMod.ProfileFor("rail");
+            Assert.AreEqual(1f, rail.noise, 0.001f);
+            Assert.AreEqual(1f, rail.spread, 0.001f);
+            Assert.AreEqual(0, rail.magazineBonus);
+            Assert.AreEqual(0.35f, WeaponMod.Combine(WeaponMod.PackFlags(true, true, false)).noise, 0.001f);
+            Assert.AreEqual("rail", WeaponMod.PackFlags(false, false, false, true));
+            Assert.IsTrue(WeaponMod.RailOn("suppressor+rail"));
+            Assert.IsFalse(WeaponMod.RailOn("suppressor"));
+            Assert.AreEqual(0.35f, WeaponMod.Combine("suppressor+rail").noise, 0.001f);
+            Assert.IsTrue(CraftBill.TryOf("rail", out var bill));
+            Assert.AreEqual(5, bill.Scrap);
+            Assert.AreEqual(CraftBill.Workbench, bill.Station);
+            Assert.AreEqual("Riel de linterna", Loc.T("recipe.rail", "es"));
+        }
+
+        [Test]
+        public void TheFlashlightCookieKeepsABrightCenterAndADirtRing()
+        {
+            Assert.AreEqual(256, LampCookie.Size);
+            Assert.AreEqual(40f, LampCookie.Inner, 0.001f);
+            Assert.AreEqual(62f, LampCookie.Outer, 0.001f);
+            Assert.AreEqual(1f, LampCookie.Shade(0.5f, 0.5f), 0.001f);
+            Assert.AreEqual(0f, LampCookie.Shade(0f, 0f), 0.001f);
+            Assert.AreEqual(0f, LampCookie.Shade(1f, 1f), 0.001f);
+            float ring = LampCookie.Shade(0.5f + LampCookie.Ring * 0.5f, 0.5f);
+            float inside = LampCookie.Shade(0.5f + 0.30f, 0.5f);
+            Assert.AreEqual(0.182f, ring, 0.001f);
+            Assert.AreEqual(0.4f, inside, 0.001f);
+            Assert.Less(ring, inside);
+            Assert.AreEqual(LampCookie.Shade(0.2f, 0.5f), LampCookie.Shade(0.8f, 0.5f), 0.001f);
+            Assert.AreEqual(LampCookie.Shade(0.5f, 0.2f), LampCookie.Shade(0.5f, 0.8f), 0.001f);
         }
 
         [Test]
@@ -762,6 +1677,11 @@ namespace OutpostZero.Tests.EditMode
             Assert.AreEqual("step_hard", AudioMix.StepId("sidewalk_corner"));
             Assert.AreEqual("step", AudioMix.StepId("Ground"));
             Assert.AreEqual("step", AudioMix.StepId(null));
+            Assert.AreEqual("step_gravel", AudioMix.StepId("gravel_lot"));
+            Assert.AreEqual("step_gravel", AudioMix.StepId("rubble"));
+            Assert.AreEqual("step_gravel", AudioMix.StepId("dirt_path"));
+            Assert.AreEqual("step_hard", AudioMix.StepId("Road_Straight"));
+            Assert.AreEqual(0.35f, AudioSpace.SpatialBlend("step_gravel"), 0.001f);
         }
 
         [Test]
@@ -810,6 +1730,174 @@ namespace OutpostZero.Tests.EditMode
             RaidPlan.AnchorOf("mystery", out float ux, out float uz);
             Assert.AreEqual(-6f, ux);
             Assert.AreEqual(-8f, uz);
+        }
+
+        [Test]
+        public void AFarScreamStaysOffTheSubtitleLine()
+        {
+            Assert.IsTrue(CaptionGate.Show(0f, 10f, false, NoiseType.ZombieScream, false));
+            Assert.IsFalse(CaptionGate.Show(11f, 10f, false, NoiseType.ZombieScream, false));
+            Assert.IsFalse(CaptionGate.Show(0f, 10f, true, NoiseType.ZombieScream, false));
+            Assert.IsTrue(CaptionGate.Show(0f, 10f, true, NoiseType.GunshotLoud, false));
+            Assert.IsFalse(CaptionGate.Show(9.5f, 10f, false, NoiseType.ZombieScream, false));
+            Assert.IsTrue(CaptionGate.Show(8f, 10f, false, NoiseType.ZombieScream, false));
+            Assert.IsTrue(CaptionGate.Show(9.45f, 10f, false, NoiseType.ZombieScream, false));
+            Assert.IsFalse(CaptionGate.Show(9.45f, 10f, false, NoiseType.ZombieScream, true));
+            Assert.IsTrue(CaptionGate.Show(0f, 40f, false, NoiseType.Thunder, false));
+            Assert.IsFalse(CaptionGate.Show(41f, 40f, false, NoiseType.Thunder, false));
+            Assert.IsFalse(CaptionGate.Show(0f, 0f, false, NoiseType.Thunder, false));
+            Assert.AreEqual(0f, HearGate.Perceived(0f, 40f, 1f, false, NoiseType.Thunder), 0.001f);
+        }
+
+        [Test]
+        public void TheYardWallKeepsTheStreetOnThePlane()
+        {
+            Assert.AreEqual(33.4f, MapRim.Open, 0.001f);
+            Assert.AreEqual(3.2f, MapRim.Height, 0.001f);
+            Assert.IsTrue(MapRim.Inside(0f, 0f));
+            Assert.IsTrue(MapRim.Inside(20f, 16f));
+            Assert.IsTrue(MapRim.Inside(-18f, -16f));
+            Assert.IsTrue(MapRim.Inside(33.4f, 0f));
+            Assert.IsTrue(MapRim.Inside(-33.4f, -33.4f));
+            Assert.IsFalse(MapRim.Inside(33.5f, 0f));
+            Assert.IsFalse(MapRim.Inside(-33.5f, 0f));
+            Assert.IsFalse(MapRim.Inside(0f, 34f));
+            Assert.IsFalse(MapRim.Inside(0f, -34f));
+        }
+
+        [Test]
+        public void APartlyEmptiedCrateKeepsWhatIsLeft()
+        {
+            var stacks = new[]
+            {
+                new ContainerHold.Stack { Id = "scrap", Count = 4 },
+                new ContainerHold.Stack { Id = "bandage", Count = 1 }
+            };
+            Assert.AreEqual("scrap*4;bandage*1", ContainerHold.Encode(stacks));
+            var back = ContainerHold.Decode("scrap*4;bandage*1");
+            Assert.AreEqual(2, back.Length);
+            Assert.AreEqual("scrap", back[0].Id);
+            Assert.AreEqual(4, back[0].Count);
+            Assert.AreEqual("bandage", back[1].Id);
+            Assert.AreEqual(1, back[1].Count);
+            Assert.AreEqual(0, ContainerHold.Decode("").Length);
+            Assert.AreEqual(0, ContainerHold.Decode(null).Length);
+            string mark = StreetLedger.Mark("crate", 2.2f, 12f);
+            Assert.AreEqual("crate@22,120", mark);
+            string packed = StreetLedger.Hold(null, "ash_market", mark, "scrap*4;bandage*1");
+            Assert.AreEqual("ash_market=crate@22,120~scrap*4;bandage*1", packed);
+            Assert.IsFalse(StreetLedger.Has(packed, "ash_market", mark));
+            Assert.AreEqual("scrap*4;bandage*1", StreetLedger.Read(packed, "ash_market", mark));
+            Assert.AreEqual(1, StreetLedger.Count(packed, "ash_market"));
+            Assert.IsNull(StreetLedger.Read(packed, "rail_yard", mark));
+            packed = StreetLedger.Hold(packed, "ash_market", mark, "scrap*1");
+            Assert.AreEqual("scrap*1", StreetLedger.Read(packed, "ash_market", mark));
+            Assert.AreEqual(1, StreetLedger.Count(packed, "ash_market"));
+            packed = StreetLedger.Note(packed, "ash_market", mark);
+            Assert.AreEqual("", StreetLedger.Read(packed, "ash_market", mark));
+            Assert.IsTrue(StreetLedger.Has(packed, "ash_market", mark));
+            Assert.AreEqual(1, StreetLedger.Count(packed, "ash_market"));
+            Assert.IsNull(StreetLedger.Read("", "ash_market", mark));
+            Assert.IsNull(StreetLedger.Read(null, "ash_market", mark));
+        }
+
+        [Test]
+        public void ABurstBarrelStaysGoneOnTheNextTrip()
+        {
+            string barrel = StreetLedger.Mark("barrel_explosive", 1.6f, 4f);
+            string crate = StreetLedger.Mark("crate", 1.6f, 4f);
+            Assert.AreEqual("barrel_explosive@16,40", barrel);
+            Assert.AreNotEqual(barrel, crate);
+            string packed = StreetLedger.Note("", "rail_yard", barrel);
+            Assert.IsTrue(StreetLedger.Has(packed, "rail_yard", barrel));
+            Assert.IsFalse(StreetLedger.Has(packed, "rail_yard", crate));
+            Assert.IsFalse(StreetLedger.Has(packed, "ash_market", barrel));
+            Assert.AreEqual(1, StreetLedger.Count(packed, "rail_yard"));
+            packed = StreetLedger.Note(packed, "rail_yard", crate);
+            Assert.AreEqual(2, StreetLedger.Count(packed, "rail_yard"));
+            Assert.AreEqual(0, StreetLedger.Count(packed, "ash_market"));
+        }
+
+        [Test]
+        public void AnEmptiedCrateStaysEmptyOnTheSameStreet()
+        {
+            Assert.AreEqual("crate@16,40", StreetLedger.Mark("crate", 1.6f, 4f));
+            Assert.AreEqual("poi@-32,60", StreetLedger.Mark("poi", -3.2f, 6f));
+            Assert.AreEqual("", StreetLedger.Note(null, "", "road"));
+            Assert.AreEqual("", StreetLedger.Note("", "ash_market", ""));
+            string packed = StreetLedger.Note(null, "ash_market", "road@16,40");
+            Assert.AreEqual("ash_market=road@16,40", packed);
+            Assert.AreEqual(packed, StreetLedger.Note(packed, "ash_market", "road@16,40"));
+            packed = StreetLedger.Note(packed, "rail_yard", "poi@0,0");
+            Assert.AreEqual("ash_market=road@16,40|rail_yard=poi@0,0", packed);
+            Assert.IsTrue(StreetLedger.Has(packed, "ash_market", "road@16,40"));
+            Assert.IsTrue(StreetLedger.Has(packed, "rail_yard", "poi@0,0"));
+            Assert.IsFalse(StreetLedger.Has(packed, "rail_yard", "road@16,40"));
+            Assert.IsFalse(StreetLedger.Has(null, "ash_market", "road@16,40"));
+            Assert.AreEqual(1, StreetLedger.Count(packed, "ash_market"));
+            Assert.AreEqual(0, StreetLedger.Count(packed, "old_hospital"));
+            Assert.AreEqual(0, StreetLedger.Count("", "ash_market"));
+            var data = new SaveGameData { street = packed };
+            Assert.IsTrue(SaveCodec.TryDeserialize(SaveCodec.Serialize(data), out var loaded, out var error), error);
+            Assert.AreEqual(SaveCodec.CurrentSchema, loaded.schemaVersion);
+            Assert.AreEqual(packed, loaded.street);
+            Assert.IsTrue(SaveCodec.TryDeserialize("{\"schemaVersion\":1}", out var legacy, out var legacyError), legacyError);
+            Assert.IsTrue(string.IsNullOrEmpty(legacy.street));
+            Assert.AreEqual("searched", Loc.T("camp.searched"));
+            Assert.AreEqual("registrado", Loc.T("camp.searched", "es"));
+        }
+
+        [Test]
+        public void UnmappedRoadsStayOffTheBoardUntilANeighborIsCleared()
+        {
+            Assert.IsFalse(MapVeil.Seen("", new string[0]));
+            Assert.IsFalse(MapVeil.Seen(null, new string[0]));
+            Assert.IsFalse(MapVeil.Seen("nowhere", null));
+            Assert.IsTrue(MapVeil.Seen("ash_market", new string[0]));
+            Assert.IsTrue(MapVeil.Seen("rail_yard", null));
+            Assert.IsTrue(MapVeil.Seen("commercial_strip", new string[0]));
+            Assert.IsFalse(MapVeil.Seen("old_hospital", new string[0]));
+            Assert.IsFalse(MapVeil.Seen("downtown_core", new string[0]));
+            Assert.IsFalse(MapVeil.Seen("old_hospital", new[] { "ash_market" }));
+            Assert.IsTrue(MapVeil.Seen("police_station", new[] { "rail_yard" }));
+            Assert.IsFalse(MapVeil.Seen("north_gate", new[] { "rail_yard" }));
+            Assert.IsTrue(MapVeil.Seen("north_gate", new[] { "water_plant" }));
+            Assert.IsTrue(MapVeil.Seen("downtown_core", new[] { "mall" }));
+            Assert.AreEqual(7, MapVeil.Hidden(null));
+            Assert.AreEqual(7, MapVeil.Hidden(new string[0]));
+            Assert.AreEqual(5, MapVeil.Hidden(new[] { "rail_yard" }));
+            Assert.AreEqual("clear", MapVeil.Forecast("ash_market", new string[0], 1));
+            Assert.AreEqual("rain", MapVeil.Forecast("rail_yard", null, 1));
+            Assert.AreEqual("storm", MapVeil.Forecast("rail_yard", null, 2));
+            Assert.AreEqual("", MapVeil.Forecast("old_hospital", new string[0], 3));
+            Assert.AreEqual("fog", MapVeil.Forecast("old_hospital", new[] { "commercial_strip" }, 1));
+            Assert.AreEqual("overcast", MapVeil.Forecast("old_hospital", new[] { "commercial_strip" }, 3));
+            Assert.AreEqual("Unmapped roads", Loc.T("camp.fog"));
+            Assert.AreEqual("Caminos sin mapa", Loc.T("camp.fog", "es"));
+            Assert.AreEqual("Niebla", Loc.T("sky.fog", "es"));
+            Assert.AreEqual("Tormenta", Loc.T("sky.storm", "es"));
+            Assert.AreEqual("cache", MapVeil.Site("ash_market", new string[0]));
+            Assert.AreEqual("cache", MapVeil.Site("rail_yard", null));
+            Assert.AreEqual("", MapVeil.Site("old_hospital", new string[0]));
+            Assert.AreEqual("", MapVeil.Site("downtown_core", null));
+            Assert.AreEqual("radio", MapVeil.Site("old_hospital", new[] { "commercial_strip" }));
+            Assert.AreEqual("radio", MapVeil.Site("police_station", new[] { "rail_yard" }));
+            Assert.AreEqual("cache", MapVeil.Site("north_gate", new[] { "water_plant" }));
+            Assert.AreEqual("", MapVeil.Site("nowhere", new[] { "ash_market" }));
+            Assert.AreEqual(0.5f, FuelTank.TripRate, 0.001f);
+            Assert.AreEqual(1f, FuelTank.TripCost(2f), 0.001f);
+            Assert.AreEqual(4f, FuelTank.TripCost(8f), 0.001f);
+            Assert.AreEqual(0f, FuelTank.TripCost(0f), 0.001f);
+            Assert.AreEqual(0f, FuelTank.TripCost(-1f), 0.001f);
+            Assert.AreEqual(9f, FuelTank.Trip(10f, 2f), 0.001f);
+            Assert.AreEqual(6f, FuelTank.Trip(10f, 8f), 0.001f);
+            Assert.AreEqual(0f, FuelTank.Trip(1f, 8f), 0.001f);
+            Assert.AreEqual(10f, FuelTank.Trip(10f, 0f), 0.001f);
+            Assert.AreEqual(0f, FuelTank.Trip(-2f, 2f), 0.001f);
+            Assert.AreEqual("Fuel burned", Loc.T("camp.trip"));
+            Assert.AreEqual("Combustible gastado", Loc.T("camp.trip", "es"));
+            Assert.AreEqual("Pieza de radio", Loc.T("poi.radio", "es"));
+            Assert.AreEqual("Alijo", Loc.T("poi.cache", "es"));
         }
 
         [Test]
@@ -937,7 +2025,7 @@ namespace OutpostZero.Tests.EditMode
             var data = new SaveGameData { day = 4, hour = 6.5f, slot = 2 };
             string json = SaveCodec.Serialize(data);
             Assert.IsTrue(SaveCodec.TryDeserialize(json, out var loaded, out var error), error);
-            Assert.AreEqual(1, loaded.schemaVersion);
+            Assert.AreEqual(SaveCodec.CurrentSchema, loaded.schemaVersion);
             Assert.AreEqual(4, loaded.day);
             Assert.AreEqual(2, loaded.slot);
             Assert.IsFalse(string.IsNullOrEmpty(loaded.seal));
@@ -954,7 +2042,7 @@ namespace OutpostZero.Tests.EditMode
             Assert.AreEqual(2, kept.day);
             Assert.AreEqual("", kept.seal);
 
-            var future = new SaveGameData { schemaVersion = 2 };
+            var future = new SaveGameData { schemaVersion = SaveCodec.CurrentSchema + 1 };
             Assert.IsFalse(SaveCodec.TryDeserialize(JsonUtility.ToJson(future), out _, out error));
             Assert.AreEqual("schema", error);
         }
@@ -993,10 +2081,16 @@ namespace OutpostZero.Tests.EditMode
             Assert.AreEqual("west", Presentation.Compass(-9f, 0f, "en"));
             Assert.AreEqual("northeast", Presentation.Compass(6f, 6f, "en"));
             Assert.AreEqual("here", Presentation.Compass(0f, 0f, "en"));
-            Assert.AreEqual("[Zombie scream, norte]", Presentation.Caption(NoiseType.ZombieScream, 0f, 4f, "es"));
+            Assert.AreEqual("[Grito, norte]", Presentation.Caption(NoiseType.ZombieScream, 0f, 4f, "es"));
             Assert.AreEqual("[Gunshot, west]", Presentation.Caption(NoiseType.GunshotLoud, -5f, 0f, "en"));
             Assert.AreEqual("[Explosion, here]", Presentation.Caption(NoiseType.Explosion, 0f, 0f, "en"));
             Assert.AreEqual("", Presentation.Caption(NoiseType.WalkFootstep, 1f, 0f, "en"));
+            Assert.AreEqual("", Presentation.Caption(NoiseType.SprintFootstep, 1f, 0f, "en"));
+            Assert.AreEqual("", Presentation.Caption(NoiseType.SneakFootstep, 1f, 0f, "es"));
+            Assert.AreEqual("[Something broke, east]", Presentation.Caption(NoiseType.ObjectBroken, 4f, 0f, "en"));
+            Assert.AreEqual("[Rotura, este]", Presentation.Caption(NoiseType.ObjectBroken, 4f, 0f, "es"));
+            Assert.AreEqual("[Blade, north]", Presentation.Caption(NoiseType.MeleeSwing, 0f, 4f, "en"));
+            Assert.AreEqual("[Corte, norte]", Presentation.Caption(NoiseType.MeleeSwing, 0f, 4f, "es"));
         }
 
         [Test]
@@ -1034,16 +2128,17 @@ namespace OutpostZero.Tests.EditMode
             Assert.AreEqual(45f, cursor);
             cursor = HordeSchedule.Advance(400f, cursor, 1, out kind);
             Assert.AreEqual("", kind);
-            Assert.AreEqual(90f, cursor);
-            cursor = HordeSchedule.Advance(400f, cursor, 1, out kind);
-            Assert.AreEqual("", kind);
             Assert.AreEqual(300f, cursor);
 
+            Assert.IsTrue(HordeSchedule.RunnerPack(90f, true, 2, false));
+            Assert.IsFalse(HordeSchedule.RunnerPack(400f, false, 3, false), "runner packs hunt at night only");
+            Assert.IsFalse(HordeSchedule.RunnerPack(89f, true, 3, false));
+            Assert.IsFalse(HordeSchedule.RunnerPack(400f, true, 1, false));
+            Assert.IsFalse(HordeSchedule.RunnerPack(400f, true, 3, true), "one pack per street");
+            Assert.AreEqual(4, HordeSchedule.Count("runners"));
+            Assert.AreEqual("Runner", HordeSchedule.Prefer("runners"));
+
             cursor = HordeSchedule.Advance(400f, 45f, 3, out kind);
-            Assert.AreEqual("runners", kind);
-            Assert.AreEqual(4, HordeSchedule.Count(kind));
-            Assert.AreEqual("Runner", HordeSchedule.Prefer(kind));
-            cursor = HordeSchedule.Advance(400f, cursor, 3, out kind);
             Assert.AreEqual("brute", kind);
             Assert.AreEqual(1, HordeSchedule.Count(kind));
             Assert.AreEqual("Brute", HordeSchedule.Prefer(kind));
@@ -1120,8 +2215,9 @@ namespace OutpostZero.Tests.EditMode
             Assert.Greater(survivor.Max, 75f);
             Assert.GreaterOrEqual(survivor.Calm, 1);
             Assert.GreaterOrEqual(survivor.Peak, 1);
-            Assert.AreEqual(35, survivor.Spawns);
-            Assert.AreEqual(56, nightmare.Spawns);
+            Assert.AreEqual(31, survivor.Spawns);
+            Assert.AreEqual(52, nightmare.Spawns);
+            Assert.AreEqual(35, PressureClock.Run(2, 20f, 8f, 2, true).Spawns, "a night street adds the runner pack");
             Assert.Greater(nightmare.Spawns, survivor.Spawns);
 
             Assert.AreEqual(1f, ExtractWatch.Advance(0f, 1f, true, false));
@@ -1249,13 +2345,18 @@ namespace OutpostZero.Tests.EditMode
         [Test]
         public void ARunnerWindsUpBeforeTheLungeAndABruteBeforeTheCharge()
         {
-            Assert.IsTrue(SpecialBeat.InReach(2.2f, false));
-            Assert.IsFalse(SpecialBeat.InReach(2.1f, false));
-            Assert.IsTrue(SpecialBeat.InReach(5.5f, false));
-            Assert.IsFalse(SpecialBeat.InReach(5.6f, false));
-            Assert.IsTrue(SpecialBeat.InReach(3f, true));
-            Assert.IsTrue(SpecialBeat.InReach(8f, true));
-            Assert.IsFalse(SpecialBeat.InReach(2.5f, true));
+            Assert.IsTrue(SpecialBeat.InReach(3f, false));
+            Assert.IsFalse(SpecialBeat.InReach(2.9f, false));
+            Assert.IsTrue(SpecialBeat.InReach(5f, false));
+            Assert.IsFalse(SpecialBeat.InReach(5.1f, false));
+            Assert.IsTrue(SpecialBeat.InReach(6f, true));
+            Assert.IsTrue(SpecialBeat.InReach(12f, true));
+            Assert.IsFalse(SpecialBeat.InReach(5.9f, true));
+            Assert.IsFalse(SpecialBeat.InReach(12.1f, true));
+            Assert.AreEqual(4f, SpecialBeat.Cooldown);
+            Assert.AreEqual(1.2f, SpecialBeat.ChargeKnockdown);
+            Assert.GreaterOrEqual(SpecialBeat.ChargeDash * SpecialBeat.ChargeSpeed, SpecialBeat.ChargeFar, "a charge from the far edge arrives");
+            Assert.GreaterOrEqual(SpecialBeat.Dash * SpecialBeat.LungeSpeed + 1.5f, SpecialBeat.LungeFar, "a lunge from 5 m closes to bite reach");
             Assert.AreEqual(8f, SpecialBeat.Speed(false));
             Assert.AreEqual(6.5f, SpecialBeat.Speed(true));
             Assert.AreEqual(30f, SpecialBeat.LungeDamage);
@@ -1285,6 +2386,9 @@ namespace OutpostZero.Tests.EditMode
             var brute = SpecialBeat.Advance(new SpecialBeat.Clock(), true, 10f, 0.05f, true);
             Assert.AreEqual(1, brute.Phase);
             Assert.AreEqual(SpecialBeat.ChargeWindup, brute.Left, 0.001f);
+            var rush = SpecialBeat.Advance(brute, true, 10.05f, 1f, true);
+            Assert.AreEqual(2, rush.Phase);
+            Assert.AreEqual(SpecialBeat.ChargeDash, rush.Left, 0.001f);
             Assert.AreEqual(1.5f, SpecialBeat.WallStun);
             SpecialBeat.Commit(0f, 4f, out float headX, out float headZ);
             Assert.AreEqual(0f, headX, 0.001f);
@@ -1381,12 +2485,11 @@ namespace OutpostZero.Tests.EditMode
             Assert.AreEqual(50f, PackOps.Limit(2), 0.001f);
             Assert.IsTrue(PackOps.Fits(48f, PackOps.RaisedLimit, 2f));
             Assert.IsFalse(PackOps.Fits(49f, PackOps.RaisedLimit, 2f));
-            Assert.IsTrue(PackOps.CanRaise(1, 2, 12, 3, 1));
-            Assert.IsFalse(PackOps.CanRaise(1, 1, 12, 3, 1));
-            Assert.IsFalse(PackOps.CanRaise(2, 2, 12, 3, 1));
-            Assert.IsFalse(PackOps.CanRaise(1, 2, 11, 3, 1));
-            Assert.IsFalse(PackOps.CanRaise(1, 2, 12, 2, 1));
-            Assert.IsFalse(PackOps.CanRaise(1, 2, 12, 3, 0));
+            Assert.IsTrue(PackOps.CanRaise(1, 2, 0, 6, 3), "the issue's Backpack T2: cloth 6 and duct tape 3");
+            Assert.IsFalse(PackOps.CanRaise(1, 1, 0, 6, 3), "needs the tier 2 bench");
+            Assert.IsFalse(PackOps.CanRaise(2, 2, 0, 6, 3));
+            Assert.IsFalse(PackOps.CanRaise(1, 2, 0, 5, 3));
+            Assert.IsFalse(PackOps.CanRaise(1, 2, 0, 6, 2));
             var packSave = new SaveGameData { packTier = 2 };
             Assert.IsTrue(SaveCodec.TryDeserialize(SaveCodec.Serialize(packSave), out var packLoaded, out var packError), packError);
             Assert.AreEqual(2, packLoaded.packTier);
@@ -1628,6 +2731,11 @@ namespace OutpostZero.Tests.EditMode
             Assert.AreEqual(1f, NeedsPressure.Regen(25f), 0.001f);
             Assert.AreEqual(80f, NeedsPressure.StaminaCap(24f, 100f), 0.01f);
             Assert.AreEqual(100f, NeedsPressure.StaminaCap(25f, 100f), 0.01f);
+            Assert.AreEqual(100f, NeedsPressure.Pool(0, 100f), 0.01f);
+            Assert.AreEqual(116f, NeedsPressure.Pool(4, 100f), 0.01f);
+            Assert.AreEqual(132f, NeedsPressure.Pool(8, 100f), 0.01f);
+            Assert.AreEqual(132f, NeedsPressure.Pool(12, 100f), 0.01f);
+            Assert.AreEqual(105.6f, NeedsPressure.StaminaCap(24f, NeedsPressure.Pool(8, 100f)), 0.01f);
             Assert.AreEqual(0.62f, NeedsPressure.Aim(76f), 0.001f);
             Assert.AreEqual(1f, NeedsPressure.Aim(75f), 0.001f);
             Assert.IsTrue(NeedsPressure.Hungry(24f));
@@ -1899,7 +3007,9 @@ namespace OutpostZero.Tests.EditMode
             Assert.AreEqual(18f, NoiseCue.Height(2, 2f), 0.001f);
 
             Assert.AreEqual("", NoiseCue.Mark(0, 1f));
-            Assert.AreEqual("", NoiseCue.Mark(3, 1f));
+            Assert.AreEqual("", NoiseCue.Mark(HudPalette.Count, 1f));
+            Assert.AreEqual("#", NoiseCue.Mark(HudPalette.Tritan, 1f));
+            Assert.AreEqual(".", NoiseCue.Mark(HudPalette.Tritan, 0f));
             Assert.AreEqual(".", NoiseCue.Mark(1, 0f));
             Assert.AreEqual("-", NoiseCue.Mark(1, 0.25f));
             Assert.AreEqual("=", NoiseCue.Mark(1, 0.55f));
@@ -1910,6 +3020,39 @@ namespace OutpostZero.Tests.EditMode
             Assert.AreEqual("[]", NoiseCue.Mark(2, 0.799f));
             Assert.AreEqual("*", NoiseCue.Mark(2, 0.8f));
             Assert.AreNotEqual(NoiseCue.Mark(1, 0.9f), NoiseCue.Mark(2, 0.9f));
+            Color health = HudPalette.Health(0);
+            Assert.AreEqual(0.75f, health.r, 0.001f);
+            Assert.AreEqual(0.2f, health.g, 0.001f);
+            Assert.AreEqual(0.16f, health.b, 0.001f);
+            Assert.AreEqual(health, HudPalette.Health(-1));
+            Assert.AreEqual(health, HudPalette.Health(HudPalette.Count));
+            Color blue = HudPalette.Health(1);
+            Assert.Greater(blue.b, blue.r);
+            Color mono = HudPalette.Health(2);
+            Assert.AreEqual(mono.r, mono.g, 0.001f);
+            Assert.AreEqual(mono.g, mono.b, 0.001f);
+            Color safe = HudPalette.Safe(0);
+            Assert.AreEqual(0.35f, safe.r, 0.001f);
+            Assert.AreEqual(0.62f, safe.g, 0.001f);
+            Assert.AreEqual(0.38f, safe.b, 0.001f);
+            Assert.Greater(HudPalette.Safe(1).r, HudPalette.Safe(1).b);
+            Color warn = HudPalette.Warn(0);
+            Assert.AreEqual(0.95f, warn.r, 0.001f);
+            Assert.AreEqual(0.55f, warn.g, 0.001f);
+            Assert.AreEqual(0.25f, warn.b, 0.001f);
+            Color alarm = HudPalette.Alarm(0);
+            Assert.AreEqual(0.95f, alarm.r, 0.001f);
+            Assert.AreEqual(0.35f, alarm.g, 0.001f);
+            Color ask = HudPalette.Ask(0);
+            Assert.AreEqual(0.95f, ask.r, 0.001f);
+            Assert.AreEqual(0.8f, ask.g, 0.001f);
+            Assert.AreEqual("set.vision0", HudPalette.Name(0));
+            Assert.AreEqual("set.vision1", HudPalette.Name(1));
+            Assert.AreEqual("set.vision2", HudPalette.Name(2));
+            Assert.AreEqual("Blue-yellow", Loc.T("set.vision1"));
+            Assert.AreEqual("Azul-amarillo", Loc.T("set.vision1", "es"));
+            Assert.AreEqual("Apagado", Loc.T("set.vision0", "es"));
+            Assert.AreEqual("", NoiseCue.Mark(0, 1f));
         }
 
         [Test]
@@ -2112,6 +3255,18 @@ namespace OutpostZero.Tests.EditMode
             Assert.AreEqual(2, BuildSite.Need("Lamp"));
             Assert.AreEqual(13, GridBuilder.Cost(ModuleKind.Lamp));
             Assert.AreEqual("Foco", Loc.T("camp.lamp", "es"));
+            Assert.AreEqual(2, YardFlood.Count);
+            Assert.IsTrue(YardFlood.Lit(true));
+            Assert.IsFalse(YardFlood.Lit(false));
+            Assert.AreEqual(-1.6f, YardFlood.Local(0).x, 0.001f);
+            Assert.AreEqual(3.2f, YardFlood.Local(0).y, 0.001f);
+            Assert.AreEqual(1.6f, YardFlood.Local(1).x, 0.001f);
+            Assert.AreEqual(55f, YardFlood.Aim(0).x, 0.001f);
+            Assert.AreEqual(-35f, YardFlood.Aim(0).y, 0.001f);
+            Assert.AreEqual(35f, YardFlood.Aim(1).y, 0.001f);
+            Assert.AreEqual(FloodBeam.Radius, 14f, 0.001f);
+            Assert.AreEqual(70f, YardFlood.Spread, 0.001f);
+            Assert.AreEqual(3.4f, YardFlood.Intensity, 0.001f);
         }
 
         [Test]
@@ -2165,7 +3320,7 @@ namespace OutpostZero.Tests.EditMode
             Assert.AreEqual(1, MendBoard.Pick(new[] { 1, 0 }, new[] { 20, 90 }));
             Assert.AreEqual(-1, MendBoard.Pick(new[] { 0 }, new[] { 100 }));
             Assert.AreEqual(-1, MendBoard.Pick(null, new[] { 40 }));
-            Assert.AreEqual("Reparar", Loc.T("camp.mend", "es"));
+            Assert.AreEqual("Reparar", Loc.T("camp.mend_module", "es"));
         }
 
         [Test]
@@ -2380,6 +3535,23 @@ namespace OutpostZero.Tests.EditMode
             Assert.IsTrue(MealTable.Argument(true, 2, false));
             Assert.IsFalse(MealTable.Argument(true, 2, true));
             Assert.IsFalse(MealTable.Argument(true, 1, false));
+            Assert.IsFalse(KinBoard.Quarrel(null, false));
+            var cold = new List<ColonistDay>
+            {
+                new ColonistDay { id = "ada", task = "Rest", kin = "ben:-20", morale = 50f, hunger = 90f, thirst = 90f },
+                new ColonistDay { id = "ben", task = "Scavenge", morale = 50f, hunger = 90f, thirst = 90f }
+            };
+            Assert.IsTrue(KinBoard.Quarrel(cold, false));
+            Assert.IsFalse(KinBoard.Quarrel(cold, true));
+            cold[0].kin = "ben:-19";
+            Assert.IsFalse(KinBoard.Quarrel(cold, false));
+            cold[0].kin = "ben:-20";
+            int coldFood = 0;
+            int coldWater = 0;
+            var coldNotes = ColonyDay.Simulate(cold, ref coldFood, ref coldWater, false, false, "");
+            Assert.Contains("argument", coldNotes);
+            Assert.AreEqual(6, MealTable.FeudShift(6, false));
+            Assert.AreEqual(3, MealTable.FeudShift(6, true));
 
             var ward = new List<ColonistDay>
             {
@@ -2897,9 +4069,17 @@ namespace OutpostZero.Tests.EditMode
         [Test]
         public void TheFourthShiftPaysAndAnOldSaveStaysAtZero()
         {
-            Assert.AreEqual(4, Practice.Gain(3));
-            Assert.AreEqual(8, Practice.Gain(8));
-            Assert.AreEqual(1, Practice.Gain(-1));
+            int skill = 0, xp = 0;
+            for (int shift = 1; shift <= 4; shift++)
+            {
+                Practice.Train(ref skill, ref xp);
+                Assert.AreEqual(shift, skill, "one shift a level below 4");
+            }
+            Assert.AreEqual(1, Practice.Bonus(skill), "the fourth shift is the first one that pays");
+            skill = -1; xp = -3;
+            Practice.Train(ref skill, ref xp);
+            Assert.AreEqual(1, skill);
+            Assert.AreEqual(0, xp);
             Assert.AreEqual(0, Practice.Bonus(3));
             Assert.AreEqual(1, Practice.Bonus(4));
             Assert.AreEqual(1, Practice.Bonus(8));
@@ -2925,6 +4105,47 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void SkillsClimbToTenOnExperienceThatCostsMoreEachLevelFromFour()
+        {
+            Assert.AreEqual(10, Practice.Cap);
+            Assert.AreEqual(1, Practice.Need(0));
+            Assert.AreEqual(1, Practice.Need(3));
+            Assert.AreEqual(2, Practice.Need(4));
+            Assert.AreEqual(7, Practice.Need(9));
+            Assert.AreEqual(4, Practice.Shifts(0, 4));
+            Assert.AreEqual(18, Practice.Shifts(0, 8));
+            Assert.AreEqual(31, Practice.Shifts(0, 10));
+
+            int skill = 4, xp = 0;
+            Practice.Train(ref skill, ref xp);
+            Assert.AreEqual(4, skill);
+            Assert.AreEqual(1, xp);
+            Practice.Train(ref skill, ref xp);
+            Assert.AreEqual(5, skill);
+            Assert.AreEqual(0, xp, "experience starts over at each level");
+
+            skill = 0; xp = 0;
+            int shifts = 0;
+            while (skill < Practice.Cap && shifts < 100) { Practice.Train(ref skill, ref xp); shifts++; }
+            Assert.AreEqual(31, shifts);
+            Practice.Train(ref skill, ref xp);
+            Assert.AreEqual(10, skill, "ten is the ceiling");
+            Assert.AreEqual(0, xp, "no experience piles up at the ceiling");
+
+            Practice.Unpack(Practice.Pack(10, 9, 0, 0, 12), out int combat, out int medicine, out _, out _, out int scavenge);
+            Assert.AreEqual(10, combat);
+            Assert.AreEqual(9, medicine);
+            Assert.AreEqual(10, scavenge, "a packed skill past the ceiling reads back at ten");
+            string drill = Practice.PackXp(1, 0, 3, 0, 6, 2);
+            Assert.AreEqual("1,0,3,0,6,2", drill);
+            Assert.AreEqual(3, Practice.ReadXp(drill, 2));
+            Assert.AreEqual(2, Practice.ReadXp(drill, 5));
+            Assert.AreEqual(0, Practice.ReadXp(null, 0), "a save from before experience starts every skill fresh");
+            Assert.AreEqual(0, Practice.ReadXp("4", 3));
+            Assert.AreEqual(8, Practice.ReadXp("999", 0));
+        }
+
+        [Test]
         public void APracticedLeaderChangesTheStreetAndANewOneDoesNot()
         {
             Assert.AreEqual(1f, FieldHand.Spread(0), 0.001f);
@@ -2938,7 +4159,18 @@ namespace OutpostZero.Tests.EditMode
             Assert.AreEqual(50, FieldHand.Medkit(3));
             Assert.AreEqual(56, FieldHand.Medkit(4));
             Assert.AreEqual("Medkit used  +50 HP", FieldHand.Dose(0));
-            Assert.AreEqual("Medkit used  +56 HP", FieldHand.Dose(8));
+            Assert.AreEqual("Medkit used  +56 HP", FieldHand.Dose(4));
+            Assert.AreEqual("Medkit used  +60 HP", FieldHand.Dose(8));
+            Assert.AreEqual(1f, HandDepth.Spread(4), 0.001f);
+            Assert.AreEqual(0.88f, HandDepth.Spread(8), 0.001f);
+            Assert.AreEqual(1f, HandDepth.Reload(4), 0.001f);
+            Assert.AreEqual(0.9f, HandDepth.Reload(8), 0.001f);
+            Assert.AreEqual(0, HandDepth.Heal(4));
+            Assert.AreEqual(4, HandDepth.Heal(8));
+            Assert.AreEqual(0, HandDepth.Scrap(4));
+            Assert.AreEqual(4, HandDepth.Scrap(8));
+            Assert.AreEqual(0.8f, FieldHand.Reload(Practice.Cap), 0.001f);
+            Assert.AreEqual(0.9f, HandDepth.Reload(Practice.Cap), 0.001f);
             Assert.AreEqual(2.5f, RecoilBloom.Spread(2.5f, FieldHand.Spread(0), 0f), 0.001f);
             Assert.AreEqual(2.125f, RecoilBloom.Spread(2.5f, FieldHand.Spread(4), 0f), 0.001f);
         }
@@ -3046,6 +4278,3048 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void AnEngineerBuildsACookPlatesAndACowardFlinches()
+        {
+            Assert.AreEqual(2, BuildSite.Shift("Engineer", 40f));
+            Assert.AreEqual(4, TraitHook.CookPlate("Cook", true));
+            Assert.AreEqual(0, TraitHook.CookPlate("Cook", false));
+            Assert.AreEqual(0, TraitHook.CookPlate("Glutton", true));
+            Assert.AreEqual(0.8f, TraitHook.Aim("Sharpshooter"), 0.001f);
+            Assert.AreEqual(1f, TraitHook.Aim("Steady Hands"), 0.001f);
+            Assert.AreEqual(1f, TraitHook.Aim(null), 0.001f);
+            Assert.AreEqual(0, TraitHook.WatchCost("Brave"));
+            Assert.AreEqual(2, TraitHook.WatchCost("Watchful"));
+            Assert.AreEqual(2, TraitHook.WatchCost(null));
+            Assert.AreEqual(6, TraitHook.WatchCost("Cowardly"));
+            Assert.AreEqual(0, TraitHook.WatchPay("Cowardly", 2));
+            Assert.AreEqual(2, TraitHook.WatchPay("Brave", 2));
+            Assert.AreEqual(0, TraitHook.WatchPay("Brave", 0));
+            bool engineer = false;
+            bool cook = false;
+            bool sharp = false;
+            for (int seed = 1; seed <= 40; seed++)
+            {
+                var camp = SurvivorDraw.Open(seed);
+                for (int i = 0; i < camp.Length; i++)
+                {
+                    if (camp[i].Trait == "Engineer")
+                    {
+                        Assert.AreEqual(4, camp[i].Engineering);
+                        engineer = true;
+                    }
+                    if (camp[i].Trait == "Cook")
+                    {
+                        Assert.AreEqual(4, camp[i].Cooking);
+                        cook = true;
+                    }
+                    if (camp[i].Trait == "Sharpshooter")
+                    {
+                        Assert.AreEqual(4, camp[i].Combat);
+                        sharp = true;
+                    }
+                }
+            }
+            Assert.IsTrue(engineer);
+            Assert.IsTrue(cook);
+            Assert.IsTrue(sharp);
+            Assert.AreEqual("Ingeniero", Loc.T("trait.engineer", "es"));
+            Assert.AreEqual("Cocinero", Loc.T("trait.cook", "es"));
+            Assert.AreEqual("Tirador", Loc.T("trait.sharp", "es"));
+            Assert.AreEqual("Valiente", Loc.T("trait.brave", "es"));
+            Assert.AreEqual("Cobarde", Loc.T("trait.coward", "es"));
+        }
+
+        [Test]
+        public void AnInsomniacRestsLessAndANightOwlStretchesTheWarning()
+        {
+            Assert.AreEqual(8, TraitHook.RestGain(null, 8));
+            Assert.AreEqual(10, TraitHook.RestGain("Cook", 10));
+            Assert.AreEqual(5, TraitHook.RestGain("Insomniac", 8));
+            Assert.AreEqual(7, TraitHook.RestGain("Insomniac", 10));
+            Assert.AreEqual(2, TraitHook.RestGain("Insomniac", 5));
+            Assert.AreEqual(1, TraitHook.RestGain("Insomniac", 1));
+            Assert.AreEqual("Steady", ColonyDay.Mood(65f));
+            Assert.AreEqual("Inspired", ColonyDay.Mood(65f, "Optimist"));
+            Assert.AreEqual("Inspired", ColonyDay.Mood(80f, "Optimist"));
+            Assert.AreEqual("Breakdown", ColonyDay.Mood(5f, "Optimist"));
+            Assert.AreEqual(1f, ColonyDay.OutputScale(65f), 0.001f);
+            Assert.AreEqual(1.1f, ColonyDay.OutputScale(65f, "Optimist"), 0.001f);
+            Assert.AreEqual(0f, ColonyDay.OutputScale(5f, "Optimist"), 0.001f);
+            Assert.AreEqual(1.1f, ColonyDay.OutputScale(80f), 0.001f);
+            Assert.AreEqual(14f, TraitHook.NightStretch(14f, 0), 0.001f);
+            Assert.AreEqual(0f, TraitHook.NightStretch(0f, 2), 0.001f);
+            Assert.AreEqual(16f, TraitHook.NightStretch(14f, 1), 0.001f);
+            Assert.AreEqual(28f, TraitHook.NightStretch(28f, 3), 0.001f);
+            int food = 4;
+            int water = 4;
+            int raw = 0;
+            var pair = new[]
+            {
+                new ColonistDay { id = "ada", trait = "Loner", task = "Guard", morale = 50f, hunger = 78f, thirst = 78f, opinion = 18 },
+                new ColonistDay { id = "ben", task = "Guard", morale = 50f, hunger = 78f, thirst = 78f, opinion = 18 }
+            };
+            ColonyDay.Simulate(pair, ref food, ref water, true, false, "", 0, ref raw);
+            Assert.AreEqual(18, pair[0].opinion);
+            Assert.AreEqual(20, pair[1].opinion);
+            Assert.AreEqual("", pair[0].kin);
+            Assert.AreEqual("ada:2", pair[1].kin);
+            bool loner = false;
+            for (int seed = 1; seed <= 40; seed++)
+            {
+                var camp = SurvivorDraw.Open(seed);
+                for (int i = 0; i < camp.Length; i++)
+                {
+                    if (camp[i].Trait != "Loner") continue;
+                    Assert.AreEqual(camp[i].Aside == "Scrounger" ? 3 : 2, camp[i].Scavenge);
+                    loner = true;
+                }
+            }
+            Assert.IsTrue(loner);
+            Assert.AreEqual("Insomne", Loc.T("trait.insomniac", "es"));
+            Assert.AreEqual("Optimista", Loc.T("trait.optimist", "es"));
+            Assert.AreEqual("Solitario", Loc.T("trait.loner", "es"));
+            Assert.AreEqual("Noctámbulo", Loc.T("trait.owl", "es"));
+        }
+
+        [Test]
+        public void EachHandCarriesASecondTraitThatDoesNotClash()
+        {
+            Assert.IsTrue(SurvivorDraw.Clashes("Brave", "Cowardly"));
+            Assert.IsTrue(SurvivorDraw.Clashes("Cowardly", "Brave"));
+            Assert.IsTrue(SurvivorDraw.Clashes("Insomniac", "Light Sleeper"));
+            Assert.IsTrue(SurvivorDraw.Clashes("Optimist", "Volatile"));
+            Assert.IsTrue(SurvivorDraw.Clashes("Cook", "Cook"));
+            Assert.IsFalse(SurvivorDraw.Clashes("Cook", "Engineer"));
+            Assert.IsFalse(SurvivorDraw.Clashes("Brave", ""));
+            Assert.IsFalse(SurvivorDraw.Clashes(null, "Loner"));
+            for (int seed = 1; seed <= 40; seed++)
+            {
+                var camp = SurvivorDraw.Open(seed);
+                var again = SurvivorDraw.Open(seed);
+                Assert.AreEqual(SurvivorDraw.Signature(camp), SurvivorDraw.Signature(again));
+                for (int i = 0; i < camp.Length; i++)
+                {
+                    Assert.IsFalse(string.IsNullOrEmpty(camp[i].Aside));
+                    Assert.IsFalse(SurvivorDraw.Clashes(camp[i].Trait, camp[i].Aside));
+                    Assert.AreEqual(camp[i].Aside, again[i].Aside);
+                    if (camp[i].Trait == "Field Medic") Assert.AreEqual(4, camp[i].Medicine);
+                    if (camp[i].Aside == "Engineer") Assert.AreEqual(4, camp[i].Engineering);
+                    if (camp[i].Aside == "Cook") Assert.AreEqual(4, camp[i].Cooking);
+                    if (camp[i].Aside == "Sharpshooter") Assert.AreEqual(4, camp[i].Combat);
+                }
+            }
+            Assert.AreEqual(23.4f, TraitHook.HungerDrop("Watchful", "Glutton"), 0.001f);
+            Assert.AreEqual(18f, TraitHook.HungerDrop("Watchful", null), 0.001f);
+            Assert.AreEqual(6, TraitHook.WatchCost("Cook", "Cowardly"));
+            Assert.AreEqual(0, TraitHook.WatchCost("Cook", "Brave"));
+            Assert.AreEqual(2, TraitHook.WatchCost("Watchful", null));
+            Assert.AreEqual(0, TraitHook.WatchPay("Cook", "Cowardly", 2));
+            Assert.AreEqual(2, TraitHook.WatchPay("Cook", "Brave", 2));
+            Assert.AreEqual(0.8f, TraitHook.Aim("Cook", "Sharpshooter"), 0.001f);
+            Assert.AreEqual(1f, TraitHook.Aim("Cook", null), 0.001f);
+            Assert.AreEqual(4, TraitHook.CookPlate("Guard", "Cook", true));
+            Assert.AreEqual(0, TraitHook.CookPlate("Guard", "Cook", false));
+            Assert.AreEqual(5, TraitHook.RestGain("Cook", "Insomniac", 8));
+            Assert.AreEqual(8, TraitHook.RestGain("Cook", null, 8));
+            Assert.AreEqual("Inspired", ColonyDay.Mood(65f, "Cook", "Optimist"));
+            Assert.AreEqual("Steady", ColonyDay.Mood(65f, "Cook", "Loner"));
+            Assert.AreEqual(1.1f, ColonyDay.OutputScale(65f, "Cook", "Optimist"), 0.001f);
+            var saved = new SaveGameData { survivors = new[] { new SurvivorSave { id = "ada", trait = "Cook", aside = "Loner" } } };
+            Assert.IsTrue(SaveCodec.TryDeserialize(SaveCodec.Serialize(saved), out var loaded, out var error), error);
+            Assert.AreEqual(SaveCodec.CurrentSchema, loaded.schemaVersion);
+            Assert.AreEqual("Loner", loaded.survivors[0].aside);
+            Assert.IsTrue(SaveCodec.TryDeserialize("{\"schemaVersion\":1,\"survivors\":[{\"id\":\"ada\",\"trait\":\"Cook\"}]}", out var old, out error), error);
+            Assert.IsNull(old.survivors[0].aside);
+            Assert.IsNull(old.survivors[0].mark);
+        }
+
+        [Test]
+        public void EachHandCarriesAThirdTrait()
+        {
+            Assert.AreEqual(23.4f, TraitHook.HungerDrop("Watchful", "Loner", "Glutton"), 0.001f);
+            Assert.AreEqual(18f, TraitHook.HungerDrop("Watchful", "Loner", null), 0.001f);
+            Assert.AreEqual(18f, TraitHook.HungerDrop("Watchful", null), 0.001f);
+            Assert.AreEqual(23.4f, TraitHook.HungerDrop("Watchful", "Glutton"), 0.001f);
+            Assert.AreEqual(0.8f, TraitHook.Aim("Cook", "Loner", "Sharpshooter"), 0.001f);
+            Assert.AreEqual(1f, TraitHook.Aim("Cook", null), 0.001f);
+            Assert.AreEqual(5, TraitHook.RestGain("Cook", "Loner", "Insomniac", 8));
+            Assert.AreEqual(8, TraitHook.RestGain("Cook", null, 8));
+            Assert.AreEqual(4, TraitHook.CookPlate("Guard", "Loner", "Cook", true));
+            Assert.AreEqual(0, TraitHook.CookPlate("Guard", "Cook", false));
+            Assert.AreEqual(6, TraitHook.WatchCost("Cook", "Loner", "Cowardly"));
+            Assert.AreEqual(0, TraitHook.WatchCost("Cook", "Loner", "Brave"));
+            Assert.AreEqual(2, TraitHook.WatchCost("Watchful", null));
+            Assert.AreEqual("Inspired", ColonyDay.Mood(65f, "Cook", "Loner", "Optimist"));
+            Assert.AreEqual("Steady", ColonyDay.Mood(65f, "Cook", "Loner", null));
+            Assert.AreEqual(1.1f, ColonyDay.OutputScale(65f, "Cook", "Loner", "Optimist"), 0.001f);
+            var plain = new[]
+            {
+                new ColonistDay { id = "ada", trait = "Watchful", aside = "Loner", task = "Rest", morale = 50f, hunger = 78f, thirst = 78f, opinion = 18 }
+            };
+            var marked = new[]
+            {
+                new ColonistDay { id = "ada", trait = "Watchful", aside = "Loner", mark = "Glutton", task = "Rest", morale = 50f, hunger = 78f, thirst = 78f, opinion = 18 }
+            };
+            int food = 0;
+            int water = 0;
+            int raw = 0;
+            int foodB = 0;
+            int waterB = 0;
+            int rawB = 0;
+            ColonyDay.Simulate(plain, ref food, ref water, false, false, "", 0, ref raw);
+            ColonyDay.Simulate(marked, ref foodB, ref waterB, false, false, "", 0, ref rawB);
+            Assert.AreEqual(60f, plain[0].hunger, 0.01f);
+            Assert.AreEqual(54.6f, marked[0].hunger, 0.01f);
+            for (int seed = 1; seed <= 40; seed++)
+            {
+                var camp = SurvivorDraw.Open(seed);
+                var again = SurvivorDraw.Open(seed);
+                Assert.AreEqual(SurvivorDraw.Signature(camp), SurvivorDraw.Signature(again));
+                for (int i = 0; i < camp.Length; i++)
+                {
+                    Assert.IsFalse(string.IsNullOrEmpty(camp[i].Mark));
+                    Assert.AreEqual(camp[i].Mark, again[i].Mark);
+                    Assert.IsFalse(SurvivorDraw.Clashes(camp[i].Trait, camp[i].Mark));
+                    Assert.IsFalse(SurvivorDraw.Clashes(camp[i].Aside, camp[i].Mark));
+                    Assert.AreNotEqual(camp[i].Trait, camp[i].Mark);
+                    Assert.AreNotEqual(camp[i].Aside, camp[i].Mark);
+                    if (camp[i].Trait == "Field Medic") Assert.AreEqual(4, camp[i].Medicine);
+                    if (camp[i].Trait == "Cook") Assert.AreEqual(4, camp[i].Cooking);
+                    if (camp[i].Trait == "Loner") Assert.AreEqual(camp[i].Aside == "Scrounger" ? 3 : 2, camp[i].Scavenge);
+                }
+            }
+            var saved = new SaveGameData { survivors = new[] { new SurvivorSave { id = "ada", trait = "Cook", aside = "Loner", mark = "Optimist" } } };
+            Assert.IsTrue(SaveCodec.TryDeserialize(SaveCodec.Serialize(saved), out var loaded, out var error), error);
+            Assert.AreEqual("Optimist", loaded.survivors[0].mark);
+            Assert.AreEqual(SaveCodec.CurrentSchema, loaded.schemaVersion);
+        }
+
+        [Test]
+        public void ADeepCookPlatesExtraAndAFourthShiftDoesNot()
+        {
+            Assert.AreEqual(0, PotDepth.Plate(4));
+            Assert.AreEqual(0, PotDepth.Plate(0));
+            Assert.AreEqual(0, PotDepth.Plate(-1));
+            Assert.AreEqual(1, PotDepth.Plate(5));
+            Assert.AreEqual(4, PotDepth.Plate(8));
+            Assert.AreEqual(4, PotDepth.Plate(12));
+            Assert.AreEqual(1, Practice.Bonus(4));
+            Assert.AreEqual(1, Practice.Bonus(8));
+            CookPot.Serve(true, 4, 2, out int spent, out int food, out int morale);
+            Assert.AreEqual(2, spent);
+            Assert.AreEqual(6, food);
+            Assert.AreEqual(8, morale);
+            Assert.AreEqual(7, food + Practice.Bonus(4) + PotDepth.Plate(4));
+            Assert.AreEqual(11, food + Practice.Bonus(8) + PotDepth.Plate(8));
+        }
+
+        [Test]
+        public void AThirdFogDayOpensOvercastAndTheMarketStaysClear()
+        {
+            Assert.AreEqual(WeatherKind.Fog, SkyBand.Cast(WeatherKind.Fog, 3));
+            Assert.AreEqual(WeatherKind.Fog, CloudDeck.Lay(WeatherKind.Fog, 2));
+            Assert.AreEqual(WeatherKind.Fog, CloudDeck.Lay(WeatherKind.Fog, 0));
+            Assert.AreEqual(WeatherKind.Overcast, CloudDeck.Lay(WeatherKind.Fog, 3));
+            Assert.AreEqual(WeatherKind.Overcast, CloudDeck.Lay(WeatherKind.Fog, 6));
+            Assert.AreEqual(WeatherKind.Rain, CloudDeck.Lay(WeatherKind.Rain, 1));
+            Assert.AreEqual(WeatherKind.Storm, CloudDeck.Lay(WeatherKind.Rain, 2));
+            Assert.AreEqual(WeatherKind.Clear, CloudDeck.Lay(WeatherKind.Clear, 3));
+            Assert.AreEqual(WeatherKind.Clear, CloudDeck.Lay(DistrictRules.For("ash_market").Weather, 3));
+            Assert.AreEqual(WeatherKind.Fog, DistrictRules.For("old_hospital").Weather);
+            Assert.AreEqual(WeatherKind.Overcast, CloudDeck.Lay(DistrictRules.For("old_hospital").Weather, 3));
+            Assert.AreEqual(0.9f, WeatherSurface.Sight(WeatherKind.Overcast), 0.001f);
+            Assert.AreEqual(0.1f, WeatherSurface.Wetness(WeatherKind.Overcast), 0.001f);
+            Assert.AreEqual("wind", AshFall.Bed(WeatherKind.Overcast, "old_hospital"));
+        }
+
+        [Test]
+        public void EveryToneHasACreditAndAMissingOneDoesNot()
+        {
+            Assert.AreEqual("", SoundCredit.Line(null));
+            Assert.AreEqual("", SoundCredit.Line(""));
+            Assert.AreEqual("", SoundCredit.Line("nope"));
+            Assert.IsFalse(SoundCredit.Covers("nope"));
+            Assert.AreEqual(ClipBook.Ids.Length, SoundCredit.Count);
+            for (int i = 0; i < ClipBook.Ids.Length; i++)
+            {
+                string id = ClipBook.Ids[i];
+                Assert.IsTrue(SoundCredit.Covers(id), id);
+                Assert.AreEqual(id + " — generated", SoundCredit.Line(id));
+            }
+            Assert.AreEqual("Every tone is generated in the game.", Loc.T("menu.tones", "en"));
+            Assert.AreEqual("Cada tono se genera en el juego.", Loc.T("menu.tones", "es"));
+            Assert.AreEqual("tonos generados", Loc.T("menu.tones_n", "es"));
+        }
+
+        [Test]
+        public void ALeaderWithoutARigStillFiresAndFalls()
+        {
+            Assert.AreEqual(GaitSheet.Beat.Idle, GaitSheet.Pick(false, false, false, false, false, false, 0f));
+            Assert.AreEqual(GaitSheet.Beat.Walk, GaitSheet.Pick(false, false, false, false, false, false, 1f));
+            Assert.AreEqual(GaitSheet.Beat.CrouchStill, GaitSheet.Pick(false, false, false, false, true, false, 0f));
+            Assert.AreEqual(GaitSheet.Beat.Crouch, GaitSheet.Pick(false, false, false, false, true, true, 1f));
+            Assert.AreEqual(GaitSheet.Beat.Sprint, GaitSheet.Pick(false, false, false, false, false, true, 2f));
+            Assert.AreEqual(GaitSheet.Beat.Attack, GaitSheet.Pick(false, false, true, true, true, true, 2f));
+            Assert.AreEqual(GaitSheet.Beat.Hit, GaitSheet.Pick(false, true, true, true, false, true, 2f));
+            Assert.AreEqual(GaitSheet.Beat.Dead, GaitSheet.Pick(true, true, true, true, true, true, 2f));
+            Assert.AreEqual(GaitSheet.Beat.Aim, GaitSheet.Pick(false, false, false, false, false, true, 2f, true));
+            Assert.AreEqual(GaitSheet.Beat.Aim, GaitSheet.Pick(false, false, false, false, true, false, 1f, true));
+            Assert.AreEqual(GaitSheet.Beat.Reload, GaitSheet.Pick(false, false, false, true, false, false, 0f, true));
+            Assert.AreEqual(GaitSheet.Beat.Walk, GaitSheet.Pick(false, false, false, false, false, false, 1f, false));
+            Assert.AreEqual(8f, GaitSheet.Lean(GaitSheet.Beat.Aim, 0f), 0.001f);
+            Assert.AreEqual(0.02f, GaitSheet.Hop(GaitSheet.Beat.Aim, 1.5708f), 0.001f);
+            Assert.AreEqual(0.72f, GaitSheet.Scale(true, false), 0.001f);
+            Assert.AreEqual(1f, GaitSheet.Scale(true, true), 0.001f);
+            Assert.AreEqual(1f, GaitSheet.Scale(false, false), 0.001f);
+            Assert.AreEqual(0.04f, GaitSheet.Hop(GaitSheet.Beat.Walk, 1.5707963f), 0.001f);
+            Assert.AreEqual(0.07f, GaitSheet.Hop(GaitSheet.Beat.Sprint, 1.5707963f), 0.001f);
+            Assert.AreEqual(0f, GaitSheet.Hop(GaitSheet.Beat.Idle, 1.5707963f), 0.001f);
+            Assert.AreEqual(0f, GaitSheet.Lean(GaitSheet.Beat.Idle, 1f), 0.001f);
+            Assert.AreEqual(0f, GaitSheet.Lean(GaitSheet.Beat.CrouchStill, 1f), 0.001f);
+            Assert.AreEqual(12f, GaitSheet.Lean(GaitSheet.Beat.Sprint, 0f), 0.001f);
+            Assert.AreEqual(0f, GaitSheet.Swing(0f), 0.001f);
+            Assert.AreEqual(1f, GaitSheet.Swing(0.12f), 0.001f);
+            Assert.AreEqual(0f, GaitSheet.Swing(0.34f), 0.001f);
+            Assert.AreEqual(26f, GaitSheet.Lean(GaitSheet.Beat.Attack, 0.12f), 0.001f);
+            Assert.AreEqual(1f, GaitSheet.Flail(0.08f), 0.001f);
+            Assert.AreEqual(0f, GaitSheet.Flail(0.28f), 0.001f);
+            Assert.AreEqual(-18f, GaitSheet.Lean(GaitSheet.Beat.Hit, 0.08f), 0.001f);
+            Assert.AreEqual(1f, GaitSheet.Dip(0.4f), 0.001f);
+            Assert.AreEqual(0f, GaitSheet.Dip(0f), 0.001f);
+            Assert.AreEqual(10f, GaitSheet.Lean(GaitSheet.Beat.Reload, 0.4f), 0.001f);
+            Assert.AreEqual(-0.06f, GaitSheet.Sink(GaitSheet.Beat.Reload, 0.4f), 0.001f);
+            Assert.AreEqual(0f, GaitSheet.Fall(0f), 0.001f);
+            Assert.AreEqual(1f, GaitSheet.Fall(0.7f), 0.001f);
+            Assert.AreEqual(1f, GaitSheet.Fall(2f), 0.001f);
+            Assert.AreEqual(76f, GaitSheet.Lean(GaitSheet.Beat.Dead, 0.7f), 0.001f);
+            Assert.AreEqual(-0.45f, GaitSheet.Sink(GaitSheet.Beat.Dead, 0.7f), 0.001f);
+            Assert.AreEqual(0f, GaitSheet.Sink(GaitSheet.Beat.Walk, 1f), 0.001f);
+            Assert.AreEqual(14f, PoseSheet.Lean(ZombieAI.ZombieState.Chase, 0f), 0.001f);
+        }
+
+        [Test]
+        public void SaveSlotsAndKeyRowsSpeakSpanish()
+        {
+            Assert.AreEqual("SAVES", MenuLine.Title("en"));
+            Assert.AreEqual("PARTIDAS", MenuLine.Title("es"));
+            Assert.AreEqual("Slot 1  day 4  Mara", MenuLine.Slot(1, 4, "Mara", true, "en"));
+            Assert.AreEqual("Ranura 1  día 4  Mara", MenuLine.Slot(1, 4, "Mara", true, "es"));
+            Assert.AreEqual("Slot 2  empty", MenuLine.Slot(2, 0, "", false, "en"));
+            Assert.AreEqual("Ranura 2  vacía", MenuLine.Slot(2, 9, "Mara", false, "es"));
+            Assert.AreEqual("Autosave  day 7  Ellis", MenuLine.Auto(7, "Ellis", "en"));
+            Assert.AreEqual("Autoguardado  día 7  Ellis", MenuLine.Auto(7, "Ellis", "es"));
+            Assert.AreEqual("Press a key for Reload", MenuLine.KeyWait("Reload", "en"));
+            Assert.AreEqual("Pulsa una tecla para Recargar", MenuLine.KeyWait("Reload", "es"));
+            Assert.AreEqual("Reload: R", MenuLine.KeyBound("Reload", "R", "en"));
+            Assert.AreEqual("Recargar: R", MenuLine.KeyBound("Reload", "R", "es"));
+            Assert.AreEqual("Press a button for Interact", MenuLine.PadWait("Interact", "en"));
+            Assert.AreEqual("Pulsa un botón para Interactuar", MenuLine.PadWait("Interact", "es"));
+            Assert.AreEqual("Pad Dodge: South", MenuLine.PadBound("Dodge", "South", "en"));
+            Assert.AreEqual("Mando Esquivar: South", MenuLine.PadBound("Dodge", "South", "es"));
+        }
+
+        [Test]
+        public void ARunnerClawOpensABleed()
+        {
+            Assert.IsTrue(ClawCut.Opens(true, 0.34f));
+            Assert.IsFalse(ClawCut.Opens(true, 0.35f));
+            Assert.IsFalse(ClawCut.Opens(false, 0f));
+            Assert.IsTrue(ClawCut.Opens(true, -1f));
+            Assert.IsFalse(ClawCut.Opens(true, 1f));
+            Assert.AreEqual(0.35f, ClawCut.RunnerBleed, 0.001f);
+            Assert.IsTrue(ClawCut.Infects(0.19f));
+            Assert.IsFalse(ClawCut.Infects(0.2f));
+            Assert.IsFalse(ClawCut.Infects(1f));
+            Assert.AreEqual(0.2f, ClawCut.BiteInfect, 0.001f);
+        }
+
+        [Test]
+        public void ASpentCasingCallsAnythingClose()
+        {
+            Assert.AreEqual(3.2f, ShellRing.Radius, 0.001f);
+            Assert.AreEqual(0.28f, ShellRing.Loud, 0.001f);
+            Assert.IsTrue(ShellRing.Calls(WeaponType.Pistol));
+            Assert.IsTrue(ShellRing.Calls(WeaponType.Shotgun));
+            Assert.IsTrue(ShellRing.Calls(WeaponType.Rifle));
+            Assert.IsTrue(ShellRing.Calls(WeaponType.SMG));
+            Assert.IsFalse(ShellRing.Calls(WeaponType.Melee));
+            Assert.Greater(ShellRing.Radius, 2f);
+            Assert.Less(ShellRing.Radius, 6f);
+            Assert.Less(ShellRing.Radius, BleedScent.Radius);
+            Assert.AreEqual("[Shell, east]", Presentation.Caption(NoiseType.ShellClink, 1f, 0f, "en"));
+            Assert.AreEqual("[Casquillo, este]", Presentation.Caption(NoiseType.ShellClink, 1f, 0f, "es"));
+            Assert.AreEqual("", Presentation.Caption(NoiseType.WalkFootstep, 1f, 0f, "en"));
+            Assert.IsFalse(StormCover.Masks(10f, 10.6f, NoiseType.ShellClink));
+        }
+
+        [Test]
+        public void ACraftRowAndAMoodSpeakSpanish()
+        {
+            Assert.AreEqual(CraftBill.Line("9mm (12)", 3, 0, 1, 0), CraftSay.Line("9mm (12)", 3, 0, 1, 0, "en"));
+            Assert.AreEqual("9mm (12)   chatarra 3   quím 1", CraftSay.Line("9mm (12)", 3, 0, 1, 0, "es"));
+            Assert.AreEqual("Craft   scrap 4   cloth 2   tape 1", CraftSay.Line("", 4, 2, 0, 1, "en"));
+            Assert.AreEqual("Fabricar   chatarra 4   tela 2   cinta 1", CraftSay.Line("", 4, 2, -3, 1, "es"));
+            Assert.AreEqual("Inspired", Loc.Mood(ColonyDay.Mood(80f), "en"));
+            Assert.AreEqual("Inspirado", Loc.Mood(ColonyDay.Mood(80f), "es"));
+            Assert.AreEqual("Steady", Loc.Mood("Steady", "en"));
+            Assert.AreEqual("Estable", Loc.Mood("Steady", "es"));
+            Assert.AreEqual("Colapso", Loc.Mood("Breakdown", "es"));
+            Assert.AreEqual("", Loc.Mood("", "es"));
+        }
+
+        [Test]
+        public void TheDayLineSpeaksSpanish()
+        {
+            Assert.AreEqual("Day 3  18:30", ClockFace.Read(3, 18.5f, "en"));
+            Assert.AreEqual("Día 3  18:30", ClockFace.Read(3, 18.5f, "es"));
+            Assert.AreEqual("Day 1  06:30", ClockFace.Read(1, 6.5f, "en"));
+            Assert.AreEqual("Day 1  00:00", ClockFace.Read(0, -2f, "en"));
+            Assert.AreEqual("Day 2  00:00", ClockFace.Read(2, 24f, "en"));
+            Assert.AreEqual("Day 4  morning watch", ClockFace.Morning(4, "en"));
+            Assert.AreEqual("Día 4  guardia de la mañana", ClockFace.Morning(4, "es"));
+            Assert.AreEqual("Day 1  morning watch", ClockFace.Morning(0, "en"));
+        }
+
+        [Test]
+        public void OpeningARationCallsAnythingClose()
+        {
+            Assert.IsTrue(RationNoise.Calls(12f, 0f));
+            Assert.IsTrue(RationNoise.Calls(0f, 20f));
+            Assert.IsFalse(RationNoise.Calls(0f, 0f));
+            Assert.IsFalse(RationNoise.Calls(-4f, 0f));
+            Assert.AreEqual(2.6f, RationNoise.Radius, 0.001f);
+            Assert.AreEqual(0.22f, RationNoise.Loud, 0.001f);
+            Assert.Greater(RationNoise.Radius, 2f);
+            Assert.Less(RationNoise.Radius, ShellRing.Radius);
+            Assert.AreEqual("[Bite, east]", Presentation.Caption(NoiseType.RationBite, 1f, 0f, "en"));
+            Assert.AreEqual("[Bocado, este]", Presentation.Caption(NoiseType.RationBite, 1f, 0f, "es"));
+            Assert.AreEqual("", Presentation.Caption(NoiseType.WalkFootstep, 1f, 0f, "en"));
+            Assert.IsTrue(ClipBook.Has("bite"));
+            Assert.AreEqual(6f, AudioSpace.MaxDistance("bite"), 0.001f);
+            Assert.IsFalse(StormCover.Masks(10f, 10.6f, NoiseType.RationBite));
+        }
+
+        [Test]
+        public void AMedkitAndAFeverFollowTheLanguage()
+        {
+            Assert.AreEqual("Medkit used  +50 HP", FieldHand.Dose(0));
+            Assert.AreEqual("Medkit used  +56 HP", FieldHand.Dose(4, "en"));
+            Assert.AreEqual("Medkit used  +60 HP", FieldHand.Dose(8, "en"));
+            Assert.AreEqual("Botiquín usado  +50 PS", FieldHand.Dose(0, "es"));
+            Assert.AreEqual("Botiquín usado  +56 PS", FieldHand.Dose(4, "es"));
+            Assert.AreEqual("Antibiotics won't help", FieldHand.Fail("en"));
+            Assert.AreEqual("Los antibióticos no sirven", FieldHand.Fail("es"));
+            Assert.AreEqual("The fever breaks", FieldHand.Breaks("en"));
+            Assert.AreEqual("La fiebre cede", FieldHand.Breaks("es"));
+            Assert.AreEqual("Painkillers", FieldHand.Relief("painkillers", "en"));
+            Assert.AreEqual("Analgésicos", FieldHand.Relief("painkillers", "es"));
+            Assert.AreEqual("Used Bandage", FieldHand.Spent("bandage", "en"));
+            Assert.AreEqual("Usado Vendaje", FieldHand.Spent("bandage", "es"));
+        }
+
+        [Test]
+        public void ABeltAndADropFollowTheLanguage()
+        {
+            Assert.AreEqual("Belt is full", PackSay.Full("en"));
+            Assert.AreEqual("El cinturón está lleno", PackSay.Full("es"));
+            Assert.AreEqual("Cleared belt", PackSay.Clear("en"));
+            Assert.AreEqual("Cinturón vacío", PackSay.Clear("es"));
+            Assert.AreEqual("Belt 5", PackSay.Slot(5, "en"));
+            Assert.AreEqual("Belt 5", PackSay.Slot(0, "en"));
+            Assert.AreEqual("Cinturón 8", PackSay.Slot(8, "es"));
+            Assert.AreEqual("Cinturón 8", PackSay.Slot(12, "es"));
+            Assert.AreEqual("Dropped Bandage", PackSay.Dropped("bandage", "", "en"));
+            Assert.AreEqual("Soltado Vendaje", PackSay.Dropped("bandage", "Bandage", "es"));
+            Assert.AreEqual("Dropped Spare", PackSay.Dropped("spare_widget", "Spare", "en"));
+            Assert.AreEqual("Dropped spare_widget", PackSay.Dropped("spare_widget", "", "en"));
+            Assert.AreEqual("Pack is full", PackSay.Pack("en"));
+            Assert.AreEqual("La mochila está llena", PackSay.Pack("es"));
+            Assert.AreEqual("Poisoned", PackSay.Poison("en"));
+            Assert.AreEqual("Envenenado", PackSay.Poison("es"));
+            Assert.AreEqual("Crafted Painkillers", PackSay.Made("painkillers", "Painkillers", "en"));
+            Assert.AreEqual("Fabricado Analgésicos", PackSay.Made("painkillers", "Painkillers", "es"));
+            Assert.AreEqual("Crafted Spare", PackSay.Made("spare_widget", "Spare", "en"));
+        }
+
+        [Test]
+        public void AGateAndACrateFollowTheLanguage()
+        {
+            Assert.AreEqual("Pack is too heavy", GateLine.Heavy("en"));
+            Assert.AreEqual("La mochila pesa demasiado", GateLine.Heavy("es"));
+            Assert.AreEqual("Left some loot behind", GateLine.Left("en"));
+            Assert.AreEqual("Quedó botín atrás", GateLine.Left("es"));
+            Assert.AreEqual("Container open", GateLine.Open("en"));
+            Assert.AreEqual("Contenedor abierto", GateLine.Open("es"));
+            Assert.AreEqual("Empty", GateLine.Empty("en"));
+            Assert.AreEqual("Vacío", GateLine.Empty("es"));
+            Assert.AreEqual("Pick an open district", GateLine.District("en"));
+            Assert.AreEqual("Elige un distrito abierto", GateLine.District("es"));
+            Assert.AreEqual("Dragged back to the gate", GateLine.Drag("en"));
+            Assert.AreEqual("Arrastrado a la puerta", GateLine.Drag("es"));
+            Assert.AreEqual("Objectives unfinished", GateLine.Quota("en"));
+            Assert.AreEqual("Objetivos sin cumplir", GateLine.Quota("es"));
+            Assert.AreEqual("They're too close", GateLine.Close("en"));
+            Assert.AreEqual("Están demasiado cerca", GateLine.Close("es"));
+            Assert.AreEqual("That road is still closed", GateLine.Road("en"));
+            Assert.AreEqual("Ese camino sigue cerrado", GateLine.Road("es"));
+            Assert.AreEqual("Radio part recovered", GateLine.Radio("en"));
+            Assert.AreEqual("Pieza de radio recuperada", GateLine.Radio("es"));
+            Assert.AreEqual("The broadcast is already out", GateLine.Broadcast("en"));
+            Assert.AreEqual("La emisión ya salió", GateLine.Broadcast("es"));
+            Assert.AreEqual("Extracted", GateLine.Extracted("en"));
+            Assert.AreEqual("Extraído", GateLine.Extracted("es"));
+            Assert.AreEqual("Save failed", GateLine.SaveFail("en"));
+            Assert.AreEqual("No se pudo guardar", GateLine.SaveFail("es"));
+            Assert.AreEqual("Game saved", GateLine.Saved("en"));
+            Assert.AreEqual("Partida guardada", GateLine.Saved("es"));
+            Assert.AreEqual("No save file", GateLine.NoFile("en"));
+            Assert.AreEqual("No hay partida", GateLine.NoFile("es"));
+            Assert.AreEqual("Save could not be read", GateLine.Unread("en"));
+            Assert.AreEqual("No se pudo leer la partida", GateLine.Unread("es"));
+            Assert.AreEqual("Save loaded", GateLine.Loaded("en"));
+            Assert.AreEqual("Partida cargada", GateLine.Loaded("es"));
+            Assert.AreEqual("Autosave loaded", GateLine.AutoLoaded("en"));
+            Assert.AreEqual("Autoguardado cargado", GateLine.AutoLoaded("es"));
+        }
+
+        [Test]
+        public void AYardLineFollowsTheLanguage()
+        {
+            Assert.AreEqual("Build mode: click the yard", YardSay.Mode(true, "en"));
+            Assert.AreEqual("Modo construir: pulsa el patio", YardSay.Mode(true, "es"));
+            Assert.AreEqual("Build mode off", YardSay.Mode(false, "en"));
+            Assert.AreEqual("Modo construir apagado", YardSay.Mode(false, "es"));
+            Assert.AreEqual("Facing 90", YardSay.Facing(90, "en"));
+            Assert.AreEqual("Orientación 0", YardSay.Facing(0, "es"));
+            Assert.AreEqual("Recovered 4 scrap", YardSay.Recovered(4, "en"));
+            Assert.AreEqual("Recovered 0 scrap", YardSay.Recovered(-2, "en"));
+            Assert.AreEqual("Recuperados 4 chatarra", YardSay.Recovered(4, "es"));
+            Assert.AreEqual("That square is taken", YardSay.Taken("en"));
+            Assert.AreEqual("Esa casilla está ocupada", YardSay.Taken("es"));
+            Assert.AreEqual("Need 8 camp scrap", YardSay.Need(8, "en"));
+            Assert.AreEqual("Need 0 camp scrap", YardSay.Need(-1, "en"));
+            Assert.AreEqual("Hacen falta 8 de chatarra", YardSay.Need(8, "es"));
+            Assert.AreEqual("Site marked Generator", YardSay.Marked("Generator", "en"));
+            Assert.AreEqual("Sitio marcado Generador", YardSay.Marked("Generator", "es"));
+            Assert.AreEqual("Site marked TradingPost", YardSay.Marked("TradingPost", "en"));
+            Assert.AreEqual("Sitio marcado Puesto", YardSay.Marked("TradingPost", "es"));
+            Assert.AreEqual("Site marked Relay", YardSay.Marked("Relay", "en"));
+            Assert.AreEqual("Generator is up", YardSay.Up("Generator", "en"));
+            Assert.AreEqual("Generador en pie", YardSay.Up("Generator", "es"));
+            Assert.AreEqual("Patched Barricade", YardSay.Mend("Barricade", true, "en"));
+            Assert.AreEqual("Parcheado Barricada", YardSay.Mend("Barricade", true, "es"));
+            Assert.AreEqual("Mended Cot", YardSay.Mend("Cot", false, "en"));
+            Assert.AreEqual("Arreglado Camilla", YardSay.Mend("Cot", false, "es"));
+            Assert.AreEqual("A barricade gave way", YardSay.Barricade("en"));
+            Assert.AreEqual("Una barricada cedió", YardSay.Barricade("es"));
+            Assert.AreEqual("The spikes broke", YardSay.Spikes("en"));
+            Assert.AreEqual("Los pinchos se rompieron", YardSay.Spikes("es"));
+            Assert.AreEqual("The oil catches", YardSay.Oil("en"));
+            Assert.AreEqual("El aceite prende", YardSay.Oil("es"));
+            Assert.AreEqual("Not enough camp supplies", YardSay.Short("en"));
+            Assert.AreEqual("Faltan suministros", YardSay.Short("es"));
+            Assert.AreEqual("Stores are full", YardSay.Stores("en"));
+            Assert.AreEqual("El almacén está lleno", YardSay.Stores("es"));
+            Assert.AreEqual("", YardSay.Kind("", "en"));
+        }
+
+        [Test]
+        public void ATakedownAndAGunOnTheGroundFollowTheLanguage()
+        {
+            Assert.AreEqual("Takedown", FightSay.Start("en"));
+            Assert.AreEqual("Derribo", FightSay.Start("es"));
+            Assert.AreEqual("Takedown slipped", FightSay.Slip("en"));
+            Assert.AreEqual("El derribo falló", FightSay.Slip("es"));
+            Assert.AreEqual("Down", FightSay.Down("en"));
+            Assert.AreEqual("Abajo", FightSay.Down("es"));
+            Assert.AreEqual("Pipe bomb burst", FightSay.Burst("en"));
+            Assert.AreEqual("La bomba de tubo estalló", FightSay.Burst("es"));
+            Assert.AreEqual("Flare lit", FightSay.Flare("en"));
+            Assert.AreEqual("Bengala encendida", FightSay.Flare("es"));
+            Assert.AreEqual("Already carrying that", FightSay.Held("en"));
+            Assert.AreEqual("Ya llevas eso", FightSay.Held("es"));
+            Assert.AreEqual("Took Tactical 9mm Pistol", FightSay.Took("pistol_9mm", "", "en"));
+            Assert.AreEqual("Tomaste Pistola táctica 9mm", FightSay.Took("pistol_9mm", "Tactical 9mm Pistol", "es"));
+            Assert.AreEqual("Took Remington 870 Shotgun", FightSay.Took("shotgun_pump", "", "en"));
+            Assert.AreEqual("Tomaste Escopeta Remington 870", FightSay.Took("shotgun_pump", "", "es"));
+            Assert.AreEqual("Took Assault Rifle", FightSay.Took("rifle_assault", "", "en"));
+            Assert.AreEqual("Tomaste Rifle de asalto", FightSay.Took("rifle_assault", "", "es"));
+            Assert.AreEqual("Took Compact SMG", FightSay.Took("smg", "", "en"));
+            Assert.AreEqual("Tomaste Subfusil compacto", FightSay.Took("smg", "", "es"));
+            Assert.AreEqual("Took Steel Machete", FightSay.Took("machete", "", "en"));
+            Assert.AreEqual("Tomaste Machete de acero", FightSay.Took("machete", "", "es"));
+            Assert.AreEqual("Took Relay Gun", FightSay.Took("relay", "Relay Gun", "en"));
+            Assert.AreEqual("Took relay", FightSay.Took("relay", "", "en"));
+            Assert.AreEqual("Swapped weapons", FightSay.Swap("en"));
+            Assert.AreEqual("Armas cambiadas", FightSay.Swap("es"));
+            Assert.AreEqual("The boards gave way", FightSay.Boards("en"));
+            Assert.AreEqual("Los tablones cedieron", FightSay.Boards("es"));
+            Assert.AreEqual("The roster is full", FightSay.Roster("en"));
+            Assert.AreEqual("La lista está llena", FightSay.Roster("es"));
+            Assert.AreEqual("The tower is not ready", FightSay.Tower("en"));
+            Assert.AreEqual("La torre no está lista", FightSay.Tower("es"));
+            Assert.AreEqual("The board could not be written", FightSay.Ledger("en"));
+            Assert.AreEqual("No se pudo escribir el tablero", FightSay.Ledger("es"));
+        }
+
+        [Test]
+        public void AStallToastFollowsTheLanguage()
+        {
+            Assert.AreEqual("No caravan until the next visit", StallVoice.Wait("en"));
+            Assert.AreEqual("No hay caravana hasta la próxima visita", StallVoice.Wait("es"));
+            Assert.AreEqual("Iron Militia will not trade", StallVoice.Refuse(StallVoice.Name("militia", "en"), "en"));
+            Assert.AreEqual("Milicia de Hierro no comercia", StallVoice.Refuse(StallVoice.Name("militia", "es"), "es"));
+            Assert.AreEqual("The merchant shakes their head", StallVoice.Shake("en"));
+            Assert.AreEqual("El mercader niega con la cabeza", StallVoice.Shake("es"));
+            Assert.AreEqual("The pack is full", StallVoice.Full("en"));
+            Assert.AreEqual("La mochila está llena", StallVoice.Full("es"));
+            Assert.AreEqual("Iron Militia deal sealed", StallVoice.Deal("militia", 0, "en"));
+            Assert.AreEqual("Iron Militia deal sealed  Rounds +4", StallVoice.Deal("militia", 4, "en"));
+            Assert.AreEqual("Milicia de Hierro trato cerrado", StallVoice.Deal("militia", -2, "es"));
+            Assert.AreEqual("La Caravana trato cerrado  Balas +6", StallVoice.Deal("caravan", 6, "es"));
+            Assert.AreEqual("No bandage to barter", StallVoice.NoBandage("en"));
+            Assert.AreEqual("No hay vendaje para trocar", StallVoice.NoBandage("es"));
+            Assert.AreEqual("Bartered a bandage for 3 scrap", StallVoice.Bartered(3, "en"));
+            Assert.AreEqual("Bartered a bandage for 0 scrap", StallVoice.Bartered(-1, "en"));
+            Assert.AreEqual("Cambiaste un vendaje por 3 chatarra", StallVoice.Bartered(3, "es"));
+            Assert.AreEqual("The Clinic wants 10 meds", StallVoice.Quest("clinic", false, "en"));
+            Assert.AreEqual("La Clínica pide 10 medicinas", StallVoice.Quest("clinic", false, "es"));
+            Assert.AreEqual("Clinic blueprint: field dressings", StallVoice.Blueprint("en"));
+            Assert.AreEqual("Plano de la Clínica: vendajes de campaña", StallVoice.Blueprint("es"));
+            Assert.AreEqual("Free Farmers remember the cleared nest", StallVoice.Nest("en"));
+            Assert.AreEqual("Los Granjeros Libres recuerdan el nido limpio", StallVoice.Nest("es"));
+            Assert.AreEqual("The Caravan made it through", StallVoice.Through("en"));
+            Assert.AreEqual("La Caravana logró pasar", StallVoice.Through("es"));
+            Assert.AreEqual("The Caravan is at the gate", StallVoice.Arrival("caravan", "en"));
+            Assert.AreEqual("La Caravana está en la puerta", StallVoice.Arrival("caravan", "es"));
+            Assert.AreEqual(CaravanBook.Display("clinic"), StallVoice.Name("clinic", "en"));
+        }
+
+        [Test]
+        public void AStreetPromptFollowsTheLanguage()
+        {
+            Assert.AreEqual("Search container", StreetAsk.Search("en"));
+            Assert.AreEqual("Busca el contenedor", StreetAsk.Search("es"));
+            Assert.AreEqual("Take from container", StreetAsk.Take("en"));
+            Assert.AreEqual("Coge del contenedor", StreetAsk.Take("es"));
+            Assert.AreEqual("Take the radio part", StreetAsk.Radio("en"));
+            Assert.AreEqual("Coge la pieza de radio", StreetAsk.Radio("es"));
+            Assert.AreEqual("Search the cache", StreetAsk.Cache("en"));
+            Assert.AreEqual("Busca el alijo", StreetAsk.Cache("es"));
+            Assert.AreEqual("Recover gear", StreetAsk.Gear("en"));
+            Assert.AreEqual("Recupera el equipo", StreetAsk.Gear("es"));
+            Assert.AreEqual("Step inside", DoorMap.Prompt(false));
+            Assert.AreEqual("Step outside", DoorMap.Prompt(true));
+            Assert.AreEqual("Entra", DoorMap.Prompt(false, "es"));
+            Assert.AreEqual("Sal", DoorMap.Prompt(true, "es"));
+            Assert.AreEqual("Find the cache", ObjectiveTracker.LineFor("cache", false));
+            Assert.AreEqual("Radio part stowed", ObjectiveTracker.LineFor("radio", true));
+            Assert.AreEqual("", ObjectiveTracker.LineFor("", false));
+            Assert.AreEqual("Busca el alijo", ObjectiveTracker.LineFor("cache", false, "es"));
+            Assert.AreEqual("Busca la pieza de radio", ObjectiveTracker.LineFor("radio", false, "es"));
+            Assert.AreEqual("Alijo registrado", ObjectiveTracker.LineFor("cache", true, "es"));
+            Assert.AreEqual("Pieza de radio guardada", ObjectiveTracker.LineFor("radio", true, "es"));
+            Assert.AreEqual("Bring Mara along", StreetAsk.Along("Mara", "en"));
+            Assert.AreEqual("Trae a Mara", StreetAsk.Along("Mara", "es"));
+            Assert.AreEqual("Bring Survivor along", StreetAsk.Along("", "en"));
+            Assert.AreEqual("Trae a Superviviente", StreetAsk.Along("Survivor", "es"));
+            Assert.AreEqual("Bring Mara to the gate", StreetAsk.ToGate("Mara", "en"));
+            Assert.AreEqual("Lleva a Mara a la puerta", StreetAsk.ToGate("Mara", "es"));
+            Assert.AreEqual("Mara is with you", StreetAsk.With("Mara", "en"));
+            Assert.AreEqual("Mara va contigo", StreetAsk.With("Mara", "es"));
+            Assert.AreEqual("Mara takes the gate", StreetAsk.Takes("Mara", "en"));
+            Assert.AreEqual("Mara toma la puerta", StreetAsk.Takes("Mara", "es"));
+            Assert.AreEqual("Back inside the gate", StreetAsk.Back("en"));
+            Assert.AreEqual("De vuelta en la puerta", StreetAsk.Back("es"));
+            Assert.AreEqual("Ash Market — Loot the stalls, watch the alleys", StreetAsk.Place("ash_market", "Ash Market", "Loot the stalls, watch the alleys", "en"));
+            Assert.AreEqual("Mercado de ceniza — Saquea los puestos, vigila los callejones", StreetAsk.Place("ash_market", "Ash Market", "Loot the stalls, watch the alleys", "es"));
+            Assert.AreEqual("Downtown Core — The tower site is past the plaza", StreetAsk.Place("downtown_core", "Downtown Core", "The tower site is past the plaza", "en"));
+            Assert.AreEqual("Centro — El sitio de la torre queda tras la plaza", StreetAsk.Place("downtown_core", "", "", "es"));
+            Assert.AreEqual("Relay — Still closed", StreetAsk.Place("relay", "Relay", "Still closed", "en"));
+        }
+
+        [Test]
+        public void ALoadingCardAndAKillTapeFollowTheLanguage()
+        {
+            Assert.AreEqual("WAKING THE GATE", SceneRoute.Title(FlowStep.Boot));
+            Assert.AreEqual("THE SANCTUARY", SceneRoute.Title(FlowStep.Sanctuary, "en"));
+            Assert.AreEqual("INTO THE DISTRICT", SceneRoute.Title(FlowStep.Expedition, "en"));
+            Assert.AreEqual("BACK INSIDE", SceneRoute.Title(FlowStep.Results, "en"));
+            Assert.AreEqual("OUTPOST ZERO", SceneRoute.Title(FlowStep.MainMenu, "en"));
+            Assert.AreEqual("DESPERTANDO LA PUERTA", SceneRoute.Title(FlowStep.Boot, "es"));
+            Assert.AreEqual("EL SANTUARIO", SceneRoute.Title(FlowStep.Sanctuary, "es"));
+            Assert.AreEqual("AL DISTRITO", SceneRoute.Title(FlowStep.Expedition, "es"));
+            Assert.AreEqual("DE VUELTA DENTRO", SceneRoute.Title(FlowStep.Results, "es"));
+            Assert.AreEqual("OUTPOST ZERO", SceneRoute.Title(FlowStep.MainMenu, "es"));
+            Assert.AreEqual(SceneRoute.Tips[0], SceneRoute.Tip(FlowStep.Boot, 0));
+            Assert.AreEqual(SceneRoute.Tips[0], SceneRoute.Tip(FlowStep.Boot, 0, "en"));
+            Assert.AreEqual("El ruido llega más lejos que el disparo.", SceneRoute.Tip(FlowStep.Boot, 0, "es"));
+            Assert.AreEqual(SceneRoute.Tips[9], SceneRoute.Tip(FlowStep.Expedition, 0, "en"));
+            Assert.AreEqual("Los barriles de aceite, tóxicos y de pólvora encadenan si los rompes.", SceneRoute.Tip(FlowStep.Expedition, 0, "es"));
+            Assert.AreEqual("Walker", KillTape.Name("walker"));
+            Assert.AreEqual("Runner\nBrute\nWalker", KillTape.Show("Runner\nBrute\nWalker", "en"));
+            Assert.AreEqual("Corredor\nBruto\nCaminante", KillTape.Show("Runner\nBrute\nWalker", "es"));
+            Assert.AreEqual("Relay", KillTape.Show("Relay", "es"));
+            Assert.AreEqual("", KillTape.Show("", "es"));
+            Assert.AreEqual("Take Assault Rifle", FightSay.Lift("rifle_assault", "Assault Rifle", "en"));
+            Assert.AreEqual("Llevar Rifle de asalto", FightSay.Lift("rifle_assault", "Assault Rifle", "es"));
+            Assert.AreEqual("Take Tactical 9mm Pistol", FightSay.Lift("pistol_9mm", "", "en"));
+        }
+
+        [Test]
+        public void ACompassMarkFollowsTheLanguage()
+        {
+            Assert.AreEqual("N   Gate right", StreetHeading.Readout(0f, 1f, 0f, 0f, false, 0f, 0f, true, 10f, 0f));
+            Assert.AreEqual("N   Gate behind", StreetHeading.Readout(0f, 1f, 0f, 0f, false, 0f, 0f, true, 0f, -10f));
+            Assert.AreEqual("E   POI left", StreetHeading.Readout(1f, 0f, 0f, 0f, true, 0f, 12f, false, 0f, 0f));
+            Assert.AreEqual("N   Puerta derecha", StreetHeading.Readout(0f, 1f, 0f, 0f, false, 0f, 0f, true, 10f, 0f, "es"));
+            Assert.AreEqual("N   Puerta detrás", StreetHeading.Readout(0f, 1f, 0f, 0f, false, 0f, 0f, true, 0f, -10f, "es"));
+            Assert.AreEqual("E   Punto izquierda", StreetHeading.Readout(1f, 0f, 0f, 0f, true, 0f, 12f, false, 0f, 0f, "es"));
+            Assert.AreEqual("Gate front", StreetHeading.Mark("Gate", 0f, "en"));
+            Assert.AreEqual("Puerta frente", StreetHeading.Mark("Puerta", 0f, "es"));
+            Assert.AreEqual("front", StreetHeading.Sector(0f));
+        }
+
+        [Test]
+        public void AWeaponNameOnTheStreetFollowsTheLanguage()
+        {
+            Assert.AreEqual("> 1  Pistol", WeaponWheel.Row(0, "Pistol", true));
+            Assert.AreEqual("  3  empty", WeaponWheel.Row(2, "", false));
+            Assert.AreEqual("  3  vacío", WeaponWheel.Row(2, "", false, "es"));
+            Assert.AreEqual("> 1  Rifle de asalto", WeaponWheel.Row(0, FightSay.Gun("rifle_assault", "Assault Rifle", "es"), true, "es"));
+            Assert.AreEqual("Assault Rifle", FightSay.Gun("rifle_assault", "Assault Rifle", "en"));
+            Assert.AreEqual("Rifle de asalto", FightSay.Gun("rifle_assault", "Assault Rifle", "es"));
+            Assert.AreEqual("Steel Machete", FightSay.Gun("machete", "Steel Machete", "en"));
+            Assert.AreEqual("Machete de acero", FightSay.Gun(WeaponCard.IdFor(WeaponType.Melee), "Steel Machete", "es"));
+        }
+
+        [Test]
+        public void AFinishedRunAndAFrameCapFollowTheLanguage()
+        {
+            var held = RunBoard.Make("Bo", 9, 2, 0, 3, true);
+            var fell = RunBoard.Make("Ada", 3, 4, 1, 1, false);
+            Assert.AreEqual("Held  day 9  kills 2  lost 0  streets 3", RunBoard.Line(held));
+            Assert.AreEqual("Fell  day 3  kills 4  lost 1  streets 1", RunBoard.Line(fell, "en"));
+            Assert.AreEqual("Aguantó  día 9  bajas 2  perdidos 0  calles 3", RunBoard.Line(held, "es"));
+            Assert.AreEqual("Cayó  día 3  bajas 4  perdidos 1  calles 1", RunBoard.Line(fell, "es"));
+            Assert.AreEqual("Auto", PlayOptions.FrameName(0));
+            Assert.AreEqual("30 fps", PlayOptions.FrameName(1, "en"));
+            Assert.AreEqual("60 fps", PlayOptions.FrameName(2, "es"));
+            Assert.AreEqual("120 fps", PlayOptions.FrameName(3));
+            Assert.AreEqual("Uncapped", PlayOptions.FrameName(4, "en"));
+            Assert.AreEqual("Sin tope", PlayOptions.FrameName(4, "es"));
+            Assert.AreEqual("Auto", PlayOptions.FrameName(-1, "es"));
+        }
+
+        [Test]
+        public void AWatchPageFollowsTheLanguage()
+        {
+            Assert.AreEqual("Chase  Player  1.3", AiWatch.Line("Chase", "Player", 1.26f));
+            Assert.AreEqual("Chase  -  0.0", AiWatch.Line("Chase", "", -1f, "en"));
+            Assert.AreEqual("Persecución  Jugador  1.3", AiWatch.Line("Chase", "Player", 1.26f, "es"));
+            Assert.AreEqual("Investiga  Mara  0.0", AiWatch.Line("InvestigateNoise", "Mara", 0f, "es"));
+            Assert.AreEqual("Ataque  -  2.0", AiWatch.Line("Attack", "", 2f, "es"));
+            bool wasOpen = AiWatch.Open;
+            if (!AiWatch.Open) AiWatch.Toggle();
+            Assert.AreEqual("watch", AiWatch.Page(null, 6));
+            Assert.AreEqual("vigía", AiWatch.Page(null, 6, "es"));
+            Assert.AreEqual("watch\nChase  Player  1.3", AiWatch.Page(new[] { "Chase  Player  1.3" }, 6, "en"));
+            if (AiWatch.Open != wasOpen) AiWatch.Toggle();
+            VfxLedger.Reset();
+            VfxLedger.Borrow();
+            StringAssert.StartsWith("vfx 1  peak 1  pooled ", VfxLedger.Line());
+            StringAssert.StartsWith("efectos 1  pico 1  en reserva ", VfxLedger.Line("es"));
+            VfxLedger.Reset();
+        }
+
+        [Test]
+        public void AnExtractLineNamesTheStreetInTheLanguage()
+        {
+            Assert.AreEqual("Street  kills 0/1  scrap 0/1", ExtractSlip.Line("", -2, 0, -4, 0, "", ""));
+            Assert.AreEqual("Ash Market", ExtractSlip.Place("ash_market", "en"));
+            Assert.AreEqual("Mercado de ceniza", ExtractSlip.Place("ash_market", "es"));
+            Assert.AreEqual("Street", ExtractSlip.Place("", "en"));
+            Assert.AreEqual("Calle", ExtractSlip.Place("", "es"));
+            Assert.AreEqual("Relay", ExtractSlip.Place("Relay", "en"));
+            Assert.AreEqual("Mercado de ceniza  bajas 3/8  chatarra 4/15", ExtractSlip.Line(ExtractSlip.Place("ash_market", "es"), 3, 8, 4, 15, "bajas", "chatarra"));
+            Assert.AreEqual("Ash Market  kills 8/8  scrap 15/15", ExtractSlip.Line(ExtractSlip.Place("ash_market", "en"), 8, 8, 15, 15, "kills", "scrap"));
+        }
+
+        [Test]
+        public void ADayNoteFollowsTheLanguage()
+        {
+            Assert.AreEqual("A death in the camp", NoteSay.One("grief", "en"));
+            Assert.AreEqual("Una muerte en el campamento", NoteSay.One("grief", "es"));
+            Assert.AreEqual("A fever spread, The pot cooked", NoteSay.Read("fever, stew", "en"));
+            Assert.AreEqual("Una fiebre se extendió, La olla cocinó", NoteSay.Read("fever, stew", "es"));
+            Assert.AreEqual("Someone is on their feet", NoteSay.Read("recovery", "en"));
+            Assert.AreEqual("Alguien se levanta", NoteSay.Read("recovery", "es"));
+            Assert.AreEqual("A friendship formed", NoteSay.One("friendship", "en"));
+            Assert.AreEqual("Nació una amistad", NoteSay.One("friendship", "es"));
+            Assert.AreEqual("An argument at the table", NoteSay.One("argument", "en"));
+            Assert.AreEqual("Una discusión en la mesa", NoteSay.One("argument", "es"));
+            Assert.AreEqual("Someone broke", NoteSay.One("breakdown", "en"));
+            Assert.AreEqual("Alguien se quebró", NoteSay.One("breakdown", "es"));
+            Assert.AreEqual("The camp celebrated", NoteSay.One("celebration", "en"));
+            Assert.AreEqual("El campamento celebró", NoteSay.One("celebration", "es"));
+            Assert.AreEqual("", NoteSay.Read("", "en"));
+            Assert.AreEqual("relay", NoteSay.Read("relay", "es"));
+        }
+
+        [Test]
+        public void StreetLampsFollowTheDarkAndNoonStaysOut()
+        {
+            Assert.AreEqual(0f, DayNightCycle.HourToNight(12f), 0.001f);
+            Assert.AreEqual(1f, DayNightCycle.HourToNight(23f), 0.001f);
+            Assert.AreEqual(0f, LampClock.Factor(0f), 0.001f);
+            Assert.AreEqual(0f, LampClock.Factor(-1f), 0.001f);
+            Assert.AreEqual(1f, LampClock.Factor(1f), 0.001f);
+            Assert.AreEqual(1f, LampClock.Factor(2f), 0.001f);
+            Assert.AreEqual(0.5f, LampClock.Factor(0.5f), 0.001f);
+            Assert.AreEqual(0f, LampClock.Glow(0f, 0.7f), 0.001f);
+            Assert.AreEqual(0.7f, LampClock.Glow(1f, 0.7f), 0.001f);
+            Assert.AreEqual(1.4f, LampClock.Glow(1f, 1.4f), 0.001f);
+            Assert.AreEqual(0.7f, LampClock.Glow(0.5f, 1.4f), 0.001f);
+            Assert.AreEqual(0f, LampClock.Resolve(0f, 12f), 0.001f);
+            Assert.AreEqual(1f, LampClock.Resolve(0f, 23f), 0.001f);
+            Assert.AreEqual(1f, LampClock.Resolve(1f, 12f), 0.001f);
+            Assert.Greater(LampClock.Resolve(0f, 18.5f), 0.4f);
+        }
+
+        [Test]
+        public void ASodiumLampFlickersAndAWreckTradesItsLamps()
+        {
+            Assert.AreEqual(9f, SodiumLamp.Range, 0.001f);
+            Assert.AreEqual(1f, SodiumLamp.Tint.r, 0.001f);
+            Assert.AreEqual(184f / 255f, SodiumLamp.Tint.g, 0.001f);
+            Assert.AreEqual(112f / 255f, SodiumLamp.Tint.b, 0.001f);
+            Assert.IsTrue(SodiumLamp.Dead(0));
+            Assert.IsTrue(SodiumLamp.Dead(1));
+            Assert.IsTrue(SodiumLamp.Dead(2));
+            Assert.IsFalse(SodiumLamp.Dead(3));
+            Assert.IsFalse(SodiumLamp.Dead(9));
+            Assert.IsTrue(SodiumLamp.Dead(10));
+            Assert.IsTrue(SodiumLamp.Dead(-1));
+            Assert.AreEqual(1f, SodiumLamp.Flicker(0f, false), 0.001f);
+            Assert.AreEqual(0.78f, SodiumLamp.Flicker(0.28f, false), 0.001f);
+            Assert.AreEqual(0f, SodiumLamp.Flicker(0.28f, true), 0.001f);
+            Assert.AreEqual(1f, SodiumLamp.Flicker(0.1f, false), 0.001f);
+            Assert.AreEqual(1f, FirePulse.Scale(0f, true), 0.001f);
+            Assert.AreEqual(1.18f, FirePulse.Scale(0.1125f, true), 0.001f);
+            Assert.AreEqual(0.82f, FirePulse.Scale(0.3375f, true), 0.001f);
+            Assert.AreEqual(0f, FirePulse.Scale(1f, false), 0.001f);
+            Assert.AreEqual(1.6f, FirePulse.Peak, 0.001f);
+            Assert.IsTrue(HazardBlink.Lit(0f, true));
+            Assert.IsTrue(HazardBlink.Lit(0.27f, true));
+            Assert.IsFalse(HazardBlink.Lit(0.28f, true));
+            Assert.IsFalse(HazardBlink.Lit(0.69f, true));
+            Assert.IsTrue(HazardBlink.Lit(0.7f, true));
+            Assert.IsFalse(HazardBlink.Lit(0f, false));
+            Assert.IsTrue(HazardBlink.Left(0f, true));
+            Assert.IsFalse(HazardBlink.Right(0f, true));
+            Assert.IsFalse(HazardBlink.Left(0.4f, true));
+            Assert.IsTrue(HazardBlink.Right(0.4f, true));
+            Assert.IsFalse(HazardBlink.Right(0f, false));
+        }
+
+        [Test]
+        public void TheFlashlightShowsAConeAndWallsKeepTheirShadow()
+        {
+            float rim = 8f * Mathf.Tan(31f * Mathf.Deg2Rad);
+            Assert.AreEqual(rim, LampShaft.Radius(LampShaft.Length, LampCookie.Outer), 0.0001f);
+            Assert.AreEqual(0f, LampShaft.Radius(0f, 62f), 0.001f);
+            Assert.AreEqual(0f, LampShaft.Radius(8f, 0f), 0.001f);
+            Assert.AreEqual(13, LampShaft.VertexCount(LampShaft.Sides));
+            Assert.AreEqual(36, LampShaft.IndexCount(LampShaft.Sides));
+            Assert.AreEqual(1f, LampShaft.Fade(0f), 0.001f);
+            Assert.AreEqual(0.25f, LampShaft.Fade(0.5f), 0.001f);
+            Assert.AreEqual(0f, LampShaft.Fade(1f), 0.001f);
+            Assert.AreEqual(0.22f, LampShaft.Alpha, 0.001f);
+            Assert.AreEqual(2, ShadowRig.Cascades);
+            Assert.AreEqual(0.2f, ShadowRig.Near, 0.001f);
+            Assert.IsTrue(WallSeal.Casts("Building_Storefront_NW"));
+            Assert.IsTrue(WallSeal.Casts("Building_Warehouse_NE"));
+            Assert.IsFalse(WallSeal.Casts("StreetLamp_NW"));
+            Assert.IsFalse(WallSeal.Casts(""));
+            Assert.AreEqual(18f, QualityProfile.For(0).ShadowDistance, 0.001f);
+            Assert.AreEqual(45f, QualityProfile.For(1).ShadowDistance, 0.001f);
+        }
+
+        [Test]
+        public void NightBringsAMoonAndTheQuotaPullsDuskForward()
+        {
+            Assert.AreEqual(0f, DayNightCycle.HourToNight(12f), 0.001f);
+            Assert.AreEqual(1f, DayNightCycle.HourToNight(23f), 0.001f);
+            Assert.AreEqual(1.15f, SkyGrade.Sun(0f), 0.001f);
+            Assert.AreEqual(0.15f, SkyGrade.Sun(1f), 0.001f);
+            Assert.AreEqual(0.65f, SkyGrade.Sun(0.5f), 0.001f);
+            Assert.AreEqual(0.08f, SkyGrade.NightSky.b, 0.001f);
+            Assert.Less(SkyGrade.NightSky.r, SkyGrade.NightSky.b);
+            Assert.IsTrue(SkyGrade.NightSky == SkyGrade.Sky(1f));
+            Assert.AreEqual(SkyGrade.DaySky, SkyGrade.Sky(0f));
+            Assert.AreEqual(1.05f, SkyGrade.Exposure(0f), 0.001f);
+            Assert.AreEqual(0.35f, SkyGrade.Exposure(1f), 0.001f);
+            Assert.AreEqual(0f, SkyGrade.Job(0f, 8f, 0f, 15f), 0.001f);
+            Assert.AreEqual(1f, SkyGrade.Job(8f, 8f, 15f, 15f), 0.001f);
+            Assert.AreEqual(0.5f, SkyGrade.Job(4f, 8f, 7.5f, 15f), 0.001f);
+            Assert.AreEqual(0f, SkyGrade.JobNight(0.69f), 0.001f);
+            Assert.AreEqual(0f, SkyGrade.JobNight(0.70f), 0.001f);
+            Assert.AreEqual(0.5f, SkyGrade.JobNight(0.85f), 0.001f);
+            Assert.AreEqual(1f, SkyGrade.JobNight(1f), 0.001f);
+            Assert.AreEqual(1f, SkyGrade.JobNight(1.4f), 0.001f);
+        }
+
+        [Test]
+        public void ADistrictBlockGetsOneProbeAndTheYardKeepsASixMeterGrid()
+        {
+            Assert.AreEqual(6f, ProbeGrid.Step, 0.001f);
+            Assert.AreEqual(128, ProbeGrid.Resolution);
+            Assert.AreEqual(1.6f, ProbeGrid.Eye, 0.001f);
+            Assert.AreEqual(1, ProbeGrid.Span(0f, 0f));
+            Assert.AreEqual(3, ProbeGrid.Span(-6f, 6f));
+            Assert.AreEqual(11, ProbeGrid.Span(ProbeGrid.YardMin, ProbeGrid.YardMax));
+            var local = ProbeGrid.Lights(-6f, 6f, -6f, 6f);
+            Assert.AreEqual(9, local.Length);
+            Assert.AreEqual(-6f, local[0].x, 0.001f);
+            Assert.AreEqual(1.6f, local[0].y, 0.001f);
+            Assert.AreEqual(-6f, local[0].z, 0.001f);
+            Assert.AreEqual(0f, local[4].x, 0.001f);
+            Assert.AreEqual(0f, local[4].z, 0.001f);
+            var yard = ProbeGrid.Lights(ProbeGrid.YardMin, ProbeGrid.YardMax, ProbeGrid.YardMin, ProbeGrid.YardMax);
+            Assert.AreEqual(121, yard.Length);
+            Assert.AreEqual(new Vector3(-4f, 1.6f, 2f), ProbeGrid.Center(-8f, 0f, -4f, 8f));
+            var box = ProbeGrid.Box(-14f, 0f, -10f, 16f);
+            Assert.AreEqual(16f, box.x, 0.001f);
+            Assert.AreEqual(8f, box.y, 0.001f);
+            Assert.AreEqual(28f, box.z, 0.001f);
+            var tight = ProbeGrid.Box(1f, 2f, 3f, 4f);
+            Assert.AreEqual(8f, tight.x, 0.001f);
+            Assert.AreEqual(8f, tight.z, 0.001f);
+        }
+
+        [Test]
+        public void ASpareGunBreaksIntoScrapAtTheBench()
+        {
+            Assert.IsFalse(StripYield.Can(1, false, true));
+            Assert.IsFalse(StripYield.Can(2, true, true));
+            Assert.IsFalse(StripYield.Can(2, false, false));
+            Assert.IsTrue(StripYield.Can(2, false, true));
+            Assert.AreEqual(8, StripYield.Scrap("pistol_9mm"));
+            Assert.AreEqual(0, StripYield.Chemicals("pistol_9mm"));
+            Assert.AreEqual(12, StripYield.Scrap("shotgun_pump"));
+            Assert.AreEqual(1, StripYield.Chemicals("shotgun_pump"));
+            Assert.AreEqual(16, StripYield.Scrap("rifle_assault"));
+            Assert.AreEqual(1, StripYield.Chemicals("rifle_assault"));
+            Assert.AreEqual(10, StripYield.Scrap("smg"));
+            Assert.AreEqual(1, StripYield.Chemicals("smg"));
+            Assert.AreEqual(0, StripYield.Scrap("machete"));
+            Assert.AreEqual(0, StripYield.Scrap(""));
+            Assert.IsTrue(StripYield.RoomFor(0, 80, 8, 0));
+            Assert.IsTrue(StripYield.RoomFor(0, 80, 16, 1));
+            Assert.IsFalse(StripYield.RoomFor(80, 80, 8, 0));
+            Assert.IsFalse(StripYield.RoomFor(76, 80, 8, 1));
+            Assert.AreEqual("Desguazar arma", Loc.T("camp.strip", "es"));
+            Assert.AreEqual("Guarda un arma", Loc.T("camp.strip_none", "es"));
+            Assert.AreEqual("El almacén está lleno", Loc.T("camp.strip_full", "es"));
+            Assert.AreEqual("Piezas recuperadas", Loc.T("camp.strip_ok", "es"));
+        }
+
+        [Test]
+        public void ADeepBuilderRaisesExtraAndAFourthShiftDoesNot()
+        {
+            Assert.AreEqual(0, BuildDepth.Raise(4));
+            Assert.AreEqual(0, BuildDepth.Raise(0));
+            Assert.AreEqual(0, BuildDepth.Raise(-1));
+            Assert.AreEqual(1, BuildDepth.Raise(5));
+            Assert.AreEqual(4, BuildDepth.Raise(8));
+            Assert.AreEqual(4, BuildDepth.Raise(12));
+            Assert.AreEqual(1, Practice.Bonus(4));
+            Assert.AreEqual(1, Practice.Bonus(8));
+            Assert.AreEqual(2, BuildSite.Shift("Field Engineer", 40f));
+            Assert.AreEqual(1, BuildSite.Shift("Steady Hands", 40f));
+            Assert.AreEqual(0, BuildSite.Shift("Steady Hands", 5f));
+            int trained = BuildSite.Shift("Steady Hands", 40f) + Practice.Bonus(4) + BuildDepth.Raise(4);
+            int deep = BuildSite.Shift("Steady Hands", 40f) + Practice.Bonus(8) + BuildDepth.Raise(8);
+            Assert.AreEqual(2, trained);
+            Assert.AreEqual(6, deep);
+            BuildSite.Work(1, 0, 4, trained, out int site, out int hours, out bool done);
+            Assert.AreEqual(1, site);
+            Assert.AreEqual(2, hours);
+            Assert.IsFalse(done);
+            BuildSite.Work(1, 0, 4, deep, out site, out hours, out done);
+            Assert.AreEqual(0, site);
+            Assert.AreEqual(4, hours);
+            Assert.IsTrue(done);
+        }
+
+        [Test]
+        public void ACampMateSquatsAtRestAndSwingsAtTheWall()
+        {
+            Assert.AreEqual(22f, YardPose.Lean("Rest", 1f), 0.001f);
+            Assert.AreEqual(0.72f, YardPose.Scale("Rest"), 0.001f);
+            Assert.AreEqual(1f, YardPose.Scale("Guard"), 0.001f);
+            Assert.AreEqual(-8f, YardPose.Lean("Guard", 0.4f), 0.001f);
+            Assert.AreEqual(0f, YardPose.Stir(0f), 0.001f);
+            Assert.AreEqual(0.5f, YardPose.Stir(0.2f), 0.001f);
+            Assert.AreEqual(1f, YardPose.Stir(0.4f), 0.001f);
+            Assert.AreEqual(28f, YardPose.Lean("Build", 0.4f), 0.001f);
+            Assert.AreEqual(14f, YardPose.Lean("Cook", 0.4f), 0.001f);
+            Assert.AreEqual(18f, YardPose.Lean("Clear", 0.4f), 0.001f);
+            Assert.AreEqual(16f, YardPose.Lean("Medic", 0.2f), 0.001f);
+            Assert.AreEqual(10f, YardPose.Lean("Scavenge", 0.2f), 0.001f);
+            Assert.AreEqual(0f, YardPose.Lean("Lead", 0.4f), 0.001f);
+            Assert.AreEqual(0f, YardPose.Lean(null, 0.4f), 0.001f);
+        }
+
+        [Test]
+        public void ALampCellDiesAndAnOldSaveStartsFull()
+        {
+            Assert.AreEqual(96f, LampCell.Tick(100f, true, 1f), 0.001f);
+            Assert.AreEqual(0f, LampCell.Tick(4f, true, 1f), 0.001f);
+            Assert.AreEqual(0f, LampCell.Tick(0f, true, 1f), 0.001f);
+            Assert.AreEqual(2f, LampCell.Tick(0f, false, 1f), 0.001f);
+            Assert.AreEqual(100f, LampCell.Tick(99f, false, 1f), 0.001f);
+            Assert.AreEqual(50f, LampCell.Tick(50f, true, 0f), 0.001f);
+            Assert.AreEqual(50f, LampCell.Tick(50f, true, -1f), 0.001f);
+            Assert.IsFalse(LampCell.Live(0f));
+            Assert.IsFalse(LampCell.Live(0.5f));
+            Assert.IsTrue(LampCell.Live(0.51f));
+            Assert.AreEqual(1f, LampCell.Beam(100f), 0.001f);
+            Assert.AreEqual(0f, LampCell.Beam(0f), 0.001f);
+            Assert.AreEqual(0.675f, LampCell.Beam(50f), 0.001f);
+            Assert.AreEqual(2.8f, LampCell.Intensity(100f), 0.001f);
+            Assert.AreEqual(0f, LampCell.Intensity(0f), 0.001f);
+            Assert.AreEqual(0f, LampCell.Spent(100f), 0.001f);
+            Assert.AreEqual(60f, LampCell.Spent(40f), 0.001f);
+            Assert.AreEqual(100f, LampCell.FromSpent(0f), 0.001f);
+            Assert.AreEqual(0f, LampCell.FromSpent(100f), 0.001f);
+            Assert.AreEqual(100f, LampCell.FromSpent(-4f), 0.001f);
+            Assert.AreEqual(1f, SpotRange.Exposure(true, false, true, 1f, 0f), 0.001f);
+            Assert.IsTrue(SaveCodec.TryDeserialize("{\"schemaVersion\":1}", out var legacy, out var error), error);
+            Assert.AreEqual(0f, legacy.lampSpent, 0.001f);
+            Assert.AreEqual(100f, LampCell.FromSpent(legacy.lampSpent), 0.001f);
+            Assert.AreEqual("Linterna", Loc.T("hud.lamp", "es"));
+        }
+
+        [Test]
+        public void ALampCellFromTheBenchFillsSixtyAndTheStreetStaysPut()
+        {
+            var cell = ItemCatalog.Find("cell");
+            Assert.IsNotNull(cell);
+            Assert.AreEqual(ItemUse.Cell, cell.Use);
+            Assert.AreEqual(0.15f, cell.Weight, 0.001f);
+            Assert.AreEqual("Fills the lamp by 60", ItemBrief.Effect(cell));
+            Assert.AreEqual("Pila", Loc.Item("cell", "es"));
+            Assert.AreEqual("Llena la linterna 60", Loc.T("unit.cell", "es"));
+            Assert.AreEqual(60f, LampCell.Pack, 0.001f);
+            Assert.AreEqual(60f, LampCell.Fill(0f, LampCell.Pack), 0.001f);
+            Assert.AreEqual(100f, LampCell.Fill(50f, LampCell.Pack), 0.001f);
+            Assert.AreEqual(100f, LampCell.Fill(100f, LampCell.Pack), 0.001f);
+            Assert.AreEqual(40f, LampCell.Fill(40f, 0f), 0.001f);
+            Assert.IsTrue(LampCell.Tops(100f));
+            Assert.IsFalse(LampCell.Tops(99f));
+            Assert.AreEqual(96f, LampCell.Tick(100f, true, 1f), 0.001f);
+            Assert.IsTrue(CraftBill.TryOf("cell", out var bill));
+            Assert.AreEqual(3, bill.Scrap);
+            Assert.AreEqual(1, bill.Chemicals);
+            Assert.AreEqual(0, bill.Cloth);
+            Assert.AreEqual(CraftBill.Workbench, bill.Station);
+            Assert.AreEqual(1, CraftGate.TierOf("cell"));
+            Assert.IsTrue(CraftGate.Open("cell", 1, ""));
+            Assert.AreEqual("Pila", Loc.T("recipe.cell", "es"));
+            var street = LootTables.Roll("street", 2);
+            Assert.AreEqual(7, street.Length);
+            Assert.AreEqual("raw_food", street[6].ItemId);
+            Assert.AreEqual("pipe_bomb", street[5].ItemId);
+        }
+
+        [Test]
+        public void ABeltMolotovLeavesTheHandAndACellStaysInThePack()
+        {
+            Assert.AreEqual(TossKind.Fire, TossKind.Of("molotov"));
+            Assert.AreEqual(TossKind.Lure, TossKind.Of("noise_lure"));
+            Assert.AreEqual(TossKind.Flare, TossKind.Of("flare"));
+            Assert.AreEqual(TossKind.Bomb, TossKind.Of("pipe_bomb"));
+            Assert.AreEqual(TossKind.None, TossKind.Of("cell"));
+            Assert.AreEqual(TossKind.None, TossKind.Of("medkit"));
+            Assert.AreEqual(TossKind.None, TossKind.Of(null));
+            Assert.AreEqual(TossKind.None, TossKind.Of(""));
+            Assert.IsTrue(TossKind.Throws("molotov"));
+            Assert.IsFalse(TossKind.Throws("cell"));
+            Assert.AreEqual(18f, ThrowArc.NoiseRadius(false), 0.01f);
+            Assert.AreEqual(42f, PipeBlast.Damage, 0.001f);
+            Assert.AreEqual(1.2f, PipeBlast.Fuse, 0.001f);
+            Assert.AreEqual(20f, FlareClock.Duration, 0.001f);
+            Assert.AreEqual("Nada que lanzar", Loc.T("toss.none", "es"));
+            Assert.AreEqual(28f, FirePatch.Burst, 0.001f);
+            Assert.AreEqual(3.2f, FirePatch.BurstRadius, 0.001f);
+            Assert.IsTrue(FirePatch.Hot(0f));
+            Assert.IsTrue(FirePatch.Hot(3.9f));
+            Assert.IsFalse(FirePatch.Hot(4f));
+            Assert.IsFalse(FirePatch.Hot(-0.1f));
+            Assert.IsTrue(FirePatch.Inside(2.4f));
+            Assert.IsFalse(FirePatch.Inside(2.41f));
+            Assert.IsFalse(FirePatch.Inside(-1f));
+            Assert.IsTrue(FirePatch.TickDue(-1f, 0f));
+            Assert.IsFalse(FirePatch.TickDue(0f, 0.4f));
+            Assert.IsTrue(FirePatch.TickDue(0f, 0.5f));
+            Assert.IsFalse(FirePatch.TickDue(3.6f, 4f));
+            Assert.AreEqual(6f, FirePatch.Damage, 0.001f);
+            Assert.AreEqual(14f, OilBurn.Damage, 0.001f);
+            Assert.AreEqual(8f, OilBurn.Duration, 0.001f);
+            Assert.AreEqual(42f, PipeBlast.Damage, 0.001f);
+            Assert.AreEqual(4.2f, PipeBlast.Radius, 0.001f);
+            Assert.AreEqual(1.6f, PipeBlast.Shove, 0.001f);
+            Assert.AreEqual(0.55f, PipeBlast.Stun, 0.001f);
+            Assert.AreEqual(0.55f, HitStun.Resist(PipeBlast.Stun, false), 0.001f);
+            Assert.AreEqual(0.165f, HitStun.Resist(PipeBlast.Stun, true), 0.001f);
+            Assert.IsTrue(BlastBall.Shows(HazardKind.Explosive));
+            Assert.IsTrue(BlastWake.Ring(HazardKind.Explosive));
+            Assert.IsFalse(BlastBall.Shows(HazardKind.Oil));
+            var street = LootTables.Roll("street", 2);
+            Assert.AreEqual(7, street.Length);
+            Assert.AreEqual("raw_food", street[6].ItemId);
+        }
+
+        [Test]
+        public void ADeepScavengerBringsExtraScrapAndSometimesACell()
+        {
+            Assert.AreEqual(0, ScrapDepth.Extra(4));
+            Assert.AreEqual(0, ScrapDepth.Extra(0));
+            Assert.AreEqual(0, ScrapDepth.Extra(-1));
+            Assert.AreEqual(1, ScrapDepth.Extra(5));
+            Assert.AreEqual(4, ScrapDepth.Extra(8));
+            Assert.AreEqual(4, ScrapDepth.Extra(12));
+            Assert.AreEqual(1, Practice.Bonus(4));
+            Assert.AreEqual(1, Practice.Bonus(8));
+            Assert.IsFalse(HaulCell.Due(5, 3));
+            Assert.IsFalse(HaulCell.Due(1, 4));
+            Assert.IsTrue(HaulCell.Due(5, 4));
+            Assert.IsFalse(HaulCell.Due(1, 8));
+            Assert.IsTrue(HaulCell.Due(3, 8));
+            Assert.IsFalse(HaulCell.Due(0, 0));
+            Assert.IsTrue(HaulCell.Due(-5, 4));
+            CraftBill.Salvage(1, false, out int cloth, out int chemicals, out int tape);
+            Assert.AreEqual(1, cloth);
+            Assert.AreEqual(1, chemicals);
+            Assert.AreEqual(0, tape);
+            Assert.IsTrue(SaveCodec.TryDeserialize("{\"schemaVersion\":1}", out var legacy, out var error), error);
+            Assert.AreEqual(0, legacy.cells);
+            Assert.AreEqual("Pilas", Loc.T("camp.cell", "es"));
+        }
+
+        [Test]
+        public void ADeepMedicMendsHarderAndADeepGuardHoldsMore()
+        {
+            Assert.AreEqual(1, Practice.Bonus(4));
+            Assert.AreEqual(1, Practice.Bonus(8));
+            Assert.AreEqual(0, MedDepth.Mend(4));
+            Assert.AreEqual(0, MedDepth.Mend(0));
+            Assert.AreEqual(0, MedDepth.Mend(-1));
+            Assert.AreEqual(6, MedDepth.Mend(5));
+            Assert.AreEqual(24, MedDepth.Mend(8));
+            Assert.AreEqual(24, MedDepth.Mend(12));
+            Assert.AreEqual(18f, 12f + Practice.Bonus(4) * 6f + MedDepth.Mend(4), 0.001f);
+            Assert.AreEqual(42f, 12f + Practice.Bonus(8) * 6f + MedDepth.Mend(8), 0.001f);
+            Assert.AreEqual(0, GuardDepth.Post(4));
+            Assert.AreEqual(0, GuardDepth.Post(0));
+            Assert.AreEqual(1, GuardDepth.Post(5));
+            Assert.AreEqual(4, GuardDepth.Post(8));
+            Assert.AreEqual(4, GuardDepth.Post(12));
+            Assert.AreEqual(0, TraitHook.WatchCost("Brave"));
+            Assert.AreEqual(2, TraitHook.WatchPay("Brave", 2));
+            Assert.AreEqual(2, TraitHook.WatchPay("Brave", 1 + Practice.Bonus(4) + GuardDepth.Post(4)));
+            Assert.AreEqual(6, TraitHook.WatchPay("Brave", 1 + Practice.Bonus(8) + GuardDepth.Post(8)));
+            Assert.AreEqual(0, TraitHook.WatchPay("Cowardly", 1 + Practice.Bonus(8) + GuardDepth.Post(8)));
+        }
+
+        [Test]
+        public void ADeepLeaderQuietsALouderFeud()
+        {
+            Assert.AreEqual(6, MealTable.FeudShift(6, false));
+            Assert.AreEqual(3, MealTable.FeudShift(6, true));
+            Assert.AreEqual(3, MealTable.FeudShift(6, true, 3));
+            Assert.AreEqual(2, MealTable.FeudShift(6, true, 4));
+            Assert.AreEqual(1, MealTable.FeudShift(6, true, 5));
+            Assert.AreEqual(0, MealTable.FeudShift(6, true, 8));
+            Assert.AreEqual(0, MealTable.FeudShift(6, true, 12));
+            Assert.AreEqual(6, MealTable.FeudShift(6, false, 8));
+            Assert.AreEqual(2, LeadDepth.Ease(2, 4));
+            Assert.AreEqual(2, LeadDepth.Ease(2, 0));
+            Assert.AreEqual(1, LeadDepth.Ease(2, 5));
+            Assert.AreEqual(0, LeadDepth.Ease(2, 8));
+            Assert.AreEqual(0, LeadDepth.Ease(0, 8));
+            Assert.AreEqual(0, LeadDepth.Ease(-1, 8));
+        }
+
+        [Test]
+        public void APartnerGrievesHarderAndARivalSoursTheShift()
+        {
+            Assert.AreEqual("Partner", BondMark.Kind(80));
+            Assert.AreEqual("Partner", BondMark.Kind(100));
+            Assert.AreEqual("Friend", BondMark.Kind(40));
+            Assert.AreEqual("", BondMark.Kind(39));
+            Assert.AreEqual("", BondMark.Kind(-39));
+            Assert.AreEqual("Rival", BondMark.Kind(-40));
+            Assert.AreEqual("", KinBoard.Bitter(""));
+            Assert.AreEqual("", KinBoard.Bitter("ellis:-39"));
+            Assert.AreEqual("ellis", KinBoard.Bitter("ellis:-40"));
+            Assert.AreEqual("ellis", KinBoard.Bitter("jonas:-40|ellis:-80"));
+            Assert.AreEqual("ellis", KinBoard.Closest("jonas:40|ellis:80"));
+            Assert.AreEqual("Pareja", Loc.T("bond.partner", "es"));
+            Assert.AreEqual("Amigo", Loc.T("bond.friend", "es"));
+            Assert.AreEqual("Rival", Loc.T("bond.rival", "es"));
+
+            var partnered = new List<ColonistDay>
+            {
+                new ColonistDay { id = "jonas", task = "Guard", kin = "mara:80", morale = 80f, hunger = 78f, thirst = 78f },
+                new ColonistDay { id = "ellis", task = "Scavenge", morale = 80f, hunger = 78f, thirst = 78f },
+                new ColonistDay { id = "mara", name = "Mara Quill", alive = false, task = "Fallen" }
+            };
+            int food = 0;
+            int water = 0;
+            var grief = ColonyDay.Simulate(partnered, ref food, ref water, false, false, "Mara Quill");
+            Assert.AreEqual(28f, partnered[0].morale, 0.001f);
+            Assert.AreEqual(55f, partnered[1].morale, 0.001f);
+            Assert.Contains("grief", grief);
+
+            var rivals = new List<ColonistDay>
+            {
+                new ColonistDay { id = "jonas", task = "Guard", morale = 80f, hunger = 78f, thirst = 78f, opinion = 20, kin = "ellis:-40" },
+                new ColonistDay { id = "ellis", task = "Guard", morale = 80f, hunger = 78f, thirst = 78f, opinion = 20 }
+            };
+            ColonyDay.Simulate(rivals, ref food, ref water, false, false, "");
+            Assert.AreEqual(18, rivals[0].opinion);
+            Assert.AreEqual(22, rivals[1].opinion);
+            Assert.AreEqual("ellis:-38", rivals[0].kin);
+        }
+
+        [Test]
+        public void BloodyBootsPrintSixStepsThenDry()
+        {
+            Assert.AreEqual(0, BootPrint.Charge(4, true, 0));
+            Assert.AreEqual(6, BootPrint.Charge(0, true, 1));
+            Assert.AreEqual(4, BootPrint.Charge(4, false, 1));
+            Assert.AreEqual(6, BootPrint.Charge(2, true, 2));
+            Assert.IsFalse(BootPrint.Due(0, 1));
+            Assert.IsFalse(BootPrint.Due(4, 0));
+            Assert.IsTrue(BootPrint.Due(4, 1));
+            Assert.AreEqual(5, BootPrint.Spend(6));
+            Assert.AreEqual(0, BootPrint.Spend(0));
+            Assert.AreEqual(-0.12f, BootPrint.Side(6), 0.001f);
+            Assert.AreEqual(0.12f, BootPrint.Side(5), 0.001f);
+            Assert.AreEqual(0.16f, BootPrint.Size(1), 0.001f);
+            Assert.AreEqual(0.22f, BootPrint.Size(2), 0.001f);
+            Assert.AreEqual(0.42f, GoreMark.Size("blood", 1), 0.001f);
+            Assert.IsTrue(BootPrint.Near(0f, 0f, 1.4f, 0f));
+            Assert.IsFalse(BootPrint.Near(0f, 0f, 1.41f, 0f));
+            Assert.IsFalse(BootPrint.Through(0f, 0f, null, null, 1));
+            Assert.IsTrue(BootPrint.Through(0f, 0f, new[] { 3f, 0.2f }, new[] { 0f, 0f }, 2));
+            Assert.IsFalse(BootPrint.Through(0f, 0f, new[] { 3f }, new[] { 0f }, 1));
+            Assert.AreEqual(0, GoreMark.Splats(0, false, true));
+            Assert.AreEqual(5, GoreMark.Splats(2, true, true));
+        }
+
+        [Test]
+        public void ACompactSmgFiresFasterThanTheRifle()
+        {
+            var rifle = WeaponCard.Find("rifle_assault");
+            var smg = WeaponCard.Find("smg");
+            Assert.AreEqual(26f, rifle.Damage, 0.001f);
+            Assert.AreEqual(9f, rifle.Rate, 0.001f);
+            Assert.AreEqual(30, rifle.Magazine);
+            Assert.AreEqual(34f, rifle.Noise, 0.001f);
+            Assert.AreEqual(16f, smg.Damage, 0.001f);
+            Assert.AreEqual(14f, smg.Rate, 0.001f);
+            Assert.AreEqual(22f, smg.Range, 0.001f);
+            Assert.AreEqual(5.5f, smg.Spread, 0.001f);
+            Assert.AreEqual(25, smg.Magazine);
+            Assert.AreEqual(18f, smg.Noise, 0.001f);
+            Assert.AreEqual(WeaponType.SMG, smg.Type);
+            Assert.IsTrue(smg.Automatic);
+            Assert.IsTrue(smg.Projectile);
+            Assert.AreEqual("smg", WeaponCard.IdFor(WeaponType.SMG));
+            var rounds = ItemCatalog.Find("ammo_smg");
+            Assert.AreEqual(ItemUse.Ammo, rounds.Use);
+            Assert.AreEqual(WeaponType.SMG, rounds.AmmoType);
+            Assert.AreEqual(25, rounds.AmmoAmount);
+            Assert.AreEqual(0.05f, rounds.Weight, 0.001f);
+            Assert.IsTrue(CraftBill.TryOf("ammo_smg", out var bill));
+            Assert.AreEqual(6, bill.Scrap);
+            Assert.AreEqual(1, bill.Chemicals);
+            Assert.AreEqual(5, AmmoPress.Rounds("ammo_smg", 1));
+            Assert.AreEqual(24, AmmoPress.Rounds("ammo_smg", 5));
+            Assert.AreEqual(8, AmmoPress.Rounds("ammo_rifle", 1));
+            Assert.AreEqual(7, CaravanBook.BasePrice("ammo_smg"));
+            Assert.AreEqual(3, CaravanBook.Stock("militia").Length);
+            Assert.AreEqual("ammo_smg", CaravanBook.Stock("militia")[2]);
+            var street = LootTables.Roll("street", 2);
+            Assert.AreEqual(7, street.Length);
+            Assert.AreEqual("raw_food", street[6].ItemId);
+            Assert.AreEqual("Cargador de subfusil", Loc.T("item.ammo_smg", "es"));
+            Assert.AreEqual("Sirve para el subfusil.", Loc.T("blurb.ammo_smg", "es"));
+        }
+
+        [Test]
+        public void AShotgunPelletFadesPastFourMeters()
+        {
+            var shotgun = WeaponCard.Find("shotgun_pump");
+            Assert.AreEqual(19f, shotgun.Damage, 0.001f);
+            Assert.AreEqual(16f, shotgun.Range, 0.001f);
+            Assert.AreEqual(7, shotgun.Pellets);
+            Assert.AreEqual(1f, PelletDrop.Scale(0f, 16f, WeaponType.Shotgun), 0.001f);
+            Assert.AreEqual(1f, PelletDrop.Scale(4f, 16f, WeaponType.Shotgun), 0.001f);
+            Assert.AreEqual(0.675f, PelletDrop.Scale(10f, 16f, WeaponType.Shotgun), 0.001f);
+            Assert.AreEqual(0.35f, PelletDrop.Scale(16f, 16f, WeaponType.Shotgun), 0.001f);
+            Assert.AreEqual(0.35f, PelletDrop.Scale(20f, 16f, WeaponType.Shotgun), 0.001f);
+            Assert.AreEqual(1f, PelletDrop.Scale(-2f, 16f, WeaponType.Shotgun), 0.001f);
+            Assert.AreEqual(1f, PelletDrop.Scale(10f, 16f, WeaponType.Rifle), 0.001f);
+            Assert.AreEqual(1f, PelletDrop.Scale(10f, 16f, WeaponType.SMG), 0.001f);
+            Assert.AreEqual(1f, PelletDrop.Scale(10f, 16f, WeaponType.Pistol), 0.001f);
+            Assert.AreEqual(19f, PelletDrop.Damage(19f, 4f, 16f, WeaponType.Shotgun), 0.001f);
+            Assert.AreEqual(6.65f, PelletDrop.Damage(19f, 16f, 16f, WeaponType.Shotgun), 0.001f);
+            Assert.AreEqual(26f, PelletDrop.Damage(26f, 16f, 32f, WeaponType.Rifle), 0.001f);
+            Assert.AreEqual(2f, DamageResolver.HeadshotMultiplier, 0.001f);
+            Assert.AreEqual(1.45f, DamageResolver.HeadshotHeight, 0.001f);
+        }
+
+        [Test]
+        public void AShotInTheLegSlowsTheChase()
+        {
+            Assert.IsTrue(LimbCut.Leg(0.4f, 0f));
+            Assert.IsTrue(LimbCut.Leg(0.05f, 0f));
+            Assert.IsTrue(LimbCut.Leg(0.62f, 0f));
+            Assert.IsFalse(LimbCut.Leg(0.04f, 0f));
+            Assert.IsFalse(LimbCut.Leg(0.63f, 0f));
+            Assert.IsFalse(LimbCut.Leg(1.0f, 0f));
+            Assert.IsFalse(LimbCut.Leg(1.5f, 0f));
+            Assert.AreEqual(4f, LimbCut.Seconds, 0.001f);
+            Assert.AreEqual(4.6f, LimbCut.Speed(4.6f, false, false), 0.001f);
+            Assert.AreEqual(2.53f, LimbCut.Speed(4.6f, true, false), 0.001f);
+            Assert.AreEqual(3.588f, LimbCut.Speed(4.6f, true, true), 0.001f);
+            Assert.AreEqual(0.99f, LimbCut.Speed(1.8f, true, false), 0.001f);
+            Assert.AreEqual(0f, LimbCut.Speed(-2f, true, false), 0.001f);
+            Assert.AreEqual(3f, LimbCut.Tick(4f, 1f), 0.001f);
+            Assert.AreEqual(0f, LimbCut.Tick(0.2f, 1f), 0.001f);
+            Assert.AreEqual(0f, LimbCut.Tick(-1f, 1f), 0.001f);
+            Assert.AreEqual(4f, LimbCut.Tick(4f, 0f), 0.001f);
+        }
+
+        [Test]
+        public void AToxicCloudSlowsThePackAndDoesNotBurnThem()
+        {
+            Assert.AreEqual(4f, GasCloud.Radius, 0.001f);
+            Assert.AreEqual(25f, GasCloud.Life, 0.001f);
+            Assert.AreEqual(0.62f, GasCloud.Pace, 0.001f);
+            Assert.AreEqual(0f, GasCloud.Hurt, 0.001f);
+            Assert.IsTrue(GasCloud.Live(0f));
+            Assert.IsTrue(GasCloud.Live(24.9f));
+            Assert.IsFalse(GasCloud.Live(25f));
+            Assert.IsFalse(GasCloud.Live(-0.1f));
+            Assert.IsTrue(GasCloud.Inside(4f, 0f));
+            Assert.IsFalse(GasCloud.Inside(4.01f, 0f));
+            Assert.IsFalse(GasCloud.Inside(3f, 3f));
+            Assert.IsTrue(GasCloud.Covers(3f, 1f, 0f, 0f, 1f));
+            Assert.IsFalse(GasCloud.Covers(3f, 1f, 0f, 0f, 25f));
+            Assert.IsFalse(GasCloud.Covers(6f, 0f, 0f, 0f, 1f));
+            Assert.AreEqual(4.6f, GasCloud.Speed(4.6f, false), 0.001f);
+            Assert.AreEqual(2.852f, GasCloud.Speed(4.6f, true), 0.001f);
+            Assert.AreEqual(0f, GasCloud.Speed(-2f, true), 0.001f);
+            Assert.AreEqual(4.5f, BlastWake.Hold(HazardKind.Toxic), 0.001f);
+        }
+
+        [Test]
+        public void AShotLightsTheOilOnTheStreet()
+        {
+            Assert.AreEqual(1.6f, StreetSlick.Radius, 0.001f);
+            Assert.AreEqual(12f, StreetSlick.Life, 0.001f);
+            Assert.AreEqual(2.8f, StreetSlick.Light, 0.001f);
+            Assert.IsTrue(StreetSlick.Wet(0f));
+            Assert.IsTrue(StreetSlick.Wet(11.9f));
+            Assert.IsFalse(StreetSlick.Wet(12f));
+            Assert.IsFalse(StreetSlick.Wet(-0.1f));
+            Assert.IsTrue(StreetSlick.On(1.6f, 0f, 0f, 0f));
+            Assert.IsFalse(StreetSlick.On(1.61f, 0f, 0f, 0f));
+            Assert.IsTrue(StreetSlick.Crosses(-5f, 0f, 5f, 0f, 0f, 0f));
+            Assert.IsFalse(StreetSlick.Crosses(-5f, 3f, 5f, 3f, 0f, 0f));
+            Assert.IsTrue(StreetSlick.Crosses(0f, 0f, 0.4f, 0f, 0f, 0f));
+            Assert.IsFalse(StreetSlick.Crosses(4f, 4f, 6f, 6f, 0f, 0f));
+            Assert.IsTrue(StreetSlick.Near(2.8f, 0f, 0f, 0f));
+            Assert.IsFalse(StreetSlick.Near(2.81f, 0f, 0f, 0f));
+            Assert.AreEqual(3.5f, OilBurn.Ignite, 0.001f);
+            Assert.AreEqual(14f, OilBurn.Damage, 0.001f);
+            Assert.AreEqual(4f, FirePatch.Life, 0.001f);
+        }
+
+        [Test]
+        public void ABodyKeepsBurningAfterItLeavesTheFire()
+        {
+            Assert.AreEqual(3.5f, Ember.Seconds, 0.001f);
+            Assert.AreEqual(0.5f, Ember.Gap, 0.001f);
+            Assert.AreEqual(4f, Ember.Damage, 0.001f);
+            Assert.AreEqual(1.4f, Ember.Spread, 0.001f);
+            Assert.IsFalse(Ember.Alight(0f));
+            Assert.IsTrue(Ember.Alight(0.2f));
+            Assert.AreEqual(3.5f, Ember.Catch(0f), 0.001f);
+            Assert.AreEqual(3.5f, Ember.Catch(-1f), 0.001f);
+            Assert.AreEqual(1.2f, Ember.Catch(1.2f), 0.001f);
+            Assert.AreEqual(3f, Ember.Tick(3.5f, 0.5f), 0.001f);
+            Assert.AreEqual(0f, Ember.Tick(0.2f, 0.5f), 0.001f);
+            Assert.AreEqual(3.5f, Ember.Tick(3.5f, 0f), 0.001f);
+            Assert.IsTrue(Ember.Due(3.5f, 3f));
+            Assert.IsFalse(Ember.Due(2.6f, 2.5f));
+            Assert.IsFalse(Ember.Due(0.4f, 0f));
+            Assert.IsFalse(Ember.Due(0f, 0f));
+            Assert.IsTrue(Ember.Reaches(1.4f, 0f));
+            Assert.IsFalse(Ember.Reaches(1.41f, 0f));
+            Assert.AreEqual(6f, FirePatch.Damage, 0.001f);
+            Assert.AreEqual(4f, FirePatch.Life, 0.001f);
+        }
+
+        [Test]
+        public void APowderBarrelLeavesAFireOnTheStreet()
+        {
+            Assert.AreEqual(10f, PowderBed.Life, 0.001f);
+            Assert.AreEqual(1f, PowderBed.Gap, 0.001f);
+            Assert.AreEqual(3.2f, PowderBed.Radius, 0.001f);
+            Assert.AreEqual(8f, PowderBed.Damage, 0.001f);
+            Assert.IsTrue(PowderBed.Hot(0f));
+            Assert.IsTrue(PowderBed.Hot(9.9f));
+            Assert.IsFalse(PowderBed.Hot(10f));
+            Assert.IsFalse(PowderBed.Hot(-0.1f));
+            Assert.IsTrue(PowderBed.Inside(3.2f));
+            Assert.IsFalse(PowderBed.Inside(3.21f));
+            Assert.IsFalse(PowderBed.Inside(-1f));
+            Assert.IsTrue(PowderBed.TickDue(-1f, 0f));
+            Assert.IsFalse(PowderBed.TickDue(0f, 0.9f));
+            Assert.IsTrue(PowderBed.TickDue(0f, 1f));
+            Assert.IsFalse(PowderBed.TickDue(9.1f, 10f));
+            Assert.AreEqual(28f, FirePatch.Burst, 0.001f);
+            Assert.AreEqual(4f, FirePatch.Life, 0.001f);
+            Assert.AreEqual(6f, FirePatch.Damage, 0.001f);
+        }
+
+        [Test]
+        public void AFireOnTheStreetBreaksTheView()
+        {
+            Assert.IsTrue(SmokeVeil.Between(-4f, 0f, 4f, 0f, 0f, 0f, 2.4f));
+            Assert.IsFalse(SmokeVeil.Between(1f, 0f, 6f, 0f, 0f, 0f, 2.4f));
+            Assert.IsFalse(SmokeVeil.Between(-4f, 0f, 1f, 0f, 0f, 0f, 2.4f));
+            Assert.IsFalse(SmokeVeil.Between(-5f, 3f, 5f, 3f, 0f, 0f, 2.4f));
+            Assert.IsFalse(SmokeVeil.Between(-4f, 0f, 4f, 0f, 0f, 0f, 0f));
+            Assert.IsFalse(SmokeVeil.Between(-4f, 0f, 4f, 0f, 0f, 0f, -1f));
+            Assert.IsTrue(SmokeVeil.Between(-6f, 0f, 6f, 0f, 0f, 0f, 3.2f));
+            Assert.IsFalse(SmokeVeil.Inside(2.41f, 0f, 0f, 0f, 2.4f));
+            Assert.IsTrue(SmokeVeil.Inside(2.4f, 0f, 0f, 0f, 2.4f));
+            Assert.AreEqual(2.4f, FirePatch.Radius, 0.001f);
+            Assert.AreEqual(3.2f, PowderBed.Radius, 0.001f);
+            Assert.AreEqual(1.8f, CoverSight.Reach, 0.001f);
+        }
+
+        [Test]
+        public void APlayerKeepsBurningAfterTheyLeaveTheFire()
+        {
+            Assert.AreEqual("On fire", Loc.T("hud.burn", "en"));
+            Assert.AreEqual("En llamas", Loc.T("hud.burn", "es"));
+            Assert.AreEqual("You're on fire", Loc.T("burn.you", "en"));
+            Assert.AreEqual("Estás en llamas", Loc.T("burn.you", "es"));
+            Assert.AreEqual(3.5f, Ember.Catch(0f), 0.001f);
+            Assert.AreEqual(2f, Ember.Catch(2f), 0.001f);
+            Assert.IsTrue(Ember.Due(3.5f, 3f));
+            Assert.IsFalse(Ember.Due(0.4f, 0f));
+            Assert.AreEqual(4f, Ember.Damage, 0.001f);
+            Assert.AreEqual(1.4f, Ember.Spread, 0.001f);
+            Assert.AreEqual(3.5f, Ember.Seconds, 0.001f);
+        }
+
+        [Test]
+        public void AMissedRoundStillCracksPastANearbyBody()
+        {
+            Assert.AreEqual(1.1f, WhiffClock.Reach, 0.001f);
+            Assert.AreEqual(0.45f, WhiffClock.Seconds, 0.001f);
+            Assert.AreEqual(0.72f, WhiffClock.Pace, 0.001f);
+            Assert.IsTrue(WhiffClock.Passes(0f, 0f, 10f, 0f, 5f, 1.1f, out float nearX, out float nearZ));
+            Assert.AreEqual(5f, nearX, 0.001f);
+            Assert.AreEqual(0f, nearZ, 0.001f);
+            Assert.IsFalse(WhiffClock.Passes(0f, 0f, 10f, 0f, 5f, 1.11f, out _, out _));
+            Assert.IsTrue(WhiffClock.Passes(0f, 0f, 10f, 0f, 5f, 0f, out _, out _));
+            Assert.IsFalse(WhiffClock.Passes(0f, 0f, 4f, 0f, 8f, 0f, out _, out _));
+            Assert.AreEqual(4.6f, WhiffClock.Speed(4.6f, false), 0.001f);
+            Assert.AreEqual(3.312f, WhiffClock.Speed(4.6f, true), 0.001f);
+            Assert.AreEqual(0f, WhiffClock.Speed(-1f, true), 0.001f);
+            Assert.AreEqual(0.25f, WhiffClock.Tick(0.45f, 0.2f), 0.001f);
+            Assert.AreEqual(0f, WhiffClock.Tick(0.1f, 0.2f), 0.001f);
+            Assert.AreEqual(0.6f, HitStun.Seconds(WeaponType.Shotgun), 0.001f);
+            Assert.AreEqual(0.25f, HitStun.Seconds(WeaponType.Pistol), 0.001f);
+        }
+
+        [Test]
+        public void RainEatsAFireFasterThanAClearStreet()
+        {
+            Assert.AreEqual(1f, RainQuench.Pace(WeatherKind.Clear), 0.001f);
+            Assert.AreEqual(1f, RainQuench.Pace(WeatherKind.Fog), 0.001f);
+            Assert.AreEqual(1f, RainQuench.Pace(WeatherKind.Overcast), 0.001f);
+            Assert.AreEqual(2.5f, RainQuench.Pace(WeatherKind.Rain), 0.001f);
+            Assert.AreEqual(3.5f, RainQuench.Pace(WeatherKind.Storm), 0.001f);
+            Assert.AreEqual(1f, RainQuench.Step(0.4f, WeatherKind.Rain), 0.001f);
+            Assert.AreEqual(1.4f, RainQuench.Step(0.4f, WeatherKind.Storm), 0.001f);
+            Assert.AreEqual(0.4f, RainQuench.Step(0.4f, WeatherKind.Clear), 0.001f);
+            Assert.AreEqual(0f, RainQuench.Step(-1f, WeatherKind.Storm), 0.001f);
+            Assert.AreEqual(0.4f, RainQuench.Now(0.4f), 0.001f);
+            Assert.AreEqual(4f, FirePatch.Life, 0.001f);
+            Assert.AreEqual(10f, PowderBed.Life, 0.001f);
+            Assert.AreEqual(3.5f, Ember.Seconds, 0.001f);
+            Assert.AreEqual(0.65f, WeatherSurface.Wetness(WeatherKind.Rain), 0.001f);
+            Assert.AreEqual(0.85f, WeatherSurface.Wetness(WeatherKind.Storm), 0.001f);
+        }
+
+        [Test]
+        public void AnOilSlickSlowsAStepUntilItCatches()
+        {
+            Assert.AreEqual(0.7f, StreetSlick.Drag, 0.001f);
+            Assert.AreEqual(4.5f, StreetSlick.Speed(4.5f, false), 0.001f);
+            Assert.AreEqual(3.15f, StreetSlick.Speed(4.5f, true), 0.001f);
+            Assert.AreEqual(1.54f, StreetSlick.Speed(2.2f, true), 0.001f);
+            Assert.AreEqual(0f, StreetSlick.Speed(-1f, true), 0.001f);
+            Assert.AreEqual(1.6f, StreetSlick.Radius, 0.001f);
+            Assert.AreEqual(12f, StreetSlick.Life, 0.001f);
+            Assert.AreEqual(2.8f, StreetSlick.Light, 0.001f);
+            Assert.IsTrue(StreetSlick.On(1.6f, 0f, 0f, 0f));
+            Assert.IsFalse(StreetSlick.On(1.61f, 0f, 0f, 0f));
+        }
+
+        [Test]
+        public void AStormSoaksTheYardAndACookStaysDry()
+        {
+            Assert.AreEqual(4, YardSoak.Keep(4, "Scavenge", WeatherKind.Clear));
+            Assert.AreEqual(4, YardSoak.Keep(4, "Scavenge", WeatherKind.Fog));
+            Assert.AreEqual(4, YardSoak.Keep(4, "Build", WeatherKind.Overcast));
+            Assert.AreEqual(3, YardSoak.Keep(4, "Scavenge", WeatherKind.Rain));
+            Assert.AreEqual(2, YardSoak.Keep(4, "Scavenge", WeatherKind.Storm));
+            Assert.AreEqual(1, YardSoak.Keep(1, "Guard", WeatherKind.Rain));
+            Assert.AreEqual(0, YardSoak.Keep(1, "Guard", WeatherKind.Storm));
+            Assert.AreEqual(2, YardSoak.Keep(2, "Cook", WeatherKind.Storm));
+            Assert.AreEqual(0, YardSoak.Keep(0, "Clear", WeatherKind.Storm));
+            Assert.AreEqual(0, YardSoak.Keep(-3, "Build", WeatherKind.Rain));
+            Assert.AreEqual(22f, YardSoak.Wear(22f, "Scavenge", WeatherKind.Clear), 0.001f);
+            Assert.AreEqual(28f, YardSoak.Wear(22f, "Guard", WeatherKind.Rain), 0.001f);
+            Assert.AreEqual(36f, YardSoak.Wear(22f, "Build", WeatherKind.Storm), 0.001f);
+            Assert.AreEqual(22f, YardSoak.Wear(22f, "Cook", WeatherKind.Storm), 0.001f);
+            Assert.AreEqual(100f, YardSoak.Wear(90f, "Clear", WeatherKind.Storm), 0.001f);
+            Assert.AreEqual(0f, YardSoak.Mood("Cook", WeatherKind.Storm), 0.001f);
+            Assert.AreEqual(4f, YardSoak.Mood("Scavenge", WeatherKind.Storm), 0.001f);
+            Assert.AreEqual("The yard is soaked", NoteSay.One("soak", "en"));
+            Assert.AreEqual("El patio está empapado", NoteSay.One("soak", "es"));
+
+            var yard = new List<ColonistDay>
+            {
+                new ColonistDay { id = "ada", task = "Scavenge", hunger = 78f, thirst = 78f, morale = 70f }
+            };
+            int food = 0;
+            int water = 0;
+            int raw = 0;
+            var clear = ColonyDay.Simulate(yard, ref food, ref water, false, false, "", 0, ref raw);
+            Assert.AreEqual(22f, yard[0].fatigue, 0.001f);
+            Assert.AreEqual(70f, yard[0].morale, 0.001f);
+            Assert.IsFalse(System.Array.IndexOf(clear, "soak") >= 0);
+
+            yard[0].fatigue = 0f;
+            yard[0].morale = 70f;
+            yard[0].hunger = 78f;
+            yard[0].thirst = 78f;
+            var storm = ColonyDay.Simulate(yard, ref food, ref water, false, false, "", 0, ref raw, WeatherKind.Storm);
+            Assert.AreEqual(36f, yard[0].fatigue, 0.001f);
+            Assert.AreEqual(66f, yard[0].morale, 0.001f);
+            Assert.AreEqual(60f, yard[0].hunger, 0.001f);
+            Assert.Contains("soak", storm);
+
+            var kitchen = new List<ColonistDay>
+            {
+                new ColonistDay { id = "ada", task = "Cook", hunger = 78f, thirst = 78f, morale = 70f }
+            };
+            var wet = ColonyDay.Simulate(kitchen, ref food, ref water, false, false, "", 0, ref raw, WeatherKind.Storm);
+            Assert.AreEqual(22f, kitchen[0].fatigue, 0.001f);
+            Assert.AreEqual(70f, kitchen[0].morale, 0.001f);
+            Assert.Contains("soak", wet);
+        }
+
+        [Test]
+        public void PoisonClosesTheViewAndAClearBodyKeepsTheGrade()
+        {
+            Assert.AreEqual(0.28f, RaidGrade.Vignette(false, 1), 0.001f);
+            Assert.AreEqual(0.46f, RaidGrade.Vignette(true, 1), 0.001f);
+            Assert.AreEqual(0.28f, PoisonVeil.Shade(0.28f, false), 0.001f);
+            Assert.AreEqual(0.52f, PoisonVeil.Shade(0.28f, true), 0.001f);
+            Assert.AreEqual(0.7f, PoisonVeil.Shade(0.46f, true), 0.001f);
+            Assert.AreEqual(0.78f, PoisonVeil.Shade(0.62f, true), 0.001f);
+            Assert.AreEqual(0.24f, PoisonVeil.Shade(-1f, true), 0.001f);
+            Assert.IsFalse(PoisonVeil.Soft(false, false));
+            Assert.IsTrue(PoisonVeil.Soft(true, false));
+            Assert.IsTrue(PoisonVeil.Soft(false, true));
+            Assert.AreEqual(0f, PoisonVeil.BlurOf(false, false), 0.001f);
+            Assert.AreEqual(0.35f, PoisonVeil.BlurOf(false, true), 0.001f);
+            Assert.AreEqual(0.62f, PoisonVeil.BlurOf(true, false), 0.001f);
+            Assert.AreEqual(0.62f, PoisonVeil.BlurOf(true, true), 0.001f);
+            PoisonVeil.Tint(false, 1f, 0.96f, 0.9f, out float r, out float g, out float b);
+            Assert.AreEqual(1f, r, 0.001f);
+            Assert.AreEqual(0.96f, g, 0.001f);
+            Assert.AreEqual(0.9f, b, 0.001f);
+            PoisonVeil.Tint(true, 1f, 0.96f, 0.9f, out r, out g, out b);
+            Assert.AreEqual(0.72f, r, 0.001f);
+            Assert.AreEqual(0.912f, g, 0.001f);
+            Assert.AreEqual(0.558f, b, 0.001f);
+        }
+
+        [Test]
+        public void WindSlidesPaperAlongTheStreetAndAClearDayLeavesItDown()
+        {
+            Assert.IsFalse(WindSheet.Skims(WeatherKind.Clear));
+            Assert.IsTrue(WindSheet.Skims(WeatherKind.Rain));
+            Assert.IsTrue(WindSheet.Skims(WeatherKind.Storm));
+            Assert.IsTrue(WindSheet.Skims(WeatherKind.Fog));
+            Assert.IsTrue(WindSheet.Skims(WeatherKind.Overcast));
+            Assert.AreEqual(0.65f, GroundMist.Wind(WeatherKind.Rain), 0.001f);
+            Assert.AreEqual(0.9f, GroundMist.Wind(WeatherKind.Storm), 0.001f);
+            Assert.AreEqual(0.08f, GroundMist.Wind(WeatherKind.Clear), 0.001f);
+            WindSheet.Step(0f, 6f, 0.65f, 1f, out float x, out float z);
+            Assert.AreEqual(2.08f, x, 0.001f);
+            Assert.AreEqual(6f, z, 0.001f);
+            WindSheet.Step(0f, 6f, 0.9f, 1f, out x, out z);
+            Assert.AreEqual(2.88f, x, 0.001f);
+            WindSheet.Step(0f, 6f, 0f, 5f, out x, out z);
+            Assert.AreEqual(0f, x, 0.001f);
+            WindSheet.Step(0f, 6f, 1f, -2f, out x, out z);
+            Assert.AreEqual(0f, x, 0.001f);
+            WindSheet.Step(21f, 6f, 1f, 1f, out x, out z);
+            Assert.AreEqual(-19.8f, x, 0.001f);
+            Assert.AreEqual(6f, z, 0.001f);
+            WindSheet.Home(0, out x, out z);
+            Assert.AreEqual(-18f, x, 0.001f);
+            Assert.AreEqual(6f, z, 0.001f);
+            WindSheet.Home(4, out x, out z);
+            Assert.AreEqual(18f, x, 0.001f);
+            Assert.AreEqual(0f, WindSheet.Tilt(0f, 0, 1f), 0.001f);
+            Assert.AreEqual(18.512f, WindSheet.Tilt(0.2f, 0, 1f), 0.01f);
+            Assert.AreEqual(0f, WindSheet.Tilt(0.2f, 0, 0f), 0.001f);
+        }
+
+        [Test]
+        public void AUsableThingWearsARimUntilYouStepAway()
+        {
+            Assert.AreEqual(0.035f, HoverMark.Width, 0.001f);
+            Assert.AreEqual(0.35f, HoverMark.Red, 0.001f);
+            Assert.AreEqual(0.85f, HoverMark.Green, 0.001f);
+            Assert.AreEqual(0.95f, HoverMark.Blue, 0.001f);
+            Assert.IsTrue(HoverMark.Live(true));
+            Assert.IsFalse(HoverMark.Live(false));
+        }
+
+        [Test]
+        public void ARoofTakesDirtAndRainDrawsARipple()
+        {
+            Assert.AreEqual(0f, StreetCoat.Cover(0.65f), 0.001f);
+            Assert.AreEqual(0f, StreetCoat.Cover(0f), 0.001f);
+            Assert.AreEqual(0f, StreetCoat.Cover(-1f), 0.001f);
+            Assert.AreEqual(0.175f, StreetCoat.Cover(0.825f), 0.001f);
+            Assert.AreEqual(0.35f, StreetCoat.Cover(1f), 0.001f);
+            Assert.AreEqual(0.35f, StreetCoat.Cover(2f), 0.001f);
+            Assert.AreEqual(0f, StreetCoat.Shimmer(0f, 1f), 0.001f);
+            Assert.AreEqual(0f, StreetCoat.Shimmer(0.65f, 0f), 0.001f);
+            Assert.AreEqual(0.052f, StreetCoat.Shimmer(0.65f, 1f), 0.001f);
+            Assert.AreEqual(0.08f, StreetCoat.Shimmer(1f, 1f), 0.001f);
+            Assert.AreEqual(0.08f, StreetCoat.Shimmer(2f, 2f), 0.001f);
+            Assert.AreEqual(0.65f, WeatherSurface.Wetness(WeatherKind.Rain), 0.001f);
+        }
+
+        [Test]
+        public void AStreetBottleThrowsLikeALureAndSpeaksBothLanguages()
+        {
+            var bottle = ItemCatalog.Find("street_bottle");
+            Assert.IsNotNull(bottle);
+            Assert.AreEqual(0.25f, bottle.Weight, 0.001f);
+            Assert.AreEqual(ItemUse.Lure, bottle.Use);
+            Assert.AreEqual(0.2f, ItemCatalog.Find("noise_lure").Weight, 0.001f);
+            Assert.AreEqual(TossKind.Lure, TossKind.Of("street_bottle"));
+            Assert.AreEqual(TossKind.Lure, TossKind.Of("noise_lure"));
+            Assert.IsTrue(TossKind.Throws("street_bottle"));
+            Assert.AreEqual(TossKind.None, TossKind.Of("water"));
+            Assert.AreEqual(18f, ThrowArc.LureRadius, 0.001f);
+            Assert.Greater(ThrowArc.Flight(ThrowArc.Height, ThrowArc.Forward, ThrowArc.Lift, ThrowArc.Gravity), 15f);
+            Assert.AreEqual("Street Bottle", Loc.Item("street_bottle", "en"));
+            Assert.AreEqual("Botella de la calle", Loc.Item("street_bottle", "es"));
+            Assert.AreEqual("Take the bottle", Loc.T("toss.take_bottle", "en"));
+            Assert.AreEqual("Coge la botella", Loc.T("toss.take_bottle", "es"));
+            Assert.AreEqual("Breaks loud enough to pull a group.", Loc.T("blurb.street_bottle", "en"));
+            Assert.AreEqual("Se rompe lo bastante fuerte para atraer a un grupo.", Loc.T("blurb.street_bottle", "es"));
+            Assert.AreEqual("pipe_bomb", LootTables.Roll("street", 2)[5].ItemId);
+            Assert.AreEqual("raw_food", LootTables.Roll("street", 2)[6].ItemId);
+        }
+
+        [Test]
+        public void StreetShoutsFollowTheLanguage()
+        {
+            Assert.AreEqual("Barrel exploded", FightSay.Hazard(HazardKind.Explosive, "en"));
+            Assert.AreEqual("El barril explotó", FightSay.Hazard(HazardKind.Explosive, "es"));
+            Assert.AreEqual("Toxic cloud", FightSay.Hazard(HazardKind.Toxic, "en"));
+            Assert.AreEqual("Nube tóxica", FightSay.Hazard(HazardKind.Toxic, "es"));
+            Assert.AreEqual("Oil spill", FightSay.Hazard(HazardKind.Oil, "en"));
+            Assert.AreEqual("Derrame de aceite", FightSay.Hazard(HazardKind.Oil, "es"));
+            Assert.AreEqual("Molotov burst", FightSay.Impact(true, "en"));
+            Assert.AreEqual("Estalló el molotov", FightSay.Impact(true, "es"));
+            Assert.AreEqual("Lure clattered", FightSay.Impact(false, "en"));
+            Assert.AreEqual("El cebo resonó", FightSay.Impact(false, "es"));
+            Assert.AreEqual("Mara stays at the sanctuary", StreetAsk.Stays("Mara", "en"));
+            Assert.AreEqual("Mara se queda en el santuario", StreetAsk.Stays("Mara", "es"));
+            Assert.AreEqual("Radio part stowed", StreetAsk.Stowed(true, "en"));
+            Assert.AreEqual("Pieza de radio guardada", StreetAsk.Stowed(true, "es"));
+            Assert.AreEqual("Cache searched", StreetAsk.Stowed(false, "en"));
+            Assert.AreEqual("Alijo registrado", StreetAsk.Stowed(false, "es"));
+            Assert.AreEqual("Gear recovered", StreetAsk.Kept(true, "en"));
+            Assert.AreEqual("Equipo recuperado", StreetAsk.Kept(true, "es"));
+            Assert.AreEqual("Nothing left but the name", StreetAsk.Kept(false, "en"));
+            Assert.AreEqual("No queda más que el nombre", StreetAsk.Kept(false, "es"));
+            Assert.AreEqual("Inside", DoorMap.Cross(false, "en"));
+            Assert.AreEqual("Dentro", DoorMap.Cross(false, "es"));
+            Assert.AreEqual("Back on the street", DoorMap.Cross(true, "en"));
+            Assert.AreEqual("De vuelta en la calle", DoorMap.Cross(true, "es"));
+            Assert.AreEqual("Step inside", DoorMap.Prompt(false));
+            Assert.AreEqual("Generator repair fitted", CraftSay.Fitted("repair_kit", "Repair Kit", "en"));
+            Assert.AreEqual("Reparación del generador colocado", CraftSay.Fitted("repair_kit", "Repair Kit", "es"));
+            Assert.AreEqual("Pipe bomb burst", FightSay.Burst("en"));
+        }
+
+        [Test]
+        public void AStormPullsTheWireHarderThanAClearDay()
+        {
+            Assert.AreEqual(0.08f, GroundMist.Wind(WeatherKind.Clear), 0.001f);
+            Assert.AreEqual(0.9f, GroundMist.Wind(WeatherKind.Storm), 0.001f);
+            Assert.AreEqual(0f, WireGust.Side(0.08f, 0f), 0.001f);
+            Assert.AreEqual(0.0726f, WireGust.Side(0.08f, 1f), 0.001f);
+            Assert.AreEqual(0.817f, WireGust.Side(0.9f, 1f), 0.001f);
+            Assert.AreEqual(0.227f, WireGust.Side(0.25f, 1f), 0.001f);
+            Assert.AreEqual(0f, WireGust.Side(-1f, 1f), 0.001f);
+            Assert.AreEqual(0.12f, WireGust.Base, 0.001f);
+            Assert.AreEqual(0.65f, WireGust.Rate, 0.001f);
+        }
+
+        [Test]
+        public void ABoltLightsACrouchAndAQuietSkyStaysDark()
+        {
+            Assert.AreEqual(0.55f, BoltGlare.Hold, 0.001f);
+            Assert.AreEqual(0.42f, BoltGlare.Lift, 0.001f);
+            Assert.AreEqual(0.85f, BoltGlare.Flash, 0.001f);
+            Assert.AreEqual(0.45f, BoltGlare.Mix, 0.001f);
+            Assert.IsFalse(BoltGlare.Live(0f, 10f));
+            Assert.IsFalse(BoltGlare.Live(10f, 9f));
+            Assert.IsTrue(BoltGlare.Live(10f, 10f));
+            Assert.IsTrue(BoltGlare.Live(10f, 10.55f));
+            Assert.IsFalse(BoltGlare.Live(10f, 10.56f));
+            Assert.AreEqual(0.22f, BoltGlare.Glare(0.22f, false), 0.001f);
+            Assert.AreEqual(0.64f, BoltGlare.Glare(0.22f, true), 0.001f);
+            Assert.AreEqual(1f, BoltGlare.Glare(0.85f, true), 0.001f);
+            Assert.AreEqual(1f, BoltGlare.Glare(1f, true), 0.001f);
+            Assert.AreEqual(0.42f, BoltGlare.Glare(-1f, true), 0.001f);
+            Assert.AreEqual(0.15f, BoltGlare.Bright(0.15f, false), 0.001f);
+            Assert.AreEqual(1f, BoltGlare.Bright(0.15f, true), 0.001f);
+            Assert.AreEqual(0.65f, BoltGlare.Bright(-0.2f, true), 0.001f);
+            Assert.AreEqual(-0.2f, RaidGrade.Exposure(1f, true), 0.001f);
+            BoltGlare.Wash(false, 1f, 0.96f, 0.9f, out float stillR, out float stillG, out float stillB);
+            Assert.AreEqual(1f, stillR, 0.001f);
+            Assert.AreEqual(0.96f, stillG, 0.001f);
+            Assert.AreEqual(0.9f, stillB, 0.001f);
+            BoltGlare.Wash(true, 0.72f, 0.58f, 0.78f, out float washR, out float washG, out float washB);
+            Assert.AreEqual(0.846f, washR, 0.001f);
+            Assert.AreEqual(0.769f, washG, 0.001f);
+            Assert.AreEqual(0.879f, washB, 0.001f);
+            Assert.AreEqual(4.5f, SkyBand.BoltGap, 0.001f);
+            Assert.AreEqual(0.6f, StormCover.Delay, 0.001f);
+        }
+
+        [Test]
+        public void AWindowPaneLetsALookThroughAndAShotBreaksIt()
+        {
+            Assert.IsTrue(PaneGlass.Opening("wall_window", 0.9f, 1.2f, 1f, 2f));
+            Assert.IsFalse(PaneGlass.Opening("wall_window", 0f, 0.9f, 1f, 2f));
+            Assert.IsFalse(PaneGlass.Opening("wall_window", 2.1f, 0.9f, 1f, 2f));
+            Assert.IsFalse(PaneGlass.Opening("wall_window", 0f, 3f, 0.5f, 2f));
+            Assert.IsFalse(PaneGlass.Opening("wall_window_broken", 0.9f, 1.2f, 1f, 2f));
+            Assert.IsFalse(PaneGlass.Opening("wall_plain", 0f, 3f, 2f, 2f));
+            Assert.IsTrue(PaneGlass.SeeThrough("KitGlass"));
+            Assert.IsFalse(PaneGlass.SeeThrough("KitBlock"));
+            Assert.IsFalse(PaneGlass.SeeThrough(""));
+            Assert.IsFalse(PaneGlass.Occluded(null));
+            Assert.IsFalse(PaneGlass.Occluded(new string[0]));
+            Assert.IsFalse(PaneGlass.Occluded(new[] { "KitGlass" }));
+            Assert.IsFalse(PaneGlass.Occluded(new[] { "KitGlass", "KitGlass" }));
+            Assert.IsTrue(PaneGlass.Occluded(new[] { "KitGlass", "KitBlock" }));
+            Assert.IsTrue(PaneGlass.Occluded(new[] { "KitBlock" }));
+            Assert.AreEqual(12f, PaneGlass.Hp, 0.001f);
+            Assert.AreEqual(9f, PaneGlass.Noise, 0.001f);
+            Assert.AreEqual(8f, PaneGlass.After(12f, 4f), 0.001f);
+            Assert.AreEqual(0f, PaneGlass.After(12f, 12f), 0.001f);
+            Assert.AreEqual(0f, PaneGlass.After(12f, 34f), 0.001f);
+            Assert.AreEqual(12f, PaneGlass.After(12f, 0f), 0.001f);
+            Assert.IsFalse(PaneGlass.Gone(8f));
+            Assert.IsTrue(PaneGlass.Gone(0f));
+            Assert.AreEqual(0.38f, PaneGlass.Tint.a, 0.001f);
+            Assert.AreEqual("The pane shatters", Loc.T("pane.break", "en"));
+            Assert.AreEqual("El cristal se rompe", Loc.T("pane.break", "es"));
+            Assert.AreEqual(34f, WeaponCard.Find("pistol_9mm").Damage, 0.001f);
+        }
+
+        [Test]
+        public void AshHangsOverTheMarketAndAClearYardStaysOpen()
+        {
+            Assert.AreEqual(0.82f, AshVeil.Cut, 0.001f);
+            Assert.AreEqual(0.28f, AshVeil.Mix, 0.001f);
+            Assert.AreEqual(1f, WeatherSurface.Sight(WeatherKind.Clear), 0.001f);
+            Assert.AreEqual(0.62f, WeatherSurface.Sight(WeatherKind.Fog), 0.001f);
+            Assert.AreEqual(1f, AshVeil.Scale(1f, false), 0.001f);
+            Assert.AreEqual(0.82f, AshVeil.Scale(1f, true), 0.001f);
+            Assert.AreEqual(0.5084f, AshVeil.Scale(0.62f, true), 0.001f);
+            Assert.AreEqual(0.8f, AshVeil.Scale(0.8f, false), 0.001f);
+            Assert.AreEqual(0f, AshVeil.Scale(-1f, true), 0.001f);
+            Assert.IsTrue(AshFall.Falls("ash_market"));
+            Assert.IsFalse(AshFall.Falls("rail_yard"));
+            AshVeil.Grit(false, 1f, 0.96f, 0.9f, out float openR, out float openG, out float openB);
+            Assert.AreEqual(1f, openR, 0.001f);
+            Assert.AreEqual(0.96f, openG, 0.001f);
+            Assert.AreEqual(0.9f, openB, 0.001f);
+            AshVeil.Grit(true, 1f, 0.96f, 0.9f, out float gritR, out float gritG, out float gritB);
+            Assert.AreEqual(0.874f, gritR, 0.001f);
+            Assert.AreEqual(0.8368f, gritG, 0.001f);
+            Assert.AreEqual(0.7824f, gritB, 0.001f);
+            Assert.AreEqual("Ash hangs in the air", Loc.T("ash.air", "en"));
+            Assert.AreEqual("La ceniza flota en el aire", Loc.T("ash.air", "es"));
+        }
+
+        [Test]
+        public void AFollowerCriesOutWhenTheDeadComeClose()
+        {
+            Assert.AreEqual(7f, StraggleCall.Near, 0.001f);
+            Assert.AreEqual(6f, StraggleCall.Gap, 0.001f);
+            Assert.AreEqual(16f, StraggleCall.Radius, 0.001f);
+            Assert.IsFalse(StraggleCall.Due(0f, 10f, -1f));
+            Assert.IsFalse(StraggleCall.Due(0f, 10f, 7.1f));
+            Assert.IsTrue(StraggleCall.Due(0f, 10f, 7f));
+            Assert.IsTrue(StraggleCall.Due(0f, 10f, 0f));
+            Assert.IsFalse(StraggleCall.Due(10f, 15.9f, 3f));
+            Assert.IsTrue(StraggleCall.Due(10f, 16f, 3f));
+            Assert.IsFalse(StraggleCall.Due(10f, 9f, 3f));
+            Assert.AreEqual("Imani Cole cries out", StreetAsk.Cry("Imani Cole", "en"));
+            Assert.AreEqual("Imani Cole grita", StreetAsk.Cry("Imani Cole", "es"));
+            Assert.AreEqual(1.6f, RescueBook.FollowGap, 0.001f);
+            RescueBook.Step(0f, 0f, 0f, 6f, 4f, 1f, out float stepX, out float stepZ);
+            Assert.AreEqual(0f, stepX, 0.001f);
+            Assert.AreEqual(4f, stepZ, 0.001f);
+        }
+
+        [Test]
+        public void ARaidSpeaksTheLanguageAndKeepsTheApproach()
+        {
+            Assert.AreEqual("Broadcast night — hold the tower", RaidSay.Open(true, "gate", "en"));
+            Assert.AreEqual("Night raid from the gate", RaidSay.Open(false, "gate", "en"));
+            Assert.AreEqual("Night raid from the alley", RaidSay.Open(false, "alley", "en"));
+            Assert.AreEqual("Night raid from the yard", RaidSay.Open(false, "yard", "en"));
+            Assert.AreEqual("Night raid from the fence", RaidSay.Open(false, "fence", "en"));
+            Assert.AreEqual("The gate held", RaidSay.Held(false, "en"));
+            Assert.AreEqual("The broadcast went out", RaidSay.Held(true, "en"));
+            Assert.AreEqual("The raid broke the stores", RaidSay.Broke("en"));
+            Assert.AreEqual("They come from the yard", RaidSay.Coming("yard", "en"));
+            Assert.AreEqual("Noche de emisión — aguanta la torre", RaidSay.Open(true, "alley", "es"));
+            Assert.AreEqual("Incursión nocturna desde la puerta", RaidSay.Open(false, "gate", "es"));
+            Assert.AreEqual("Incursión nocturna desde el callejón", RaidSay.Open(false, "alley", "es"));
+            Assert.AreEqual("La puerta aguantó", RaidSay.Held(false, "es"));
+            Assert.AreEqual("La emisión salió", RaidSay.Held(true, "es"));
+            Assert.AreEqual("La incursión rompió las reservas", RaidSay.Broke("es"));
+            Assert.AreEqual("Vienen desde el callejón", RaidSay.Coming("alley", "es"));
+            Assert.AreEqual("Vienen desde el patio", RaidSay.Coming("yard", "es"));
+            Assert.AreEqual("Vienen desde la valla", RaidSay.Coming("fence", "es"));
+            Assert.AreEqual("gate", RaidPlan.Side(1, 0, 0) == "gate" || RaidPlan.Side(1, 0, 0) == "alley" || RaidPlan.Side(1, 0, 0) == "yard" || RaidPlan.Side(1, 0, 0) == "fence" ? RaidPlan.Side(1, 0, 0) : "gate");
+        }
+
+        [Test]
+        public void ABrokenPaneLeavesGlassThatCutsTheFirstStep()
+        {
+            Assert.AreEqual(0.55f, GlassCrunch.Radius, 0.001f);
+            Assert.AreEqual(1.28f, GlassCrunch.Reach, 0.001f);
+            Assert.AreEqual(1.28f, StepReach.GlassCrunchReach, 0.001f);
+            Assert.AreEqual(3f, GlassCrunch.Nick, 0.001f);
+            Assert.AreEqual(8, GlassCrunch.Cap);
+            Assert.IsTrue(GlassCrunch.On(0f, 0f, 0f, 0f));
+            Assert.IsTrue(GlassCrunch.On(0.5f, 0f, 0f, 0f));
+            Assert.IsFalse(GlassCrunch.On(0.7f, 0f, 0f, 0f));
+            Assert.AreEqual("step_glass", AudioMix.StepId("Shard_glass"));
+            Assert.AreEqual("step", AudioMix.StepId("Ground"));
+            Assert.AreEqual(7.68f, StepReach.Radius(6f, "step_glass"), 0.001f);
+            Assert.AreEqual(8.1f, StepReach.Radius(6f, "step_metal"), 0.001f);
+            Assert.IsTrue(ClipBook.Has("step_glass"));
+            Assert.AreEqual(12f, PaneGlass.Hp, 0.001f);
+            Assert.AreEqual("Glass cuts", Loc.T("pane.cut", "en"));
+            Assert.AreEqual("El cristal corta", Loc.T("pane.cut", "es"));
+        }
+
+        [Test]
+        public void ABruteChargeSmashesAPaneAndAWallStillStopsIt()
+        {
+            Assert.AreEqual(18f, PaneCharge.Hit, 0.001f);
+            Assert.AreEqual(12f, PaneGlass.Hp, 0.001f);
+            Assert.IsTrue(PaneCharge.Smashes("KitGlass"));
+            Assert.IsFalse(PaneCharge.Smashes("KitBlock"));
+            Assert.IsFalse(PaneCharge.Smashes(""));
+            Assert.IsTrue(PaneCharge.Through(12f, 18f));
+            Assert.IsFalse(PaneCharge.Through(12f, 4f));
+            Assert.AreEqual(45f, BoardBreak.ChargeHit, 0.001f);
+            Assert.AreEqual(1.5f, SpecialBeat.WallStun, 0.001f);
+        }
+
+        [Test]
+        public void AWalkerClawsAPaneUntilItFails()
+        {
+            Assert.AreEqual(4f, PaneClaw.Hit, 0.001f);
+            Assert.AreEqual(1.1f, PaneClaw.Reach, 0.001f);
+            Assert.AreEqual(0.8f, PaneClaw.Gap, 0.001f);
+            Assert.AreEqual(3, PaneClaw.Strikes(12f, 4f));
+            Assert.AreEqual(1, PaneClaw.Strikes(12f, 18f));
+            Assert.AreEqual(0, PaneClaw.Strikes(0f, 4f));
+            Assert.AreEqual(0, PaneClaw.Strikes(12f, 0f));
+            Assert.AreEqual(12f, PaneGlass.Hp, 0.001f);
+            Assert.AreEqual(18f, PaneCharge.Hit, 0.001f);
+        }
+
+        [Test]
+        public void AshMakesYouCoughAndAClearYardStaysQuiet()
+        {
+            Assert.AreEqual(7f, AshCough.Gap, 0.001f);
+            Assert.AreEqual(11f, AshCough.CrouchGap, 0.001f);
+            Assert.AreEqual(8f, AshCough.Radius, 0.001f);
+            Assert.IsFalse(AshCough.Due(false, false, 0f, 20f));
+            Assert.IsTrue(AshCough.Due(true, false, 0f, 1f));
+            Assert.IsFalse(AshCough.Due(true, false, 10f, 16.9f));
+            Assert.IsTrue(AshCough.Due(true, false, 10f, 17f));
+            Assert.IsFalse(AshCough.Due(true, true, 10f, 20.9f));
+            Assert.IsTrue(AshCough.Due(true, true, 10f, 21f));
+            Assert.IsFalse(AshCough.Due(true, false, 10f, 9f));
+            Assert.AreEqual(8f, AshCough.Carry(false), 0.001f);
+            Assert.AreEqual(4f, AshCough.Carry(true), 0.001f);
+            Assert.AreEqual(0.82f, AshVeil.Cut, 0.001f);
+            Assert.IsTrue(AshFall.Falls("ash_market"));
+            Assert.IsFalse(AshFall.Falls("rail_yard"));
+            Assert.AreEqual("[Cough, east]", Presentation.Caption(NoiseType.Cough, 1f, 0f, "en"));
+            Assert.AreEqual("[Tos, este]", Presentation.Caption(NoiseType.Cough, 1f, 0f, "es"));
+            Assert.AreEqual("", Presentation.Caption(NoiseType.WalkFootstep, 1f, 0f, "en"));
+            Assert.AreEqual(0f, HearGate.Perceived(8f, 40f, 1f, false, NoiseType.Thunder), 0.001f);
+            Assert.Greater(HearGate.Perceived(2f, 8f, 0.7f, false, NoiseType.Cough), 0.05f);
+            Assert.IsFalse(StormCover.Masks(10f, 11f, NoiseType.Cough));
+            Assert.IsTrue(ClipBook.Has("cough"));
+            Assert.AreEqual(10f, AudioSpace.MaxDistance("cough"), 0.001f);
+        }
+
+        [Test]
+        public void AStreetBiteComesHomeOnTheLeadersInjury()
+        {
+            Assert.AreEqual(0, HomeSick.Carry(0, 0));
+            Assert.AreEqual(1, HomeSick.Carry(0, 1));
+            Assert.AreEqual(2, HomeSick.Carry(0, 2));
+            Assert.AreEqual(2, HomeSick.Carry(1, 2));
+            Assert.AreEqual(3, HomeSick.Carry(3, 1));
+            Assert.AreEqual(2, HomeSick.Carry(2, 0));
+            Assert.AreEqual(2, HomeSick.Carry(-1, 2));
+            Assert.AreEqual(3, HomeSick.Carry(0, 3));
+            Assert.AreEqual(3, HomeSick.Carry(0, 9));
+            Assert.AreEqual(3, HomeSick.Carry(5, 1));
+            Assert.IsTrue(HomeSick.Rises(0, 1));
+            Assert.IsTrue(HomeSick.Rises(0, 2));
+            Assert.IsTrue(HomeSick.Rises(2, 3));
+            Assert.IsTrue(HomeSick.Rises(-1, 2));
+            Assert.IsFalse(HomeSick.Rises(2, 1));
+            Assert.IsFalse(HomeSick.Rises(2, 0));
+            Assert.IsFalse(HomeSick.Rises(3, 1));
+            Assert.IsFalse(HomeSick.Rises(5, 1));
+            Assert.AreEqual("The bite came home", HomeSick.Line(1, "en"));
+            Assert.AreEqual("La mordedura llegó a casa", HomeSick.Line(1, "es"));
+            Assert.AreEqual("The fever came home", HomeSick.Line(2, "en"));
+            Assert.AreEqual("La fiebre llegó a casa", HomeSick.Line(2, "es"));
+            Assert.AreEqual("La fiebre llegó a casa", HomeSick.Line(3, "es"));
+            Assert.AreEqual("", HomeSick.Line(0, "en"));
+            Assert.AreEqual(2, FeverSpread.Sick);
+            Assert.AreEqual(3, FeverSpread.Cap);
+            Assert.AreEqual(2, SuccessionLedger.MercyInjury);
+            Assert.AreEqual(1, Affliction.Stage(1f));
+            Assert.AreEqual(1, Affliction.Stage(89f));
+            Assert.AreEqual(2, Affliction.Stage(90f));
+            Assert.AreEqual(2, Affliction.Stage(179f));
+            Assert.AreEqual(3, Affliction.Stage(180f));
+            Assert.IsTrue(Affliction.AntibioticsWork(1));
+            Assert.IsTrue(Affliction.AntibioticsWork(2));
+            Assert.IsFalse(Affliction.AntibioticsWork(3));
+            Assert.IsFalse(Affliction.AntibioticsWork(0));
+        }
+
+        [Test]
+        public void TheCampCardNamesABiteAFeverAndACriticalWound()
+        {
+            Assert.AreEqual("", WoundCard.Line(0, "en"));
+            Assert.AreEqual("", WoundCard.Line(-1, "es"));
+            Assert.AreEqual("Bitten", WoundCard.Line(1, "en"));
+            Assert.AreEqual("Mordida", WoundCard.Line(1, "es"));
+            Assert.AreEqual("Fever", WoundCard.Line(2, "en"));
+            Assert.AreEqual("Fiebre", WoundCard.Line(2, "es"));
+            Assert.AreEqual("Critical", WoundCard.Line(3, "en"));
+            Assert.AreEqual("Crítica", WoundCard.Line(3, "es"));
+            Assert.AreEqual("Critical", WoundCard.Line(4, "en"));
+            Assert.AreEqual("Medic", CampRoutine.Choose("Guard", 80f, 80f, 70f, 2));
+            Assert.AreEqual("Guard", CampRoutine.Choose("Guard", 80f, 80f, 70f, 1));
+            Assert.AreEqual(1, HomeSick.Carry(0, 1));
+            Assert.AreEqual(2, HomeSick.Carry(0, 2));
+            Assert.AreEqual(3, FeverSpread.Cap);
+        }
+
+        [Test]
+        public void AHurtColonistCanTakeTheCotAndAHealthyOneStaysUp()
+        {
+            Assert.IsTrue(CotPull.Holds(1));
+            Assert.IsTrue(CotPull.Holds(2));
+            Assert.IsTrue(CotPull.Holds(3));
+            Assert.IsFalse(CotPull.Holds(0));
+            Assert.IsFalse(CotPull.Holds(-1));
+            Assert.AreEqual("On the cot", CotPull.Bed("en"));
+            Assert.AreEqual("En la camilla", CotPull.Bed("es"));
+            Assert.AreEqual("They are not hurt", CotPull.Refuse("en"));
+            Assert.AreEqual("No está herido", CotPull.Refuse("es"));
+            Assert.AreEqual(40f, ShiftWear.After(80f, "Quarantine", false), 0.001f);
+            Assert.AreEqual(10f, ShiftWear.After(80f, "Quarantine", true), 0.001f);
+            Assert.AreEqual(22f, ShiftWear.After(0f, "Guard", false), 0.001f);
+            Assert.AreEqual(0f, ShiftWear.After(0f, "Fallen", false), 0.001f);
+            Assert.IsFalse(YardSoak.Outdoor("Quarantine"));
+            Assert.IsTrue(YardSoak.Outdoor("Guard"));
+            Assert.IsFalse(FeverSpread.Source(2, "Quarantine", true));
+            Assert.IsTrue(FeverSpread.Source(2, "Guard", true));
+            Assert.IsFalse(FeverSpread.Source(1, "Guard", true));
+            Assert.AreEqual("Medic", CampRoutine.Choose("Quarantine", 80f, 80f, 70f, 1));
+            Assert.AreEqual("Cuarentena", Loc.Task("Quarantine", "es"));
+        }
+
+        [Test]
+        public void ACampWoundSlowsTheStreetAndAFeverRefusesASprint()
+        {
+            Assert.AreEqual(0.92f, StreetLimp.Bite, 0.001f);
+            Assert.AreEqual(0.78f, StreetLimp.Fever, 0.001f);
+            Assert.AreEqual(0.62f, StreetLimp.Critical, 0.001f);
+            Assert.AreEqual(4.5f, StreetLimp.Pace(4.5f, 0), 0.001f);
+            Assert.AreEqual(4.14f, StreetLimp.Pace(4.5f, 1), 0.001f);
+            Assert.AreEqual(3.51f, StreetLimp.Pace(4.5f, 2), 0.001f);
+            Assert.AreEqual(2.79f, StreetLimp.Pace(4.5f, 3), 0.001f);
+            Assert.AreEqual(2.79f, StreetLimp.Pace(4.5f, 9), 0.001f);
+            Assert.AreEqual(0f, StreetLimp.Pace(-2f, 2), 0.001f);
+            Assert.IsTrue(StreetLimp.AllowsSprint(0));
+            Assert.IsTrue(StreetLimp.AllowsSprint(1));
+            Assert.IsTrue(StreetLimp.AllowsSprint(-1));
+            Assert.IsFalse(StreetLimp.AllowsSprint(2));
+            Assert.IsFalse(StreetLimp.AllowsSprint(3));
+            Assert.AreEqual("", StreetLimp.Line(0, "en"));
+            Assert.AreEqual("The bite slows you", StreetLimp.Line(1, "en"));
+            Assert.AreEqual("La mordedura te frena", StreetLimp.Line(1, "es"));
+            Assert.AreEqual("The fever slows you", StreetLimp.Line(2, "en"));
+            Assert.AreEqual("La fiebre te frena", StreetLimp.Line(2, "es"));
+            Assert.AreEqual("You can barely walk", StreetLimp.Line(3, "en"));
+            Assert.AreEqual("Apenas puedes caminar", StreetLimp.Line(4, "es"));
+            Assert.AreEqual(2, FeverSpread.Sick);
+        }
+
+        [Test]
+        public void ACampWoundOpensTheShotAndAClearLeaderKeepsTheSights()
+        {
+            Assert.AreEqual(1.12f, WoundSway.Bite, 0.001f);
+            Assert.AreEqual(1.35f, WoundSway.Fever, 0.001f);
+            Assert.AreEqual(1.6f, WoundSway.Critical, 0.001f);
+            Assert.AreEqual(5.5f, WoundSway.Angle(5.5f, 0), 0.001f);
+            Assert.AreEqual(6.16f, WoundSway.Angle(5.5f, 1), 0.001f);
+            Assert.AreEqual(7.425f, WoundSway.Angle(5.5f, 2), 0.001f);
+            Assert.AreEqual(8.8f, WoundSway.Angle(5.5f, 3), 0.001f);
+            Assert.AreEqual(8.8f, WoundSway.Angle(5.5f, 9), 0.001f);
+            Assert.AreEqual(0f, WoundSway.Angle(-1f, 2), 0.001f);
+            Assert.AreEqual(0.62f, SightGroup.Tight, 0.001f);
+            Assert.AreEqual(3.41f, SightGroup.Angle(5.5f, true), 0.001f);
+            Assert.AreEqual(5.5f, SightGroup.Angle(5.5f, false), 0.001f);
+            Assert.AreEqual(4.6035f, WoundSway.Angle(SightGroup.Angle(5.5f, true), 2), 0.001f);
+            Assert.AreEqual(0.8f, TraitHook.Aim("Sharpshooter"), 0.001f);
+            Assert.AreEqual(1f, TraitHook.Aim("Brave"), 0.001f);
+            Assert.AreEqual(0.92f, StreetLimp.Bite, 0.001f);
+        }
+
+        [Test]
+        public void AStreetDoseEasesTheCampWoundAndAClearLeaderStaysClear()
+        {
+            Assert.IsFalse(WoundEase.Helps(0));
+            Assert.IsFalse(WoundEase.Helps(-1));
+            Assert.IsTrue(WoundEase.Helps(1));
+            Assert.IsTrue(WoundEase.Helps(3));
+            Assert.AreEqual(0, WoundEase.After(0));
+            Assert.AreEqual(0, WoundEase.After(-2));
+            Assert.AreEqual(0, WoundEase.After(1));
+            Assert.AreEqual(1, WoundEase.After(2));
+            Assert.AreEqual(2, WoundEase.After(3));
+            Assert.AreEqual("The wound eases", WoundEase.Line("en"));
+            Assert.AreEqual("La herida cede", WoundEase.Line("es"));
+            Assert.AreEqual("Kit", WoundEase.Note("Kit", false, "en"));
+            Assert.AreEqual("Kit  The wound eases", WoundEase.Note("Kit", true, "en"));
+            Assert.AreEqual("Kit  La herida cede", WoundEase.Note("Kit", true, "es"));
+            Assert.AreEqual("The wound eases", WoundEase.Note("", true, "en"));
+            Assert.AreEqual(50, FieldHand.Medkit(0));
+            Assert.IsFalse(Affliction.AntibioticsWork(0));
+            Assert.IsTrue(Affliction.AntibioticsWork(1));
+            Assert.IsTrue(Affliction.AntibioticsWork(2));
+            Assert.IsFalse(Affliction.AntibioticsWork(3));
+            Assert.AreEqual(1.12f, WoundSway.Bite, 0.001f);
+        }
+
+        [Test]
+        public void ACampWoundCarriesTheStepAndAClearLeaderStaysQuiet()
+        {
+            Assert.AreEqual(1.15f, LimpStep.Bite, 0.001f);
+            Assert.AreEqual(1.4f, LimpStep.Fever, 0.001f);
+            Assert.AreEqual(1.7f, LimpStep.Critical, 0.001f);
+            Assert.AreEqual(6f, LimpStep.Radius(6f, 0), 0.001f);
+            Assert.AreEqual(6.9f, LimpStep.Radius(6f, 1), 0.001f);
+            Assert.AreEqual(8.4f, LimpStep.Radius(6f, 2), 0.001f);
+            Assert.AreEqual(10.2f, LimpStep.Radius(6f, 3), 0.001f);
+            Assert.AreEqual(10.2f, LimpStep.Radius(6f, 9), 0.001f);
+            Assert.AreEqual(0f, LimpStep.Radius(-1f, 2), 0.001f);
+            Assert.AreEqual(2.8f, LimpStep.Radius(2f, 2), 0.001f);
+            Assert.AreEqual(6f, StepReach.Radius(6f, "step"), 0.001f);
+            Assert.AreEqual(8.1f, StepReach.Radius(6f, "step_metal"), 0.001f);
+            Assert.AreEqual(9.315f, LimpStep.Radius(StepReach.Radius(6f, "step_metal"), 1), 0.001f);
+            Assert.AreEqual(0.92f, StreetLimp.Bite, 0.001f);
+            Assert.AreEqual("", Presentation.Caption(NoiseType.WalkFootstep, 1f, 0f, "en"));
+        }
+
+        [Test]
+        public void AStormFillsTheCollectorAndAClearDayLeavesIt()
+        {
+            Assert.AreEqual(1, RainCatch.RainExtra);
+            Assert.AreEqual(2, RainCatch.StormExtra);
+            Assert.AreEqual(1, RainCatch.Extra("Water", 100, 0, WeatherKind.Rain));
+            Assert.AreEqual(2, RainCatch.Extra("Water", 100, 0, WeatherKind.Storm));
+            Assert.AreEqual(0, RainCatch.Extra("Water", 100, 0, WeatherKind.Clear));
+            Assert.AreEqual(0, RainCatch.Extra("Water", 100, 0, WeatherKind.Fog));
+            Assert.AreEqual(0, RainCatch.Extra("Water", 100, 0, WeatherKind.Overcast));
+            Assert.AreEqual(0, RainCatch.Extra("Water", 0, 0, WeatherKind.Storm));
+            Assert.AreEqual(0, RainCatch.Extra("Water", 40, 1, WeatherKind.Rain));
+            Assert.AreEqual(0, RainCatch.Extra("Purifier", 100, 0, WeatherKind.Storm));
+            Assert.AreEqual(0, RainCatch.Extra("Farm", 100, 0, WeatherKind.Rain));
+            Assert.AreEqual("The collector caught the rain", RainCatch.Line(WeatherKind.Rain, "en"));
+            Assert.AreEqual("El colector atrapó la lluvia", RainCatch.Line(WeatherKind.Rain, "es"));
+            Assert.AreEqual("The collector caught the storm", RainCatch.Line(WeatherKind.Storm, "en"));
+            Assert.AreEqual("El colector atrapó la tormenta", RainCatch.Line(WeatherKind.Storm, "es"));
+            Assert.AreEqual("", RainCatch.Line(WeatherKind.Clear, "en"));
+            var plots = new[]
+            {
+                new CampYield.Plot { Kind = "Purifier", Integrity = 100 },
+                new CampYield.Plot { Kind = "Water", Integrity = 100 }
+            };
+            CampYield.Produce(plots, false, out _, out int dry);
+            CampYield.Produce(plots, true, out _, out int wet);
+            Assert.AreEqual(3, dry);
+            Assert.AreEqual(4, wet);
+            Assert.AreEqual(1, CampYield.CollectorWater);
+            Assert.AreEqual(2, CampYield.PurifierWater);
+            Assert.AreEqual(1, CampYield.RainBonus);
+        }
+
+        [Test]
+        public void AStormDrinksTheTankAndAClearNightDoesNot()
+        {
+            Assert.AreEqual(0.8f, StormBurn.Pull, 0.001f);
+            Assert.AreEqual(10f, StormBurn.After(10f, 10f, WeatherKind.Storm), 0.001f);
+            Assert.AreEqual(5f, StormBurn.After(10f, 5f, WeatherKind.Clear), 0.001f);
+            Assert.AreEqual(5f, StormBurn.After(10f, 5f, WeatherKind.Rain), 0.001f);
+            Assert.AreEqual(5f, StormBurn.After(10f, 5f, WeatherKind.Fog), 0.001f);
+            Assert.AreEqual(1f, StormBurn.After(10f, 5f, WeatherKind.Storm), 0.001f);
+            Assert.AreEqual(6.4f, StormBurn.After(10f, 8f, WeatherKind.Storm), 0.001f);
+            Assert.AreEqual(0f, StormBurn.After(1f, 0f, WeatherKind.Storm), 0.001f);
+            Assert.AreEqual(0f, StormBurn.After(-1f, 5f, WeatherKind.Storm), 0.001f);
+            Assert.AreEqual(90f, FuelTank.NightRate, 0.001f);
+            Assert.AreEqual(0.45f, FuelTank.Dusk, 0.001f);
+            Assert.AreEqual(5f, FuelTank.Drink(10f, 200f, true, 0.46f), 0.001f);
+            Assert.AreEqual(10f, FuelTank.Drink(10f, 200f, true, 0.45f), 0.001f);
+            Assert.AreEqual(10f, FuelTank.Drink(10f, 200f, false, 0.8f), 0.001f);
+            Assert.AreEqual("A storm drinks the tank", Loc.T("tank.storm", "en"));
+            Assert.AreEqual("Una tormenta bebe el tanque", Loc.T("tank.storm", "es"));
+            Assert.AreEqual(2, RainCatch.StormExtra);
+        }
+
+        [Test]
+        public void AStormWearsTheYardAndAClearDayLeavesIt()
+        {
+            Assert.AreEqual(6, StormWear.StormHit);
+            Assert.AreEqual(2, StormWear.RainHit);
+            Assert.AreEqual(94, StormWear.After(100, 0, "Farm", WeatherKind.Storm));
+            Assert.AreEqual(98, StormWear.After(100, 0, "Barricade", WeatherKind.Rain));
+            Assert.AreEqual(100, StormWear.After(100, 0, "Farm", WeatherKind.Clear));
+            Assert.AreEqual(100, StormWear.After(100, 0, "Farm", WeatherKind.Fog));
+            Assert.AreEqual(100, StormWear.After(100, 0, "Cot", WeatherKind.Storm));
+            Assert.AreEqual(100, StormWear.After(100, 0, "Workbench", WeatherKind.Storm));
+            Assert.AreEqual(100, StormWear.After(100, 0, "Campfire", WeatherKind.Storm));
+            Assert.AreEqual(100, StormWear.After(100, 1, "Farm", WeatherKind.Storm));
+            Assert.AreEqual(0, StormWear.After(4, 0, "Generator", WeatherKind.Storm));
+            Assert.AreEqual(0, StormWear.After(0, 0, "Farm", WeatherKind.Storm));
+            Assert.AreEqual(94, StormWear.After(100, 0, "Purifier", WeatherKind.Storm));
+            Assert.AreEqual(94, StormWear.After(100, 0, "Lamp", WeatherKind.Storm));
+            Assert.IsTrue(StormWear.Outdoor("Watchtower"));
+            Assert.IsFalse(StormWear.Outdoor("Crate"));
+            Assert.AreEqual("The storm wore the yard", StormWear.Line(WeatherKind.Storm, "en"));
+            Assert.AreEqual("La tormenta gastó el patio", StormWear.Line(WeatherKind.Storm, "es"));
+            Assert.AreEqual("The rain wore the yard", StormWear.Line(WeatherKind.Rain, "en"));
+            Assert.AreEqual("La lluvia gastó el patio", StormWear.Line(WeatherKind.Rain, "es"));
+            Assert.AreEqual("", StormWear.Line(WeatherKind.Clear, "en"));
+            Assert.IsTrue(BuildSite.Ready(0, 94));
+            Assert.IsFalse(BuildSite.Ready(0, 0));
+            Assert.AreEqual(0.8f, StormBurn.Pull, 0.001f);
+        }
+
+        [Test]
+        public void AMacheteSwingSpendsBreathAndAGunDoesNot()
+        {
+            Assert.AreEqual(8f, SwingCost.Melee, 0.001f);
+            Assert.AreEqual(8f, SwingCost.Of(WeaponType.Melee), 0.001f);
+            Assert.AreEqual(0f, SwingCost.Of(WeaponType.Pistol), 0.001f);
+            Assert.AreEqual(0f, SwingCost.Of(WeaponType.Shotgun), 0.001f);
+            Assert.AreEqual(0f, SwingCost.Of(WeaponType.Rifle), 0.001f);
+            Assert.AreEqual(0f, SwingCost.Of(WeaponType.SMG), 0.001f);
+            Assert.IsTrue(SwingCost.Pays(8f, WeaponType.Melee));
+            Assert.IsTrue(SwingCost.Pays(40f, WeaponType.Melee));
+            Assert.IsFalse(SwingCost.Pays(7.9f, WeaponType.Melee));
+            Assert.IsFalse(SwingCost.Pays(0f, WeaponType.Melee));
+            Assert.IsTrue(SwingCost.Pays(0f, WeaponType.Pistol));
+            Assert.AreEqual(92f, SwingCost.After(100f, WeaponType.Melee), 0.001f);
+            Assert.AreEqual(0f, SwingCost.After(8f, WeaponType.Melee), 0.001f);
+            Assert.AreEqual(0f, SwingCost.After(3f, WeaponType.Melee), 0.001f);
+            Assert.AreEqual(0f, SwingCost.After(-2f, WeaponType.Melee), 0.001f);
+            Assert.AreEqual(40f, SwingCost.After(40f, WeaponType.Pistol), 0.001f);
+            Assert.AreEqual("Too tired to swing", SwingCost.Line("en"));
+            Assert.AreEqual("Demasiado cansado para cortar", SwingCost.Line("es"));
+            Assert.AreEqual(48f, WeaponCard.Find("machete").Damage, 0.001f);
+            Assert.AreEqual(1.8f, WeaponCard.Find("machete").Rate, 0.001f);
+            Assert.AreEqual(1.9f, WeaponCard.Find("machete").Range, 0.001f);
+            Assert.AreEqual(2f, WeaponCard.Find("machete").Noise, 0.001f);
+            Assert.AreEqual(34f, WeaponCard.Find("pistol_9mm").Damage, 0.001f);
+        }
+
+        [Test]
+        public void ACrouchedBladeStaysCloseAndAGunKeepsItsReach()
+        {
+            Assert.AreEqual(0.45f, QuietSwing.Crouch, 0.001f);
+            Assert.AreEqual(1f, QuietSwing.Scale(false, WeaponType.Melee), 0.001f);
+            Assert.AreEqual(0.45f, QuietSwing.Scale(true, WeaponType.Melee), 0.001f);
+            Assert.AreEqual(1f, QuietSwing.Scale(true, WeaponType.Pistol), 0.001f);
+            Assert.AreEqual(1f, QuietSwing.Scale(true, WeaponType.Shotgun), 0.001f);
+            Assert.AreEqual(2f, QuietSwing.Radius(2f, false, WeaponType.Melee), 0.001f);
+            Assert.AreEqual(0.9f, QuietSwing.Radius(2f, true, WeaponType.Melee), 0.001f);
+            Assert.AreEqual(0f, QuietSwing.Radius(-1f, true, WeaponType.Melee), 0.001f);
+            Assert.AreEqual(20f, QuietSwing.Radius(20f, true, WeaponType.Pistol), 0.001f);
+            Assert.AreEqual(34f, QuietSwing.Radius(34f, true, WeaponType.Rifle), 0.001f);
+            Assert.AreEqual(2f, WeaponCard.Find("machete").Noise, 0.001f);
+            Assert.AreEqual(8f, SwingCost.Melee, 0.001f);
+            Assert.AreEqual(48f, WeaponCard.Find("machete").Damage, 0.001f);
+        }
+
+        [Test]
+        public void ABladeOnAWallRingsFartherThanACleanSwing()
+        {
+            Assert.AreEqual(9f, BladeClang.Reach, 0.001f);
+            Assert.AreEqual(0.55f, BladeClang.Crouch, 0.001f);
+            Assert.AreEqual(9f, BladeClang.Radius(false), 0.001f);
+            Assert.AreEqual(4.95f, BladeClang.Radius(true), 0.001f);
+            Assert.AreEqual(2f, QuietSwing.Radius(2f, false, WeaponType.Melee), 0.001f);
+            Assert.AreEqual(0.9f, QuietSwing.Radius(2f, true, WeaponType.Melee), 0.001f);
+            Assert.AreEqual("clang", ContactCue.Impact(false, true));
+            Assert.AreEqual("chop", ContactCue.Impact(true, true));
+            Assert.AreEqual("", ContactCue.Impact(false, false));
+            Assert.AreEqual(8f, SwingCost.Melee, 0.001f);
+            Assert.AreEqual(2f, WeaponCard.Find("machete").Noise, 0.001f);
+            Assert.AreEqual(0.45f, QuietSwing.Crouch, 0.001f);
+        }
+
+        [Test]
+        public void ABladeBreaksAPaneAndALightRakeDoesNot()
+        {
+            Assert.AreEqual(48f, BladePane.Hit(48f), 0.001f);
+            Assert.AreEqual(0f, BladePane.Hit(-3f), 0.001f);
+            Assert.IsTrue(BladePane.Breaks(48f));
+            Assert.IsTrue(BladePane.Breaks(12f));
+            Assert.IsFalse(BladePane.Breaks(4f));
+            Assert.IsFalse(BladePane.Breaks(0f));
+            Assert.AreEqual(12f, PaneGlass.Hp, 0.001f);
+            Assert.AreEqual(0f, PaneGlass.After(PaneGlass.Hp, 48f), 0.001f);
+            Assert.AreEqual(8f, PaneGlass.After(PaneGlass.Hp, 4f), 0.001f);
+            Assert.AreEqual(48f, WeaponCard.Find("machete").Damage, 0.001f);
+            Assert.AreEqual(4f, PaneClaw.Hit, 0.001f);
+            Assert.AreEqual(18f, PaneCharge.Hit, 0.001f);
+            Assert.AreEqual(9f, PaneGlass.Noise, 0.001f);
+            Assert.AreEqual(9f, BladeClang.Reach, 0.001f);
+            Assert.AreEqual("The pane shatters", Loc.T("pane.break", "en"));
+        }
+
+        [Test]
+        public void ABarredDoorHoldsUntilTheThirdSwingAndTheWayOutStaysOpen()
+        {
+            Assert.AreEqual(3, DoorBar.Hits);
+            Assert.AreEqual(8f, DoorBar.Noise, 0.001f);
+            Assert.AreEqual(12f, DoorBar.BreakNoise, 0.001f);
+            Assert.IsTrue(DoorBar.Holds(3));
+            Assert.IsTrue(DoorBar.Holds(1));
+            Assert.IsFalse(DoorBar.Holds(0));
+            Assert.IsFalse(DoorBar.Holds(-1));
+            Assert.AreEqual(2, DoorBar.After(3));
+            Assert.AreEqual(1, DoorBar.After(2));
+            Assert.AreEqual(0, DoorBar.After(1));
+            Assert.AreEqual(0, DoorBar.After(0));
+            Assert.AreEqual("Barred", DoorBar.Face("en"));
+            Assert.AreEqual("Atrancada", DoorBar.Face("es"));
+            Assert.AreEqual("The bar holds", DoorBar.Hold("en"));
+            Assert.AreEqual("La tranca aguanta", DoorBar.Hold("es"));
+            Assert.AreEqual("The bar gives", DoorBar.Gives("en"));
+            Assert.AreEqual("La tranca cede", DoorBar.Gives("es"));
+            Assert.AreEqual("Step inside", DoorMap.Prompt(false));
+            Assert.AreEqual("Step outside", DoorMap.Prompt(true));
+            Assert.AreEqual("Inside", DoorMap.Cross(false, "en"));
+            Assert.AreEqual(90f, DoorMap.Shift, 0.001f);
+            Assert.AreEqual(48f, WeaponCard.Find("machete").Damage, 0.001f);
+        }
+
+        [Test]
+        public void AClawWorksTheBarAndAChargeRipsItOpen()
+        {
+            Assert.AreEqual(1.1f, BarClaw.Reach, 0.001f);
+            Assert.AreEqual(0.8f, BarClaw.Gap, 0.001f);
+            Assert.AreEqual(3, BarClaw.Charge);
+            Assert.AreEqual(2, BarClaw.Rake(3));
+            Assert.AreEqual(1, BarClaw.Rake(2));
+            Assert.AreEqual(0, BarClaw.Rake(1));
+            Assert.AreEqual(0, BarClaw.Rake(0));
+            Assert.AreEqual(0, BarClaw.Rake(-1));
+            Assert.AreEqual(0, BarClaw.Rush(3));
+            Assert.AreEqual(0, BarClaw.Rush(1));
+            Assert.AreEqual(0, BarClaw.Rush(0));
+            Assert.AreEqual(0, BarClaw.Rush(-2));
+            Assert.IsFalse(BarClaw.Opens(3, false));
+            Assert.IsTrue(BarClaw.Opens(1, false));
+            Assert.IsTrue(BarClaw.Opens(3, true));
+            Assert.IsFalse(BarClaw.Opens(0, true));
+            Assert.IsFalse(BarClaw.Opens(0, false));
+            Assert.AreEqual("The bar rattles", BarClaw.Rattle("en"));
+            Assert.AreEqual("La tranca vibra", BarClaw.Rattle("es"));
+            Assert.AreEqual(3, DoorBar.Hits);
+            Assert.AreEqual(8f, DoorBar.Noise, 0.001f);
+            Assert.AreEqual(12f, DoorBar.BreakNoise, 0.001f);
+            Assert.AreEqual(4f, PaneClaw.Hit, 0.001f);
+            Assert.AreEqual(18f, PaneCharge.Hit, 0.001f);
+            Assert.AreEqual(1.1f, PaneClaw.Reach, 0.001f);
+            Assert.AreEqual("Step inside", DoorMap.Prompt(false));
+        }
+
+        [Test]
+        public void AShotHitsTheBarAndABlastSpendsTwo()
+        {
+            Assert.AreEqual(1, BarShot.Bullet);
+            Assert.AreEqual(2, BarShot.Blast);
+            Assert.AreEqual(1, BarShot.Hits(WeaponType.Pistol));
+            Assert.AreEqual(1, BarShot.Hits(WeaponType.Rifle));
+            Assert.AreEqual(1, BarShot.Hits(WeaponType.SMG));
+            Assert.AreEqual(2, BarShot.Hits(WeaponType.Shotgun));
+            Assert.AreEqual(0, BarShot.Hits(WeaponType.Melee));
+            Assert.AreEqual(2, BarShot.Volley(WeaponType.Shotgun, 7));
+            Assert.AreEqual(2, BarShot.Volley(WeaponType.Shotgun, 1));
+            Assert.AreEqual(0, BarShot.Volley(WeaponType.Shotgun, 0));
+            Assert.AreEqual(1, BarShot.Volley(WeaponType.Pistol, 7));
+            Assert.AreEqual(0, BarShot.Volley(WeaponType.Melee, 1));
+            Assert.AreEqual(2, BarShot.After(3, WeaponType.Pistol));
+            Assert.AreEqual(2, BarShot.After(3, WeaponType.Rifle));
+            Assert.AreEqual(2, BarShot.After(3, WeaponType.SMG));
+            Assert.AreEqual(1, BarShot.After(3, WeaponType.Shotgun));
+            Assert.AreEqual(0, BarShot.After(2, WeaponType.Shotgun));
+            Assert.AreEqual(0, BarShot.After(1, WeaponType.Shotgun));
+            Assert.AreEqual(0, BarShot.After(1, WeaponType.Pistol));
+            Assert.AreEqual(0, BarShot.After(0, WeaponType.Shotgun));
+            Assert.AreEqual(0, BarShot.After(-1, WeaponType.Pistol));
+            Assert.AreEqual(3, BarShot.After(3, WeaponType.Melee));
+            Assert.IsFalse(BarShot.Opens(3, WeaponType.Pistol));
+            Assert.IsTrue(BarShot.Opens(1, WeaponType.Pistol));
+            Assert.IsFalse(BarShot.Opens(3, WeaponType.Shotgun));
+            Assert.IsTrue(BarShot.Opens(2, WeaponType.Shotgun));
+            Assert.IsFalse(BarShot.Opens(0, WeaponType.Shotgun));
+            Assert.AreEqual("The shot hits the bar", BarShot.Line("en"));
+            Assert.AreEqual("El disparo pega en la tranca", BarShot.Line("es"));
+            Assert.AreEqual(3, DoorBar.Hits);
+            Assert.AreEqual(19f, WeaponCard.Find("shotgun_pump").Damage, 0.001f);
+            Assert.AreEqual(7, WeaponCard.Find("shotgun_pump").Pellets);
+            Assert.AreEqual(34f, WeaponCard.Find("pistol_9mm").Damage, 0.001f);
+            Assert.AreEqual("The bar holds", DoorBar.Hold("en"));
+            Assert.AreEqual("The bar rattles", BarClaw.Rattle("en"));
+        }
+
+        [Test]
+        public void ACampWoundSlowsTheReloadAndTheNextSwing()
+        {
+            Assert.AreEqual(1.2f, WoundRack.Bite, 0.001f);
+            Assert.AreEqual(1.45f, WoundRack.Fever, 0.001f);
+            Assert.AreEqual(1.8f, WoundRack.Critical, 0.001f);
+            Assert.AreEqual(1f, WoundRack.Scale(0), 0.001f);
+            Assert.AreEqual(1f, WoundRack.Scale(-2), 0.001f);
+            Assert.AreEqual(1.2f, WoundRack.Scale(1), 0.001f);
+            Assert.AreEqual(1.45f, WoundRack.Scale(2), 0.001f);
+            Assert.AreEqual(1.8f, WoundRack.Scale(3), 0.001f);
+            Assert.AreEqual(1.8f, WoundRack.Scale(9), 0.001f);
+            Assert.AreEqual(1.8f, WoundRack.Reload(1.8f, 0, 0), 0.001f);
+            Assert.AreEqual(2.16f, WoundRack.Reload(1.8f, 0, 1), 0.001f);
+            Assert.AreEqual(2.61f, WoundRack.Reload(1.8f, 0, 2), 0.001f);
+            Assert.AreEqual(3.24f, WoundRack.Reload(1.8f, 0, 3), 0.001f);
+            Assert.AreEqual(3.24f, WoundRack.Reload(1.8f, 0, 9), 0.001f);
+            Assert.AreEqual(0f, WoundRack.Reload(-2f, 0, 2), 0.001f);
+            Assert.AreEqual(1.296f, WoundRack.Reload(1.8f, 8, 0), 0.001f);
+            Assert.AreEqual(1.8792f, WoundRack.Reload(1.8f, 8, 2), 0.001f);
+            Assert.AreEqual(1f, FieldHand.Reload(0), 0.001f);
+            Assert.AreEqual(0.8f, FieldHand.Reload(8), 0.001f);
+            Assert.AreEqual(1f, HandDepth.Reload(4), 0.001f);
+            Assert.AreEqual(0.9f, HandDepth.Reload(8), 0.001f);
+            float machete = 1f / 1.8f;
+            Assert.AreEqual(machete, WoundRack.Swing(machete, 0, WeaponType.Melee), 0.001f);
+            Assert.AreEqual(machete * 1.45f, WoundRack.Swing(machete, 2, WeaponType.Melee), 0.001f);
+            Assert.AreEqual(machete * 1.8f, WoundRack.Swing(machete, 3, WeaponType.Melee), 0.001f);
+            Assert.AreEqual(0f, WoundRack.Swing(-1f, 2, WeaponType.Melee), 0.001f);
+            Assert.AreEqual(1f / 9f, WoundRack.Swing(1f / 9f, 3, WeaponType.Rifle), 0.001f);
+            Assert.AreEqual(1f / 14f, WoundRack.Swing(1f / 14f, 3, WeaponType.SMG), 0.001f);
+            Assert.AreEqual("", WoundRack.Line(0, "en"));
+            Assert.AreEqual("The wound slows your hands", WoundRack.Line(1, "en"));
+            Assert.AreEqual("The wound slows your hands", WoundRack.Line(3, "en"));
+            Assert.AreEqual("La herida retrasa las manos", WoundRack.Line(2, "es"));
+            Assert.AreEqual(1.8f, WeaponCard.Find("machete").Rate, 0.001f);
+            Assert.AreEqual(9f, WeaponCard.Find("rifle_assault").Rate, 0.001f);
+            Assert.AreEqual(14f, WeaponCard.Find("smg").Rate, 0.001f);
+            Assert.AreEqual(34f, WeaponCard.Find("pistol_9mm").Damage, 0.001f);
+        }
+
+        [Test]
+        public void ABittenGuardShootsShortAndAFeverLeavesTheLine()
+        {
+            Assert.AreEqual(0.72f, PostBite.Reach, 0.001f);
+            Assert.AreEqual(0.7f, PostBite.Hit, 0.001f);
+            Assert.AreEqual(16f, PostBite.Range(0), 0.001f);
+            Assert.AreEqual(16f, PostBite.Range(-1), 0.001f);
+            Assert.AreEqual(11.52f, PostBite.Range(1), 0.001f);
+            Assert.AreEqual(0f, PostBite.Range(2), 0.001f);
+            Assert.AreEqual(0f, PostBite.Range(3), 0.001f);
+            Assert.AreEqual(8f, PostBite.Damage(0), 0.001f);
+            Assert.AreEqual(8f, PostBite.Damage(-2), 0.001f);
+            Assert.AreEqual(5.6f, PostBite.Damage(1), 0.001f);
+            Assert.AreEqual(0f, PostBite.Damage(2), 0.001f);
+            Assert.AreEqual(0f, PostBite.Damage(9), 0.001f);
+            Assert.AreEqual("The bite pulls the shot", PostBite.Line("en"));
+            Assert.AreEqual("La mordedura tira el tiro", PostBite.Line("es"));
+            Assert.AreEqual("Guard", GuardStand.Face("Guard", 60f, 1));
+            Assert.AreEqual("Medic", GuardStand.Face("Guard", 60f, 2));
+            Assert.AreEqual("Medic", GuardStand.Face("Guard", 60f, 3));
+            Assert.AreEqual(8f, GuardVolley.Damage, 0.001f);
+            Assert.AreEqual(16f, GuardVolley.Range, 0.001f);
+            Assert.AreEqual(16f, GuardVolley.Hit(2), 0.001f);
+            Assert.AreEqual(24f, GuardVolley.Hit(4), 0.001f);
+            Assert.AreEqual(1.4f, GuardVolley.Interval, 0.001f);
+        }
+
+        [Test]
+        public void AFollowerSwingsUpCloseAndACryStaysFarther()
+        {
+            Assert.AreEqual(1.6f, StreetAid.Reach, 0.001f);
+            Assert.AreEqual(1.35f, StreetAid.Gap, 0.001f);
+            Assert.AreEqual(14f, StreetAid.Damage, 0.001f);
+            Assert.AreEqual(6f, StreetAid.Noise, 0.001f);
+            Assert.IsTrue(StreetAid.Due(0f, 10f, 1.6f));
+            Assert.IsTrue(StreetAid.Due(0f, 10f, 0f));
+            Assert.IsFalse(StreetAid.Due(0f, 10f, 1.61f));
+            Assert.IsFalse(StreetAid.Due(0f, 10f, -1f));
+            Assert.IsFalse(StreetAid.Due(5f, 6f, 1f));
+            Assert.IsTrue(StreetAid.Due(5f, 6.35f, 1f));
+            Assert.IsFalse(StreetAid.Due(5f, 4f, 1f));
+            Assert.IsFalse(StreetAid.Due(5f, 6.35f, 4f));
+            Assert.IsTrue(StraggleCall.Due(0f, 10f, 4f));
+            Assert.AreEqual(7f, StraggleCall.Near, 0.001f);
+            Assert.AreEqual(6f, StraggleCall.Gap, 0.001f);
+            Assert.AreEqual(16f, StraggleCall.Radius, 0.001f);
+            Assert.AreEqual("Maya swings", StreetAid.Line("Maya", "en"));
+            Assert.AreEqual("Maya golpea", StreetAid.Line("Maya", "es"));
+            Assert.AreEqual("Survivor swings", StreetAid.Line("", "en"));
+            Assert.AreEqual("Superviviente golpea", StreetAid.Line("Survivor", "es"));
+            Assert.AreEqual("Maya cries out", StreetAsk.Cry("Maya", "en"));
+        }
+
+        [Test]
+        public void ACloseZombieBitesTheFollowerAndTheBiteComesHome()
+        {
+            Assert.AreEqual(1.2f, FollowBite.Reach, 0.001f);
+            Assert.AreEqual(2.4f, FollowBite.Gap, 0.001f);
+            Assert.AreEqual(1, FollowBite.Wound);
+            Assert.AreEqual(3, FollowBite.Cap);
+            Assert.IsTrue(FollowBite.Due(0f, 10f, 1.2f));
+            Assert.IsTrue(FollowBite.Due(0f, 10f, 0f));
+            Assert.IsFalse(FollowBite.Due(0f, 10f, 1.21f));
+            Assert.IsFalse(FollowBite.Due(0f, 10f, 1.5f));
+            Assert.IsTrue(StreetAid.Due(0f, 10f, 1.5f));
+            Assert.IsFalse(FollowBite.Due(4f, 6f, 1f));
+            Assert.IsTrue(FollowBite.Due(4f, 6.4f, 1f));
+            Assert.IsFalse(FollowBite.Due(6f, 5f, 1f));
+            Assert.AreEqual(1, FollowBite.After(0));
+            Assert.AreEqual(2, FollowBite.After(1));
+            Assert.AreEqual(3, FollowBite.After(2));
+            Assert.AreEqual(3, FollowBite.After(3));
+            Assert.AreEqual(3, FollowBite.After(9));
+            Assert.AreEqual(1, FollowBite.After(-1));
+            Assert.AreEqual(0, FollowBite.Bring(0));
+            Assert.AreEqual(1, FollowBite.Bring(1));
+            Assert.AreEqual(3, FollowBite.Bring(3));
+            Assert.AreEqual(3, FollowBite.Bring(9));
+            Assert.AreEqual(0, FollowBite.Bring(-2));
+            Assert.AreEqual(1, HomeSick.Carry(0, 1));
+            Assert.AreEqual(3, HomeSick.Carry(0, 9));
+            Assert.AreEqual("Maya is bitten", FollowBite.Line("Maya", "en"));
+            Assert.AreEqual("Maya recibe una mordedura", FollowBite.Line("Maya", "es"));
+            Assert.AreEqual("Survivor is bitten", FollowBite.Line("", "en"));
+            Assert.AreEqual(1.6f, StreetAid.Reach, 0.001f);
+            Assert.AreEqual(14f, StreetAid.Damage, 0.001f);
+            Assert.AreEqual(7f, StraggleCall.Near, 0.001f);
+        }
+
+        [Test]
+        public void ABittenFollowerSlowsAndACriticalOneStopsSwinging()
+        {
+            Assert.AreEqual(0.85f, FollowLimp.Bite, 0.001f);
+            Assert.AreEqual(0.62f, FollowLimp.Fever, 0.001f);
+            Assert.AreEqual(0.4f, FollowLimp.Critical, 0.001f);
+            Assert.AreEqual(3, FollowLimp.Still);
+            Assert.AreEqual(4.2f, FollowLimp.Pace(4.2f, 0), 0.001f);
+            Assert.AreEqual(4.2f, FollowLimp.Pace(4.2f, -1), 0.001f);
+            Assert.AreEqual(3.57f, FollowLimp.Pace(4.2f, 1), 0.001f);
+            Assert.AreEqual(2.604f, FollowLimp.Pace(4.2f, 2), 0.001f);
+            Assert.AreEqual(1.68f, FollowLimp.Pace(4.2f, 3), 0.001f);
+            Assert.AreEqual(1.68f, FollowLimp.Pace(4.2f, 9), 0.001f);
+            Assert.AreEqual(0f, FollowLimp.Pace(-2f, 2), 0.001f);
+            Assert.IsTrue(FollowLimp.Swings(0));
+            Assert.IsTrue(FollowLimp.Swings(1));
+            Assert.IsTrue(FollowLimp.Swings(2));
+            Assert.IsFalse(FollowLimp.Swings(3));
+            Assert.IsFalse(FollowLimp.Swings(9));
+            Assert.AreEqual("Maya can barely keep up", FollowLimp.Line("Maya", "en"));
+            Assert.AreEqual("Maya apenas puede seguir", FollowLimp.Line("Maya", "es"));
+            Assert.AreEqual("Survivor can barely keep up", FollowLimp.Line("", "en"));
+            Assert.AreEqual(1.6f, RescueBook.FollowGap, 0.001f);
+            Assert.AreEqual(14f, RescueBook.CatchUp, 0.001f);
+            Assert.AreEqual(1.6f, StreetAid.Reach, 0.001f);
+            Assert.AreEqual(1.2f, FollowBite.Reach, 0.001f);
+            Assert.AreEqual(3, FollowBite.Cap);
+            Assert.AreEqual("Maya is bitten", FollowBite.Line("Maya", "en"));
+        }
+
+        [Test]
+        public void AMedkitEasesTheFollowerAndLeavesTheLeader()
+        {
+            Assert.IsTrue(FollowEase.Helps(1, 1));
+            Assert.IsTrue(FollowEase.Helps(3, 2));
+            Assert.IsFalse(FollowEase.Helps(1, 0));
+            Assert.IsFalse(FollowEase.Helps(0, 2));
+            Assert.IsFalse(FollowEase.Helps(-1, 1));
+            Assert.AreEqual(0, FollowEase.After(1));
+            Assert.AreEqual(1, FollowEase.After(2));
+            Assert.AreEqual(2, FollowEase.After(3));
+            Assert.AreEqual(0, FollowEase.After(0));
+            Assert.AreEqual(0, FollowEase.After(-2));
+            Assert.AreEqual(0, WoundEase.After(1));
+            Assert.AreEqual(2, WoundEase.After(3));
+            Assert.AreEqual("Ease the bite", FollowEase.Prompt("en"));
+            Assert.AreEqual("Alivia la mordedura", FollowEase.Prompt("es"));
+            Assert.AreEqual("The wound eases", FollowEase.Line("en"));
+            Assert.AreEqual("La herida cede", FollowEase.Line("es"));
+            Assert.AreEqual("The wound eases", WoundEase.Line("en"));
+            Assert.AreEqual("Bitten", WoundCard.Line(1, "en"));
+            Assert.AreEqual("Fever", WoundCard.Line(2, "en"));
+            Assert.AreEqual("Critical", WoundCard.Line(3, "en"));
+            Assert.AreEqual("", WoundCard.Line(0, "en"));
+            Assert.AreEqual("Mara is with you", StreetAsk.With("Mara", "en"));
+            Assert.AreEqual(50, FieldHand.Medkit(0));
+        }
+
+        [Test]
+        public void AFourthBiteDropsTheFollowerAndThreeWoundsStay()
+        {
+            Assert.IsFalse(FollowFall.Drops(0));
+            Assert.IsFalse(FollowFall.Drops(2));
+            Assert.IsFalse(FollowFall.Drops(-1));
+            Assert.IsTrue(FollowFall.Drops(3));
+            Assert.IsTrue(FollowFall.Drops(9));
+            Assert.AreEqual(3, FollowBite.After(3));
+            Assert.AreEqual(3, FollowBite.Cap);
+            Assert.IsFalse(FollowLimp.Swings(3));
+            Assert.AreEqual("Maya falls", FollowFall.Line("Maya", "en"));
+            Assert.AreEqual("Maya cae", FollowFall.Line("Maya", "es"));
+            Assert.AreEqual("Survivor falls", FollowFall.Line("", "en"));
+            Assert.AreEqual("Superviviente cae", FollowFall.Line("Survivor", "es"));
+            Assert.AreEqual("Maya can barely keep up", FollowLimp.Line("Maya", "en"));
+            Assert.AreEqual(8, RescueBook.RosterCap);
+        }
+
+        [Test]
+        public void AStreetLossHurtsLessThanALeaderAndLeavesAMemorial()
+        {
+            Assert.AreEqual(8f, StreetMourn.Loss, 0.001f);
+            Assert.AreEqual(64f, StreetMourn.After(72f), 0.001f);
+            Assert.AreEqual(0f, StreetMourn.After(8f), 0.001f);
+            Assert.AreEqual(0f, StreetMourn.After(3f), 0.001f);
+            Assert.AreEqual(0f, StreetMourn.After(0f), 0.001f);
+            Assert.AreEqual(0f, StreetMourn.After(-4f), 0.001f);
+            Assert.AreEqual(92f, StreetMourn.After(100f), 0.001f);
+            Assert.AreEqual("street", StreetMourn.Cause());
+            Assert.AreEqual(25f, SuccessionLedger.CampLoss, 0.001f);
+            Assert.AreEqual(40f, SuccessionLedger.FriendLoss, 0.001f);
+            var row = new SuccessionLedger.Memorial { name = "Maya", day = 2, kills = 0, cause = StreetMourn.Cause(), district = "mall" };
+            Assert.AreEqual("Maya  day 2  kills 0  street", SuccessionLedger.Card(row));
+            Assert.AreEqual(3, FollowBite.Cap);
+            Assert.IsTrue(FollowFall.Drops(3));
+            Assert.IsFalse(FollowFall.Drops(2));
+        }
+
+        [Test]
+        public void BringingTheStreetBodyHomeGivesALittleMoraleBack()
+        {
+            Assert.AreEqual(4f, StreetMourn.Back, 0.001f);
+            Assert.AreEqual(68f, StreetMourn.Lift(64f), 0.001f);
+            Assert.AreEqual(100f, StreetMourn.Lift(98f), 0.001f);
+            Assert.AreEqual(100f, StreetMourn.Lift(100f), 0.001f);
+            Assert.AreEqual(4f, StreetMourn.Lift(0f), 0.001f);
+            Assert.AreEqual(4f, StreetMourn.Lift(-2f), 0.001f);
+            Assert.IsTrue(StreetMourn.Named("street", "Maya", "Maya"));
+            Assert.IsFalse(StreetMourn.Named("raid", "Maya", "Maya"));
+            Assert.IsFalse(StreetMourn.Named("street", "Maya", "Imani"));
+            Assert.IsFalse(StreetMourn.Named("street", "", "Maya"));
+            Assert.AreEqual("The body is home", StreetMourn.Line("en"));
+            Assert.AreEqual("El cuerpo está en casa", StreetMourn.Line("es"));
+            Assert.AreEqual(8f, StreetMourn.Loss, 0.001f);
+            Assert.AreEqual(64f, StreetMourn.After(72f), 0.001f);
+            Assert.AreEqual(25f, SuccessionLedger.CampLoss, 0.001f);
+            Assert.AreEqual(40f, SuccessionLedger.FriendLoss, 0.001f);
+            Assert.AreEqual("Nothing left but the name", Loc.T("ask.nameonly", "en"));
+            Assert.AreEqual("Gear recovered", Loc.T("ask.kept", "en"));
+        }
+
+        [Test]
+        public void AFollowerSwingOrCryPullsAnIdleZombieAndAChaseStays()
+        {
+            Assert.IsTrue(FollowPull.Chases(true, true, false, NoiseType.MeleeSwing));
+            Assert.IsTrue(FollowPull.Chases(true, true, false, NoiseType.ZombieScream));
+            Assert.IsFalse(FollowPull.Chases(true, true, true, NoiseType.MeleeSwing));
+            Assert.IsFalse(FollowPull.Chases(true, true, true, NoiseType.ZombieScream));
+            Assert.IsFalse(FollowPull.Chases(true, false, false, NoiseType.MeleeSwing));
+            Assert.IsFalse(FollowPull.Chases(false, true, false, NoiseType.ZombieScream));
+            Assert.IsFalse(FollowPull.Chases(true, true, false, NoiseType.GunshotLoud));
+            Assert.IsFalse(FollowPull.Chases(true, true, false, NoiseType.GunshotQuiet));
+            Assert.IsFalse(FollowPull.Chases(true, true, false, NoiseType.WalkFootstep));
+            Assert.IsFalse(FollowPull.Chases(true, true, false, NoiseType.SprintFootstep));
+            Assert.IsFalse(FollowPull.Chases(true, true, false, NoiseType.Cough));
+            Assert.IsFalse(FollowPull.Chases(true, true, false, NoiseType.DoorSwing));
+            Assert.IsFalse(FollowPull.Chases(true, true, false, NoiseType.BleedDrip));
+            Assert.IsFalse(FollowPull.Chases(true, true, false, NoiseType.ObjectBroken));
+            Assert.AreEqual(6f, StreetAid.Noise, 0.001f);
+            Assert.AreEqual(16f, StraggleCall.Radius, 0.001f);
+            Assert.AreEqual(1.6f, StreetAid.Reach, 0.001f);
+            Assert.AreEqual(7f, StraggleCall.Near, 0.001f);
+        }
+
+        [Test]
+        public void AFallenFollowerDropsTheChaseAndALandedBiteStillCounts()
+        {
+            Assert.IsTrue(TargetDrop.Gone(true, false));
+            Assert.IsFalse(TargetDrop.Gone(true, true));
+            Assert.IsFalse(TargetDrop.Gone(false, false));
+            Assert.IsFalse(TargetDrop.Gone(false, true));
+            Assert.IsTrue(FollowBite.Due(0f, 10f, 0f));
+            Assert.IsFalse(FollowBite.Due(10f, 10f, 0f));
+            Assert.IsTrue(FollowBite.Due(7f, 9.4f, 0f));
+            Assert.AreEqual(1.2f, FollowBite.Reach, 0.001f);
+            Assert.AreEqual(2.4f, FollowBite.Gap, 0.001f);
+            Assert.IsFalse(FollowPull.Chases(true, true, true, NoiseType.ZombieScream));
+            Assert.IsTrue(FollowFall.Drops(3));
+        }
+
+        [Test]
+        public void AZombieWithoutARigStillAttacksAndFalls()
+        {
+            Assert.AreEqual(14f, PoseSheet.Lean(ZombieAI.ZombieState.Chase, 0f), 0.001f);
+            Assert.AreEqual(0f, PoseSheet.Lean(ZombieAI.ZombieState.Idle, 1f), 0.001f);
+            Assert.AreEqual(0f, PoseSheet.Lean(ZombieAI.ZombieState.Wander, 1f), 0.001f);
+            Assert.AreEqual(-22f, PoseSheet.Lean(ZombieAI.ZombieState.Stunned, 0.4f), 0.001f);
+            Assert.AreEqual(0f, PoseSheet.Swing(0f), 0.001f);
+            Assert.AreEqual(1f, PoseSheet.Swing(0.2f), 0.001f);
+            Assert.AreEqual(0f, PoseSheet.Swing(0.45f), 0.001f);
+            Assert.AreEqual(38f, PoseSheet.Lean(ZombieAI.ZombieState.Attack, 0.2f), 0.001f);
+            Assert.AreEqual(0f, PoseSheet.Fall(0f), 0.001f);
+            Assert.AreEqual(1f, PoseSheet.Fall(0.6f), 0.001f);
+            Assert.AreEqual(1f, PoseSheet.Fall(2f), 0.001f);
+            Assert.AreEqual(88f, PoseSheet.Lean(ZombieAI.ZombieState.Dead, 0.6f), 0.001f);
+            Assert.AreEqual(0f, PoseSheet.Sink(ZombieAI.ZombieState.Chase, 1f), 0.001f);
+            Assert.AreEqual(-0.55f, PoseSheet.Sink(ZombieAI.ZombieState.Dead, 0.6f), 0.001f);
+            Assert.AreEqual(4.2f, PoseSheet.Speed(ZombieAI.ZombieState.Chase), 0.001f);
+            Assert.AreEqual(1.1f, PoseSheet.Speed(ZombieAI.ZombieState.Wander), 0.001f);
+            Assert.AreEqual(0f, PoseSheet.Speed(ZombieAI.ZombieState.Dead), 0.001f);
+            Assert.IsTrue(PoseSheet.Sprint(ZombieAI.ZombieState.Chase));
+            Assert.IsFalse(PoseSheet.Sprint(ZombieAI.ZombieState.Wander));
+            Assert.AreEqual(0.05f, PoseSheet.Hop(ZombieAI.ZombieState.Chase, 1.5707963f), 0.001f);
+            Assert.AreEqual(0f, PoseSheet.Hop(ZombieAI.ZombieState.Idle, 1.5707963f), 0.001f);
+        }
+
+        [Test]
+        public void AHeadshotMistsAndABleedDrips()
+        {
+            Assert.IsTrue(WoundShow.MistDue(true, 1));
+            Assert.IsTrue(WoundShow.MistDue(true, 2));
+            Assert.IsFalse(WoundShow.MistDue(true, 0));
+            Assert.IsFalse(WoundShow.MistDue(false, 2));
+            Assert.IsFalse(WoundShow.Bleeds(0));
+            Assert.IsTrue(WoundShow.Bleeds(1));
+            Assert.IsTrue(WoundShow.DripDue(1f, 0f));
+            Assert.IsFalse(WoundShow.DripDue(1.5f, 1f));
+            Assert.IsTrue(WoundShow.DripDue(1.85f, 1f));
+            Assert.IsTrue(WoundShow.DripDue(0.4f, 1f));
+            Assert.IsTrue(WoundShow.Soaked(0.65f));
+            Assert.IsFalse(WoundShow.Soaked(0.2f));
+            Assert.IsFalse(WoundShow.Soaked(0f));
+            Assert.AreEqual(0, WoundShow.Puffs(true, true, true));
+            Assert.AreEqual(2, WoundShow.Puffs(false, false, false));
+            Assert.AreEqual(6, WoundShow.Puffs(true, false, false));
+            Assert.AreEqual(5, WoundShow.Puffs(false, false, true));
+            Assert.AreEqual(7, WoundShow.Puffs(true, false, true));
+            Assert.AreEqual(0.46f, WoundShow.Mist, 0.001f);
+            Assert.AreEqual(10f, AudioSpace.MaxDistance("mist"), 0.001f);
+            Assert.AreEqual(8f, AudioSpace.MaxDistance("splash"), 0.001f);
+        }
+
+        [Test]
+        public void ABarrelLeavesAWakeAfterTheFlash()
+        {
+            Assert.AreEqual("fire", BlastWake.Wake(HazardKind.Explosive));
+            Assert.AreEqual("cloud", BlastWake.Wake(HazardKind.Toxic));
+            Assert.AreEqual("slick", BlastWake.Wake(HazardKind.Oil));
+            Assert.AreEqual(3.2f, BlastWake.Hold(HazardKind.Explosive), 0.001f);
+            Assert.AreEqual(4.5f, BlastWake.Hold(HazardKind.Toxic), 0.001f);
+            Assert.AreEqual(6f, BlastWake.Hold(HazardKind.Oil), 0.001f);
+            Assert.IsTrue(BlastWake.Ring(HazardKind.Explosive));
+            Assert.IsFalse(BlastWake.Ring(HazardKind.Toxic));
+            Assert.IsFalse(BlastWake.Ring(HazardKind.Oil));
+            Assert.IsTrue(BlastWake.Smokes(HazardKind.Explosive));
+            Assert.IsFalse(BlastWake.Smokes(HazardKind.Oil));
+            Assert.AreEqual("burn", BlastWake.Sound(HazardKind.Explosive));
+            Assert.AreEqual("burn", BlastWake.Sound(HazardKind.Oil));
+            Assert.AreEqual("cloud", BlastWake.Sound(HazardKind.Toxic));
+            Assert.AreEqual(0.32f, BlastWake.Volume(HazardKind.Oil), 0.001f);
+            Assert.AreEqual(0.26f, BlastWake.Volume(HazardKind.Toxic), 0.001f);
+            Assert.AreEqual(2.4f, BlastWake.Smoke, 0.001f);
+            Assert.AreEqual(14f, AudioSpace.MaxDistance("burn"), 0.001f);
+            Assert.AreEqual(12f, AudioSpace.MaxDistance("cloud"), 0.001f);
+            Assert.AreEqual(1.4f, BarrelFuse.Length(HazardKind.Explosive), 0.001f);
+            Assert.AreEqual(14f, OilBurn.Damage, 0.001f);
+            Assert.IsTrue(BlastChunk.Throws(HazardKind.Explosive));
+            Assert.IsFalse(BlastChunk.Throws(HazardKind.Toxic));
+            Assert.IsFalse(BlastChunk.Throws(HazardKind.Oil));
+            Assert.AreEqual(6, BlastChunk.Count);
+            Assert.AreEqual(1.1f, BlastChunk.Life, 0.001f);
+            Assert.AreEqual(4.5f, BlastChunk.Speed, 0.001f);
+        }
+
+        [Test]
+        public void APowderBlastOpensAFireball()
+        {
+            Assert.IsTrue(BlastBall.Shows(HazardKind.Explosive));
+            Assert.IsFalse(BlastBall.Shows(HazardKind.Toxic));
+            Assert.IsFalse(BlastBall.Shows(HazardKind.Oil));
+            Assert.AreEqual(4, BlastBall.Frames);
+            Assert.AreEqual(0.48f, BlastBall.Life, 0.001f);
+            Assert.AreEqual(0, BlastBall.Frame(0f));
+            Assert.AreEqual(0, BlastBall.Frame(-0.2f));
+            Assert.AreEqual(0, BlastBall.Frame(0.24f));
+            Assert.AreEqual(1, BlastBall.Frame(0.25f));
+            Assert.AreEqual(2, BlastBall.Frame(0.5f));
+            Assert.AreEqual(3, BlastBall.Frame(0.75f));
+            Assert.AreEqual(3, BlastBall.Frame(0.99f));
+            Assert.AreEqual(3, BlastBall.Frame(2f));
+            Assert.AreEqual(0.6f, BlastBall.Scale(0f), 0.001f);
+            Assert.AreEqual(0.6f, BlastBall.Scale(-1f), 0.001f);
+            Assert.AreEqual(2f, BlastBall.Scale(0.5f), 0.001f);
+            Assert.AreEqual(3.4f, BlastBall.Scale(1f), 0.001f);
+            Assert.AreEqual(3.4f, BlastBall.Scale(2f), 0.001f);
+            Assert.AreEqual(0.4f, BlastBall.WarpScale(0f), 0.001f);
+            Assert.AreEqual(6.6f, BlastBall.WarpScale(1f), 0.001f);
+            Assert.AreEqual(6.2f, BlastBall.Warp, 0.001f);
+            Assert.AreEqual(0.36f, BlastBall.WarpTime, 0.001f);
+        }
+
+        [Test]
+        public void AFireDriftsEmbersAndABrokenLampSpitsSparks()
+        {
+            Assert.IsFalse(YardGlow.EmbersDue(false, 10f, 0f));
+            Assert.IsTrue(YardGlow.EmbersDue(true, 1f, 0f));
+            Assert.IsFalse(YardGlow.EmbersDue(true, 1.3f, 1f));
+            Assert.IsTrue(YardGlow.EmbersDue(true, 1.6f, 1f));
+            Assert.IsTrue(YardGlow.EmbersDue(true, 0.4f, 1f));
+            Assert.IsFalse(YardGlow.SparksDue(1, 40, 10f, 0f));
+            Assert.IsFalse(YardGlow.SparksDue(0, 0, 10f, 0f));
+            Assert.IsFalse(YardGlow.SparksDue(0, 100, 10f, 0f));
+            Assert.IsTrue(YardGlow.SparksDue(0, 40, 1f, 0f));
+            Assert.IsFalse(YardGlow.SparksDue(0, 40, 1.3f, 1f));
+            Assert.IsTrue(YardGlow.SparksDue(0, 40, 1.6f, 1f));
+            Assert.AreEqual(8, YardGlow.Embers);
+            Assert.AreEqual(5, YardGlow.Sparks);
+            Assert.AreEqual(0.18f, YardGlow.Spit, 0.001f);
+            Assert.AreEqual(8f, AudioSpace.MaxDistance("spit"), 0.001f);
+            Assert.IsTrue(MendBoard.Needs(0, 40));
+            Assert.IsFalse(MendBoard.Needs(0, 100));
+            Assert.IsTrue(BuildSite.Ready(0, 40));
+            Assert.IsFalse(BuildSite.Ready(1, 40));
+        }
+
+        [Test]
+        public void TheGeneratorHumsAndTheFireCrackles()
+        {
+            YardBed.Mix(false, false, false, out float hum, out float crackle, out float buzz);
+            Assert.AreEqual(0f, hum, 0.001f);
+            Assert.AreEqual(0f, crackle, 0.001f);
+            Assert.AreEqual(0f, buzz, 0.001f);
+            YardBed.Mix(true, false, true, out hum, out crackle, out buzz);
+            Assert.AreEqual(0.28f, hum, 0.001f);
+            Assert.AreEqual(0f, crackle, 0.001f);
+            Assert.AreEqual(0.14f, buzz, 0.001f);
+            YardBed.Mix(false, true, true, out hum, out crackle, out buzz);
+            Assert.AreEqual(0f, hum, 0.001f);
+            Assert.AreEqual(0.22f, crackle, 0.001f);
+            Assert.AreEqual(0f, buzz, 0.001f);
+            YardBed.Mix(true, true, false, out hum, out crackle, out buzz);
+            Assert.AreEqual(0.28f, hum, 0.001f);
+            Assert.AreEqual(0.22f, crackle, 0.001f);
+            Assert.AreEqual(0f, buzz, 0.001f);
+            var dark = new List<PlacedModule> { new PlacedModule { kind = "Generator", x = 4f, z = -2f, site = 1, integrity = 100 } };
+            Assert.IsFalse(YardBed.Spot(dark, "Generator", out _, out _));
+            var lit = new List<PlacedModule>
+            {
+                new PlacedModule { kind = "Campfire", x = 1f, z = 2f, site = 0, integrity = 80 },
+                new PlacedModule { kind = "Lamp", x = 6f, z = 3f, site = 0, integrity = 40 }
+            };
+            Assert.IsTrue(YardBed.Spot(lit, "Campfire", out float x, out float z));
+            Assert.AreEqual(1f, x, 0.001f);
+            Assert.AreEqual(2f, z, 0.001f);
+            Assert.IsTrue(YardBed.Spot(lit, "Lamp", out x, out z));
+            Assert.AreEqual(6f, x, 0.001f);
+            Assert.AreEqual(18f, YardBed.Reach, 0.001f);
+            Assert.AreEqual(MixBus.Ambience, AudioMix.BusOf("hum"));
+            Assert.AreEqual(MixBus.Ambience, AudioMix.BusOf("crackle"));
+            Assert.AreEqual(MixBus.Ambience, AudioMix.BusOf("buzz"));
+            Assert.AreEqual(1f, AudioSpace.SpatialBlend("hum"), 0.001f);
+        }
+
+        [Test]
+        public void AHitBarrelHissesThenCooksOff()
+        {
+            Assert.IsTrue(BarrelFuse.Arms(HazardKind.Explosive));
+            Assert.IsTrue(BarrelFuse.Arms(HazardKind.Toxic));
+            Assert.IsFalse(BarrelFuse.Arms(HazardKind.Oil));
+            Assert.AreEqual(1.4f, BarrelFuse.Length(HazardKind.Explosive), 0.001f);
+            Assert.AreEqual(0.8f, BarrelFuse.Length(HazardKind.Toxic), 0.001f);
+            Assert.AreEqual(0f, BarrelFuse.Length(HazardKind.Oil), 0.001f);
+            Assert.IsFalse(BarrelFuse.Due(0f, 5f, 1.4f));
+            Assert.IsFalse(BarrelFuse.Due(1f, 2.3f, 1.4f));
+            Assert.IsTrue(BarrelFuse.Due(1f, 2.4f, 1.4f));
+            Assert.IsTrue(BarrelFuse.HissDue(0f, 1f));
+            Assert.IsFalse(BarrelFuse.HissDue(1f, 1.2f));
+            Assert.IsTrue(BarrelFuse.HissDue(1f, 1.35f));
+            Assert.AreEqual(20f, AudioSpace.MaxDistance("hiss"), 0.001f);
+            Assert.AreEqual("El barril silba", Loc.T("barrel.hiss", "es"));
+        }
+
+        [Test]
+        public void ASwingChopsFleshAndClangsAWall()
+        {
+            Assert.AreEqual("chop", ContactCue.Impact(true, true));
+            Assert.AreEqual("chop", ContactCue.Impact(true, false));
+            Assert.AreEqual("clang", ContactCue.Impact(false, true));
+            Assert.AreEqual("", ContactCue.Impact(false, false));
+            Assert.IsTrue(ContactCue.Wall(GameLayers.Environment));
+            Assert.IsFalse(ContactCue.Wall(GameLayers.Enemy));
+            Assert.IsTrue(ContactCue.Pain(true, 40f));
+            Assert.IsFalse(ContactCue.Pain(true, 0f));
+            Assert.IsFalse(ContactCue.Pain(false, 40f));
+            Assert.AreEqual(0f, AudioSpace.SpatialBlend("pained"), 0.001f);
+            Assert.AreEqual(1f, AudioSpace.SpatialBlend("clang"), 0.001f);
+        }
+
+        [Test]
+        public void PickingAPileIsASmallNoise()
+        {
+            Assert.AreEqual(3.5f, LootTake.Noise, 0.001f);
+            Assert.AreEqual("take_soft", LootTake.Sound(LootKind.Medkit));
+            Assert.AreEqual("take_box", LootTake.Sound(LootKind.Ammo9mm));
+            Assert.AreEqual("take_box", LootTake.Sound(LootKind.AmmoShotgun));
+            Assert.AreEqual("take_metal", LootTake.Sound(LootKind.Scrap));
+            Assert.AreEqual("Picked up Medkit +2", LootTake.Line(LootKind.Medkit, 2, "en"));
+            Assert.AreEqual("Recogido Botiquín +2", LootTake.Line(LootKind.Medkit, 2, "es"));
+            Assert.AreEqual("Recogido Chatarra +1", LootTake.Line(LootKind.Scrap, 0, "es"));
+            Assert.AreEqual("Recogido Cartuchos +6", LootTake.Line(LootKind.AmmoShotgun, 6, "es"));
+        }
+
+        [Test]
+        public void AYoungNightRestsMoreAndAnOldSaveStaysAtEight()
+        {
+            Assert.AreEqual(8, LifeLine.Rest(0));
+            Assert.AreEqual(10, LifeLine.Rest(22));
+            Assert.AreEqual(10, LifeLine.Rest(28));
+            Assert.AreEqual(8, LifeLine.Rest(29));
+            Assert.AreEqual(8, LifeLine.Rest(51));
+            Assert.AreEqual(5, LifeLine.Rest(52));
+            Assert.AreEqual(5, LifeLine.Rest(61));
+            int years = LifeLine.YearsOf("mara_quil");
+            Assert.GreaterOrEqual(years, 22);
+            Assert.LessOrEqual(years, 61);
+            Assert.AreEqual(years, LifeLine.YearsOf("mara_quil"));
+            Assert.AreNotEqual(LifeLine.Past("mara_quil"), LifeLine.Past("jonas_reed"));
+            Assert.AreEqual("", LifeLine.Line(0, "past.nurse", "es"));
+            Assert.AreEqual("34  Enfermera", LifeLine.Line(34, "past.nurse", "es"));
+            Assert.AreEqual("Soldado", Loc.T("past.soldier", "es"));
+        }
+
+        [Test]
+        public void AClipStepSilencesTheTimerBeat()
+        {
+            Assert.IsTrue(StepGate.AllowTimer(1f, 0f));
+            Assert.IsFalse(StepGate.AllowTimer(1.1f, 1f));
+            Assert.IsTrue(StepGate.AllowTimer(1.22f, 1f));
+            Assert.IsTrue(StepGate.AllowTimer(0.5f, 1f));
+            Assert.AreEqual(0.22f, StepGate.Hold, 0.001f);
+        }
+
+        [Test]
+        public void AHostileMilitiaOpensWithExtraBodies()
+        {
+            Assert.IsFalse(CaravanBook.Ambush(-40));
+            Assert.IsTrue(CaravanBook.Ambush(-41));
+            Assert.AreEqual(0, AmbushBeat.Bodies(false, 32));
+            Assert.AreEqual(0, AmbushBeat.Bodies(false, 8));
+            Assert.AreEqual(4, AmbushBeat.Bodies(true, 16));
+            Assert.AreEqual(4, AmbushBeat.Bodies(true, 32));
+            Assert.AreEqual(4, AmbushBeat.Bodies(true, 40));
+            Assert.AreEqual(2, AmbushBeat.Bodies(true, 15));
+            Assert.AreEqual(2, AmbushBeat.Bodies(true, 4));
+            Assert.AreEqual("The militia has the dead waiting", Loc.T("ambush.warn", "en"));
+            Assert.AreEqual("La milicia tiene a los muertos esperando", Loc.T("ambush.warn", "es"));
+        }
+
+        [Test]
+        public void FliesSitOnTheNearestDumpster()
+        {
+            Assert.IsTrue(FlyBed.Counts("Dumpster_Alley"));
+            Assert.IsFalse(FlyBed.Counts("Crate_01"));
+            Assert.IsFalse(FlyBed.Counts(null));
+            Assert.IsFalse(FlyBed.Counts(""));
+            Assert.AreEqual(0.16f, FlyBed.Gain(0f), 0.001f);
+            Assert.AreEqual(0.08f, FlyBed.Gain(4f), 0.001f);
+            Assert.AreEqual(0f, FlyBed.Gain(8f), 0.001f);
+            Assert.AreEqual(0f, FlyBed.Gain(9f), 0.001f);
+            Assert.AreEqual(0f, FlyBed.Gain(-1f), 0.001f);
+            Assert.AreEqual(2, FlyBed.Nearest(new[] { 9f, 3f, 1f }));
+            Assert.AreEqual(1, FlyBed.Nearest(new[] { 6f, 2f, 8f }));
+            Assert.AreEqual(-1, FlyBed.Nearest(new[] { 8f, 12f }));
+            Assert.AreEqual(-1, FlyBed.Nearest(null));
+            Assert.AreEqual(8f, AudioSpace.MaxDistance("flies"), 0.001f);
+            Assert.AreEqual(MixBus.Ambience, AudioMix.BusOf("flies"));
+        }
+
+        [Test]
+        public void ACasingClinksAndARifleTracerWaitsForTheThirdRound()
+        {
+            Assert.IsFalse(BrassCue.Ejects(WeaponType.Melee));
+            Assert.IsTrue(BrassCue.Ejects(WeaponType.Pistol));
+            Assert.IsTrue(BrassCue.Ejects(WeaponType.Rifle));
+            Assert.AreEqual("", BrassCue.Sound(WeaponType.Melee));
+            Assert.AreEqual("clink", BrassCue.Sound(WeaponType.Pistol));
+            Assert.AreEqual("clink", BrassCue.Sound(WeaponType.Rifle));
+            Assert.AreEqual("clink", BrassCue.Sound(WeaponType.SMG));
+            Assert.AreEqual("clack", BrassCue.Sound(WeaponType.Shotgun));
+            Assert.AreEqual(0f, BrassCue.Volume(WeaponType.Melee), 0.001f);
+            Assert.AreEqual(0.22f, BrassCue.Volume(WeaponType.Rifle), 0.001f);
+            Assert.AreEqual(0.34f, BrassCue.Volume(WeaponType.Shotgun), 0.001f);
+            Assert.IsFalse(BrassCue.Due(1f, 0f));
+            Assert.IsFalse(BrassCue.Due(0.5f, 1f));
+            Assert.IsFalse(BrassCue.Due(1.34f, 1f));
+            Assert.IsTrue(BrassCue.Due(1.35f, 1f));
+            Assert.IsTrue(BrassCue.Tracer(WeaponType.Pistol, 1));
+            Assert.IsTrue(BrassCue.Tracer(WeaponType.Shotgun, 2));
+            Assert.IsFalse(BrassCue.Tracer(WeaponType.Rifle, 1));
+            Assert.IsFalse(BrassCue.Tracer(WeaponType.Rifle, 2));
+            Assert.IsTrue(BrassCue.Tracer(WeaponType.Rifle, 3));
+            Assert.IsTrue(BrassCue.Tracer(WeaponType.Rifle, 6));
+            Assert.IsFalse(BrassCue.Tracer(WeaponType.SMG, 0));
+            Assert.IsFalse(BrassCue.Tracer(WeaponType.SMG, 4));
+            Assert.IsTrue(BrassCue.Tracer(WeaponType.SMG, 3));
+            Assert.AreEqual(6f, AudioSpace.MaxDistance("clink"), 0.001f);
+            Assert.AreEqual(6f, AudioSpace.MaxDistance("clack"), 0.001f);
+        }
+
+        [Test]
+        public void AHitReadsTheSurfaceAndACorpseBurnsAway()
+        {
+            Assert.AreEqual("flesh", StrikeFace.OfName("Zombie_Walker"));
+            Assert.AreEqual("metal", StrikeFace.OfName("Dumpster_Alley"));
+            Assert.AreEqual("metal", StrikeFace.OfName("Prop_Barrel_Red"));
+            Assert.AreEqual("wood", StrikeFace.OfName("RoomCrate"));
+            Assert.AreEqual("wood", StrikeFace.OfName("StreetDoor"));
+            Assert.AreEqual("concrete", StrikeFace.OfName("DistrictLot"));
+            Assert.AreEqual("concrete", StrikeFace.OfName(null));
+            Assert.AreEqual("concrete", StrikeFace.OfName(""));
+            Assert.AreEqual("spray", StrikeFace.Sound("flesh"));
+            Assert.AreEqual("spark", StrikeFace.Sound("metal"));
+            Assert.AreEqual("splinter", StrikeFace.Sound("wood"));
+            Assert.AreEqual("dust", StrikeFace.Sound("concrete"));
+            Assert.AreEqual(0.4f, StrikeFace.Volume("flesh"), 0.001f);
+            Assert.AreEqual(0.38f, StrikeFace.Volume("metal"), 0.001f);
+            Assert.AreEqual(0.36f, StrikeFace.Volume("wood"), 0.001f);
+            Assert.AreEqual(0.28f, StrikeFace.Volume("concrete"), 0.001f);
+            Assert.AreEqual(16f, AudioSpace.MaxDistance("spark"), 0.001f);
+            Assert.AreEqual(12f, AudioSpace.MaxDistance("splinter"), 0.001f);
+            Assert.AreEqual(8f, AudioSpace.MaxDistance("dust"), 0.001f);
+            Assert.AreEqual(0f, CorpseMelt.Amount(0f), 0.001f);
+            Assert.AreEqual(0.5f, CorpseMelt.Amount(1.5f), 0.001f);
+            Assert.AreEqual(1f, CorpseMelt.Amount(3f), 0.001f);
+            Assert.AreEqual(1f, CorpseMelt.Amount(4f), 0.001f);
+            Assert.AreEqual(3f, CorpseMelt.Length, 0.001f);
+        }
+
+        [Test]
+        public void ABulletHoleStaysOnTheStreetUntilTheRunEnds()
+        {
+            Assert.IsTrue(MarkStay.Holds("hole"));
+            Assert.IsTrue(MarkStay.Holds("scorch"));
+            Assert.IsFalse(MarkStay.Holds("blood"));
+            Assert.IsFalse(MarkStay.Holds("oil"));
+            Assert.IsFalse(MarkStay.Holds(null));
+            Assert.AreEqual(8f, MarkStay.Life("blood"), 0.001f);
+            Assert.AreEqual(8f, MarkStay.Life("oil"), 0.001f);
+            Assert.AreEqual(0f, MarkStay.Life("hole"), 0.001f);
+            Assert.AreEqual(0f, MarkStay.Life("scorch"), 0.001f);
+            Assert.IsTrue(MarkStay.OnStreet(GameState.ExpeditionActive));
+            Assert.IsTrue(MarkStay.OnStreet(GameState.RaidActive));
+            Assert.IsFalse(MarkStay.OnStreet(GameState.CampManagement));
+            Assert.IsTrue(MarkStay.Visible("hole", true, true));
+            Assert.IsFalse(MarkStay.Visible("hole", true, false));
+            Assert.IsFalse(MarkStay.Visible("scorch", false, true));
+            Assert.IsTrue(MarkStay.Visible("blood", false, false));
+            Assert.IsTrue(GoreMark.Near(28f, 0f, 28f));
+            Assert.IsFalse(GoreMark.Near(30f, 0f, 30f));
+        }
+
+        [Test]
         public void GoreOffDropsBloodAndAShotgunSpraysTheWall()
         {
             Assert.AreEqual(0, GoreMark.Splats(0, false, true));
@@ -3066,6 +7340,36 @@ namespace OutpostZero.Tests.EditMode
             GoreMark.Offset(1, out float x, out float y);
             Assert.AreEqual(0.18f, x, 0.001f);
             Assert.AreEqual(0.08f, y, 0.001f);
+        }
+
+        [Test]
+        public void BloodStreaksWithTheShot()
+        {
+            Assert.IsFalse(BloodDrift.Shows(0, true));
+            Assert.IsFalse(BloodDrift.Shows(1, false));
+            Assert.IsTrue(BloodDrift.Shows(1, true));
+            Assert.IsTrue(BloodDrift.Shows(2, true));
+            BloodDrift.Along(1f, 0f, 0f, out float ox, out float oy, out float oz);
+            Assert.AreEqual(0.55f, ox, 0.001f);
+            Assert.AreEqual(0f, oy, 0.001f);
+            Assert.AreEqual(0f, oz, 0.001f);
+            BloodDrift.Along(0f, -1f, 0f, out ox, out oy, out oz);
+            Assert.AreEqual(0f, ox, 0.001f);
+            Assert.AreEqual(0f, oy, 0.001f);
+            Assert.AreEqual(0f, oz, 0.001f);
+            BloodDrift.Along(0f, 0f, 0f, out ox, out oy, out oz);
+            Assert.AreEqual(0f, ox, 0.001f);
+            Assert.AreEqual(0f, oz, 0.001f);
+            BloodDrift.Along(3f, -1f, 0f, out ox, out oy, out oz);
+            Assert.AreEqual(0.55f, ox, 0.001f);
+            Assert.AreEqual(0f, oy, 0.001f);
+            Assert.AreEqual(0f, oz, 0.001f);
+            BloodDrift.Along(-1f, 2f, -1f, out ox, out oy, out oz);
+            Assert.AreEqual(-0.3889f, ox, 0.001f);
+            Assert.AreEqual(0f, oy, 0.001f);
+            Assert.AreEqual(-0.3889f, oz, 0.001f);
+            Assert.AreEqual(3, BloodDrift.Drops);
+            Assert.AreEqual(0, GoreMark.Splats(0, false, true));
         }
 
         [Test]
@@ -3096,6 +7400,115 @@ namespace OutpostZero.Tests.EditMode
             Assert.IsFalse(FlashCap.Due(true, 8f, 15.9f));
             Assert.AreEqual("Sin destellos", Loc.T("set.flash_off", "es"));
             Assert.AreEqual("Destellos sí", Loc.T("set.flash_on", "es"));
+        }
+
+        [Test]
+        public void AMuzzleMatchesTheGunAndTheWatchCountsIt()
+        {
+            Assert.IsFalse(MuzzleShape.Shows(WeaponType.Melee));
+            Assert.IsTrue(MuzzleShape.Shows(WeaponType.Pistol));
+            Assert.IsTrue(MuzzleShape.Smoke(WeaponType.Shotgun));
+            Assert.IsFalse(MuzzleShape.Smoke(WeaponType.Pistol));
+            Assert.IsFalse(MuzzleShape.Smoke(WeaponType.Rifle));
+            Assert.IsTrue(MuzzleShape.Strobe(WeaponType.Rifle));
+            Assert.IsTrue(MuzzleShape.Strobe(WeaponType.SMG));
+            Assert.IsFalse(MuzzleShape.Strobe(WeaponType.Shotgun));
+            Assert.IsFalse(MuzzleShape.Strobe(WeaponType.Pistol));
+            Assert.AreEqual(0.12f, MuzzleShape.Scale(WeaponType.Pistol), 0.001f);
+            Assert.AreEqual(0.28f, MuzzleShape.Scale(WeaponType.Shotgun), 0.001f);
+            Assert.AreEqual(0.08f, MuzzleShape.Scale(WeaponType.Rifle), 0.001f);
+            Assert.AreEqual(0.08f, MuzzleShape.Scale(WeaponType.SMG), 0.001f);
+            Assert.AreEqual(3.2f, MuzzleShape.Range(WeaponType.Pistol), 0.001f);
+            Assert.AreEqual(6.5f, MuzzleShape.Range(WeaponType.Shotgun), 0.001f);
+            Assert.AreEqual(5.5f, MuzzleShape.Range(WeaponType.Rifle), 0.001f);
+            Assert.AreEqual(2.4f, MuzzleShape.Intensity(WeaponType.Pistol), 0.001f);
+            Assert.AreEqual(4.2f, MuzzleShape.Intensity(WeaponType.Shotgun), 0.001f);
+            Assert.AreEqual(5f, MuzzleShape.Intensity(WeaponType.SMG), 0.001f);
+            Assert.AreEqual(0.05f, MuzzleShape.Hold(WeaponType.Pistol), 0.001f);
+            Assert.AreEqual(0.08f, MuzzleShape.Hold(WeaponType.Shotgun), 0.001f);
+            Assert.AreEqual(0.03f, MuzzleShape.Hold(WeaponType.Rifle), 0.001f);
+            VfxLedger.Reset();
+            VfxLedger.Borrow();
+            VfxLedger.Borrow();
+            Assert.AreEqual(2, VfxLedger.Live);
+            Assert.AreEqual(2, VfxLedger.Peak);
+            VfxLedger.Return();
+            Assert.AreEqual(1, VfxLedger.Live);
+            Assert.AreEqual(2, VfxLedger.Peak);
+            StringAssert.StartsWith("vfx 1  peak 2  pooled ", VfxLedger.Line());
+            VfxLedger.Return();
+            VfxLedger.Return();
+            Assert.AreEqual(0, VfxLedger.Live);
+            VfxLedger.Reset();
+        }
+
+        [Test]
+        public void ThunderCoversAGunshotAndStillNamesItself()
+        {
+            Assert.IsFalse(StormCover.ThunderDue(0f, 20f, false));
+            Assert.IsFalse(StormCover.ThunderDue(10f, 10.59f, false));
+            Assert.IsTrue(StormCover.ThunderDue(10f, 10.6f, false));
+            Assert.IsFalse(StormCover.ThunderDue(10f, 10.6f, true));
+            Assert.IsFalse(StormCover.Masks(0f, 10f, NoiseType.GunshotLoud));
+            Assert.IsFalse(StormCover.Masks(10f, 10.5f, NoiseType.GunshotLoud));
+            Assert.IsTrue(StormCover.Masks(10f, 10.6f, NoiseType.GunshotLoud));
+            Assert.IsTrue(StormCover.Masks(10f, 11.9f, NoiseType.GunshotQuiet));
+            Assert.IsFalse(StormCover.Masks(10f, 12f, NoiseType.GunshotLoud));
+            Assert.IsFalse(StormCover.Masks(10f, 10.6f, NoiseType.Explosion));
+            Assert.IsFalse(StormCover.Masks(10f, 10.6f, NoiseType.WalkFootstep));
+            Assert.AreEqual(0f, HearGate.Perceived(0f, 40f, 1f, false, NoiseType.Thunder), 0.001f);
+            Assert.AreEqual(0.09f, HearGate.Perceived(8f, 10f, 1f, true, NoiseType.GunshotLoud), 0.001f);
+            Assert.AreEqual(0.75f, WeatherSurface.Sight(WeatherKind.Rain), 0.001f);
+            Assert.AreEqual(1f, RainMask.Heard(1f, false), 0.001f);
+            Assert.AreEqual(0f, RainMask.Heard(0f, true), 0.001f);
+            Assert.AreEqual(0.85f, RainMask.Heard(1f, true), 0.001f);
+            Assert.AreEqual(0.051f, RainMask.Heard(0.06f, true), 0.001f);
+            Assert.AreEqual(0f, RainMask.Heard(0.05f, true), 0.001f);
+            Assert.AreEqual(0.15f, RainMask.Cover, 0.001f);
+            Assert.AreEqual("whoosh", SwingCue.Sound(WeaponType.Melee));
+            Assert.AreEqual("", SwingCue.Sound(WeaponType.Pistol));
+            Assert.AreEqual(0.36f, SwingCue.Volume, 0.001f);
+            Assert.AreEqual(14f, AudioSpace.MaxDistance("whoosh"), 0.001f);
+            Assert.AreEqual(0.95f, PitchGate.Next(0f, 0f), 0.001f);
+            Assert.AreEqual(1.05f, PitchGate.Next(0f, 1f), 0.001f);
+            Assert.AreEqual(1f, PitchGate.Next(0f, 0.5f), 0.001f);
+            Assert.AreEqual(1.02f, PitchGate.Next(1f, 0.5f), 0.001f);
+            Assert.AreEqual(0.97f, PitchGate.Next(0.95f, 0f), 0.001f);
+            Assert.AreEqual(1.03f, PitchGate.Next(1.05f, 1f), 0.001f);
+            Assert.AreEqual(0, KinBoard.Read("", "ellis"));
+            Assert.AreEqual(0, KinBoard.Read("ellis:2", "jonas"));
+            Assert.AreEqual("ellis:2", KinBoard.Shift("", "ellis", 2));
+            Assert.AreEqual("ellis:100", KinBoard.Shift("ellis:99", "ellis", 5));
+            Assert.AreEqual("ellis:-100", KinBoard.Shift("ellis:0", "ellis", -140));
+            Assert.IsFalse(KinBoard.Close("ellis:39", "ellis"));
+            Assert.IsTrue(KinBoard.Close("ellis:40", "ellis"));
+            Assert.AreEqual("ellis", KinBoard.Closest("jonas:10|ellis:40"));
+            Assert.AreEqual("", KinBoard.Closest("ellis:39"));
+            Assert.IsTrue(KinBoard.Grieves("Close to Mara", "", "Mara Quill", ""));
+            Assert.IsFalse(KinBoard.Grieves("", "", "Mara Quill", "mara"));
+            Assert.IsTrue(KinBoard.Grieves("", "mara:40", "Mara Quill", "mara"));
+            var mourned = new List<ColonistDay>
+            {
+                new ColonistDay { id = "jonas", task = "Guard", kin = "mara:40", morale = 80f, hunger = 78f, thirst = 78f },
+                new ColonistDay { id = "ellis", task = "Scavenge", morale = 80f, hunger = 78f, thirst = 78f },
+                new ColonistDay { id = "mara", name = "Mara Quill", alive = false, task = "Fallen" }
+            };
+            int kinFood = 0;
+            int kinWater = 0;
+            var kinGrief = ColonyDay.Simulate(mourned, ref kinFood, ref kinWater, false, false, "Mara Quill");
+            Assert.AreEqual(40f, mourned[0].morale);
+            Assert.AreEqual(55f, mourned[1].morale);
+            Assert.Contains("grief", kinGrief);
+            Assert.AreEqual("mara", KinBoard.FallenId(mourned, "Mara Quill"));
+            var blank = JsonUtility.FromJson<SurvivorSave>("{\"id\":\"ada\"}");
+            Assert.IsNull(blank.kin);
+            Assert.AreEqual("close", Loc.T("camp.close", "en"));
+            Assert.AreEqual("cercano", Loc.T("camp.close", "es"));
+            Assert.AreEqual("[Thunder, east]", Presentation.Caption(NoiseType.Thunder, 4f, 0f, "en"));
+            Assert.AreEqual("[Trueno, este]", Presentation.Caption(NoiseType.Thunder, 4f, 0f, "es"));
+            Assert.AreEqual(48f, AudioSpace.MaxDistance("thunder"), 0.001f);
+            Assert.AreEqual(0.7f, StormCover.Volume, 0.001f);
+            Assert.AreEqual(40f, StormCover.Radius, 0.001f);
         }
 
         [Test]
@@ -3149,6 +7562,34 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void ARunnerShrieksAndABruteStomps()
+        {
+            Assert.AreEqual("walker", ZombieVoice.Breed("walker", 0));
+            Assert.AreEqual("runner", ZombieVoice.Breed("walker", 1));
+            Assert.AreEqual("brute", ZombieVoice.Breed("", 2));
+            Assert.AreEqual("runner", ZombieVoice.Breed("Zombie_Runner", 0));
+            Assert.AreEqual("groan", ZombieVoice.Idle("walker"));
+            Assert.AreEqual("shriek", ZombieVoice.Idle("runner"));
+            Assert.AreEqual("roar", ZombieVoice.Idle("brute"));
+            Assert.AreEqual("snarl", ZombieVoice.Bite("runner"));
+            Assert.AreEqual("stomp", ZombieVoice.Bite("brute"));
+            Assert.AreEqual("shriek", ZombieVoice.Hurt("runner"));
+            Assert.AreEqual("roar", ZombieVoice.Death("brute"));
+            Assert.IsFalse(ZombieVoice.IdleDue(22.1f, 0, 10f, 0f));
+            Assert.IsFalse(ZombieVoice.IdleDue(10f, 6, 10f, 0f));
+            Assert.IsFalse(ZombieVoice.IdleDue(10f, 2, 10f, 6f));
+            Assert.IsTrue(ZombieVoice.IdleDue(10f, 5, 10.8f, 6f));
+            var seats = new float[6];
+            ZombieVoice.Seat(seats, 1f);
+            ZombieVoice.Seat(seats, 1f);
+            Assert.AreEqual(2, ZombieVoice.Live(1.1f, seats));
+            Assert.AreEqual(0, ZombieVoice.Live(1f + ZombieVoice.Hold, seats));
+            Assert.AreEqual(40f, AudioSpace.MaxDistance("stomp"), 0.001f);
+            Assert.AreEqual(36f, AudioSpace.MaxDistance("scream"), 0.001f);
+            Assert.AreEqual(22f, AudioSpace.MaxDistance("groan"), 0.001f);
+        }
+
+        [Test]
         public void DemolishingAModuleReturnsHalfTheScrap()
         {
             Assert.AreEqual(3, ScrapRefund.Half(6));
@@ -3199,11 +7640,12 @@ namespace OutpostZero.Tests.EditMode
             Assert.AreEqual(RoadGraph.Signature(mall), RoadGraph.Signature(mallAgain));
             Assert.AreEqual("alley", RoadGraph.KindAt(mall, 24f, 4f));
             Assert.AreEqual("lot", RoadGraph.KindAt(mall, 28f, 4f));
-            Assert.AreEqual("hole", RoadGraph.KindAt(mall, 40f, 8f));
+            Assert.AreEqual("lot", RoadGraph.KindAt(mall, 40f, 8f), "a lot off the road backs onto one that fronts it");
+            Assert.AreEqual("hole", RoadGraph.KindAt(mall, 28f, 12f));
             Assert.AreEqual(28f, mall.LootX, 0.001f);
             Assert.AreEqual(4f, mall.LootZ, 0.001f);
-            Assert.AreEqual(40f, mall.NestX, 0.001f);
-            Assert.AreEqual(8f, mall.NestZ, 0.001f);
+            Assert.AreEqual(28f, mall.NestX, 0.001f);
+            Assert.AreEqual(12f, mall.NestZ, 0.001f);
             Assert.AreNotEqual(RoadGraph.Signature(mall), RoadGraph.Signature(RoadGraph.Build(99991, "mall")));
 
             var ids = CampaignBoard.All();

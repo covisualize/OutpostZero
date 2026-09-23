@@ -1,0 +1,35 @@
+{
+  "id": "Kit_drain",
+  "category": "Kit",
+  "generator": "generate_kit.build_piece",
+  "generatorHash": "7793cd1c987ce4978befd349b513a6354f6281708986f59f2c9fbaec9fbc2019",
+  "gitSha": "edff058f31a908ed7de64edaf527c44ea12a41ff",
+  "blender": "4.2.11",
+  "tags": [
+    "kit",
+    "road"
+  ],
+  "pivot": "authored",
+  "collider": "box",
+  "rig": "",
+  "lods": [
+    1.0
+  ],
+  "tris": 12,
+  "lodTris": [
+    12
+  ],
+  "size": {
+    "width": 0.4,
+    "depth": 2.0,
+    "height": 0.08
+  },
+  "floor": 0.0,
+  "center": {
+    "x": 0.2,
+    "y": 1.0
+  },
+  "materials": [
+    "Mat_metal"
+  ]
+}

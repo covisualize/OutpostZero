@@ -1,0 +1,37 @@
+{
+  "id": "Loot_AmmoBox_Rifle",
+  "category": "Weapons",
+  "generator": "generate_items.build_ammo_box_rifle",
+  "generatorHash": "155dff168ce0e447c586716611e21555aed0eff4e815d59ec52f0aef6014aa5e",
+  "gitSha": "edff058f31a908ed7de64edaf527c44ea12a41ff",
+  "blender": "4.2.11",
+  "tags": [
+    "loot",
+    "item"
+  ],
+  "pivot": "bottom",
+  "collider": "box",
+  "rig": "",
+  "lods": [
+    1.0
+  ],
+  "tris": 144,
+  "lodTris": [
+    144
+  ],
+  "size": {
+    "width": 0.27,
+    "depth": 0.105,
+    "height": 0.166
+  },
+  "floor": 0.0,
+  "center": {
+    "x": 0.0,
+    "y": 0.0
+  },
+  "materials": [
+    "Mat_Item_RifleCan",
+    "Mat_Item_RifleLatch",
+    "Mat_Item_RifleStencil"
+  ]
+}

@@ -8,7 +8,9 @@ namespace OutpostZero.Graphics
     {
         Clear,
         Fog,
-        Rain
+        Rain,
+        Overcast,
+        Storm
     }
 
     public static class WeatherSurface
@@ -16,15 +18,88 @@ namespace OutpostZero.Graphics
         public static float Wetness(WeatherKind kind)
         {
             if (kind == WeatherKind.Rain) return 0.65f;
+            if (kind == WeatherKind.Storm) return 0.85f;
             if (kind == WeatherKind.Fog) return 0.2f;
+            if (kind == WeatherKind.Overcast) return 0.1f;
             return 0f;
         }
 
         public static float Sight(WeatherKind kind)
         {
             if (kind == WeatherKind.Fog) return 0.62f;
-            if (kind == WeatherKind.Rain) return 0.8f;
+            if (kind == WeatherKind.Storm) return 0.7f;
+            if (kind == WeatherKind.Rain) return 0.75f;
+            if (kind == WeatherKind.Overcast) return 0.9f;
             return 1f;
+        }
+    }
+
+    /// <summary>
+    /// Rain leaves four puddles on the avenue. Fog and a dry street leave them hidden.
+    /// </summary>
+    public static class RainPuddle
+    {
+        public const int Count = 4;
+        public const float Y = 0.03f;
+
+        public struct Spot
+        {
+            public float X;
+            public float Z;
+            public float W;
+            public float D;
+        }
+
+        public static bool Shows(float wetness)
+        {
+            return wetness >= 0.65f;
+        }
+
+        public static Spot At(int index)
+        {
+            if (index == 1) return new Spot { X = -2.4f, Z = 9f, W = 1.6f, D = 1.05f };
+            if (index == 2) return new Spot { X = 3.1f, Z = 14f, W = 1.2f, D = 0.85f };
+            if (index == 3) return new Spot { X = -1.2f, Z = 17f, W = 1.8f, D = 1.1f };
+            return new Spot { X = 2.2f, Z = 6f, W = 1.4f, D = 0.9f };
+        }
+    }
+
+    /// <summary>
+    /// Three low banks of mist on the avenue. They sit under the eye line.
+    /// Fog, a storm, a dark overcast, and deep night raise them. A clear day leaves the street open.
+    /// </summary>
+    public static class MistBank
+    {
+        public const int Count = 3;
+        public const float Y = 0.45f;
+        public const float Tall = 0.7f;
+        public const float NightAt = 0.7f;
+        public const float OvercastAt = 0.5f;
+
+        public struct Spot
+        {
+            public float X;
+            public float Z;
+            public float W;
+            public float D;
+        }
+
+        public static float Top => Y + Tall * 0.5f;
+
+        public static bool Shows(WeatherKind kind, float night)
+        {
+            if (night < 0f) night = 0f;
+            if (night > 1f) night = 1f;
+            if (kind == WeatherKind.Fog || kind == WeatherKind.Storm) return true;
+            if (kind == WeatherKind.Overcast) return night >= OvercastAt;
+            return night >= NightAt;
+        }
+
+        public static Spot At(int index)
+        {
+            if (index == 1) return new Spot { X = 1.2f, Z = 11f, W = 4.2f, D = 2.4f };
+            if (index == 2) return new Spot { X = -2.8f, Z = 15.5f, W = 3.6f, D = 2.1f };
+            return new Spot { X = -3.4f, Z = 4.5f, W = 3.8f, D = 2.2f };
         }
     }
 
@@ -37,11 +112,28 @@ namespace OutpostZero.Graphics
         [SerializeField] private float multiplier = 1f;
         private ParticleSystem rain;
         private ParticleSystem debris;
+        private ParticleSystem ash;
+        private Transform[] sheets;
+        private GameObject puddles;
+        private GameObject mist;
+        private Material mistMat;
+        private string district = "";
         private WeatherKind applied = (WeatherKind)(-1);
         private float nextShift;
         private float lastBolt;
+        private bool thunderSent;
 
         public WeatherKind Kind => kind;
+        public string District => district ?? "";
+
+        public void SetDistrict(string id)
+        {
+            string next = id ?? "";
+            bool arrived = next != district && AshFall.Falls(next);
+            district = next;
+            Apply();
+            if (arrived) GameplayFeedback.Toast(OutpostZero.Shell.Loc.T("ash.air"));
+        }
 
         private void Awake()
         {
@@ -54,6 +146,11 @@ namespace OutpostZero.Graphics
             nextShift = Time.time + 80f;
         }
 
+        private void OnDestroy()
+        {
+            if (Instance == this) HeightFog.Clear();
+        }
+
         private void Update()
         {
             if (Time.time >= nextShift)
@@ -62,8 +159,21 @@ namespace OutpostZero.Graphics
                 kind = (WeatherKind)(((int)kind + 1) % 3);
             }
             Apply();
-            if (FlashCap.Due(kind == WeatherKind.Rain, lastBolt, Time.time) && CombatVfx.Bolt(transform.position + Vector3.up * 18f))
+            bool bolt = FlashCap.Due(kind == WeatherKind.Rain, lastBolt, Time.time) || SkyBand.BoltDue(kind, lastBolt, Time.time);
+            if (bolt && CombatVfx.Bolt(transform.position + Vector3.up * 18f))
+            {
                 lastBolt = Time.time;
+                thunderSent = false;
+                Sensory.StormCover.Strike(lastBolt);
+            }
+            if (Sensory.StormCover.ThunderDue(lastBolt, Time.time, thunderSent))
+            {
+                thunderSent = true;
+                Vector3 at = transform.position;
+                Shell.AudioManager.Instance?.PlayAt("thunder", at, Sensory.StormCover.Volume);
+                if (Sensory.NoiseManager.Instance != null)
+                    Sensory.NoiseManager.Instance.EmitNoise(at, Sensory.NoiseTable.Radius(Sensory.NoiseTable.Thunder), Sensory.NoiseTable.Loud(Sensory.NoiseTable.Thunder), NoiseType.Thunder);
+            }
         }
 
         public void Set(WeatherKind weather)
@@ -81,16 +191,33 @@ namespace OutpostZero.Graphics
 
         private void Apply()
         {
-            bool fog = kind != WeatherKind.Clear;
-            RenderSettings.fog = fog;
+            float night = DayNightCycle.Instance != null ? DayNightCycle.Instance.NightFactor : 0f;
+            float eye = 1.7f;
+            var cam = Camera.main;
+            if (cam != null) eye = cam.transform.position.y;
+            float density = GroundMist.Density(kind, night, eye);
+            RenderSettings.fog = density > 0.001f;
             RenderSettings.fogMode = FogMode.ExponentialSquared;
-            RenderSettings.fogColor = kind == WeatherKind.Rain ? new Color(0.35f, 0.38f, 0.42f) : new Color(0.55f, 0.58f, 0.62f);
-            RenderSettings.fogDensity = kind == WeatherKind.Fog ? 0.045f : kind == WeatherKind.Rain ? 0.02f : 0f;
-            multiplier = WeatherSurface.Sight(kind);
-            if (kind == WeatherKind.Rain) EnsureRain();
-            if (rain != null) rain.gameObject.SetActive(kind == WeatherKind.Rain);
+            RenderSettings.fogColor = GroundMist.Tint(kind, night);
+            RenderSettings.fogDensity = density;
+            HeightFog.Push(kind, night);
+            Shader.SetGlobalFloat("_WindStrength", GroundMist.Wind(kind));
+            Shader.SetGlobalFloat("_OutpostWet", WeatherSurface.Wetness(kind));
+            HoldPuddles(WeatherSurface.Wetness(kind));
+            HoldMist(kind, night);
+            multiplier = AshVeil.Scale(WeatherSurface.Sight(kind), AshFall.Falls(district));
+            if (SkyBand.Rains(kind)) EnsureRain();
+            if (rain != null)
+            {
+                rain.gameObject.SetActive(SkyBand.Rains(kind));
+                var emission = rain.emission;
+                emission.rateOverTime = kind == WeatherKind.Storm ? 160f : 80f;
+            }
             if (kind != WeatherKind.Clear) EnsureDebris();
             if (debris != null) debris.gameObject.SetActive(kind != WeatherKind.Clear);
+            HoldSheets();
+            if (AshFall.Falls(district)) EnsureAsh();
+            if (ash != null) ash.gameObject.SetActive(AshFall.Falls(district));
             if (applied != kind)
             {
                 applied = kind;
@@ -129,6 +256,68 @@ namespace OutpostZero.Graphics
             }
         }
 
+        private void HoldPuddles(float wetness)
+        {
+            if (puddles == null)
+            {
+                puddles = new GameObject("RainPuddles");
+                puddles.transform.SetParent(transform, false);
+                for (int i = 0; i < RainPuddle.Count; i++)
+                {
+                    var spot = RainPuddle.At(i);
+                    var body = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                    body.name = "Puddle";
+                    body.transform.SetParent(puddles.transform, false);
+                    body.transform.position = new Vector3(spot.X, RainPuddle.Y, spot.Z);
+                    body.transform.localScale = new Vector3(spot.W, 0.02f, spot.D);
+                    var collider = body.GetComponent<Collider>();
+                    if (collider != null) Destroy(collider);
+                    var renderer = body.GetComponent<Renderer>();
+                    if (renderer != null) renderer.material.color = new Color(0.1f, 0.12f, 0.14f);
+                }
+            }
+            puddles.SetActive(RainPuddle.Shows(wetness));
+        }
+
+        private void HoldMist(WeatherKind weather, float night)
+        {
+            if (mist == null)
+            {
+                mist = new GameObject("StreetMist");
+                mist.transform.SetParent(transform, false);
+                var source = Resources.Load<Material>("OutpostMist");
+                if (source == null)
+                {
+                    var shader = Shader.Find("OutpostZero/Mist");
+                    if (shader != null) source = new Material(shader);
+                }
+                if (source != null) mistMat = new Material(source);
+                for (int i = 0; i < MistBank.Count; i++)
+                {
+                    var spot = MistBank.At(i);
+                    var body = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                    body.name = "Mist";
+                    body.transform.SetParent(mist.transform, false);
+                    body.transform.position = new Vector3(spot.X, MistBank.Y, spot.Z);
+                    body.transform.localScale = new Vector3(spot.W, MistBank.Tall, spot.D);
+                    var collider = body.GetComponent<Collider>();
+                    if (collider != null) Destroy(collider);
+                    var renderer = body.GetComponent<Renderer>();
+                    if (renderer == null) continue;
+                    renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                    renderer.receiveShadows = false;
+                    if (mistMat != null) renderer.sharedMaterial = mistMat;
+                }
+            }
+            if (mistMat != null)
+            {
+                Color tint = GroundMist.Tint(weather, night);
+                tint.a = 0.22f;
+                mistMat.color = tint;
+            }
+            mist.SetActive(MistBank.Shows(weather, night));
+        }
+
         private void EnsureRain()
         {
             if (rain != null) return;
@@ -147,6 +336,51 @@ namespace OutpostZero.Graphics
             shape.shapeType = ParticleSystemShapeType.Box;
             shape.scale = new Vector3(30f, 1f, 30f);
             go.transform.position = new Vector3(0f, 12f, 0f);
+        }
+
+        private void HoldSheets()
+        {
+            if (sheets == null)
+            {
+                sheets = new Transform[WindSheet.Count];
+                var root = new GameObject("WindSheets");
+                root.transform.SetParent(transform, false);
+                var shader = Shader.Find("OutpostZero/TriplanarRim");
+                Material mat = null;
+                if (shader != null)
+                {
+                    mat = new Material(shader);
+                    mat.SetColor("_BaseColor", new Color(0.72f, 0.66f, 0.48f));
+                    mat.SetFloat("_Sway", 0.4f);
+                }
+                for (int i = 0; i < WindSheet.Count; i++)
+                {
+                    var body = GameObject.CreatePrimitive(PrimitiveType.Quad);
+                    body.name = "Sheet";
+                    body.transform.SetParent(root.transform, false);
+                    body.transform.localScale = new Vector3(0.42f, 0.28f, 1f);
+                    var collider = body.GetComponent<Collider>();
+                    if (collider != null) Destroy(collider);
+                    var renderer = body.GetComponent<Renderer>();
+                    if (mat != null) renderer.sharedMaterial = mat;
+                    else renderer.material.color = new Color(0.72f, 0.66f, 0.48f);
+                    WindSheet.Home(i, out float hx, out float hz);
+                    body.transform.position = new Vector3(hx, 0.05f, hz);
+                    sheets[i] = body.transform;
+                }
+            }
+            bool show = WindSheet.Skims(kind);
+            float wind = GroundMist.Wind(kind);
+            for (int i = 0; i < sheets.Length; i++)
+            {
+                if (sheets[i] == null) continue;
+                sheets[i].gameObject.SetActive(show);
+                if (!show) continue;
+                var place = sheets[i].position;
+                WindSheet.Step(place.x, place.z, wind, Time.deltaTime, out float nx, out float nz);
+                sheets[i].position = new Vector3(nx, 0.05f, nz);
+                sheets[i].rotation = Quaternion.Euler(90f, 0f, WindSheet.Tilt(Time.time, i, wind));
+            }
         }
 
         private void EnsureDebris()
@@ -172,6 +406,28 @@ namespace OutpostZero.Graphics
             velocity.space = ParticleSystemSimulationSpace.World;
             velocity.x = new ParticleSystem.MinMaxCurve(2.4f);
             go.transform.position = new Vector3(0f, 3f, 0f);
+        }
+
+        private void EnsureAsh()
+        {
+            if (ash != null) return;
+            var go = new GameObject("AshFall");
+            go.transform.SetParent(transform);
+            ash = go.AddComponent<ParticleSystem>();
+            var main = ash.main;
+            main.startLifetime = AshFall.Life;
+            main.startSpeed = AshFall.Drift;
+            main.startSize = 0.06f;
+            main.startColor = new Color(0.45f, 0.4f, 0.36f, 0.7f);
+            main.maxParticles = AshFall.Flakes * 2;
+            main.simulationSpace = ParticleSystemSimulationSpace.World;
+            main.gravityModifier = 0.08f;
+            var emission = ash.emission;
+            emission.rateOverTime = AshFall.Flakes;
+            var shape = ash.shape;
+            shape.shapeType = ParticleSystemShapeType.Box;
+            shape.scale = new Vector3(28f, 6f, 28f);
+            go.transform.position = new Vector3(0f, 8f, 0f);
         }
     }
 }

@@ -1,0 +1,35 @@
+{
+  "id": "Kit_sandbag_corner",
+  "category": "Kit",
+  "generator": "generate_kit.build_piece",
+  "generatorHash": "a10611a77db5dcb98f47e9007eab16cdc2fa09194f0fdf55391212978198442a",
+  "gitSha": "edff058f31a908ed7de64edaf527c44ea12a41ff",
+  "blender": "4.2.11",
+  "tags": [
+    "kit",
+    "fort"
+  ],
+  "pivot": "authored",
+  "collider": "box",
+  "rig": "",
+  "lods": [
+    1.0
+  ],
+  "tris": 12,
+  "lodTris": [
+    12
+  ],
+  "size": {
+    "width": 0.6,
+    "depth": 0.6,
+    "height": 0.6
+  },
+  "floor": 0.0,
+  "center": {
+    "x": 0.3,
+    "y": 0.3
+  },
+  "materials": [
+    "Mat_concrete"
+  ]
+}

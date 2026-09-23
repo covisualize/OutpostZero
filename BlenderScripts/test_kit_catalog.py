@@ -61,6 +61,28 @@ class KitCatalogTests(unittest.TestCase):
         self.assertEqual(recipe_for("north_gate"), "apartment")
         self.assertEqual(recipe_for("anywhere"), "storefront")
 
+    def test_apartment_stairs_have_head_room_and_a_landing(self):
+        steps = self.pieces["stairs"]["colliders"]
+        placed = self.book["apartment"]
+        floors = [item for item in placed if item["id"] == "floor"]
+        flights = [item for item in placed if item["id"] == "stairs"]
+        self.assertEqual(len(flights), 2)
+        for flight in flights:
+            above = [f for f in floors if abs(f["y"] - (flight["y"] + 3)) < 0.01]
+            for box in steps:
+                top = flight["y"] + box["y"] + box["h"]
+                z0, z1 = flight["z"] + box["z"], flight["z"] + box["z"] + box["d"]
+                for slab in above:
+                    overlaps = slab["x"] < flight["x"] + 2 - 0.01 and slab["x"] + 2 > flight["x"] + 0.01 \
+                        and slab["z"] < z1 - 0.01 and slab["z"] + 2 > z0 + 0.01
+                    if overlaps:
+                        self.assertGreaterEqual(slab["y"] - top, 1.9, (flight, box))
+            last = steps[-1]
+            z0, z1 = flight["z"] + last["z"], flight["z"] + last["z"] + last["d"]
+            landing = [s for s in above if (abs(s["x"] + 2 - flight["x"]) < 0.01 or abs(s["x"] - flight["x"] - 2) < 0.01)
+                       and s["z"] <= z0 + 0.01 and s["z"] + 2 >= z1 - 0.01]
+            self.assertTrue(landing, flight)
+
     def test_committed_catalog_matches_the_builder(self):
         write_catalog()
         with open(catalog_path(), encoding="utf-8") as handle:

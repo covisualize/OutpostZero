@@ -14,15 +14,15 @@ using OutpostZero.Combat;
 using OutpostZero.AI;
 using OutpostZero.UI;
 using OutpostZero.Utils;
+using OutpostZero.Graphics;
 
 namespace OutpostZero.EditorTools
 {
     public static class PrototypeSceneBuilder
     {
         private const string ScenePath = "Assets/Scenes/PrototypeArena.unity";
+        private const string BootPath = "Assets/Scenes/Boot.unity";
         private const string SettingsDir = "Assets/Settings";
-        private const string MaterialsDir = "Assets/Materials";
-        private const string ModelsDir = "Assets/Models";
         private static int missingModels;
 
         [MenuItem("Tools/Outpost Zero/Build Prototype Test Arena", false, 1)]
@@ -34,8 +34,9 @@ namespace OutpostZero.EditorTools
 
             // 0. Ensure URP Pipeline Asset & Settings
             EnsureURPPipelineConfigured();
-            RendererFeatureSetup.EnsureDecals();
+            RendererFeatureSetup.EnsureFeatures();
             missingModels = 0;
+            PrefabCatalog.Refresh();
             DefaultDataGenerator.Generate();
             SurvivorAnimatorBuilder.Build();
 
@@ -57,10 +58,7 @@ namespace OutpostZero.EditorTools
             // 5. Camera Follow
             SetupCamera(player.transform);
 
-            // 6. UI HUD
-            SetupHUD(player);
-
-            // 7. Zombie Prototype Variants & Spawner
+            // 6. Zombie Prototype Variants & Spawner
             SetupZombies(player.transform);
 
             Undo.CollapseUndoOperations(undoGroup);
@@ -74,7 +72,7 @@ namespace OutpostZero.EditorTools
             Debug.Log("[Outpost Zero] Starting headless batch scene build...");
 
             EnsureURPPipelineConfigured();
-            RendererFeatureSetup.EnsureDecals();
+            RendererFeatureSetup.EnsureFeatures();
             missingModels = 0;
             DefaultDataGenerator.Generate();
             SurvivorAnimatorBuilder.Build();
@@ -94,7 +92,6 @@ namespace OutpostZero.EditorTools
             BakeNavMeshOnGround(ground);
             GameObject player = CreatePlayer();
             SetupCamera(player.transform);
-            SetupHUD(player);
             SetupZombies(player.transform);
 
             // In-game auto screen capture utility
@@ -112,9 +109,15 @@ namespace OutpostZero.EditorTools
             }
 
             EditorSceneManager.SaveScene(scene, ScenePath);
+            if (OcclusionBake.Run() < 0 && Application.isBatchMode)
+            {
+                throw new System.InvalidOperationException("[Outpost Zero] Occlusion bake failed.");
+            }
+            EditorSceneManager.SaveScene(scene, ScenePath);
 
             EditorBuildSettings.scenes = new EditorBuildSettingsScene[]
             {
+                new EditorBuildSettingsScene(BootPath, true),
                 new EditorBuildSettingsScene(ScenePath, true)
             };
 
@@ -124,69 +127,7 @@ namespace OutpostZero.EditorTools
 
         public static void CiBuildLinuxPlayer()
         {
-            try
-            {
-                BuildAndSaveSceneBatch();
-                string location = Path.Combine("Builds", "Linux", "OutpostZero.x86_64");
-                var report = BuildPipeline.BuildPlayer(new BuildPlayerOptions
-                {
-                    scenes = new[] { ScenePath },
-                    locationPathName = location,
-                    target = BuildTarget.StandaloneLinux64,
-                    options = BuildOptions.None
-                });
-                if (report.summary.result != UnityEditor.Build.Reporting.BuildResult.Succeeded)
-                {
-                    EditorApplication.Exit(1);
-                }
-            }
-            catch (System.Exception exception)
-            {
-                Debug.LogException(exception);
-                EditorApplication.Exit(1);
-            }
-        }
-
-        public static void BuildGameExecutable()
-        {
-            try
-            {
-                BuildAndSaveSceneBatch();
-            }
-            catch (System.Exception exception)
-            {
-                Debug.LogException(exception);
-                if (Application.isBatchMode)
-                {
-                    EditorApplication.Exit(1);
-                }
-                return;
-            }
-
-            string buildDir = "Builds";
-            if (!Directory.Exists(buildDir))
-            {
-                Directory.CreateDirectory(buildDir);
-            }
-
-            string exePath = Path.Combine(buildDir, "OutpostZero.exe");
-            Debug.Log($"[Outpost Zero] Building Windows Standalone player to: {exePath}...");
-
-            BuildPlayerOptions buildOptions = new BuildPlayerOptions
-            {
-                scenes = new[] { ScenePath },
-                locationPathName = exePath,
-                target = BuildTarget.StandaloneWindows64,
-                options = BuildOptions.None
-            };
-
-            var report = BuildPipeline.BuildPlayer(buildOptions);
-            Debug.Log($"[Outpost Zero] Build result: {report.summary.result} (Errors: {report.summary.totalErrors})");
-
-            if (report.summary.result != UnityEditor.Build.Reporting.BuildResult.Succeeded)
-            {
-                EditorApplication.Exit(1);
-            }
+            BuildScript.Run(BuildArgs.Parse(new[] { "-targets", "linux" }), true);
         }
 
         public static UniversalRenderPipelineAsset EnsureURPPipelineConfigured()
@@ -196,86 +137,79 @@ namespace OutpostZero.EditorTools
                 Directory.CreateDirectory(SettingsDir);
             }
 
-            string urpAssetPath = $"{SettingsDir}/OutpostZero_URP.asset";
-            string rendererPath = $"{SettingsDir}/OutpostZero_URP_Renderer.asset";
-
-            var rendererData = AssetDatabase.LoadAssetAtPath<UniversalRendererData>(rendererPath);
-            if (rendererData == null)
+            UniversalRenderPipelineAsset medium = null;
+            for (int i = 0; i < QualityProfile.Count; i++)
             {
-                rendererData = ScriptableObject.CreateInstance<UniversalRendererData>();
-                AssetDatabase.CreateAsset(rendererData, rendererPath);
-            }
-
-            var urpAsset = AssetDatabase.LoadAssetAtPath<UniversalRenderPipelineAsset>(urpAssetPath);
-            if (urpAsset == null)
-            {
-                urpAsset = UniversalRenderPipelineAsset.Create(rendererData);
-                AssetDatabase.CreateAsset(urpAsset, urpAssetPath);
-            }
-
-            GraphicsSettings.defaultRenderPipeline = urpAsset;
-            QualitySettings.renderPipeline = urpAsset;
-
-            for (int i = 0; i < QualitySettings.count; i++)
-            {
-                QualitySettings.SetQualityLevel(i, false);
-                QualitySettings.renderPipeline = urpAsset;
-            }
-
-            AssetDatabase.SaveAssets();
-            return urpAsset;
-        }
-
-        private static Material GetOrCreateMaterial(string matName, Color color)
-        {
-            if (!Directory.Exists(MaterialsDir))
-            {
-                Directory.CreateDirectory(MaterialsDir);
-            }
-
-            string path = $"{MaterialsDir}/{matName}.mat";
-            Material mat = AssetDatabase.LoadAssetAtPath<Material>(path);
-
-            Shader urpLitShader = Shader.Find("Universal Render Pipeline/Lit") 
-                               ?? Shader.Find("Universal Render Pipeline/Simple Lit")
-                               ?? Shader.Find("Standard");
-
-            if (mat == null)
-            {
-                mat = new Material(urpLitShader);
-                mat.name = matName;
-                ApplyMaterialColor(mat, color);
-                AssetDatabase.CreateAsset(mat, path);
-            }
-            else
-            {
-                if (mat.shader != urpLitShader && urpLitShader != null)
+                var tier = QualityProfile.For(i);
+                var rendererData = EnsureRenderer(QualityProfile.RendererPath(i));
+                var asset = AssetDatabase.LoadAssetAtPath<UniversalRenderPipelineAsset>(QualityProfile.AssetPath(i));
+                if (asset == null)
                 {
-                    mat.shader = urpLitShader;
+                    asset = UniversalRenderPipelineAsset.Create(rendererData);
+                    AssetDatabase.CreateAsset(asset, QualityProfile.AssetPath(i));
                 }
-                ApplyMaterialColor(mat, color);
-                EditorUtility.SetDirty(mat);
+                ApplyTier(asset, rendererData, tier);
+                if (i == 1) medium = asset;
+                if (i < QualitySettings.count)
+                {
+                    QualitySettings.SetQualityLevel(i, false);
+                    QualitySettings.renderPipeline = asset;
+                    QualitySettings.lodBias = tier.LodBias;
+                    QualitySettings.shadowDistance = tier.ShadowDistance;
+                    QualitySettings.antiAliasing = tier.Msaa > 1 ? tier.Msaa : 0;
+                    QualitySettings.streamingMipmapsActive = true;
+                }
             }
+            if (QualitySettings.count != QualityProfile.Count)
+                Debug.LogWarning($"[Outpost Zero] ProjectSettings has {QualitySettings.count} quality levels; the game expects {QualityProfile.Count} (Low, Medium, High, Ultra).");
 
-            return mat;
+            GraphicsSettings.defaultRenderPipeline = medium;
+            QualitySettings.SetQualityLevel(1, false);
+            AssetDatabase.SaveAssets();
+            return medium;
         }
 
-        private static void ApplyMaterialColor(Material mat, Color color)
+        private static UniversalRendererData EnsureRenderer(string path)
         {
-            if (mat.HasProperty("_BaseColor"))
-            {
-                mat.SetColor("_BaseColor", color);
-            }
-            if (mat.HasProperty("_Color"))
-            {
-                mat.SetColor("_Color", color);
-            }
+            var data = AssetDatabase.LoadAssetAtPath<UniversalRendererData>(path);
+            if (data != null) return data;
+            data = ScriptableObject.CreateInstance<UniversalRendererData>();
+            AssetDatabase.CreateAsset(data, path);
+            return data;
         }
 
-        private static GameObject InstantiateModel(string relativePath, string name, Vector3 pos, Quaternion rot, Vector3 scale, Transform parent = null, bool isStatic = true, bool addBoxCollider = false, int layer = GameLayers.Environment)
+        private static void ApplyTier(UniversalRenderPipelineAsset asset, UniversalRendererData renderer, QualityProfile.Tier tier)
         {
-            string fullPath = relativePath.StartsWith("Assets/") ? relativePath : $"{ModelsDir}/{relativePath}";
-            GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(fullPath);
+            asset.shadowDistance = tier.ShadowDistance;
+            asset.mainLightShadowmapResolution = tier.ShadowResolution;
+            asset.shadowCascadeCount = tier.Cascades;
+            asset.msaaSampleCount = tier.Msaa;
+            asset.renderScale = tier.RenderScale;
+            asset.supportsHDR = tier.Hdr;
+            asset.supportsCameraDepthTexture = true;
+            asset.useSRPBatcher = true;
+            var serialized = new SerializedObject(asset);
+            var list = serialized.FindProperty("m_RendererDataList");
+            if (list != null)
+            {
+                list.arraySize = 1;
+                list.GetArrayElementAtIndex(0).objectReferenceValue = renderer;
+                serialized.ApplyModifiedPropertiesWithoutUndo();
+            }
+            EditorUtility.SetDirty(asset);
+        }
+
+        private static Material LibraryMaterial(SurfaceFamily family)
+        {
+            var material = AssetDatabase.LoadAssetAtPath<Material>(MaterialLibrary.TriplanarPath(family))
+                ?? AssetDatabase.LoadAssetAtPath<Material>(MaterialLibrary.LitPath(family));
+            if (material == null) Debug.LogWarning("Material library is missing " + family + "; run BlenderScripts/material_library.py.");
+            return material;
+        }
+
+        private static GameObject InstantiateModel(string assetId, string name, Vector3 pos, Quaternion rot, Vector3 scale, Transform parent = null, bool isStatic = true, bool addBoxCollider = false, int layer = GameLayers.Environment)
+        {
+            GameObject prefab = PrefabCatalog.Load(assetId);
 
             GameObject instance;
             if (prefab != null)
@@ -286,7 +220,7 @@ namespace OutpostZero.EditorTools
             else
             {
                 missingModels++;
-                Debug.LogError($"[PrototypeSceneBuilder] Model not found at {fullPath}.");
+                Debug.LogError($"[PrototypeSceneBuilder] No prefab or model for asset id '{PrefabCatalog.Id(assetId)}' under {PrefabCatalog.PrefabRoot}.");
                 instance = GameObject.CreatePrimitive(PrimitiveType.Cube);
                 instance.name = name;
                 instance.transform.position = pos;
@@ -327,7 +261,7 @@ namespace OutpostZero.EditorTools
         {
             if (instance == null) return;
             GameLayers.ApplyRecursively(instance, GameLayers.Loot);
-            var pickup = instance.GetComponent<LootPickup>() ?? instance.AddComponent<LootPickup>();
+            var pickup = Attach.Ensure<LootPickup>(instance);
             pickup.Configure(kind, amount);
         }
 
@@ -341,6 +275,7 @@ namespace OutpostZero.EditorTools
                 {
                     foreach (var r in renderers)
                     {
+                        if (ModelSidecar.IsLowerLod(r.gameObject.name)) continue;
                         var mf = r.GetComponent<MeshFilter>();
                         if (mf != null && mf.sharedMesh != null)
                         {
@@ -390,7 +325,7 @@ namespace OutpostZero.EditorTools
             light.intensity = 1.35f;
             light.shadows = LightShadows.Soft;
 
-            var lightData = light.GetComponent<UniversalAdditionalLightData>() ?? light.gameObject.AddComponent<UniversalAdditionalLightData>();
+            var lightData = Attach.Ensure<UniversalAdditionalLightData>(light.gameObject);
 
             RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
             RenderSettings.ambientLight = new Color(0.36f, 0.38f, 0.44f);
@@ -409,20 +344,25 @@ namespace OutpostZero.EditorTools
             baseGround.transform.localScale = new Vector3(7.0f, 1.0f, 7.0f);
 
             var renderer = baseGround.GetComponent<MeshRenderer>();
-            renderer.sharedMaterial = GetOrCreateMaterial("Mat_Ground_Asphalt", new Color(0.18f, 0.19f, 0.21f));
+            renderer.sharedMaterial = LibraryMaterial(SurfaceFamily.Asphalt);
             baseGround.isStatic = true;
             GameLayers.ApplyRecursively(groundRoot, GameLayers.Environment);
 
+            var probeHost = new GameObject("LightProbeGrid");
+            probeHost.transform.SetParent(groundRoot.transform, false);
+            var group = probeHost.AddComponent<LightProbeGroup>();
+            group.probePositions = ProbeGrid.Lights(ProbeGrid.YardMin, ProbeGrid.YardMax, ProbeGrid.YardMin, ProbeGrid.YardMax);
+
             // Central Avenue (North-South, 4 straight road tiles)
-            InstantiateModel("Environment/Road_Tile_Straight.fbx", "Road_North_2", new Vector3(0, 0, 15), Quaternion.identity, Vector3.one, groundRoot.transform);
-            InstantiateModel("Environment/Road_Tile_Straight.fbx", "Road_North_1", new Vector3(0, 0, 5), Quaternion.identity, Vector3.one, groundRoot.transform);
-            InstantiateModel("Environment/Road_Tile_Intersection.fbx", "Road_Intersection_Center", new Vector3(0, 0, -5), Quaternion.identity, Vector3.one, groundRoot.transform);
-            InstantiateModel("Environment/Road_Tile_Straight.fbx", "Road_South_1", new Vector3(0, 0, -15), Quaternion.identity, Vector3.one, groundRoot.transform);
+            InstantiateModel("Road_Tile_Straight", "Road_North_2", new Vector3(0, 0, 15), Quaternion.identity, Vector3.one, groundRoot.transform);
+            InstantiateModel("Road_Tile_Straight", "Road_North_1", new Vector3(0, 0, 5), Quaternion.identity, Vector3.one, groundRoot.transform);
+            InstantiateModel("Road_Tile_Intersection", "Road_Intersection_Center", new Vector3(0, 0, -5), Quaternion.identity, Vector3.one, groundRoot.transform);
+            InstantiateModel("Road_Tile_Straight", "Road_South_1", new Vector3(0, 0, -15), Quaternion.identity, Vector3.one, groundRoot.transform);
 
             // Cross street (East-West)
             Quaternion rotEastWest = Quaternion.Euler(0, 90, 0);
-            InstantiateModel("Environment/Road_Tile_Straight.fbx", "Road_West_1", new Vector3(-10, 0, -5), rotEastWest, Vector3.one, groundRoot.transform);
-            InstantiateModel("Environment/Road_Tile_Straight.fbx", "Road_East_1", new Vector3(10, 0, -5), rotEastWest, Vector3.one, groundRoot.transform);
+            InstantiateModel("Road_Tile_Straight", "Road_West_1", new Vector3(-10, 0, -5), rotEastWest, Vector3.one, groundRoot.transform);
+            InstantiateModel("Road_Tile_Straight", "Road_East_1", new Vector3(10, 0, -5), rotEastWest, Vector3.one, groundRoot.transform);
 
             Undo.RegisterCreatedObjectUndo(groundRoot, "Create Ground & Streets");
             return baseGround;
@@ -431,7 +371,7 @@ namespace OutpostZero.EditorTools
         private static void BakeNavMeshOnGround(GameObject ground)
         {
             ground.isStatic = true;
-            var surface = ground.GetComponent<NavMeshSurface>() ?? ground.AddComponent<NavMeshSurface>();
+            var surface = Attach.Ensure<NavMeshSurface>(ground);
             surface.collectObjects = CollectObjects.All;
             surface.useGeometry = NavMeshCollectGeometry.RenderMeshes;
             surface.BuildNavMesh();
@@ -465,32 +405,32 @@ namespace OutpostZero.EditorTools
             obstaclesRoot.transform.SetParent(parent);
 
             // 1. North-West Commercial Sector
-            InstantiateModel("Environment/Building_Storefront_2Story.fbx", "Building_Storefront_NW", new Vector3(-11f, 0, 14f), Quaternion.Euler(0, 90, 0), Vector3.one, obstaclesRoot.transform);
-            InstantiateModel("Props/Prop_Dumpster.fbx", "Dumpster_Alley", new Vector3(-6.5f, 0, 18f), Quaternion.Euler(0, -15, 0), Vector3.one, obstaclesRoot.transform);
-            InstantiateModel(ModelPaths.Relative(ModelPaths.StreetLamp), "StreetLamp_NW", new Vector3(-3.2f, 0, 10f), Quaternion.Euler(0, 90, 0), Vector3.one, obstaclesRoot.transform);
-            InstantiateModel("Props/Prop_StreetBench.fbx", "StreetBench_NW", new Vector3(-3.2f, 0, 13f), Quaternion.Euler(0, 90, 0), Vector3.one, obstaclesRoot.transform);
-            InstantiateModel("Props/Vehicle_Wrecked_Sedan.fbx", "Sedan_NW_Parked", new Vector3(-2.2f, 0, 8f), Quaternion.Euler(0, -8, 0), Vector3.one, obstaclesRoot.transform);
+            InstantiateModel("Building_Storefront_2Story", "Building_Storefront_NW", new Vector3(-11f, 0, 14f), Quaternion.Euler(0, 90, 0), Vector3.one, obstaclesRoot.transform);
+            InstantiateModel("Prop_Dumpster", "Dumpster_Alley", new Vector3(-6.5f, 0, 18f), Quaternion.Euler(0, -15, 0), Vector3.one, obstaclesRoot.transform);
+            InstantiateModel("Prop_StreetLamp", "StreetLamp_NW", new Vector3(-3.2f, 0, 10f), Quaternion.Euler(0, 90, 0), Vector3.one, obstaclesRoot.transform);
+            InstantiateModel("Prop_StreetBench", "StreetBench_NW", new Vector3(-3.2f, 0, 13f), Quaternion.Euler(0, 90, 0), Vector3.one, obstaclesRoot.transform);
+            InstantiateModel("Vehicle_Wrecked_Sedan", "Sedan_NW_Parked", new Vector3(-2.2f, 0, 8f), Quaternion.Euler(0, -8, 0), Vector3.one, obstaclesRoot.transform);
 
             // 2. North-East Industrial Warehouse Sector
-            InstantiateModel("Environment/Building_Warehouse_Depot.fbx", "Building_Warehouse_NE", new Vector3(14f, 0, 14f), Quaternion.Euler(0, -90, 0), Vector3.one, obstaclesRoot.transform);
-            InstantiateModel("Props/Prop_Crate_Wood.fbx", "WoodCrate_Stack1", new Vector3(8.5f, 0, 12f), Quaternion.Euler(0, 18, 0), Vector3.one, obstaclesRoot.transform);
-            InstantiateModel("Props/Prop_Crate_Wood.fbx", "WoodCrate_Stack2", new Vector3(8.5f, 1.2f, 12f), Quaternion.Euler(0, 32, 0), Vector3.one, obstaclesRoot.transform);
-            InstantiateModel("Props/Prop_Crate_Military.fbx", "MilCrate_NE", new Vector3(7.2f, 0, 13.5f), Quaternion.Euler(0, -10, 0), Vector3.one, obstaclesRoot.transform);
-            InstantiateModel("Props/Prop_Barrel_Toxic.fbx", "Barrel_Toxic_NE", new Vector3(8.0f, 0, 15f), Quaternion.identity, Vector3.one, obstaclesRoot.transform);
-            InstantiateModel("Props/Prop_Barrel_Oil.fbx", "Barrel_Oil_NE", new Vector3(8.8f, 0, 15.2f), Quaternion.identity, Vector3.one, obstaclesRoot.transform);
-            AttachLoot(InstantiateModel(ModelPaths.Relative(ModelPaths.ScrapPile), "Salvage_Scrap_NE", new Vector3(9.2f, 0, 10.5f), Quaternion.Euler(0, 45, 0), Vector3.one, obstaclesRoot.transform, isStatic: false), LootKind.Scrap, 8);
+            InstantiateModel("Building_Warehouse_Depot", "Building_Warehouse_NE", new Vector3(14f, 0, 14f), Quaternion.Euler(0, -90, 0), Vector3.one, obstaclesRoot.transform);
+            InstantiateModel("Prop_Crate_Wood", "WoodCrate_Stack1", new Vector3(8.5f, 0, 12f), Quaternion.Euler(0, 18, 0), Vector3.one, obstaclesRoot.transform);
+            InstantiateModel("Prop_Crate_Wood", "WoodCrate_Stack2", new Vector3(8.5f, 1.2f, 12f), Quaternion.Euler(0, 32, 0), Vector3.one, obstaclesRoot.transform);
+            InstantiateModel("Prop_Crate_Military", "MilCrate_NE", new Vector3(7.2f, 0, 13.5f), Quaternion.Euler(0, -10, 0), Vector3.one, obstaclesRoot.transform);
+            InstantiateModel("Prop_Barrel_Toxic", "Barrel_Toxic_NE", new Vector3(8.0f, 0, 15f), Quaternion.identity, Vector3.one, obstaclesRoot.transform);
+            InstantiateModel("Prop_Barrel_Oil", "Barrel_Oil_NE", new Vector3(8.8f, 0, 15.2f), Quaternion.identity, Vector3.one, obstaclesRoot.transform);
+            AttachLoot(InstantiateModel("Loot_ScrapPile", "Salvage_Scrap_NE", new Vector3(9.2f, 0, 10.5f), Quaternion.Euler(0, 45, 0), Vector3.one, obstaclesRoot.transform, isStatic: false), LootKind.Scrap, 8);
 
             // 3. South-East Ruined City Sector
-            InstantiateModel("Environment/Ruin_Wall_Corner.fbx", "Ruin_Wall_SE", new Vector3(12f, 0, -14f), Quaternion.identity, Vector3.one, obstaclesRoot.transform);
-            InstantiateModel("Props/Barricade_Concrete_Jersey.fbx", "Jersey_SE_1", new Vector3(7.5f, 0, -12f), Quaternion.Euler(0, 20, 0), Vector3.one, obstaclesRoot.transform);
-            InstantiateModel("Props/Prop_Barrel_Red_Explosive.fbx", "Barrel_Explosive_SE", new Vector3(6.2f, 0, -13f), Quaternion.identity, Vector3.one, obstaclesRoot.transform);
-            AttachLoot(InstantiateModel(ModelPaths.Relative(ModelPaths.AmmoShotgun), "Loot_ShotgunAmmo_SE", new Vector3(11.5f, 0, -12.5f), Quaternion.identity, Vector3.one, obstaclesRoot.transform, isStatic: false), LootKind.AmmoShotgun, 12);
+            InstantiateModel("Ruin_Wall_Corner", "Ruin_Wall_SE", new Vector3(12f, 0, -14f), Quaternion.identity, Vector3.one, obstaclesRoot.transform);
+            InstantiateModel("Barricade_Concrete_Jersey", "Jersey_SE_1", new Vector3(7.5f, 0, -12f), Quaternion.Euler(0, 20, 0), Vector3.one, obstaclesRoot.transform);
+            InstantiateModel("Prop_Barrel_Red_Explosive", "Barrel_Explosive_SE", new Vector3(6.2f, 0, -13f), Quaternion.identity, Vector3.one, obstaclesRoot.transform);
+            AttachLoot(InstantiateModel("Loot_AmmoBox_Shotgun", "Loot_ShotgunAmmo_SE", new Vector3(11.5f, 0, -12.5f), Quaternion.identity, Vector3.one, obstaclesRoot.transform, isStatic: false), LootKind.AmmoShotgun, 12);
 
             // 4. Central Roadblock & Checkpoint
-            InstantiateModel("Props/Vehicle_Apocalypse_Truck.fbx", "ArmoredTruck_Roadblock", new Vector3(1.2f, 0, 0f), Quaternion.Euler(0, 28, 0), Vector3.one, obstaclesRoot.transform);
-            InstantiateModel("Props/Barricade_Concrete_Jersey.fbx", "Jersey_Center_1", new Vector3(-1.8f, 0, 2f), Quaternion.Euler(0, -15, 0), Vector3.one, obstaclesRoot.transform);
-            InstantiateModel("Props/Barricade_Wood_Wire.fbx", "WoodWire_Center", new Vector3(2.8f, 0, -2.5f), Quaternion.Euler(0, 40, 0), Vector3.one, obstaclesRoot.transform);
-            InstantiateModel(ModelPaths.Relative(ModelPaths.StreetLamp), "StreetLamp_Center", new Vector3(3.2f, 0, 5f), Quaternion.Euler(0, -90, 0), Vector3.one, obstaclesRoot.transform);
+            InstantiateModel("Vehicle_Apocalypse_Truck", "ArmoredTruck_Roadblock", new Vector3(1.2f, 0, 0f), Quaternion.Euler(0, 28, 0), Vector3.one, obstaclesRoot.transform);
+            InstantiateModel("Barricade_Concrete_Jersey", "Jersey_Center_1", new Vector3(-1.8f, 0, 2f), Quaternion.Euler(0, -15, 0), Vector3.one, obstaclesRoot.transform);
+            InstantiateModel("Barricade_Wood_Wire", "WoodWire_Center", new Vector3(2.8f, 0, -2.5f), Quaternion.Euler(0, 40, 0), Vector3.one, obstaclesRoot.transform);
+            InstantiateModel("Prop_StreetLamp", "StreetLamp_Center", new Vector3(3.2f, 0, 5f), Quaternion.Euler(0, -90, 0), Vector3.one, obstaclesRoot.transform);
         }
 
         private static void CreateSanctuaryHub(Transform parent)
@@ -499,28 +439,28 @@ namespace OutpostZero.EditorTools
             sanctuaryRoot.transform.SetParent(parent);
 
             // Perimeter fortifications
-            InstantiateModel("Props/Barricade_Sandbags.fbx", "Sanctuary_Sandbag_Wall", new Vector3(-8f, 0, -8f), Quaternion.Euler(0, 45, 0), Vector3.one, sanctuaryRoot.transform);
-            InstantiateModel("Props/Barricade_Wood_Wire.fbx", "Sanctuary_Wood_Gate", new Vector3(-5.5f, 0, -10f), Quaternion.Euler(0, 30, 0), Vector3.one, sanctuaryRoot.transform);
+            InstantiateModel("Barricade_Sandbags", "Sanctuary_Sandbag_Wall", new Vector3(-8f, 0, -8f), Quaternion.Euler(0, 45, 0), Vector3.one, sanctuaryRoot.transform);
+            InstantiateModel("Barricade_Wood_Wire", "Sanctuary_Wood_Gate", new Vector3(-5.5f, 0, -10f), Quaternion.Euler(0, 30, 0), Vector3.one, sanctuaryRoot.transform);
 
             // Lookout Watchtower
-            InstantiateModel("BaseBuilding/Base_Watchtower.fbx", "Watchtower_GuardPost", new Vector3(-16f, 0, -16f), Quaternion.Euler(0, 45, 0), Vector3.one, sanctuaryRoot.transform);
+            InstantiateModel("Base_Watchtower", "Watchtower_GuardPost", new Vector3(-16f, 0, -16f), Quaternion.Euler(0, 45, 0), Vector3.one, sanctuaryRoot.transform);
 
             // Colony Base Modules
-            InstantiateModel("BaseBuilding/Base_Campfire_Cooker.fbx", "Sanctuary_Campfire", new Vector3(-12f, 0, -12f), Quaternion.identity, Vector3.one, sanctuaryRoot.transform);
-            InstantiateModel("BaseBuilding/Base_CraftingWorkbench.fbx", "Sanctuary_Workbench", new Vector3(-14f, 0, -8.5f), Quaternion.Euler(0, 180, 0), Vector3.one, sanctuaryRoot.transform);
-            InstantiateModel("BaseBuilding/Base_Generator_Diesel.fbx", "Sanctuary_Generator", new Vector3(-18f, 0, -11f), Quaternion.Euler(0, 90, 0), Vector3.one, sanctuaryRoot.transform);
-            InstantiateModel("BaseBuilding/Base_MedicalCot.fbx", "Sanctuary_MedicalCot", new Vector3(-10f, 0, -15f), Quaternion.Euler(0, 30, 0), Vector3.one, sanctuaryRoot.transform);
-            InstantiateModel("BaseBuilding/Base_WaterCollector.fbx", "Sanctuary_WaterCollector", new Vector3(-14.5f, 0, -14f), Quaternion.identity, Vector3.one, sanctuaryRoot.transform);
+            InstantiateModel("Base_Campfire_Cooker", "Sanctuary_Campfire", new Vector3(-12f, 0, -12f), Quaternion.identity, Vector3.one, sanctuaryRoot.transform);
+            InstantiateModel("Base_CraftingWorkbench", "Sanctuary_Workbench", new Vector3(-14f, 0, -8.5f), Quaternion.Euler(0, 180, 0), Vector3.one, sanctuaryRoot.transform);
+            InstantiateModel("Base_Generator_Diesel", "Sanctuary_Generator", new Vector3(-18f, 0, -11f), Quaternion.Euler(0, 90, 0), Vector3.one, sanctuaryRoot.transform);
+            InstantiateModel("Base_MedicalCot", "Sanctuary_MedicalCot", new Vector3(-10f, 0, -15f), Quaternion.Euler(0, 30, 0), Vector3.one, sanctuaryRoot.transform);
+            InstantiateModel("Base_WaterCollector", "Sanctuary_WaterCollector", new Vector3(-14.5f, 0, -14f), Quaternion.identity, Vector3.one, sanctuaryRoot.transform);
 
             // Friendly NPC Colonist at Workbench
-            InstantiateModel(ModelPaths.Relative(ModelPaths.Colonist), "NPC_Colonist_Engineer", new Vector3(-14f, 0, -9.5f), Quaternion.identity, Vector3.one, sanctuaryRoot.transform, isStatic: false, addBoxCollider: true, layer: 0);
+            InstantiateModel("Colonist_Survivor", "NPC_Colonist_Engineer", new Vector3(-14f, 0, -9.5f), Quaternion.identity, Vector3.one, sanctuaryRoot.transform, isStatic: false, addBoxCollider: true, layer: 0);
 
             // NPC Merchant Vendor Stall
-            InstantiateModel(ModelPaths.Relative(ModelPaths.Merchant), "NPC_Merchant_Vendor", new Vector3(-9.5f, 0, -10f), Quaternion.Euler(0, 135, 0), Vector3.one, sanctuaryRoot.transform, isStatic: false, addBoxCollider: true, layer: 0);
+            InstantiateModel("NPC_Merchant", "NPC_Merchant_Vendor", new Vector3(-9.5f, 0, -10f), Quaternion.Euler(0, 135, 0), Vector3.one, sanctuaryRoot.transform, isStatic: false, addBoxCollider: true, layer: 0);
 
             // Starting Survival Loot Supplies in Outpost
-            AttachLoot(InstantiateModel(ModelPaths.Relative(ModelPaths.Medkit), "Supply_Medkit_Start", new Vector3(-11f, 0, -14.5f), Quaternion.identity, Vector3.one, sanctuaryRoot.transform, isStatic: false), LootKind.Medkit, 1);
-            AttachLoot(InstantiateModel(ModelPaths.Relative(ModelPaths.Ammo9mm), "Supply_Ammo_9mm_Start", new Vector3(-13.5f, 0.9f, -8.5f), Quaternion.identity, Vector3.one, sanctuaryRoot.transform, isStatic: false), LootKind.Ammo9mm, 24);
+            AttachLoot(InstantiateModel("Loot_Medkit", "Supply_Medkit_Start", new Vector3(-11f, 0, -14.5f), Quaternion.identity, Vector3.one, sanctuaryRoot.transform, isStatic: false), LootKind.Medkit, 1);
+            AttachLoot(InstantiateModel("Loot_AmmoBox_9mm", "Supply_Ammo_9mm_Start", new Vector3(-13.5f, 0.9f, -8.5f), Quaternion.identity, Vector3.one, sanctuaryRoot.transform, isStatic: false), LootKind.Ammo9mm, 24);
         }
 
         private static GameObject CreatePlayer()
@@ -536,7 +476,7 @@ namespace OutpostZero.EditorTools
             cc.center = new Vector3(0, 0.95f, 0);
 
             // Visual 3D Mesh (Survivor Leader model)
-            GameObject playerVisual = InstantiateModel(ModelPaths.Relative(ModelPaths.SurvivorLeader), "Survivor_BodyMesh", Vector3.zero, Quaternion.identity, Vector3.one, player.transform, isStatic: false, addBoxCollider: false, layer: GameLayers.Player);
+            GameObject playerVisual = InstantiateModel("Survivor_Leader", "Survivor_BodyMesh", Vector3.zero, Quaternion.identity, Vector3.one, player.transform, isStatic: false, addBoxCollider: false, layer: GameLayers.Player);
             playerVisual.transform.localPosition = Vector3.zero;
             playerVisual.transform.localRotation = Quaternion.identity;
 
@@ -552,7 +492,9 @@ namespace OutpostZero.EditorTools
             lightObj.transform.localPosition = new Vector3(0.25f, 1.4f, 0.2f);
             var spot = lightObj.AddComponent<Light>();
             spot.type = LightType.Spot;
-            spot.spotAngle = 65f;
+            spot.spotAngle = LampCookie.Outer;
+            spot.innerSpotAngle = LampCookie.Inner;
+            spot.shadows = LightShadows.Soft;
             spot.range = 32f;
             spot.intensity = 2.8f;
             spot.color = new Color(1f, 0.96f, 0.88f);
@@ -574,34 +516,30 @@ namespace OutpostZero.EditorTools
             pistolObj.transform.SetParent(socket.transform, false);
             var pistol = pistolObj.AddComponent<FirearmWeapon>();
             pistol.Configure(pistolDef);
-            GameObject pistolMesh = InstantiateModel(ModelPaths.Relative(ModelPaths.Pistol), "Pistol_Mesh", Vector3.zero, Quaternion.identity, Vector3.one, pistolObj.transform, isStatic: false, layer: GameLayers.Player);
-            pistolMesh.transform.localPosition = Vector3.zero;
-            pistolMesh.transform.localRotation = Quaternion.Euler(0, 90, 0);
+            GameObject pistolMesh = InstantiateModel("Weapon_Pistol_9mm", "Pistol_Mesh", Vector3.zero, Quaternion.identity, Vector3.one, pistolObj.transform, isStatic: false, layer: GameLayers.Player);
+            HeldModel.Place(pistolMesh.transform, pistolDef);
 
             GameObject shotgunObj = new GameObject("Shotgun_Pump");
             shotgunObj.transform.SetParent(socket.transform, false);
             var shotgun = shotgunObj.AddComponent<FirearmWeapon>();
             shotgun.Configure(shotgunDef);
-            GameObject shotgunMesh = InstantiateModel(ModelPaths.Relative(ModelPaths.Shotgun), "Shotgun_Mesh", Vector3.zero, Quaternion.identity, Vector3.one, shotgunObj.transform, isStatic: false, layer: GameLayers.Player);
-            shotgunMesh.transform.localPosition = new Vector3(0, 0, 0.1f);
-            shotgunMesh.transform.localRotation = Quaternion.Euler(0, 90, 0);
+            GameObject shotgunMesh = InstantiateModel("Weapon_Shotgun_Pump", "Shotgun_Mesh", Vector3.zero, Quaternion.identity, Vector3.one, shotgunObj.transform, isStatic: false, layer: GameLayers.Player);
+            HeldModel.Place(shotgunMesh.transform, shotgunDef);
 
             GameObject macheteObj = new GameObject("Combat_Machete");
             macheteObj.transform.SetParent(socket.transform, false);
             var machete = macheteObj.AddComponent<MeleeWeapon>();
             machete.Configure(macheteDef);
-            GameObject macheteMesh = InstantiateModel(ModelPaths.Relative(ModelPaths.Machete), "Machete_Mesh", Vector3.zero, Quaternion.identity, Vector3.one, macheteObj.transform, isStatic: false, layer: GameLayers.Player);
-            macheteMesh.transform.localPosition = new Vector3(0, 0, 0.15f);
-            macheteMesh.transform.localRotation = Quaternion.Euler(0, 90, 0);
+            GameObject macheteMesh = InstantiateModel("Weapon_Machete", "Machete_Mesh", Vector3.zero, Quaternion.identity, Vector3.one, macheteObj.transform, isStatic: false, layer: GameLayers.Player);
+            HeldModel.Place(macheteMesh.transform, macheteDef);
 
             var rifleDef = DefaultDataGenerator.LoadWeapon("Rifle_Assault");
             GameObject rifleObj = new GameObject("Assault_Rifle");
             rifleObj.transform.SetParent(socket.transform, false);
             var rifle = rifleObj.AddComponent<FirearmWeapon>();
             rifle.Configure(rifleDef);
-            GameObject rifleMesh = InstantiateModel(ModelPaths.Relative(ModelPaths.AssaultRifle), "Rifle_Mesh", Vector3.zero, Quaternion.identity, Vector3.one, rifleObj.transform, isStatic: false, layer: GameLayers.Player);
-            rifleMesh.transform.localPosition = Vector3.zero;
-            rifleMesh.transform.localRotation = Quaternion.Euler(0, 90, 0);
+            GameObject rifleMesh = InstantiateModel("Weapon_AssaultRifle", "Rifle_Mesh", Vector3.zero, Quaternion.identity, Vector3.one, rifleObj.transform, isStatic: false, layer: GameLayers.Player);
+            HeldModel.Place(rifleMesh.transform, rifleDef);
 
             var pc = player.AddComponent<PlayerController>();
             pc.Configure(new WeaponBase[] { pistol, shotgun, rifle, machete }, spot);
@@ -624,29 +562,18 @@ namespace OutpostZero.EditorTools
             cam.clearFlags = CameraClearFlags.SolidColor;
             cam.backgroundColor = new Color(0.10f, 0.12f, 0.15f);
 
-            var camData = cam.GetComponent<UniversalAdditionalCameraData>() ?? cam.gameObject.AddComponent<UniversalAdditionalCameraData>();
+            var camData = Attach.Ensure<UniversalAdditionalCameraData>(cam.gameObject);
 
-            var follow = cam.GetComponent<TopDownCameraFollow>() ?? cam.gameObject.AddComponent<TopDownCameraFollow>();
+            var follow = Attach.Ensure<CameraTargetDriver>(cam.gameObject);
             follow.SetFollowTarget(playerTarget);
-        }
-
-        private static void SetupHUD(GameObject playerObj)
-        {
-            if (Object.FindFirstObjectByType<SurvivalHUD>() == null)
-            {
-                GameObject hudObj = new GameObject("--- SURVIVAL HUD ---");
-                var hud = hudObj.AddComponent<SurvivalHUD>();
-                hud.Bind(playerObj.GetComponent<PlayerController>());
-                Undo.RegisterCreatedObjectUndo(hudObj, "Create Survival HUD");
-            }
         }
 
         private static void SetupZombies(Transform playerTransform)
         {
             // 1. Prototype Walker
-            GameObject walker = CreateZombiePrototype("Zombie_Walker", DefaultDataGenerator.LoadZombie("Walker"));
-            GameObject runner = CreateZombiePrototype("Zombie_Runner", DefaultDataGenerator.LoadZombie("Runner"));
-            GameObject brute = CreateZombiePrototype("Zombie_Brute", DefaultDataGenerator.LoadZombie("Brute"));
+            GameObject walker = ZombieActor("Zombie_Walker", DefaultDataGenerator.LoadZombie("Walker"));
+            GameObject runner = ZombieActor("Zombie_Runner", DefaultDataGenerator.LoadZombie("Runner"));
+            GameObject brute = ZombieActor("Zombie_Brute", DefaultDataGenerator.LoadZombie("Brute"));
 
             GameObject spawnerObj = new GameObject("--- ZOMBIE HORDE SPAWNER ---");
             spawnerObj.AddComponent<ZombiePool>();
@@ -658,17 +585,33 @@ namespace OutpostZero.EditorTools
             Undo.RegisterCreatedObjectUndo(spawnerObj, "Create Zombie Spawner");
         }
 
+        public const string EnemyRoot = "Assets/Prefabs/Enemies";
+
+        public static string ActorPath(string name) => EnemyRoot + "/" + name + "_Actor.prefab";
+
+        /// <summary>
+        /// Saves the spawnable zombie (model, capsule, agent, health, AI tuned from its archetype) as a prefab
+        /// asset. The spawner and pool instantiate that asset, so nothing waits in the scene.
+        /// </summary>
+        private static GameObject ZombieActor(string name, ZombieArchetype archetype)
+        {
+            GameObject proto = CreateZombiePrototype(name, archetype);
+            Directory.CreateDirectory(EnemyRoot);
+            GameObject asset = PrefabUtility.SaveAsPrefabAsset(proto, ActorPath(name));
+            Object.DestroyImmediate(proto);
+            return asset;
+        }
+
         private static GameObject CreateZombiePrototype(string name, ZombieArchetype archetype)
         {
             GameObject proto = new GameObject(name);
             proto.tag = "Enemy";
             proto.layer = GameLayers.Enemy;
-            proto.transform.position = new Vector3(0, -100f, 0);
 
-            string modelPath = archetype != null && !string.IsNullOrEmpty(archetype.modelPath)
-                ? ModelPaths.Relative(archetype.modelPath)
-                : ModelPaths.Relative(ModelPaths.ZombieWalker);
-            GameObject visual = InstantiateModel(modelPath, "Zombie_Mesh", Vector3.zero, Quaternion.identity, Vector3.one, proto.transform, isStatic: false, layer: GameLayers.Enemy);
+            string assetId = archetype != null && !string.IsNullOrEmpty(archetype.modelPath)
+                ? PrefabCatalog.Id(archetype.modelPath)
+                : "Zombie_Walker";
+            GameObject visual = InstantiateModel(assetId, "Zombie_Mesh", Vector3.zero, Quaternion.identity, Vector3.one, proto.transform, isStatic: false, layer: GameLayers.Enemy);
             visual.transform.localPosition = Vector3.zero;
             visual.transform.localRotation = Quaternion.identity;
 
@@ -693,7 +636,6 @@ namespace OutpostZero.EditorTools
             GameLayers.ApplyRecursively(proto, GameLayers.Enemy);
 
             proto.SetActive(false);
-            Undo.RegisterCreatedObjectUndo(proto, $"Create {name}");
             return proto;
         }
     }

@@ -1,6 +1,8 @@
 using UnityEngine;
+using OutpostZero.Colony;
 using OutpostZero.Combat;
 using OutpostZero.Core;
+using OutpostZero.Shell;
 
 namespace OutpostZero.Player
 {
@@ -13,9 +15,12 @@ namespace OutpostZero.Player
         [SerializeField] private float knockdownRemaining;
         [SerializeField] private float painRemaining;
         [SerializeField] private float adrenaline;
+        [SerializeField] private float burnLeft;
+        private Light burnLight;
 
         private HealthSystem health;
         private float tick;
+        private float lastDrip;
 
         public bool IsPoisoned => poisonRemaining > 0f;
         public bool IsBleeding => bleedRemaining != 0f;
@@ -23,13 +28,19 @@ namespace OutpostZero.Player
         public float Infection => infection;
         public int InfectionStage => Affliction.Stage(infection);
         public bool IsKnockedDown => knockdownRemaining > 0f;
-        public float SprintBonus => adrenaline > 0f ? Affliction.AdrenalineSprint : 1f;
+        public float SprintBonus => adrenaline > 0f ? StatusTable.Of(StatusKind.Adrenaline).Scale : 1f;
+        public bool IsBurning => burnLeft > 0f;
+        public float PoisonLeft => poisonRemaining > 0f ? poisonRemaining : 0f;
+        public float AdrenalineLeft => adrenaline > 0f ? adrenaline : 0f;
+        public float KnockdownLeft => knockdownRemaining > 0f ? knockdownRemaining : 0f;
+        /// <summary>Seconds until the infection reaches its next stage; 0 when clean or at the last.</summary>
+        public float InfectionToNext => StatusTimer.ToNextStage(infection);
         public float SlowMultiplier
         {
             get
             {
-                float slow = slowRemaining > 0f ? 0.55f : 1f;
-                if (InfectionStage >= 2) slow *= 0.85f;
+                float slow = slowRemaining > 0f ? StatusTable.Of(StatusKind.Slowed).Scale : 1f;
+                if (InfectionStage >= 2) slow *= StatusTable.Of(StatusKind.Infected).Scale;
                 return slow;
             }
         }
@@ -37,12 +48,34 @@ namespace OutpostZero.Player
         private void Awake()
         {
             health = GetComponent<HealthSystem>();
+            StatusBook.Ensure();
+        }
+
+        /// <summary>Starts a condition from data: a zombie's hit effect, a hazard or an item. Seconds of 0 or less take the row's length.</summary>
+        public void Apply(StatusKind kind, float seconds)
+        {
+            float span = StatusTable.SecondsFor(kind, seconds);
+            switch (kind)
+            {
+                case StatusKind.Bleeding: ApplyBleed(span); break;
+                case StatusKind.Infected: ApplyInfection(span); break;
+                case StatusKind.Poisoned: ApplyPoison(span); break;
+                case StatusKind.Adrenaline: ApplyAdrenaline(span); break;
+                case StatusKind.KnockedDown: Knockdown(span); break;
+                case StatusKind.Slowed: ApplySlow(span); break;
+            }
         }
 
         public void ApplyPoison(float seconds)
         {
             poisonRemaining = Mathf.Max(poisonRemaining, seconds);
-            GameplayFeedback.Toast("Poisoned");
+            GameplayFeedback.Toast(PackSay.Poison(null));
+        }
+
+        public void HoldPoison(float seconds)
+        {
+            if (seconds <= 0f) return;
+            poisonRemaining = Mathf.Max(poisonRemaining, seconds);
         }
 
         public void ApplyBleed(float seconds)
@@ -53,12 +86,13 @@ namespace OutpostZero.Player
         public void StopBleed()
         {
             bleedRemaining = 0f;
+            lastDrip = 0f;
         }
 
         public void ApplyInfection(float amount)
         {
             infection = Affliction.Bite(infection);
-            GameplayFeedback.Toast(Affliction.Label(InfectionStage));
+            GameplayFeedback.Toast(StreetHud.Infection(InfectionStage, null));
         }
 
         public bool CureInfection()
@@ -66,6 +100,11 @@ namespace OutpostZero.Player
             if (!Affliction.AntibioticsWork(InfectionStage)) return false;
             infection = 0f;
             return true;
+        }
+
+        public void DropInfection()
+        {
+            infection = 0f;
         }
 
         public void ApplyPainkiller()
@@ -77,6 +116,16 @@ namespace OutpostZero.Player
         {
             if (seconds <= 0f) return;
             adrenaline = Mathf.Max(adrenaline, seconds);
+        }
+
+        public void Ignite()
+        {
+            if (health != null && health.IsDead) return;
+            bool fresh = burnLeft <= 0f;
+            burnLeft = Ember.Catch(burnLeft);
+            if (!fresh) return;
+            GameplayFeedback.Toast(OutpostZero.Shell.Loc.T("burn.you"));
+            ShowBurn();
         }
 
         public void ApplySlow(float seconds)
@@ -103,7 +152,29 @@ namespace OutpostZero.Player
             knockdownRemaining = 0f;
             painRemaining = 0f;
             adrenaline = 0f;
+            burnLeft = 0f;
             infection = 0f;
+            ShowBurn();
+        }
+
+        private void ShowBurn()
+        {
+            if (burnLeft > 0f)
+            {
+                if (burnLight != null) return;
+                var go = new GameObject("PlayerEmber");
+                go.transform.SetParent(transform, false);
+                go.transform.localPosition = new Vector3(0f, 1.1f, 0f);
+                burnLight = go.AddComponent<Light>();
+                burnLight.type = LightType.Point;
+                burnLight.range = 3.2f;
+                burnLight.intensity = 1.3f;
+                burnLight.color = new Color(1f, 0.42f, 0.08f);
+                return;
+            }
+            if (burnLight == null) return;
+            Destroy(burnLight.gameObject);
+            burnLight = null;
         }
 
         private void Update()
@@ -114,6 +185,15 @@ namespace OutpostZero.Player
             if (slowRemaining > 0f) slowRemaining -= dt;
             if (knockdownRemaining > 0f) knockdownRemaining -= dt;
             if (adrenaline > 0f) adrenaline -= dt;
+            float beforeBurn = burnLeft;
+            burnLeft = Ember.Tick(burnLeft, OutpostZero.Graphics.RainQuench.Now(dt));
+            ShowBurn();
+            if (Ember.Due(beforeBurn, burnLeft) && health != null && !health.IsDead)
+            {
+                health.TakeDamage(Ember.Damage, transform.position + Vector3.up * 1.1f, Vector3.up, gameObject);
+                OilPatch.Blast(transform.position);
+                if (!health.IsDead) OutpostZero.AI.ZombieAI.IgniteNear(transform.position.x, transform.position.z);
+            }
             if (infection > 0.01f) infection = Affliction.Advance(infection, dt);
             if (painRemaining > 0f && health != null && !health.IsDead)
             {
@@ -122,11 +202,24 @@ namespace OutpostZero.Player
                 health.Heal(Affliction.PainHeal(step));
             }
 
+            int gore = SettingsService.Instance != null ? SettingsService.Instance.Gore : 1;
+            if (health != null && !health.IsDead && IsBleeding && WoundShow.Bleeds(gore) && WoundShow.DripDue(Time.time, lastDrip))
+            {
+                lastDrip = Time.time;
+                CombatVfx.Drip(transform.position);
+                if (Sensory.BleedScent.Calls(true, true, gore) && Sensory.NoiseManager.Instance != null)
+                    Sensory.NoiseManager.Instance.EmitNoise(transform.position, Sensory.NoiseTable.Radius(Sensory.NoiseTable.Bleed), Sensory.NoiseTable.Loud(Sensory.NoiseTable.Bleed), Core.NoiseType.BleedDrip, gameObject);
+            }
+            else if (!IsBleeding)
+            {
+                lastDrip = 0f;
+            }
+
             tick -= dt;
             if (tick > 0f || health == null || health.IsDead) return;
             tick = 1f;
-            if (poisonRemaining > 0f) health.TakeDamage(4f, transform.position, Vector3.zero, gameObject);
-            if (IsBleeding) health.TakeDamage(Affliction.BleedPerSecond, transform.position, Vector3.zero, gameObject);
+            if (poisonRemaining > 0f) health.TakeDamage(StatusTable.Of(StatusKind.Poisoned).DamagePerSecond, transform.position, Vector3.zero, gameObject);
+            if (IsBleeding) health.TakeDamage(StatusTable.Of(StatusKind.Bleeding).DamagePerSecond, transform.position, Vector3.zero, gameObject);
             if (Affliction.Fatal(infection)) health.TakeDamage(health.CurrentHealth + 5f, transform.position, Vector3.zero, gameObject);
         }
     }

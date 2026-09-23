@@ -1,0 +1,38 @@
+{
+  "id": "Weapon_Pistol_9mm",
+  "category": "Weapons",
+  "generator": "generate_weapons.build_pistol",
+  "generatorHash": "dbb18dbdb864efdea73ef873a1b84712fc71b1d7c605fe5a3c311e9f95a51c10",
+  "gitSha": "edff058f31a908ed7de64edaf527c44ea12a41ff",
+  "blender": "4.2.11",
+  "tags": [
+    "weapon",
+    "firearm",
+    "item"
+  ],
+  "pivot": "authored",
+  "collider": "box",
+  "rig": "",
+  "lods": [
+    1.0
+  ],
+  "tris": 260,
+  "lodTris": [
+    260
+  ],
+  "size": {
+    "width": 0.041,
+    "depth": 0.2565,
+    "height": 0.212
+  },
+  "floor": -0.122,
+  "center": {
+    "x": 0.0015,
+    "y": 0.0292
+  },
+  "materials": [
+    "Mat_Gun_Polymer",
+    "Mat_Gun_Silver",
+    "Mat_Gun_Steel"
+  ]
+}

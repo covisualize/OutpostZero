@@ -1,0 +1,35 @@
+{
+  "id": "Kit_desk",
+  "category": "Kit",
+  "generator": "generate_kit.build_piece",
+  "generatorHash": "b3a0fd45420692b016a0033d9660fb897ec542f6d31cc5ac29a5fda0e957cd0c",
+  "gitSha": "edff058f31a908ed7de64edaf527c44ea12a41ff",
+  "blender": "4.2.11",
+  "tags": [
+    "kit",
+    "interior"
+  ],
+  "pivot": "authored",
+  "collider": "box",
+  "rig": "",
+  "lods": [
+    1.0
+  ],
+  "tris": 12,
+  "lodTris": [
+    12
+  ],
+  "size": {
+    "width": 1.4,
+    "depth": 0.7,
+    "height": 0.75
+  },
+  "floor": 0.0,
+  "center": {
+    "x": 0.7,
+    "y": 0.35
+  },
+  "materials": [
+    "Mat_wood"
+  ]
+}

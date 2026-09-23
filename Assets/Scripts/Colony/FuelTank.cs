@@ -55,5 +55,22 @@ namespace OutpostZero.Colony
             int tenths = Pack(hours);
             return (tenths / 10) + "." + (tenths % 10);
         }
+
+        public const float TripRate = 0.5f;
+
+        public static float TripCost(float travel)
+        {
+            if (travel <= 0f) return 0f;
+            return travel * TripRate;
+        }
+
+        public static float Trip(float hours, float travel)
+        {
+            hours = Clamp(hours);
+            float cost = TripCost(travel);
+            if (cost <= 0f) return hours;
+            float next = hours - cost;
+            return next < 0f ? 0f : next;
+        }
     }
 }

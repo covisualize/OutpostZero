@@ -37,3 +37,14 @@ screen_verify.png
 __pycache__/
 *.py[cod]
 *$py.class
+
+# License-free type-check harness
+!Tools/Typecheck/**/*.csproj
+/.typecheck/
+
+# Written by BuildScript for each player build
+/Assets/StreamingAssets/version.json
+/Assets/StreamingAssets/version.json.meta
+
+# Screenshot tour output
+/[Aa]rtifacts/

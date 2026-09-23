@@ -22,8 +22,11 @@ namespace OutpostZero.Colony
         private bool towerPresent;
         private bool lightsOn;
         private float scanIn;
+        private bool generatorBroken;
 
-        public bool GeneratorOnline => FuelTank.Lit(generatorPresent, fuelHours);
+        public bool GeneratorOnline => !generatorBroken && FuelTank.Lit(generatorPresent, fuelHours);
+        public bool GeneratorBuilt => generatorPresent;
+        public bool GeneratorBroken => generatorBroken;
         public bool WaterOnline => waterPresent;
         public bool CotOnline => cotPresent;
         public bool WatchtowerOnline => towerPresent;
@@ -41,6 +44,11 @@ namespace OutpostZero.Colony
             Instance = this;
         }
 
+        public void SetGeneratorBroken(bool broken)
+        {
+            generatorBroken = broken;
+        }
+
         public void Refuel(float hours)
         {
             fuelHours = FuelTank.Pour(fuelHours, hours);
@@ -49,6 +57,14 @@ namespace OutpostZero.Colony
         public void SetFuel(float hours)
         {
             fuelHours = FuelTank.Clamp(hours);
+        }
+
+        public float BurnTrip(float travel)
+        {
+            float before = fuelHours;
+            fuelHours = FuelTank.Trip(fuelHours, travel);
+            float burned = before - fuelHours;
+            return burned < 0f ? 0f : burned;
         }
 
         private void Update()
@@ -60,7 +76,12 @@ namespace OutpostZero.Colony
             }
 
             float night = Graphics.DayNightCycle.Instance != null ? Graphics.DayNightCycle.Instance.NightFactor : 0f;
+            float before = fuelHours;
             fuelHours = FuelTank.Drink(fuelHours, Time.deltaTime, generatorPresent, night);
+            var skyKind = OutpostZero.Graphics.WeatherController.Instance != null
+                ? OutpostZero.Graphics.WeatherController.Instance.Kind
+                : OutpostZero.Graphics.WeatherKind.Clear;
+            fuelHours = StormBurn.After(before, fuelHours, skyKind);
 
             ApplyLights();
 

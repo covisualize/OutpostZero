@@ -75,11 +75,8 @@ namespace OutpostZero.Combat
 
         private void HandleShot(Vector3 muzzle, WeaponBase weapon)
         {
-            if (weapon == null || Camera.main == null) return;
-            float trauma = weapon.Type == Core.WeaponType.Shotgun ? 0.45f : weapon.Type == Core.WeaponType.Melee ? 0.1f : 0.15f;
-            var rig = Camera.main.GetComponent<OutpostZero.Graphics.ExpeditionCameraRig>();
-            if (rig != null) rig.AddTrauma(trauma * SettingsService.ShakeScale);
-            else Camera.main.GetComponent<OutpostZero.Player.TopDownCameraFollow>()?.AddTrauma(trauma * SettingsService.ShakeScale);
+            if (weapon == null) return;
+            OutpostZero.Graphics.ExpeditionCameraRig.At(OutpostZero.Graphics.CameraTuning.ShotShake(weapon.Type), muzzle);
         }
 
         private void HandleHit(Vector3 point, Vector3 normal, GameObject target)
@@ -108,14 +105,7 @@ namespace OutpostZero.Combat
 
         private static void Flash(GameObject target)
         {
-            var renderers = target.GetComponentsInChildren<Renderer>();
-            foreach (var renderer in renderers)
-            {
-                var block = new MaterialPropertyBlock();
-                renderer.GetPropertyBlock(block);
-                block.SetColor("_BaseColor", Color.white);
-                renderer.SetPropertyBlock(block);
-            }
+            OutpostZero.Graphics.HitGlow.Strike(target);
         }
 
         public void PrunePopups()

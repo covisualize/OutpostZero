@@ -1,0 +1,35 @@
+{
+  "id": "Kit_roof",
+  "category": "Kit",
+  "generator": "generate_kit.build_piece",
+  "generatorHash": "3a5c05cdab06753398b4b20b5835b8ab4909727fcdc937fa63a25f90c546acd0",
+  "gitSha": "edff058f31a908ed7de64edaf527c44ea12a41ff",
+  "blender": "4.2.11",
+  "tags": [
+    "kit",
+    "building"
+  ],
+  "pivot": "authored",
+  "collider": "box",
+  "rig": "",
+  "lods": [
+    1.0
+  ],
+  "tris": 12,
+  "lodTris": [
+    12
+  ],
+  "size": {
+    "width": 2.0,
+    "depth": 2.0,
+    "height": 0.16
+  },
+  "floor": 0.0,
+  "center": {
+    "x": 1.0,
+    "y": 1.0
+  },
+  "materials": [
+    "Mat_concrete"
+  ]
+}

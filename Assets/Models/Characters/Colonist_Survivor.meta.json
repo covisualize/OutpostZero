@@ -1,0 +1,42 @@
+{
+  "id": "Colonist_Survivor",
+  "category": "Characters",
+  "generator": "generate_characters.build_colonist",
+  "generatorHash": "3503442146e34897a93c75bbb2a93c2ab19fa60016b4771ea008c47ba6d285b1",
+  "gitSha": "edff058f31a908ed7de64edaf527c44ea12a41ff",
+  "blender": "4.2.11",
+  "tags": [
+    "character",
+    "survivor"
+  ],
+  "pivot": "bottom",
+  "collider": "box",
+  "rig": "humanoid",
+  "lods": [
+    1.0
+  ],
+  "tris": 796,
+  "lodTris": [
+    796
+  ],
+  "size": {
+    "width": 0.695,
+    "depth": 0.333,
+    "height": 1.72
+  },
+  "floor": -0.0,
+  "center": {
+    "x": 0.0,
+    "y": 0.0165
+  },
+  "materials": [
+    "Mat_Boots_Work",
+    "Mat_Dungarees_Denim",
+    "Mat_Eye_Colonist",
+    "Mat_Face_Colonist",
+    "Mat_Shirt_Flannel",
+    "Mat_Skin_Colonist",
+    "Mat_Thumb_Colonist",
+    "Mat_Toolbelt"
+  ]
+}

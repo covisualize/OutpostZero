@@ -78,6 +78,14 @@ def stair_boxes():
     return colliders
 
 
+def ladder_boxes():
+    """Two rails and nine rungs against a wall; the first rung sits above the player's step height."""
+    colliders = [box(0, 0, 0.04, 0.05, 3, 0.06), box(0.55, 0, 0.04, 0.05, 3, 0.06)]
+    for rung in range(9):
+        colliders.append(box(0.05, 0.45 + rung * 0.3, 0.05, 0.5, 0.04, 0.04))
+    return colliders
+
+
 def all_pieces():
     wall = (2.0, 3.0, 0.2)
     pieces = [
@@ -94,6 +102,7 @@ def all_pieces():
         piece("roof", "building", 2, 0.16, 2, "concrete", lod=40),
         piece("parapet", "building", 2, 0.4, 0.2, "concrete"),
         piece("stairs", "building", 2, 3, 4.08, "concrete", stair_boxes(), lod=20),
+        piece("ladder", "building", 0.6, 3, 0.12, "metal", ladder_boxes(), lod=16),
         piece("balcony", "building", 2, 1.1, 1.2, "metal", [
             box(0, 0, 0, 2, 0.1, 1.2),
             box(0, 0.1, 1.05, 2, 1.0, 0.08),
@@ -161,9 +170,11 @@ def at(piece_id, x, y, z, yaw=0):
     return {"id": piece_id, "x": round(x, 3), "y": round(y, 3), "z": round(z, 3), "yaw": int(yaw)}
 
 
-def _slab(placements, piece_id, y, xs, zs):
+def _slab(placements, piece_id, y, xs, zs, skip=()):
     for x in xs:
         for z in zs:
+            if (x, z) in skip:
+                continue
             placements.append(at(piece_id, x, y, z))
 
 
@@ -241,9 +252,12 @@ def apartment():
     placed = []
     xs = (0, 2, 4)
     zs = (0, 2, 4)
+    # The flight climbs from z 0.8 to 4.88 in the middle column; the slab above it opens from z 2 so
+    # there is head room, and the top step lands sideways on the tiles either side.
+    well = ((2, 2), (2, 4))
     for floor in range(3):
         y = floor * 3
-        _slab(placed, "floor", y, xs, zs)
+        _slab(placed, "floor", y, xs, zs, well if floor > 0 else ())
         south = ("wall_door", "wall_plain", "wall_window") if floor == 0 else ("wall_plain", "wall_window", "wall_boarded")
         for index, x in enumerate(xs):
             placed.append(at(south[index], x, y, 0))
@@ -259,7 +273,7 @@ def apartment():
     placed.append(at("shelf", 0.4, 0, 4.4))
     placed.append(at("desk", 0.4, 3, 4.2))
     placed.append(at("chair", 1.6, 3, 4.3))
-    placed.append(at("hospital_bed", 0.4, 6, 4.0))
+    placed.append(at("hospital_bed", 4.0, 6, 4.0))
     placed.append(at("ceiling_light", 1.2, 2.7, 2.2))
     _front_walk(placed, (0, 2))
     return placed

@@ -31,3 +31,9 @@ MonoBehaviour:
   automatic: 0
   useProjectile: 1
   modelPath: Assets/Models/Weapons/Weapon_Shotgun_Pump.fbx
+  heldPrefab: {fileID: 348177797955623255, guid: e7ae95172bc822745b2f56594dbcaf91, type: 3}
+  holdOffset: {x: 0, y: 0, z: 0.1}
+  holdEuler: {x: 0, y: 90, z: 0}
+  muzzleVfx: 2
+  fireSfx: shotgun
+  icon: {fileID: 2800000, guid: 2032ef10c270522714efdd78de0f6954, type: 3}

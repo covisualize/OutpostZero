@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f560dbb58b334938a83918202bcde941, type: 3}
+  m_Name: ThrowableBook
+  m_EditorClassIdentifier: OutpostZero::OutpostZero.Player.ThrowableBook
+  throwables:
+  - {fileID: 11400000, guid: 35f8ed88f0bf4e66bfcb191865c69c02, type: 2}
+  - {fileID: 11400000, guid: a5828686c55e4a88b09f7e985b5f75df, type: 2}
+  - {fileID: 11400000, guid: 8731983067124bd9902c86ae21584e6d, type: 2}
+  - {fileID: 11400000, guid: df15eed4011946ab93f6b8d3296e5479, type: 2}
+  - {fileID: 11400000, guid: 3582b7c955b9489aa54f7685ede9b97b, type: 2}

@@ -260,10 +260,54 @@ def guid_for(png_path):
     return hashlib.md5(key.encode("utf-8")).hexdigest()
 
 
+# TextureImporterFormat values, checked against UnityEditor in TextureRulesTests.
+FORMAT_BC5 = 27
+FORMAT_BC7 = 25
+FORMAT_ASTC_4X4 = 48
+FORMAT_ASTC_6X6 = 50
+
+
+def platform_formats(suffix):
+    """Desktop and mobile block formats: BC5/ASTC 4x4 keep two clean normal channels, BC7/ASTC 6x6 for the rest."""
+    if suffix == "Normal":
+        return FORMAT_BC5, FORMAT_ASTC_4X4
+    return FORMAT_BC7, FORMAT_ASTC_6X6
+
+
+def streams(suffix):
+    """Icons draw through UI Toolkit, which never reports a mip, so they stay fully resident."""
+    return suffix != "Icon"
+
+
+def _platform(target, texture_format, overridden):
+    return (
+        "  - serializedVersion: 3\n"
+        "    buildTarget: {0}\n"
+        "    maxTextureSize: 256\n"
+        "    resizeAlgorithm: 0\n"
+        "    textureFormat: {1}\n"
+        "    textureCompression: 1\n"
+        "    compressionQuality: 50\n"
+        "    crunchedCompression: 0\n"
+        "    allowsAlphaSplitting: 0\n"
+        "    overridden: {2}\n"
+        "    ignorePlatformSupport: 0\n"
+        "    androidETC2FallbackOverride: 0\n"
+        "    forceMaximumCompressionQuality_BC6H_BC7: 0\n"
+    ).format(target, texture_format, overridden)
+
+
 def meta_text(png_path, suffix):
     linear = suffix in ("Normal", "AO", "Mask")
     texture_type = 1 if suffix == "Normal" else 0
     srgb = 0 if linear else 1
+    desktop, mobile = platform_formats(suffix)
+    platforms = (
+        _platform("DefaultTexturePlatform", -1, 0)
+        + _platform("Standalone", desktop, 1)
+        + _platform("Android", mobile, 1)
+        + _platform("iPhone", mobile, 1)
+    )
     return (
         "fileFormatVersion: 2\n"
         "guid: {guid}\n"
@@ -289,7 +333,7 @@ def meta_text(png_path, suffix):
         "    normalMapFilter: 0\n"
         "    flipGreenChannel: 0\n"
         "  isReadable: 0\n"
-        "  streamingMipmaps: 0\n"
+        "  streamingMipmaps: {streaming}\n"
         "  streamingMipmapsPriority: 0\n"
         "  vTOnly: 0\n"
         "  ignoreMipmapLimit: 0\n"
@@ -334,19 +378,7 @@ def meta_text(png_path, suffix):
         "  swizzle: 50462976\n"
         "  cookieLightType: 0\n"
         "  platformSettings:\n"
-        "  - serializedVersion: 3\n"
-        "    buildTarget: DefaultTexturePlatform\n"
-        "    maxTextureSize: 256\n"
-        "    resizeAlgorithm: 0\n"
-        "    textureFormat: -1\n"
-        "    textureCompression: 1\n"
-        "    compressionQuality: 50\n"
-        "    crunchedCompression: 0\n"
-        "    allowsAlphaSplitting: 0\n"
-        "    overridden: 0\n"
-        "    ignorePlatformSupport: 0\n"
-        "    androidETC2FallbackOverride: 0\n"
-        "    forceMaximumCompressionQuality_BC6H_BC7: 0\n"
+        "{platforms}"
         "  spriteSheet:\n"
         "    serializedVersion: 2\n"
         "    sprites: []\n"
@@ -366,7 +398,125 @@ def meta_text(png_path, suffix):
         "  userData: \n"
         "  assetBundleName: \n"
         "  assetBundleVariant: \n"
-    ).format(guid=guid_for(png_path), srgb=srgb, texture_type=texture_type)
+    ).format(guid=guid_for(png_path), srgb=srgb, texture_type=texture_type,
+             streaming=1 if streams(suffix) else 0, platforms=platforms)
+
+
+MODEL_META = (
+    'fileFormatVersion: 2\n'
+    'guid: {guid}\n'
+    'ModelImporter:\n'
+    '  serializedVersion: 24000\n'
+    '  internalIDToNameTable: []\n'
+    '  externalObjects: {}\n'
+    '  materials:\n'
+    '    materialImportMode: 2\n'
+    '    materialName: 0\n'
+    '    materialSearch: 1\n'
+    '    materialLocation: 1\n'
+    '    searchTexturesGlobally: 0\n'
+    '  animations:\n'
+    '    legacyGenerateAnimations: 4\n'
+    '    bakeSimulation: 0\n'
+    '    resampleCurves: 1\n'
+    '    optimizeGameObjects: 0\n'
+    '    removeConstantScaleCurves: 0\n'
+    '    motionNodeName: \n'
+    '    animationImportErrors: \n'
+    '    animationImportWarnings: \n'
+    '    animationRetargetingWarnings: \n'
+    '    animationDoRetargetingWarnings: 0\n'
+    '    importAnimatedCustomProperties: 0\n'
+    '    importConstraints: 0\n'
+    '    animationCompression: 1\n'
+    '    animationRotationError: 0.5\n'
+    '    animationPositionError: 0.5\n'
+    '    animationScaleError: 0.5\n'
+    '    animationWrapMode: 0\n'
+    '    extraExposedTransformPaths: []\n'
+    '    extraUserProperties: []\n'
+    '    clipAnimations: []\n'
+    '    isReadable: 0\n'
+    '  meshes:\n'
+    '    lODScreenPercentages: []\n'
+    '    globalScale: 1\n'
+    '    meshCompression: 0\n'
+    '    addColliders: 0\n'
+    '    useSRGBMaterialColor: 1\n'
+    '    sortHierarchyByName: 1\n'
+    '    importPhysicalCameras: 1\n'
+    '    importVisibility: 1\n'
+    '    importBlendShapes: 1\n'
+    '    importCameras: 0\n'
+    '    importLights: 0\n'
+    '    nodeNameCollisionStrategy: 1\n'
+    '    fileIdsGeneration: 2\n'
+    '    swapUVChannels: 0\n'
+    '    generateSecondaryUV: 0\n'
+    '    useFileUnits: 1\n'
+    '    keepQuads: 0\n'
+    '    weldVertices: 1\n'
+    '    bakeAxisConversion: 0\n'
+    '    preserveHierarchy: 0\n'
+    '    skinWeightsMode: 0\n'
+    '    maxBonesPerVertex: 4\n'
+    '    minBoneWeight: 0.001\n'
+    '    optimizeBones: 1\n'
+    '    meshOptimizationFlags: -1\n'
+    '    indexFormat: 0\n'
+    '    secondaryUVAngleDistortion: 8\n'
+    '    secondaryUVAreaDistortion: 15.000001\n'
+    '    secondaryUVHardAngle: 88\n'
+    '    secondaryUVMarginMethod: 1\n'
+    '    secondaryUVMinLightmapResolution: 40\n'
+    '    secondaryUVMinObjectScale: 1\n'
+    '    secondaryUVPackMargin: 4\n'
+    '    useFileScale: 1\n'
+    '    strictVertexDataChecks: 0\n'
+    '  tangentSpace:\n'
+    '    normalSmoothAngle: 60\n'
+    '    normalImportMode: 0\n'
+    '    tangentImportMode: 3\n'
+    '    normalCalculationMode: 4\n'
+    '    legacyComputeAllNormalsFromSmoothingGroupsWhenMeshHasBlendShapes: 0\n'
+    '    blendShapeNormalImportMode: 1\n'
+    '    normalSmoothingSource: 0\n'
+    '  referencedClips: []\n'
+    '  importAnimation: 0\n'
+    '  humanDescription:\n'
+    '    serializedVersion: 3\n'
+    '    human: []\n'
+    '    skeleton: []\n'
+    '    armTwist: 0.5\n'
+    '    foreArmTwist: 0.5\n'
+    '    upperLegTwist: 0.5\n'
+    '    legTwist: 0.5\n'
+    '    armStretch: 0.05\n'
+    '    legStretch: 0.05\n'
+    '    feetSpacing: 0\n'
+    '    globalScale: 1\n'
+    '    rootMotionBoneName: \n'
+    '    hasTranslationDoF: 0\n'
+    '    hasExtraRoot: 0\n'
+    '    skeletonHasParents: 1\n'
+    '  lastHumanDescriptionAvatarSource: {instanceID: 0}\n'
+    '  autoGenerateAvatarMappingIfUnspecified: 1\n'
+    '  animationType: 0\n'
+    '  humanoidOversampling: 1\n'
+    '  avatarSetup: 0\n'
+    '  addHumanoidExtraRootOnlyWhenUsingAvatar: 1\n'
+    '  importBlendShapeDeformPercent: 1\n'
+    '  remapMaterialsIfMaterialImportModeIsNone: 0\n'
+    '  additionalBone: 0\n'
+    '  userData: \n'
+    '  assetBundleName: \n'
+    '  assetBundleVariant: \n'
+)
+
+
+def model_meta_text(fbx_path):
+    """Default ModelImporter settings for a new FBX, so Unity imports it the same way on every machine."""
+    return MODEL_META.replace("{guid}", guid_for(fbx_path))
 
 
 def map_paths(fbx_path):
@@ -396,7 +546,8 @@ def bake_manifest(root):
     with open(manifest_path, encoding="utf-8") as handle:
         manifest = json.load(handle)
     written = []
-    for relative in manifest["assets"]:
+    from pipeline_plan import asset_paths
+    for relative in asset_paths(manifest):
         written.extend(write_set(os.path.join(root, relative)))
     return written
 

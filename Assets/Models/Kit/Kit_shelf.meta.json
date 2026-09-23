@@ -1,0 +1,35 @@
+{
+  "id": "Kit_shelf",
+  "category": "Kit",
+  "generator": "generate_kit.build_piece",
+  "generatorHash": "a73d8ff5bff2b4f5c225f00c10fc8dd614561d8284f4b174b8d6b687fab98d46",
+  "gitSha": "edff058f31a908ed7de64edaf527c44ea12a41ff",
+  "blender": "4.2.11",
+  "tags": [
+    "kit",
+    "interior"
+  ],
+  "pivot": "authored",
+  "collider": "box",
+  "rig": "",
+  "lods": [
+    1.0
+  ],
+  "tris": 12,
+  "lodTris": [
+    12
+  ],
+  "size": {
+    "width": 0.9,
+    "depth": 0.4,
+    "height": 1.8
+  },
+  "floor": 0.0,
+  "center": {
+    "x": 0.45,
+    "y": 0.2
+  },
+  "materials": [
+    "Mat_wood"
+  ]
+}

@@ -1,0 +1,35 @@
+{
+  "id": "Kit_sidewalk_straight",
+  "category": "Kit",
+  "generator": "generate_kit.build_piece",
+  "generatorHash": "5c3bac445bd1c48ef60fbd893ddf762f375e7e9859b1a1a79e89e5af615bc443",
+  "gitSha": "edff058f31a908ed7de64edaf527c44ea12a41ff",
+  "blender": "4.2.11",
+  "tags": [
+    "kit",
+    "road"
+  ],
+  "pivot": "authored",
+  "collider": "box",
+  "rig": "",
+  "lods": [
+    1.0
+  ],
+  "tris": 12,
+  "lodTris": [
+    12
+  ],
+  "size": {
+    "width": 2.0,
+    "depth": 2.0,
+    "height": 0.15
+  },
+  "floor": 0.0,
+  "center": {
+    "x": 1.0,
+    "y": 1.0
+  },
+  "materials": [
+    "Mat_concrete"
+  ]
+}

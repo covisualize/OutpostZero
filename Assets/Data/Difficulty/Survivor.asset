@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9964bea51256492aa0bb10a1d4658572, type: 3}
+  m_Name: Survivor
+  m_EditorClassIdentifier: OutpostZero::OutpostZero.AI.DifficultyDefinition
+  level: 2
+  displayName: Survivor
+  tensionPerTier: 4
+  tensionPerDay: 0
+  intervalScale: 1
+  extraKillBase: -1
+  extraKillPerTier: 1
+  runnerTier: 2
+  bruteTier: 3
+  buildUpBatch: 2
+  peakBatch: 4
+  relaxBatch: 1
+  aliveScale: 1
+  walkerWeight: 34
+  runnerWeight: 33
+  bruteWeight: 33
+  cooldownScale: 1
+  lootScale: 1

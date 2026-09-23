@@ -1,0 +1,40 @@
+{
+  "id": "Vehicle_Apocalypse_Truck",
+  "category": "Props",
+  "generator": "generate_props.build_apocalypse_truck",
+  "generatorHash": "cbad5baef4a437bc7791e72cdf8d44f2ad86d109c556a301ac646c58e6c50168",
+  "gitSha": "edff058f31a908ed7de64edaf527c44ea12a41ff",
+  "blender": "4.2.11",
+  "tags": [
+    "vehicle",
+    "cover"
+  ],
+  "pivot": "bottom",
+  "collider": "box",
+  "rig": "",
+  "lods": [
+    1.0,
+    0.5
+  ],
+  "tris": 468,
+  "lodTris": [
+    312,
+    156
+  ],
+  "size": {
+    "width": 2.52,
+    "depth": 5.425,
+    "height": 1.7691
+  },
+  "floor": -0.0207,
+  "center": {
+    "x": 0.0,
+    "y": 0.1125
+  },
+  "materials": [
+    "Mat_Armor_Plates",
+    "Mat_Truck_ArmoredSteel",
+    "Mat_Truck_BullBar",
+    "Mat_Truck_Tire"
+  ]
+}

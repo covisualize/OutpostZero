@@ -1,0 +1,95 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c75b6ff8091a2b3c4d5e6f708192a49d, type: 3}
+  m_Name: CameraProfile
+  m_EditorClassIdentifier: OutpostZero::OutpostZero.Graphics.CameraProfile
+  tuning:
+    follow:
+      pitch: 55.5
+      distance: 19.4
+      fov: 0
+      damping: 0.18
+    aim:
+      pitch: 59
+      distance: 17.8
+      fov: 42
+      damping: 0.12
+    aimBlend: 0.25
+    leadInfluence: 0.15
+    leadMax: 4.5
+    stickLead: 4
+    edgeSlack: 8
+    camp:
+      pitch: 65
+      distance: 30
+      fov: 50
+      damping: 0.3
+    campMinDistance: 18
+    campMaxDistance: 44
+    campZoomStep: 3
+    edgeMargin: 0.03
+    edgeSpeed: 14
+    campRange: 24
+    death:
+      pitch: 68
+      distance: 11
+      fov: 30
+      damping: 0.6
+    deathZoom: 2.5
+    pullBack:
+      pitch: 50
+      distance: 34
+      fov: 50
+      damping: 0.8
+    pullBackHold: 2
+    wide:
+      pitch: 72
+      distance: 46
+      fov: 45
+      damping: 1
+    resultsBlend: 1.5
+    shakes:
+    - id: pistol
+      force: 0.12
+      radius: 0
+      duration: 0.12
+      shape: recoil
+    - id: smg
+      force: 0.1
+      radius: 0
+      duration: 0.08
+      shape: recoil
+    - id: rifle
+      force: 0.18
+      radius: 0
+      duration: 0.15
+      shape: recoil
+    - id: shotgun
+      force: 0.4
+      radius: 0
+      duration: 0.22
+      shape: recoil
+    - id: melee
+      force: 0.08
+      radius: 0
+      duration: 0.1
+      shape: bump
+    - id: explosion
+      force: 0.9
+      radius: 24
+      duration: 0.6
+      shape: explosion
+    - id: brute_stomp
+      force: 0.45
+      radius: 12
+      duration: 0.3
+      shape: bump

@@ -31,3 +31,9 @@ MonoBehaviour:
   automatic: 0
   useProjectile: 0
   modelPath: Assets/Models/Weapons/Weapon_Pistol_9mm.fbx
+  heldPrefab: {fileID: 4439167138115214510, guid: e96853b420bb77f458a7bd540c3146df, type: 3}
+  holdOffset: {x: 0, y: 0, z: 0}
+  holdEuler: {x: 0, y: 90, z: 0}
+  muzzleVfx: 1
+  fireSfx: gun
+  icon: {fileID: 2800000, guid: cc77543afb25c0235034396e83a9fc7c, type: 3}

@@ -1,0 +1,35 @@
+{
+  "id": "Kit_vending",
+  "category": "Kit",
+  "generator": "generate_kit.build_piece",
+  "generatorHash": "0aa66ee68fe90dba39b1965e8c087d68553c073a1fc09ffd029c7f2ced942951",
+  "gitSha": "edff058f31a908ed7de64edaf527c44ea12a41ff",
+  "blender": "4.2.11",
+  "tags": [
+    "kit",
+    "interior"
+  ],
+  "pivot": "authored",
+  "collider": "box",
+  "rig": "",
+  "lods": [
+    1.0
+  ],
+  "tris": 12,
+  "lodTris": [
+    12
+  ],
+  "size": {
+    "width": 0.9,
+    "depth": 0.7,
+    "height": 1.8
+  },
+  "floor": 0.0,
+  "center": {
+    "x": 0.45,
+    "y": 0.35
+  },
+  "materials": [
+    "Mat_metal"
+  ]
+}

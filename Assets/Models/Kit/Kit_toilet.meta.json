@@ -1,0 +1,35 @@
+{
+  "id": "Kit_toilet",
+  "category": "Kit",
+  "generator": "generate_kit.build_piece",
+  "generatorHash": "aaf6b1622a070ebc62183cd681353a4ef643296ee6e342ef9548d31fc440e47d",
+  "gitSha": "edff058f31a908ed7de64edaf527c44ea12a41ff",
+  "blender": "4.2.11",
+  "tags": [
+    "kit",
+    "interior"
+  ],
+  "pivot": "authored",
+  "collider": "box",
+  "rig": "",
+  "lods": [
+    1.0
+  ],
+  "tris": 48,
+  "lodTris": [
+    48
+  ],
+  "size": {
+    "width": 0.8,
+    "depth": 1.2,
+    "height": 1.2
+  },
+  "floor": 0.0,
+  "center": {
+    "x": 0.4,
+    "y": 0.6
+  },
+  "materials": [
+    "Mat_concrete"
+  ]
+}

@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c75b21f8091a2b3c4d5e6f708192a44f, type: 3}
+  m_Name: medkit
+  m_EditorClassIdentifier: OutpostZero::OutpostZero.Items.ItemDefinition
+  id: medkit
+  displayName: Medkit
+  category: 2
+  weight: 0.5
+  use: 1
+  useEffect: 3
+  heal: 50
+  hunger: 0
+  thirst: 0
+  worldModel: Loot_Medkit
+  worldPrefab: {fileID: 967485224772501163, guid: e74c648931108d24bba2dfe13727bcc8, type: 3}
+  icon: {fileID: 2800000, guid: 964a1947cd45ef0ea417650a5c87d45e, type: 3}

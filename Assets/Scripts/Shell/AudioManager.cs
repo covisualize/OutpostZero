@@ -16,16 +16,35 @@ namespace OutpostZero.Shell
     {
         public static float SpatialBlend(string id)
         {
-            if (id == "ambient" || id == "pulse" || id == "ui" || id == "rain" || id == "wind" || id == "heart" || id == "breath") return 0f;
+            if (id == "ambient" || id == "pulse" || id == "ui" || id == "rain" || id == "storm" || id == "wind" || id == "ash" || id == "heart" || id == "breath" || id == "pained") return 0f;
             if (id != null && id.StartsWith("step")) return 0.35f;
             return 1f;
         }
 
         public static float MaxDistance(string id)
         {
-            if (id == "boom" || id == "boom_far") return 48f;
+            if (id == "boom" || id == "boom_far" || id == "thunder") return 48f;
             if (id == "scream") return 36f;
-            if (id == "gun" || id == "shotgun" || id == "gun_far") return 32f;
+            if (id == "shriek" || id == "roar" || id == "stomp") return 40f;
+            if (id == "gun" || id == "shotgun" || id == "rifle" || id == "smg" || id == "gun_far") return 32f;
+            if (id == "groan" || id == "snarl" || id == "grunt") return 22f;
+            if (id == "hum" || id == "crackle" || id == "buzz") return Colony.YardBed.Reach;
+            if (id == "flies") return FlyBed.Reach;
+            if (id == "hiss") return 20f;
+            if (id == "clink" || id == "clack") return 6f;
+            if (id == "spark") return 16f;
+            if (id == "splinter" || id == "spray") return 12f;
+            if (id == "dust") return 8f;
+            if (id == "mist") return 10f;
+            if (id == "burn") return 14f;
+            if (id == "cloud") return 12f;
+            if (id == "splash") return 8f;
+            if (id == "spit") return 8f;
+            if (id == "drip") return 6f;
+            if (id == "creak") return 12f;
+            if (id == "bite") return 6f;
+            if (id == "cough") return 10f;
+            if (id == "whoosh") return 14f;
             return 18f;
         }
     }
@@ -38,6 +57,8 @@ namespace OutpostZero.Shell
         public static AudioManager Instance { get; private set; }
 
         private readonly Dictionary<string, AudioClip> clips = new Dictionary<string, AudioClip>();
+        private readonly Dictionary<string, int> lastVariant = new Dictionary<string, int>();
+        private SfxLibrary library;
         private readonly List<AudioSource> pool = new List<AudioSource>();
         private AudioSource ambient;
         private AudioSource percussion;
@@ -46,11 +67,18 @@ namespace OutpostZero.Shell
         private string weatherId = "";
         private NoiseManager subscribedNoise;
         private float nextStep;
+        private float stepEvent;
         private bool peaked;
         private int streak;
         private float streakAt;
         private float nextHeart;
         private float nextBreath;
+        private readonly float[] groanSeats = new float[ZombieVoice.Cap];
+        private AudioSource hum;
+        private AudioSource crackle;
+        private AudioSource buzz;
+        private AudioSource flies;
+        private float[] flyDistances = System.Array.Empty<float>();
 
         private void Awake()
         {
@@ -60,18 +88,43 @@ namespace OutpostZero.Shell
                 return;
             }
             Instance = this;
+            library = Resources.Load<SfxLibrary>(SfxLibrary.ResourcePath);
             ambient = gameObject.AddComponent<AudioSource>();
             ambient.loop = true;
             ambient.spatialBlend = 0f;
             ambient.volume = 0.12f;
             ambient.clip = GetClip("ambient");
+            MixerRig.Route(ambient, MixBus.Music);
             ambient.Play();
             weather = gameObject.AddComponent<AudioSource>();
             weather.loop = true;
             weather.spatialBlend = 0f;
             weather.playOnAwake = false;
+            MixerRig.Route(weather, MixBus.Ambience);
             percussion = AddBed("stem_perc");
             combat = AddBed("stem_combat");
+            hum = AddWorld("hum");
+            crackle = AddWorld("crackle");
+            buzz = AddWorld("buzz");
+            flies = AddWorld("flies");
+            flies.maxDistance = FlyBed.Reach;
+        }
+
+        private AudioSource AddWorld(string id)
+        {
+            var go = new GameObject(id);
+            go.transform.SetParent(transform, false);
+            var bed = go.AddComponent<AudioSource>();
+            bed.loop = true;
+            bed.spatialBlend = 1f;
+            bed.playOnAwake = false;
+            bed.clip = GetClip(id);
+            bed.volume = 0f;
+            bed.minDistance = 2f;
+            bed.maxDistance = Colony.YardBed.Reach;
+            bed.rolloffMode = AudioRolloffMode.Linear;
+            MixerRig.Route(bed, AudioMix.BusOf(id));
+            return bed;
         }
 
         private AudioSource AddBed(string id)
@@ -82,6 +135,7 @@ namespace OutpostZero.Shell
             bed.playOnAwake = false;
             bed.clip = GetClip(id);
             bed.volume = 0f;
+            MixerRig.Route(bed, MixBus.Music);
             bed.Play();
             return bed;
         }
@@ -132,6 +186,8 @@ namespace OutpostZero.Shell
             if (percussion != null) ApplyLowpass(percussion, snapshot);
             if (combat != null) ApplyLowpass(combat, snapshot);
             UpdateWeather(snapshot, music, sfx, ambience, ui);
+            UpdateYard(snapshot, music, sfx, ambience, ui);
+            UpdateFlies(snapshot, music, sfx, ambience, ui);
             if (tension >= 75f && !peaked)
             {
                 peaked = true;
@@ -155,6 +211,8 @@ namespace OutpostZero.Shell
             PlayAt(id, transform.position, volume, pitch);
         }
 
+        private float lastOpen;
+
         public void PlayAt(string id, Vector3 position, float volume = 1f, float pitch = 0f)
         {
             var source = Rent();
@@ -163,14 +221,20 @@ namespace OutpostZero.Shell
             source.minDistance = 1.5f;
             source.maxDistance = AudioSpace.MaxDistance(id);
             source.rolloffMode = AudioRolloffMode.Linear;
-            source.pitch = pitch > 0f ? pitch : Random.Range(0.94f, 1.06f);
+            MixerRig.Route(source, AudioMix.BusOf(id));
+            if (pitch > 0f) source.pitch = pitch;
+            else
+            {
+                lastOpen = PitchGate.Next(lastOpen, Random.value);
+                source.pitch = lastOpen;
+            }
             bool wall = BehindWall(id, position);
             float heard = EarWall.Gain(volume, wall, id == "scream");
             if (heard <= 0.001f) return;
             var snapshot = CurrentSnapshot();
             Levels(out float music, out float sfx, out float ambience, out float ui);
             ApplyLowpass(source, snapshot, wall);
-            source.PlayOneShot(GetClip(id), AudioMix.Gain(id, heard, 1f, music, sfx, ambience, ui, snapshot));
+            source.PlayOneShot(Clip(id), AudioMix.Gain(id, heard, 1f, music, sfx, ambience, ui, snapshot));
         }
 
         private static bool BehindWall(string id, Vector3 position)
@@ -189,7 +253,8 @@ namespace OutpostZero.Shell
         private void UpdateWeather(MixSnapshot snapshot, float music, float sfx, float ambience, float ui)
         {
             var kind = WeatherController.Instance != null ? WeatherController.Instance.Kind : WeatherKind.Clear;
-            string id = kind == WeatherKind.Rain ? "rain" : kind == WeatherKind.Fog ? "wind" : "";
+            string district = WeatherController.Instance != null ? WeatherController.Instance.District : "";
+            string id = AshFall.Bed(kind, district);
             if (id != weatherId)
             {
                 weatherId = id;
@@ -209,6 +274,81 @@ namespace OutpostZero.Shell
             ApplyLowpass(weather, snapshot);
         }
 
+        private void UpdateYard(MixSnapshot snapshot, float music, float sfx, float ambience, float ui)
+        {
+            var grid = Colony.GridBuilder.Instance;
+            var modules = grid != null ? grid.Placed : null;
+            bool fire = Colony.YardBed.Spot(modules, "Campfire", out float fireX, out float fireZ);
+            bool lamp = Colony.YardBed.Spot(modules, "Lamp", out float lampX, out float lampZ);
+            bool generator = Colony.YardBed.Spot(modules, "Generator", out float genX, out float genZ);
+            var camp = Colony.CampServices.Instance;
+            if (camp != null && !camp.GeneratorOnline) generator = false;
+            if (camp != null && camp.GeneratorOnline && !generator)
+            {
+                generator = true;
+                genX = camp.transform.position.x;
+                genZ = camp.transform.position.z;
+            }
+            Colony.YardBed.Mix(generator, fire, lamp, out float humGain, out float crackleGain, out float buzzGain);
+            Hold(hum, "hum", genX, genZ, humGain, snapshot, music, sfx, ambience, ui);
+            Hold(crackle, "crackle", fireX, fireZ, crackleGain, snapshot, music, sfx, ambience, ui);
+            Hold(buzz, "buzz", lampX, lampZ, buzzGain, snapshot, music, sfx, ambience, ui);
+        }
+
+        private void UpdateFlies(MixSnapshot snapshot, float music, float sfx, float ambience, float ui)
+        {
+            var live = FlyMark.Live;
+            var listener = PlayerRegistry.Current;
+            int count = live.Count;
+            if (listener == null || count == 0)
+            {
+                Hold(flies, "flies", 0f, 0f, 0f, snapshot, music, sfx, ambience, ui);
+                return;
+            }
+            if (flyDistances.Length != count) flyDistances = new float[count];
+            Vector3 ear = listener.transform.position;
+            for (int i = 0; i < count; i++)
+            {
+                var mark = live[i];
+                if (mark == null)
+                {
+                    flyDistances[i] = FlyBed.Reach + 1f;
+                    continue;
+                }
+                Vector3 at = mark.transform.position;
+                float dx = at.x - ear.x;
+                float dz = at.z - ear.z;
+                flyDistances[i] = Mathf.Sqrt(dx * dx + dz * dz);
+            }
+            int best = FlyBed.Nearest(flyDistances);
+            if (best < 0 || live[best] == null)
+            {
+                Hold(flies, "flies", 0f, 0f, 0f, snapshot, music, sfx, ambience, ui);
+                return;
+            }
+            Vector3 bin = live[best].transform.position;
+            Hold(flies, "flies", bin.x, bin.z, FlyBed.Gain(flyDistances[best]), snapshot, music, sfx, ambience, ui);
+        }
+
+        private void Hold(AudioSource source, string id, float x, float z, float gain, MixSnapshot snapshot, float music, float sfx, float ambience, float ui)
+        {
+            if (source == null) return;
+            var at = new Vector3(x, 0f, z);
+            source.transform.position = at;
+            bool wall = gain > 0f && BehindWall(id, at);
+            float heard = gain <= 0f ? 0f : EarWall.Gain(gain, wall, false);
+            source.volume = AudioMix.Gain(id, heard, 1f, music, sfx, ambience, ui, snapshot);
+            ApplyLowpass(source, snapshot, wall);
+            if (source.volume > 0.001f)
+            {
+                if (!source.isPlaying) source.Play();
+            }
+            else if (source.isPlaying)
+            {
+                source.Stop();
+            }
+        }
+
         private static MixSnapshot CurrentSnapshot()
         {
             bool toxic = false;
@@ -219,7 +359,10 @@ namespace OutpostZero.Shell
                 toxic = effects != null && effects.IsPoisoned;
             }
             var state = GameManager.Instance != null ? GameManager.Instance.CurrentState : GameState.ExpeditionActive;
-            return AudioMix.SnapshotFor(state, toxic);
+            var snapshot = AudioMix.SnapshotFor(state, toxic);
+            if (!MixerRig.Live) return snapshot;
+            MixerRig.Snapshot(snapshot);
+            return MixSnapshot.Normal;
         }
 
         private static void Levels(out float music, out float sfx, out float ambience, out float ui)
@@ -229,6 +372,9 @@ namespace OutpostZero.Shell
             sfx = settings != null ? settings.SfxVolume : 1f;
             ambience = settings != null ? settings.AmbienceVolume : 0.8f;
             ui = settings != null ? settings.UiVolume : 1f;
+            if (!MixerRig.Live) return;
+            MixerRig.Levels(music, sfx, ambience, ui);
+            music = sfx = ambience = ui = 1f;
         }
 
         private static void ApplyLowpass(AudioSource source, MixSnapshot snapshot)
@@ -244,8 +390,15 @@ namespace OutpostZero.Shell
             filter.cutoffFrequency = wall ? EarWall.Muffle(hz) : hz;
         }
 
+        public void Footfall()
+        {
+            stepEvent = Time.time;
+            PlayStep();
+        }
+
         private void Step()
         {
+            if (!Player.StepGate.AllowTimer(Time.time, stepEvent)) return;
             var player = PlayerRegistry.Current;
             if (player == null) return;
             var body = player.GetComponent<CharacterController>();
@@ -253,15 +406,33 @@ namespace OutpostZero.Shell
             if (Time.time < nextStep) return;
             float interval = player.IsSprinting ? 0.28f : player.IsCrouching ? 0.55f : 0.42f;
             nextStep = Time.time + interval;
-            string surface = "";
+            PlayStep();
+        }
+
+        private void PlayStep()
+        {
+            var player = PlayerRegistry.Current;
+            if (player == null) return;
+            var body = player.GetComponent<CharacterController>();
+            if (body == null || body.velocity.magnitude < 0.8f) return;
+            string step = AudioMix.StepId("");
             if (Physics.Raycast(player.transform.position + Vector3.up, Vector3.down, out var hit, 2.2f, GameLayers.VisionOcclusionMask, QueryTriggerInteraction.Ignore))
             {
-                surface = hit.collider.name;
+                var tag = SurfaceTag.Of(hit.collider);
+                step = tag != null ? ClipBook.Step(tag.Footsteps, tag.Kind, hit.collider.name) : AudioMix.StepId(hit.collider.name);
             }
-            string step = AudioMix.StepId(surface);
+            if (OutpostZero.Expedition.GlassShard.Covers(player.transform.position.x, player.transform.position.z))
+                step = "step_glass";
             bool hard = step == "step_hard" || step == "step_metal";
             float pitch = hard ? Random.Range(1.05f, 1.2f) : Random.Range(0.85f, 1f);
             PlayAt(step, player.transform.position, player.IsCrouching ? 0.12f : 0.28f, pitch);
+            var weather = WeatherController.Instance;
+            float wetness = weather != null ? WeatherSurface.Wetness(weather.Kind) : 0f;
+            bool soaked = Combat.WoundShow.Soaked(wetness);
+            int puffs = Combat.WoundShow.Puffs(player.IsSprinting, player.IsCrouching, soaked);
+            if (puffs > 0) Combat.CombatVfx.Puff(player.transform.position, puffs, soaked);
+            if (soaked && !player.IsCrouching) PlayAt("splash", player.transform.position, player.IsSprinting ? 0.3f : Combat.WoundShow.Splash);
+            ImpactDecalPool.Instance?.StampBoot(player.transform.position, player.transform.right);
         }
 
         private void Body()
@@ -289,7 +460,7 @@ namespace OutpostZero.Shell
         private void OnShot(Vector3 muzzle, WeaponBase weapon)
         {
             if (weapon == null) return;
-            string id = weapon.Type == WeaponType.Shotgun ? "shotgun" : weapon.Type == WeaponType.Melee ? "swing" : "gun";
+            string id = ClipBook.Fire(weapon.Type, weapon is FirearmWeapon firearm ? firearm.FireSfx : "");
             PlayAt(id, muzzle, 0.8f);
             if (id == "swing") return;
             float distance = HearDistance(muzzle);
@@ -297,7 +468,18 @@ namespace OutpostZero.Shell
             if (tail > 0.001f) PlayAt("gun_far", muzzle, tail, SoundTail.Pitch(distance));
         }
 
-        private void OnHit(Vector3 point, Vector3 normal, GameObject target) => PlayAt("hit", point, 0.45f);
+        private void OnHit(Vector3 point, Vector3 normal, GameObject target)
+        {
+            bool melee = CombatEvents.FromWeapon && CombatEvents.LastWeapon == WeaponType.Melee;
+            bool barrel = target != null && target.GetComponentInParent<DestructibleHazard>() != null;
+            if (melee)
+            {
+                PlayAt(barrel ? "clang" : "chop", point, 0.5f);
+                return;
+            }
+            string face = Combat.StrikeFace.Of(target);
+            PlayAt(Combat.StrikeFace.Sound(face), point, Combat.StrikeFace.Volume(face));
+        }
 
         private void OnKill(GameObject victim, GameObject killer)
         {
@@ -319,6 +501,21 @@ namespace OutpostZero.Shell
                 if (echo > 0.001f) PlayAt("boom_far", origin, echo, SoundTail.Pitch(distance));
             }
             else if (type == NoiseType.ZombieScream) PlayAt("scream", origin, 0.55f);
+            else if (type == NoiseType.BleedDrip) PlayAt("drip", origin, 0.2f);
+            else if (type == NoiseType.DoorSwing) PlayAt("creak", origin, 0.45f);
+            else if (type == NoiseType.RationBite) PlayAt("bite", origin, 0.24f);
+        }
+
+        public void Groan(string breed, Vector3 at, float now, float last, out float next)
+        {
+            next = last;
+            if (PlayerRegistry.Current == null) return;
+            float distance = HearDistance(at);
+            if (!ZombieVoice.IdleDue(distance, ZombieVoice.Live(now, groanSeats), now, last)) return;
+            ZombieVoice.Seat(groanSeats, now);
+            next = now;
+            float pitch = breed == "brute" ? 0.55f : breed == "runner" ? 1.12f : 0f;
+            PlayAt(ZombieVoice.Idle(breed), at, breed == "brute" ? 0.7f : 0.4f, pitch);
         }
 
         private static float HearDistance(Vector3 position)
@@ -343,42 +540,29 @@ namespace OutpostZero.Shell
             return extra;
         }
 
-        private static bool StepTone(string id)
-        {
-            return id == "step" || id == "step_hard" || id == "step_metal" || id == "step_wood" || id == "step_water";
-        }
-
         private static float Tone(string id, float t, float noise)
         {
-            if (id == "scream") return Mathf.Sin(t * 90f);
-            if (id == "pulse") return Mathf.Sin(t * 28f);
-            if (id == "rain") return noise;
-            if (id == "wind") return noise * Mathf.Sin(t * 6f);
-            if (StepTone(id)) return noise * Mathf.Sin(t * 18f);
-            if (id == "ui") return Mathf.Sin(t * 40f);
-            if (id == "stem_perc") return Mathf.Sin(t * 48f) > 0.65f ? noise : 0f;
-            if (id == "stem_combat") return Mathf.Sin(t * 16f);
-            if (id == "stinger_kill") return Mathf.Sin(t * 55f);
-            if (id == "stinger_death") return Mathf.Sin(t * 8f);
-            if (id == "stinger_extract") return Mathf.Sin(t * 32f);
-            if (id == "stinger_raid") return noise * Mathf.Sin(t * 12f);
-            if (id == "stinger_dawn") return Mathf.Sin(t * 22f);
-            if (id == "gun_far") return Mathf.Sin(t * 9f);
-            if (id == "boom_far") return noise * Mathf.Sin(t * 4f);
-            if (id == "heart") return Mathf.Sin(t * 7f);
-            if (id == "breath") return noise * Mathf.Sin(t * 3f);
-            if (id == "dry") return Mathf.Sin(t * 90f);
-            if (id == "mag_out" || id == "mag_in") return noise * Mathf.Sin(t * 14f);
-            if (id == "rack") return Mathf.Sin(t * 28f);
-            return noise;
+            return ClipBook.Tone(id, t, noise);
+        }
+
+        private AudioClip Clip(string id)
+        {
+            var authored = library != null ? library.Pick(id, Random.Range(0, 1 << 16), lastVariant) : null;
+            return authored != null ? authored : Procedural(id);
         }
 
         private AudioClip GetClip(string id)
         {
+            var authored = library != null ? library.Pick(id, 0) : null;
+            return authored != null ? authored : Procedural(id);
+        }
+
+        private AudioClip Procedural(string id)
+        {
             if (clips.TryGetValue(id, out var clip)) return clip;
             int rate = 22050;
-            bool loop = id == "ambient" || id == "rain" || id == "wind" || id == "stem_perc" || id == "stem_combat";
-            float seconds = loop ? 2f : id == "boom_far" ? 0.7f : id == "boom" ? 0.45f : id == "gun_far" ? 0.42f : id == "breath" ? 0.5f : id == "heart" ? 0.22f : id == "dry" ? 0.07f : 0.18f;
+            bool loop = id == "ambient" || id == "rain" || id == "storm" || id == "wind" || id == "ash" || id == "stem_perc" || id == "stem_combat" || id == "hum" || id == "crackle" || id == "buzz" || id == "flies";
+            float seconds = loop ? 2f : id == "boom_far" || id == "thunder" ? 0.7f : id == "roar" || id == "stomp" ? 0.5f : id == "boom" ? 0.45f : id == "gun_far" ? 0.42f : id == "breath" || id == "groan" ? 0.5f : id == "shriek" ? 0.28f : id == "heart" || id == "hiss" ? 0.22f : id == "dry" || id == "take_soft" || id == "take_box" || id == "take_metal" || id == "clink" || id == "clack" || id == "spit" ? 0.08f : id == "burn" || id == "cloud" ? 0.5f : 0.18f;
             int samples = Mathf.CeilToInt(rate * seconds);
             var data = new float[samples];
             var random = new System.Random(id.GetHashCode());
@@ -386,7 +570,7 @@ namespace OutpostZero.Shell
             {
                 float t = i / (float)samples;
                 float noise = (float)(random.NextDouble() * 2.0 - 1.0);
-                float decay = id == "boom_far" || id == "gun_far" ? 2.4f : id == "boom" ? 4f : id == "heart" || id == "breath" ? 5f : 10f;
+                float decay = id == "boom_far" || id == "gun_far" || id == "roar" || id == "stomp" ? 2.4f : id == "boom" ? 4f : id == "heart" || id == "breath" ? 5f : 10f;
                 float envelope = loop ? 0.25f : Mathf.Exp(-t * decay);
                 float tone = Tone(id, t, noise);
                 data[i] = tone * envelope * (loop ? 0.2f : 0.6f);

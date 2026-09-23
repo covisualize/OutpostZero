@@ -3,7 +3,7 @@ using UnityEngine;
 namespace OutpostZero.Core
 {
     /// <summary>
-    /// Named physics layers (TagManager user layers 6–11) and the masks combat uses.
+    /// Named physics layers (TagManager user layers 6–12) and the masks combat uses.
     /// A serialized LayerMask of 0 means Nothing, so weapons and vision fall back to these.
     /// </summary>
     public static class GameLayers
@@ -14,6 +14,7 @@ namespace OutpostZero.Core
         public const string LootName = "Loot";
         public const string ProjectileName = "Projectile";
         public const string InteractableName = "Interactable";
+        public const string CorpseName = "Corpse";
 
         public const int Player = 6;
         public const int Enemy = 7;
@@ -21,6 +22,8 @@ namespace OutpostZero.Core
         public const int Loot = 9;
         public const int Projectile = 10;
         public const int Interactable = 11;
+        /// <summary>Ragdoll limbs: they hit the world and each other, never the living, loot or bullets.</summary>
+        public const int Corpse = 12;
 
         public static int PlayerMask => 1 << Player;
         public static int EnemyMask => 1 << Enemy;
@@ -38,6 +41,26 @@ namespace OutpostZero.Core
         public static LayerMask Resolve(LayerMask current, LayerMask fallback)
         {
             return current.value == 0 ? fallback : current;
+        }
+
+        /// <summary>The layer a generated prefab starts on. Scene placement and spawners may still move it.</summary>
+        public static int ForAsset(string category, string id)
+        {
+            id = id ?? "";
+            switch (category)
+            {
+                case "Kit":
+                case "Environment":
+                case "Props":
+                case "BaseBuilding":
+                    return Environment;
+                case "Weapons":
+                    return id.StartsWith("Loot_") ? Loot : 0;
+                case "Characters":
+                    return id.StartsWith("Zombie_") ? Enemy : 0;
+                default:
+                    return 0;
+            }
         }
 
         public static void ApplyRecursively(GameObject root, int layer)

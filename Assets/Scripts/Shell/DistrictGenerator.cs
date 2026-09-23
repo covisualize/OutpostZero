@@ -131,6 +131,11 @@ namespace OutpostZero.Shell
                 }
                 hash ^= (uint)index;
                 hash *= 16777619u;
+                hash ^= hash >> 16;
+                hash *= 0x85ebca6bu;
+                hash ^= hash >> 13;
+                hash *= 0xc2b2ae35u;
+                hash ^= hash >> 16;
             }
             return hash;
         }

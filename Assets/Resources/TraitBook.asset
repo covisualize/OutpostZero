@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c75bb4f8091a2b3c4d5e6f708192a4e2, type: 3}
+  m_Name: TraitBook
+  m_EditorClassIdentifier: OutpostZero::OutpostZero.Colony.TraitBook
+  traits:
+  - {fileID: 11400000, guid: 36680d35116346e5b10f7857dc646896, type: 2}
+  - {fileID: 11400000, guid: 1cbf5a1369ce4f5ea96d1728141e7e5f, type: 2}
+  - {fileID: 11400000, guid: 2e252332d54443928c1be99008e6fc5d, type: 2}
+  - {fileID: 11400000, guid: 0263fa6b99134e34a065ab2cae191b99, type: 2}
+  - {fileID: 11400000, guid: a9f629b759a142a0a40ff42782362879, type: 2}
+  - {fileID: 11400000, guid: b41b8f684c364ca3a1af1172bd636ce9, type: 2}
+  - {fileID: 11400000, guid: a7601229e8a74e9984207b7fd1d61b33, type: 2}
+  - {fileID: 11400000, guid: 46a69c2b185f4195a64888c621ab5e8f, type: 2}
+  - {fileID: 11400000, guid: 7acff99704dc4205a81b970ecbedcd63, type: 2}
+  - {fileID: 11400000, guid: 2f615395ef504b5b9aef2579050e50a3, type: 2}
+  - {fileID: 11400000, guid: 24f01c1cd0494e23983db35c50d1a996, type: 2}
+  - {fileID: 11400000, guid: 16ddd139d57141d08252aecc137a1df9, type: 2}
+  - {fileID: 11400000, guid: 79865187cd5649518493f2101ea3fa20, type: 2}
+  - {fileID: 11400000, guid: 90257fe7c94f44ed9fc92d48764a6f6b, type: 2}
+  - {fileID: 11400000, guid: 592739df9fc548bd90631792fe77fee5, type: 2}
+  - {fileID: 11400000, guid: 6083aaf7c8d34291aacb2e206019a2a7, type: 2}

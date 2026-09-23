@@ -1,0 +1,36 @@
+{
+  "id": "Prop_Barrel_Red_Explosive",
+  "category": "Props",
+  "generator": "generate_props.build_barrel_explosive",
+  "generatorHash": "1988b51c15afd7938134799a8e0cab979ed5a5d1677c8c9c0758da69e3f27d12",
+  "gitSha": "edff058f31a908ed7de64edaf527c44ea12a41ff",
+  "blender": "4.2.11",
+  "tags": [
+    "barrel",
+    "explosive"
+  ],
+  "pivot": "bottom",
+  "collider": "box",
+  "rig": "",
+  "lods": [
+    1.0
+  ],
+  "tris": 180,
+  "lodTris": [
+    180
+  ],
+  "size": {
+    "width": 0.63,
+    "depth": 0.63,
+    "height": 0.94
+  },
+  "floor": 0.0,
+  "center": {
+    "x": 0.0,
+    "y": 0.0
+  },
+  "materials": [
+    "Mat_Barrel_ExplosiveRed",
+    "Mat_Hazard_Stripe"
+  ]
+}

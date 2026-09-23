@@ -20,7 +20,7 @@ namespace OutpostZero.Items
             {
                 var spec = WeaponCard.Find(weaponId);
                 string name = string.IsNullOrEmpty(spec.Name) ? weaponId : spec.Name;
-                return "Take " + name;
+                return FightSay.Lift(weaponId, name, null);
             }
         }
 
@@ -40,18 +40,18 @@ namespace OutpostZero.Items
             if (player == null) return;
             if (!player.TakeFromGround(weaponId, magazine, reserve, out string leftId, out int leftMag, out int leftReserve))
             {
-                GameplayFeedback.Toast("Already carrying that");
+                GameplayFeedback.Toast(FightSay.Held(null));
                 return;
             }
             if (string.IsNullOrEmpty(leftId))
             {
                 var spec = WeaponCard.Find(weaponId);
-                GameplayFeedback.Toast("Took " + (string.IsNullOrEmpty(spec.Name) ? weaponId : spec.Name));
+                GameplayFeedback.Toast(FightSay.Took(weaponId, spec.Name, null));
                 Destroy(gameObject);
                 return;
             }
             Configure(leftId, leftMag, leftReserve);
-            GameplayFeedback.Toast("Swapped weapons");
+            GameplayFeedback.Toast(FightSay.Swap(null));
         }
     }
 }

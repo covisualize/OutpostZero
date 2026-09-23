@@ -1,0 +1,36 @@
+{
+  "id": "Road_Tile_Intersection",
+  "category": "Environment",
+  "generator": "generate_architecture.build_road_intersection",
+  "generatorHash": "7577f0e686acbd7d888af2ab2f4158a3ef596376e688b63b298eae1f4d2a1046",
+  "gitSha": "edff058f31a908ed7de64edaf527c44ea12a41ff",
+  "blender": "4.2.11",
+  "tags": [
+    "road"
+  ],
+  "pivot": "bottom",
+  "collider": "box",
+  "rig": "",
+  "lods": [
+    1.0
+  ],
+  "tris": 252,
+  "lodTris": [
+    252
+  ],
+  "size": {
+    "width": 10.0,
+    "depth": 10.0,
+    "height": 0.16
+  },
+  "floor": 0.0,
+  "center": {
+    "x": 0.0,
+    "y": 0.0
+  },
+  "materials": [
+    "Mat_Road_Asphalt",
+    "Mat_Road_Stripes_White",
+    "Mat_Sidewalk_Tile"
+  ]
+}

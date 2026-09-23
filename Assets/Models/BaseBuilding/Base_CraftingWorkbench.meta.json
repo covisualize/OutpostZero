@@ -1,0 +1,38 @@
+{
+  "id": "Base_CraftingWorkbench",
+  "category": "BaseBuilding",
+  "generator": "generate_base_building.build_workbench",
+  "generatorHash": "a69ce5967de4192e645252bd640dfab97e3f897ed79c351d603d9c82e399386a",
+  "gitSha": "edff058f31a908ed7de64edaf527c44ea12a41ff",
+  "blender": "4.2.11",
+  "tags": [
+    "camp",
+    "module",
+    "codex"
+  ],
+  "pivot": "bottom",
+  "collider": "box",
+  "rig": "",
+  "lods": [
+    1.0
+  ],
+  "tris": 204,
+  "lodTris": [
+    204
+  ],
+  "size": {
+    "width": 1.8,
+    "depth": 0.9,
+    "height": 1.875
+  },
+  "floor": 0.0,
+  "center": {
+    "x": 0.0,
+    "y": 0.0
+  },
+  "materials": [
+    "Mat_Bench_Timber",
+    "Mat_Bench_ViseMetal",
+    "Mat_Pegboard_Brown"
+  ]
+}

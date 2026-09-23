@@ -29,7 +29,7 @@ namespace OutpostZero.Shell
             "Barricades fail when nobody is posted on Guard.",
             "Cooked food lifts morale. A skipped meal does not.",
             "The generator drinks fuel once dusk settles.",
-            "Three radio parts and a built generator open broadcast night.",
+            "Three radio parts and a tier-2 generator open broadcast night.",
             "Reload before the magazine clicks empty.",
             "Oil, toxic, and powder barrels chain if you break them.",
             "A medic on the board closes wounds between watches.",
@@ -49,14 +49,18 @@ namespace OutpostZero.Shell
 
         public static string Title(FlowStep step)
         {
-            switch (step)
-            {
-                case FlowStep.Boot: return "WAKING THE GATE";
-                case FlowStep.Sanctuary: return "THE SANCTUARY";
-                case FlowStep.Expedition: return "INTO THE DISTRICT";
-                case FlowStep.Results: return "BACK INSIDE";
-                default: return "OUTPOST ZERO";
-            }
+            return Title(step, "en");
+        }
+
+        public static string Title(FlowStep step, string language)
+        {
+            string key = step == FlowStep.Boot ? "load.boot"
+                : step == FlowStep.Sanctuary ? "load.sanctuary"
+                : step == FlowStep.Expedition ? "load.expedition"
+                : step == FlowStep.Results ? "load.results"
+                : "load.brand";
+            if (string.IsNullOrEmpty(language)) return Loc.T(key);
+            return Loc.T(key, language);
         }
 
         public static string Tip(FlowStep step, int index)
@@ -64,6 +68,17 @@ namespace OutpostZero.Shell
             int start = (int)step * 3;
             int slot = start + Math.Abs(index);
             return Tips[slot % Tips.Length];
+        }
+
+        public static string Tip(FlowStep step, int index, string language)
+        {
+            int start = (int)step * 3;
+            int slot = start + Math.Abs(index);
+            slot %= Tips.Length;
+            if (language == "en") return Tips[slot];
+            string key = "load.tip" + slot;
+            string line = string.IsNullOrEmpty(language) ? Loc.T(key) : Loc.T(key, language);
+            return line == key ? Tips[slot] : line;
         }
 
         public static float[] Beats(FlowStep step)

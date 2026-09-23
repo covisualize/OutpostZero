@@ -1,4 +1,5 @@
 using UnityEngine;
+using OutpostZero.Core;
 using OutpostZero.Combat;
 
 namespace OutpostZero.Player
@@ -24,30 +25,83 @@ namespace OutpostZero.Player
         private Pose pose = Pose.Idle;
         private HealthSystem health;
         private FirearmWeapon[] guns;
+        private float aimWeight;
+        private Transform socket;
+        private Vector3 socketRest;
+        private Transform hand;
+        private Transform spine;
+        private Transform head;
+        private readonly BoneTurn spineTurn = new BoneTurn();
+        private readonly BoneTurn headTurn = new BoneTurn();
+        private Vector3 handRest;
+        private bool handSettled;
+        private readonly float[] reloadClips = new float[CharacterRig.ReloadTakes.Length];
 
         public Pose CurrentPose => pose;
+        public float AimWeight => aimWeight;
 
         private void Awake()
         {
             controller = GetComponent<PlayerController>();
-            animator = GetComponent<Animator>() ?? GetComponentInChildren<Animator>();
+            animator = Attach.Near<Animator>(this);
             if (animator != null && animator.runtimeAnimatorController == null)
             {
                 var controllerAsset = Resources.Load<RuntimeAnimatorController>("SurvivorLocomotion");
                 if (controllerAsset != null) animator.runtimeAnimatorController = controllerAsset;
             }
-            if (animator != null && animator.runtimeAnimatorController != null) return;
+            if (animator != null && animator.runtimeAnimatorController != null)
+            {
+                Arm(animator.gameObject);
+                AddClipEvents(animator.runtimeAnimatorController);
+                return;
+            }
             visual = FindVisual();
             if (visual == null) return;
-            animationPlayer = visual.gameObject.GetComponent<Animation>() ?? visual.gameObject.AddComponent<Animation>();
+            animationPlayer = Attach.Ensure<Animation>(visual.gameObject);
             animationPlayer.playAutomatically = false;
             AddClip(Pose.Idle, 0.02f, 1.4f);
             AddClip(Pose.Walk, 0.06f, 0.45f);
             AddClip(Pose.Crouch, 0.03f, 0.7f);
             AddClip(Pose.Sprint, 0.1f, 0.28f);
             animationPlayer.Play(Pose.Idle.ToString());
+            Arm(visual.gameObject);
         }
 
+        private void Arm(GameObject host)
+        {
+            if (host == null || host == gameObject) return;
+            if (host.GetComponent<FootstepRelay>() == null) host.AddComponent<FootstepRelay>();
+        }
+
+        public void OnFootstep()
+        {
+            controller?.PlayFootstep();
+            Shell.AudioManager.Instance?.Footfall();
+        }
+
+        private void AddClipEvents(RuntimeAnimatorController rig)
+        {
+            foreach (var clip in rig.animationClips)
+            {
+                if (clip == null) continue;
+                int take = System.Array.IndexOf(CharacterRig.ReloadTakes, ClipEvents.Bare(clip.name));
+                if (take >= 0) reloadClips[take] = clip.length;
+            }
+            ClipEvents.Arm(rig);
+        }
+
+        public void OnReloadAnimComplete()
+        {
+            var gun = controller != null ? controller.ActiveWeapon as FirearmWeapon : null;
+            if (gun != null) gun.FinishFromAnimation();
+        }
+
+        private float AimTarget()
+        {
+            bool alive = health == null || !health.IsDead;
+            var gun = controller.ActiveWeapon as FirearmWeapon;
+            return AimRig.Weight(alive, controller.IsSprinting, gun != null && gun.IsReloading, controller.IsAimingDownSights);
+        }
         private void Start()
         {
             health = GetComponent<HealthSystem>();
@@ -55,6 +109,14 @@ namespace OutpostZero.Player
             {
                 health.OnDamaged += HandleDamaged;
                 health.OnDeath += HandleDeath;
+            }
+            socket = transform.Find("Weapon_Socket");
+            if (socket != null) socketRest = socket.localPosition;
+            if (animator != null)
+            {
+                hand = animator.isHuman ? animator.GetBoneTransform(HumanBodyBones.RightHand) : Bone(animator.transform, AimRig.HandBone);
+                spine = animator.isHuman ? animator.GetBoneTransform(HumanBodyBones.Spine) : Bone(animator.transform, AimRig.SpineBone);
+                head = animator.isHuman ? animator.GetBoneTransform(HumanBodyBones.Head) : Bone(animator.transform, AimRig.HeadBone);
             }
             guns = GetComponentsInChildren<FirearmWeapon>(true);
             for (int i = 0; i < guns.Length; i++)
@@ -84,7 +146,10 @@ namespace OutpostZero.Player
 
         private void HandleReload()
         {
-            if (animator != null) animator.SetTrigger("Reload");
+            if (animator == null) return;
+            var gun = controller != null ? controller.ActiveWeapon as FirearmWeapon : null;
+            if (gun != null) animator.SetFloat(CharacterRig.ReloadVariant, CharacterRig.ReloadBlend(gun.Type));
+            animator.SetTrigger("Reload");
         }
 
         private void HandleDamaged(float amount, Vector3 point)
@@ -123,6 +188,14 @@ namespace OutpostZero.Player
                 new Keyframe(duration, 0f));
             clip.SetCurve("", typeof(Transform), "localPosition.y", curve);
             clip.wrapMode = WrapMode.Loop;
+            if (id != Pose.Idle)
+            {
+                clip.AddEvent(new AnimationEvent
+                {
+                    time = duration * 0.5f,
+                    functionName = "OnFootstep"
+                });
+            }
             animationPlayer.AddClip(clip, id.ToString());
         }
 
@@ -140,6 +213,13 @@ namespace OutpostZero.Player
                 animator.SetFloat("Speed", speed);
                 animator.SetBool("Crouch", controller.IsCrouching);
                 animator.SetBool("Sprint", controller.IsSprinting);
+                var gun = controller.ActiveWeapon as FirearmWeapon;
+                animator.SetFloat("ReloadSpeed", gun != null && gun.IsReloading ? AimRig.ReloadSpeed(ReloadClipLength(gun.Type), gun.ReloadSeconds) : 1f);
+                Vector3 planar = body != null ? body.velocity : Vector3.zero;
+                planar.y = 0f;
+                string gait = controller.IsCrouching ? "CrouchWalk" : controller.IsSprinting ? "Sprint" : "Walk";
+                float ground = StrideSheet.GroundSpeed(CharacterRig.PlayerModel, gait);
+                animator.SetFloat(StrideSheet.MoveRate, StrideSheet.Rate(planar.magnitude, ground, transform.lossyScale.y));
             }
             if (next == pose || animationPlayer == null) 
             {
@@ -149,5 +229,90 @@ namespace OutpostZero.Player
             pose = next;
             animationPlayer.CrossFade(pose.ToString(), 0.12f);
         }
+
+        /// <summary>The take this gun plays, or the plain reload on a model baked before the gun takes.</summary>
+        private float ReloadClipLength(WeaponType type)
+        {
+            float length = reloadClips[CharacterRig.ReloadTake(type)];
+            return length > 0f ? length : reloadClips[0];
+        }
+
+        private static Transform Bone(Transform root, string name)
+        {
+            if (root.name == name) return root;
+            foreach (Transform child in root)
+            {
+                var found = Bone(child, name);
+                if (found != null) return found;
+            }
+            return null;
+        }
+
+        private void LateUpdate()
+        {
+            Turn();
+            if (socket == null || hand == null) return;
+            Vector3 local = transform.InverseTransformPoint(hand.position);
+            var state = animator.GetCurrentAnimatorStateInfo(0);
+            if (state.IsName("Idle") && state.normalizedTime > 0.2f)
+            {
+                handRest = handSettled ? Vector3.Lerp(handRest, local, 0.05f) : local;
+                handSettled = true;
+            }
+            if (!handSettled) return;
+            socket.localPosition = AimRig.Socket(socketRest, handRest, local, AimRig.HandFollow);
+        }
+
+        /// <summary>Turns the posed spine and head toward the aim point, after the animator has written the pose.</summary>
+        private void Turn()
+        {
+            if (controller == null || spine == null) return;
+            aimWeight = AimRig.Blend(aimWeight, AimTarget(), Time.deltaTime);
+            Vector3 chest = transform.position + Vector3.up * 1.4f;
+            Vector3 aim = controller.AimPoint.sqrMagnitude > 0f ? controller.AimPoint : transform.position + transform.forward * 6f;
+            float yaw = AimRig.Yaw(transform.forward, chest, aim, aimWeight);
+            spineTurn.Apply(spine, yaw * AimRig.SpineShare);
+            if (head != null) headTurn.Apply(head, yaw * (1f - AimRig.SpineShare));
+        }
+    }
+
+    /// <summary>
+    /// Adds a turn about world up to a bone each frame without letting it build up when the animator
+    /// leaves that bone alone: an untouched bone is put back to its pose before the new turn.
+    /// </summary>
+    public class BoneTurn
+    {
+        private Quaternion posed;
+        private Quaternion written;
+        private bool has;
+
+        public void Apply(Transform bone, float degrees)
+        {
+            if (bone == null) return;
+            if (has && Quaternion.Angle(bone.localRotation, written) < 0.01f) bone.localRotation = posed;
+            posed = bone.localRotation;
+            bone.rotation = Quaternion.AngleAxis(degrees, Vector3.up) * bone.rotation;
+            written = bone.localRotation;
+            has = true;
+        }
+    }
+
+    /// <summary>
+    /// Animation events fire on the object that plays the clip. This forwards them to the body.
+    /// </summary>
+    public class FootstepRelay : MonoBehaviour
+    {
+        public void OnFootstep()
+        {
+            var body = GetComponentInParent<SurvivorLocomotion>();
+            if (body != null) body.OnFootstep();
+        }
+
+        public void OnReloadAnimComplete()
+        {
+            var body = GetComponentInParent<SurvivorLocomotion>();
+            if (body != null) body.OnReloadAnimComplete();
+        }
+
     }
 }

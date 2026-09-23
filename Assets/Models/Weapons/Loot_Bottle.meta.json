@@ -1,0 +1,36 @@
+{
+  "id": "Loot_Bottle",
+  "category": "Weapons",
+  "generator": "generate_items.build_bottle",
+  "generatorHash": "4beb2a5134ed2b304b60e05eddfdf03135d3ad25465991e3611e150681bd598c",
+  "gitSha": "edff058f31a908ed7de64edaf527c44ea12a41ff",
+  "blender": "4.2.11",
+  "tags": [
+    "loot",
+    "item"
+  ],
+  "pivot": "bottom",
+  "collider": "box",
+  "rig": "",
+  "lods": [
+    1.0
+  ],
+  "tris": 224,
+  "lodTris": [
+    224
+  ],
+  "size": {
+    "width": 0.069,
+    "depth": 0.069,
+    "height": 0.25
+  },
+  "floor": 0.0,
+  "center": {
+    "x": 0.0,
+    "y": 0.0
+  },
+  "materials": [
+    "Mat_Item_BeerLabel",
+    "Mat_Item_BrownGlass"
+  ]
+}

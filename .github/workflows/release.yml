@@ -1,0 +1,164 @@
+name: Release
+
+# Pushing a tag like v0.6.0 or v1.0.0-rc.1 builds release players for Windows, Linux and macOS,
+# zips each with the README, CHANGELOG, notices and licence, and publishes a GitHub Release.
+# Cut the version first with: python Tools/Release/release.py bump
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing tag to (re)build, e.g. v0.6.0-rc.1
+        required: true
+
+permissions:
+  contents: write
+
+env:
+  TAG: ${{ github.event.inputs.tag || github.ref_name }}
+
+jobs:
+  notes:
+    name: Release notes
+    runs-on: ubuntu-latest
+    outputs:
+      prerelease: ${{ steps.kind.outputs.prerelease }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Release tool tests
+        run: python -m unittest discover -s Tools/Release -v
+      - name: Tag matches version.json
+        run: |
+          want="${TAG#v}"
+          have="$(python -c 'import json;print(json.load(open("Assets/Resources/version.json"))["version"])')"
+          if [ "$want" != "$have" ]; then
+            echo "::error::Tag $TAG but Assets/Resources/version.json says $have. Run: python Tools/Release/release.py bump"
+            exit 1
+          fi
+      - name: Notes from CHANGELOG.md
+        run: python Tools/Release/release.py notes "$TAG" > release-notes.md
+      - id: kind
+        run: |
+          case "$TAG" in *-*) echo "prerelease=true" >> "$GITHUB_OUTPUT" ;; *) echo "prerelease=false" >> "$GITHUB_OUTPUT" ;; esac
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-notes
+          path: release-notes.md
+
+  player:
+    name: ${{ matrix.name }} player
+    needs: notes
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Windows
+            os: windows-latest
+            unityTarget: StandaloneWindows64
+            target: windows
+            folder: Windows
+          - name: Linux
+            os: ubuntu-latest
+            unityTarget: StandaloneLinux64
+            target: linux
+            folder: Linux
+          - name: macOS
+            os: macos-latest
+            unityTarget: StandaloneOSX
+            target: mac
+            folder: macOS
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Unity license present
+        shell: bash
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+        run: |
+          if [ -z "$UNITY_LICENSE" ]; then
+            echo "::error::UNITY_LICENSE, UNITY_EMAIL and UNITY_PASSWORD repository secrets are required to build players."
+            exit 1
+          fi
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
+          lfs: true
+      - uses: actions/cache@v4
+        with:
+          path: Library
+          key: Library-Release-${{ matrix.unityTarget }}-${{ hashFiles('Packages/manifest.json', 'Packages/packages-lock.json', 'ProjectSettings/ProjectVersion.txt') }}
+          restore-keys: |
+            Library-Release-${{ matrix.unityTarget }}-
+      - uses: game-ci/unity-builder@v4
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          unityVersion: 6000.0.83f1
+          targetPlatform: ${{ matrix.unityTarget }}
+          buildMethod: OutpostZero.EditorTools.BuildScript.BuildAll
+          customParameters: -targets ${{ matrix.target }} -release -version ${{ env.TAG }} -sha ${{ github.sha }} -output Builds
+          versioning: None
+          allowDirtyBuild: true
+      - uses: actions/upload-artifact@v4
+        with:
+          name: player-${{ matrix.target }}
+          path: |
+            Builds/${{ matrix.folder }}
+            Builds/build-report.json
+          if-no-files-found: error
+
+  publish:
+    name: Publish GitHub Release
+    needs: [notes, player]
+    runs-on: ubuntu-latest
+    env:
+      BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}
+      ITCH_TARGET: ${{ vars.ITCH_TARGET }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+      - name: Zip players with docs and notices
+        run: |
+          version="${TAG#v}"
+          mkdir -p out
+          for target in windows linux mac; do
+            src="dist/player-$target"
+            stage="stage/OutpostZero-$version-$target"
+            mkdir -p "$stage"
+            find "$src" -mindepth 1 -maxdepth 1 -type d -exec cp -R {} "$stage"/ \;
+            cp README.md CHANGELOG.md THIRD_PARTY_NOTICES.md "$stage"/
+            if [ -f LICENSE ]; then cp LICENSE "$stage"/; else echo "::warning::No LICENSE file at the repo root; the zips ship without one."; fi
+            if [ -f "$src/build-report.json" ]; then cp "$src/build-report.json" "out/build-report-$target.json"; fi
+            (cd stage && zip -qr "../out/OutpostZero-$version-$target.zip" "OutpostZero-$version-$target")
+          done
+          ls -l out
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.TAG }}
+          name: Outpost Zero ${{ env.TAG }}
+          body_path: dist/release-notes/release-notes.md
+          prerelease: ${{ needs.notes.outputs.prerelease }}
+          files: out/*
+      - name: Push to itch.io (optional)
+        if: env.BUTLER_API_KEY != '' && env.ITCH_TARGET != ''
+        run: |
+          curl -sSL -o butler.zip https://broth.itch.ovh/butler/linux-amd64/LATEST/archive/default
+          unzip -q butler.zip -d butler && chmod +x butler/butler
+          version="${TAG#v}"
+          for pair in windows:windows linux:linux mac:osx; do
+            target="${pair%%:*}"; channel="${pair##*:}"
+            ./butler/butler push "stage/OutpostZero-$version-$target" "$ITCH_TARGET:$channel" --userversion "$version"
+          done

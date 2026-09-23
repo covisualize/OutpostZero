@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c75baef8091a2b3c4d5e6f708192a4dc, type: 3}
+  m_Name: FactionBook
+  m_EditorClassIdentifier: OutpostZero::OutpostZero.Colony.FactionBook
+  factions:
+  - {fileID: 11400000, guid: 0770f67926964c408a4abe9c838ea093, type: 2}
+  - {fileID: 11400000, guid: c8cf3649883049438a31db61ce2bc154, type: 2}
+  - {fileID: 11400000, guid: e251f481d42946be9d3b2b9a9d02b66e, type: 2}
+  - {fileID: 11400000, guid: 3ac9f3a55b06488dbd6cc6661faa6ff2, type: 2}

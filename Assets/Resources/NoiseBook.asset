@@ -1,0 +1,37 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e3f63f3e74cc4f11b4da62806e2152db, type: 3}
+  m_Name: NoiseBook
+  m_EditorClassIdentifier: OutpostZero::OutpostZero.Sensory.NoiseBook
+  noises:
+  - {fileID: 11400000, guid: aa43c8e8345646a6b686382ad03e673f, type: 2}
+  - {fileID: 11400000, guid: 1b97bdc7eccc4b6b97420111250d5738, type: 2}
+  - {fileID: 11400000, guid: 3d37fe75156242dab3803bfb0389962d, type: 2}
+  - {fileID: 11400000, guid: 9b66328f7c624c89ae06babe0e18719f, type: 2}
+  - {fileID: 11400000, guid: 0268111754ef47a28617d11978d5bdde, type: 2}
+  - {fileID: 11400000, guid: 90327cc882874479bedf320a259ad298, type: 2}
+  - {fileID: 11400000, guid: bf260f9b142647f68330b21b65900312, type: 2}
+  - {fileID: 11400000, guid: 0a61f10891aa450fa202ebad73d7e520, type: 2}
+  - {fileID: 11400000, guid: e7fae11f6fef453c98a387abd58487f8, type: 2}
+  - {fileID: 11400000, guid: 524a116e39e74265a298a6913322d6ad, type: 2}
+  - {fileID: 11400000, guid: 93d2c5157f7a44bbaefb1cb9733f706a, type: 2}
+  - {fileID: 11400000, guid: a4c90a818c4a43ed8d75870e7b6ee2ae, type: 2}
+  - {fileID: 11400000, guid: d6dde5f62f944b81b1313ba72d1679f1, type: 2}
+  - {fileID: 11400000, guid: f59fa584ba73434486ff7924983a5dab, type: 2}
+  - {fileID: 11400000, guid: ea97e9a80ec449069bc4bf087af63c88, type: 2}
+  - {fileID: 11400000, guid: b1c0dcd1080344849ba5c0ca16f881e5, type: 2}
+  - {fileID: 11400000, guid: f937482eaece4ba1a36b4d60057996de, type: 2}
+  - {fileID: 11400000, guid: a91177b4d66d473fbad71de407b6eff8, type: 2}
+  - {fileID: 11400000, guid: 3fb52d75b3594cc6bd9dc928a2c855a9, type: 2}
+  - {fileID: 11400000, guid: 1cd76de33e58436883c132533d9767a6, type: 2}
+  - {fileID: 11400000, guid: bb5dacd7afdd495a9a9843225f1a08b6, type: 2}
+  - {fileID: 11400000, guid: c9532c92846d4dfd93d78b28ca57c756, type: 2}

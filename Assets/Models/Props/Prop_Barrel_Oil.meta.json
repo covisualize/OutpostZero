@@ -1,0 +1,34 @@
+{
+  "id": "Prop_Barrel_Oil",
+  "category": "Props",
+  "generator": "generate_props.build_barrel_oil",
+  "generatorHash": "811e778aa48d976cb7835a0f5020efe9ab100ef325ce992903478dec257b74b3",
+  "gitSha": "edff058f31a908ed7de64edaf527c44ea12a41ff",
+  "blender": "4.2.11",
+  "tags": [
+    "barrel"
+  ],
+  "pivot": "bottom",
+  "collider": "box",
+  "rig": "",
+  "lods": [
+    1.0
+  ],
+  "tris": 60,
+  "lodTris": [
+    60
+  ],
+  "size": {
+    "width": 0.6,
+    "depth": 0.6,
+    "height": 0.94
+  },
+  "floor": 0.0,
+  "center": {
+    "x": 0.0,
+    "y": 0.0
+  },
+  "materials": [
+    "Mat_Barrel_OilBlue"
+  ]
+}

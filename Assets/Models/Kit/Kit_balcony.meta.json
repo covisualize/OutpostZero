@@ -1,0 +1,35 @@
+{
+  "id": "Kit_balcony",
+  "category": "Kit",
+  "generator": "generate_kit.build_piece",
+  "generatorHash": "cbca00897fb989606a2633c4837d4b43b55ddb04820839bcfe3ba35332ab99cc",
+  "gitSha": "edff058f31a908ed7de64edaf527c44ea12a41ff",
+  "blender": "4.2.11",
+  "tags": [
+    "kit",
+    "building"
+  ],
+  "pivot": "authored",
+  "collider": "box",
+  "rig": "",
+  "lods": [
+    1.0
+  ],
+  "tris": 24,
+  "lodTris": [
+    24
+  ],
+  "size": {
+    "width": 2.0,
+    "depth": 1.2,
+    "height": 1.1
+  },
+  "floor": 0.0,
+  "center": {
+    "x": 1.0,
+    "y": 0.6
+  },
+  "materials": [
+    "Mat_metal"
+  ]
+}

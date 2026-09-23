@@ -1,0 +1,35 @@
+{
+  "id": "Kit_fire_escape",
+  "category": "Kit",
+  "generator": "generate_kit.build_piece",
+  "generatorHash": "40ff631d3f0bf36fad033fced9c8ebc4d72ce0308fb7ab85542d91e652f42fba",
+  "gitSha": "edff058f31a908ed7de64edaf527c44ea12a41ff",
+  "blender": "4.2.11",
+  "tags": [
+    "kit",
+    "building"
+  ],
+  "pivot": "authored",
+  "collider": "box",
+  "rig": "",
+  "lods": [
+    1.0
+  ],
+  "tris": 36,
+  "lodTris": [
+    36
+  ],
+  "size": {
+    "width": 1.2,
+    "depth": 2.2,
+    "height": 3.0
+  },
+  "floor": 0.0,
+  "center": {
+    "x": 0.6,
+    "y": 1.1
+  },
+  "materials": [
+    "Mat_metal"
+  ]
+}

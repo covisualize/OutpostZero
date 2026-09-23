@@ -10,6 +10,16 @@ namespace OutpostZero.Combat
 
         public static void Resolve(RaycastHit hit, float damage, GameObject attacker, bool allowHeadshot, WeaponType weapon = WeaponType.Pistol)
         {
+            if (hit.collider != null)
+            {
+                var pane = hit.collider.GetComponent<OutpostZero.Expedition.GlassPane>();
+                if (pane != null)
+                {
+                    pane.TakeDamage(damage, hit.point, hit.normal, attacker);
+                    return;
+                }
+            }
+
             var hazard = hit.collider.GetComponentInParent<DestructibleHazard>();
             if (hazard != null)
             {
@@ -32,6 +42,8 @@ namespace OutpostZero.Combat
 
             target.TakeDamage(amount, hit.point, hit.normal, attacker);
             CombatEvents.RaiseHit(hit.point, hit.normal, body.gameObject, weapon);
+            int gore = SettingsService.Instance != null ? SettingsService.Instance.Gore : 1;
+            if (WoundShow.MistDue(crit, gore)) CombatVfx.Mist(hit.point);
             if (HitFeedback.Instance != null)
             {
                 HitFeedback.Instance.AddNumber(hit.point, amount, crit);
@@ -45,6 +57,13 @@ namespace OutpostZero.Combat
         public static void ResolveBody(Collider col, Vector3 point, Vector3 direction, float damage, GameObject attacker, bool allowHeadshot, WeaponType weapon = WeaponType.Pistol)
         {
             if (col == null) return;
+            var pane = col.GetComponent<OutpostZero.Expedition.GlassPane>();
+            if (pane != null)
+            {
+                pane.TakeDamage(damage, point, direction, attacker);
+                return;
+            }
+
             var hazard = col.GetComponentInParent<DestructibleHazard>();
             if (hazard != null)
             {
@@ -61,6 +80,8 @@ namespace OutpostZero.Combat
             float amount = crit ? damage * HeadshotMultiplier : damage;
             target.TakeDamage(amount, point, direction, attacker);
             CombatEvents.RaiseHit(point, direction, body.gameObject, weapon);
+            int gore = SettingsService.Instance != null ? SettingsService.Instance.Gore : 1;
+            if (WoundShow.MistDue(crit, gore)) CombatVfx.Mist(point);
             if (HitFeedback.Instance != null)
             {
                 HitFeedback.Instance.AddNumber(point, amount, crit);

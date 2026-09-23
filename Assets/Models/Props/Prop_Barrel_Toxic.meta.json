@@ -1,0 +1,35 @@
+{
+  "id": "Prop_Barrel_Toxic",
+  "category": "Props",
+  "generator": "generate_props.build_barrel_toxic",
+  "generatorHash": "db30c19778986fce1b0f831e4dabd79e731ab1bf2ad83419773a860f3d97da43",
+  "gitSha": "edff058f31a908ed7de64edaf527c44ea12a41ff",
+  "blender": "4.2.11",
+  "tags": [
+    "barrel"
+  ],
+  "pivot": "bottom",
+  "collider": "box",
+  "rig": "",
+  "lods": [
+    1.0
+  ],
+  "tris": 120,
+  "lodTris": [
+    120
+  ],
+  "size": {
+    "width": 0.63,
+    "depth": 0.63,
+    "height": 0.94
+  },
+  "floor": 0.0,
+  "center": {
+    "x": 0.0,
+    "y": 0.0
+  },
+  "materials": [
+    "Mat_Barrel_ToxicYellow",
+    "Mat_Biohazard_Black"
+  ]
+}

@@ -4,13 +4,26 @@ using System.Collections.Generic;
 namespace OutpostZero.Colony
 {
     /// <summary>
-    /// Four factions, a visit calendar, and prices that move with reputation.
+    /// The factions, a visit calendar, and prices that move with reputation.
     /// </summary>
     public static class CaravanBook
     {
-        public static readonly string[] Ids = { "caravan", "militia", "clinic", "farmers" };
+        /// <summary>The four factions the code tables and quests know. The first holds the legacy single standing.</summary>
+        public static readonly string[] BuiltInIds = { "caravan", "militia", "clinic", "farmers" };
+
+        /// <summary>Every faction in play: the built-in four, then any the faction book adds.</summary>
+        public static string[] Ids => FactionTable.Roster;
+
+        public static bool IsBuiltIn(string id) => Array.IndexOf(BuiltInIds, id) >= 0;
+        public const int Trusted = 30;
+        public const int HaggleCap = 10;
 
         public static string Display(string id)
+        {
+            return FactionTable.TryRow(id, out var row) && !string.IsNullOrEmpty(row.Label) ? row.Label : CodeDisplay(id);
+        }
+
+        public static string CodeDisplay(string id)
         {
             switch (id)
             {
@@ -23,27 +36,72 @@ namespace OutpostZero.Colony
 
         public static string[] Stock(string id)
         {
+            return FactionTable.TryRow(id, out var row) ? (string[])row.Stock.Clone() : CodeStock(id);
+        }
+
+        /// <summary>The loot table the stall rolls its daily shelf from.</summary>
+        public static string Table(string id)
+        {
+            if (FactionTable.TryRow(id, out var row) && !string.IsNullOrEmpty(row.LootTable)) return row.LootTable;
+            return StallShelf.CodeTable(id);
+        }
+
+        public static string[] CodeStock(string id)
+        {
             switch (id)
             {
-                case "militia": return new[] { "ammo_rifle", "ammo_shells" };
+                case "militia": return new[] { "ammo_rifle", "ammo_shells", "ammo_smg" };
                 case "clinic": return new[] { "medkit", "bandage" };
                 case "farmers": return new[] { "canned_food", "water" };
                 default: return new[] { "bandage", "ammo_9mm", "medkit" };
             }
         }
 
+        /// <summary>What a faction adds to its table once the camp is trusted.</summary>
+        public static string Premium(string id)
+        {
+            return FactionTable.TryRow(id, out var row) ? row.Premium : CodePremium(id);
+        }
+
+        public static string CodePremium(string id)
+        {
+            switch (id)
+            {
+                case "militia": return "pipe_bomb";
+                case "clinic": return "antibiotics";
+                case "farmers": return "raw_food";
+                default: return "flare";
+            }
+        }
+
+        public static string[] Stock(string id, int standing)
+        {
+            string[] table = Stock(id);
+            string premium = Premium(id);
+            if (standing < Trusted || string.IsNullOrEmpty(premium)) return table;
+            var list = new List<string>(table) { premium };
+            return list.ToArray();
+        }
+
         public static int BasePrice(string itemId)
         {
             switch (itemId)
             {
+                case "antibiotics": return 16;
+                case "pipe_bomb": return 12;
+                case "flare": return 8;
+                case "raw_food": return 3;
                 case "medkit": return 14;
                 case "ammo_rifle": return 9;
+                case "ammo_smg": return 7;
                 case "ammo_shells": return 8;
                 case "ammo_9mm": return 5;
                 case "water": return 6;
                 case "canned_food": return 5;
                 case "bandage": return 4;
-                default: return 6;
+                default:
+                    int value = CraftBill.Value(itemId);
+                    return value > 0 ? value : 6;
             }
         }
 
@@ -55,7 +113,77 @@ namespace OutpostZero.Colony
             return Math.Max(1, (int)Math.Round(BasePrice(itemId) * scale, MidpointRounding.AwayFromZero));
         }
 
-        public static bool Refuses(string id, int standing) => id == "militia" && standing < -20;
+        /// <summary>The leader haggles one percent off per point of Leadership, up to ten.</summary>
+        public static int Price(string itemId, int standing, int leadership)
+        {
+            int clamped = Math.Max(-100, Math.Min(100, standing));
+            float scale = 1f - (clamped / 100f) * 0.3f;
+            if (leadership > 0) scale *= 1f - Math.Min(leadership, HaggleCap) * 0.01f;
+            return Math.Max(1, (int)Math.Round(BasePrice(itemId) * scale, MidpointRounding.AwayFromZero));
+        }
+
+        /// <summary>
+        /// The price at one faction's table: its markup on top of standing and haggling, never at or
+        /// below the best buy-back, so nothing can be flipped for profit.
+        /// </summary>
+        public static int Price(string faction, string itemId, int standing, int leadership)
+        {
+            int clamped = Math.Max(-100, Math.Min(100, standing));
+            float scale = (1f - (clamped / 100f) * 0.3f) * (Markup(faction) / 100f);
+            if (leadership > 0) scale *= 1f - Math.Min(leadership, HaggleCap) * 0.01f;
+            int price = (int)Math.Round(BasePrice(itemId) * scale, MidpointRounding.AwayFromZero);
+            return Math.Max(Offer(itemId, 100) + 1, price);
+        }
+
+        public const int MarkupFloor = 90;
+        public const int MarkupCeiling = 150;
+
+        /// <summary>Percent of the base price a faction asks before standing and haggling.</summary>
+        public static int Markup(string id)
+        {
+            return FactionTable.TryRow(id, out var row) ? row.Markup : CodeMarkup(id);
+        }
+
+        public static int CodeMarkup(string id)
+        {
+            switch (id)
+            {
+                case "militia": return 120;
+                case "clinic": return 110;
+                case "farmers": return 90;
+                default: return 100;
+            }
+        }
+
+        /// <summary>Buy-back pays half the base price, a little more for a trusted camp.</summary>
+        public static int Offer(string itemId, int standing)
+        {
+            int clamped = Math.Max(-100, Math.Min(100, standing));
+            float scale = 1f + (clamped / 100f) * 0.1f;
+            return Math.Max(1, (int)Math.Round(BasePrice(itemId) * 0.5f * scale, MidpointRounding.AwayFromZero));
+        }
+
+        public static bool Sellable(string itemId)
+        {
+            if (string.IsNullOrEmpty(itemId) || itemId == "scrap" || itemId.StartsWith("print_", StringComparison.Ordinal)) return false;
+            for (int i = 0; i < Ids.Length; i++)
+            {
+                if (Premium(Ids[i]) == itemId || Array.IndexOf(Stock(Ids[i]), itemId) >= 0) return true;
+            }
+            return CraftBill.Value(itemId) > 0;
+        }
+
+        /// <summary>Standing below which a faction won't trade at all; below -100 means never.</summary>
+        public const int Never = -101;
+
+        public static bool Refuses(string id, int standing) => standing < RefuseBelow(id);
+
+        public static int RefuseBelow(string id)
+        {
+            return FactionTable.TryRow(id, out var row) ? row.RefuseBelow : CodeRefuseBelow(id);
+        }
+
+        public static int CodeRefuseBelow(string id) => id == "militia" ? -20 : Never;
 
         public static bool Ambush(int standing) => standing < -40;
 
@@ -123,15 +251,52 @@ namespace OutpostZero.Colony
         public static string Pack(int[] standing)
         {
             if (standing == null || standing.Length == 0) return "";
-            var parts = new string[Math.Min(Ids.Length, standing.Length)];
-            for (int i = 0; i < parts.Length; i++) parts[i] = Ids[i] + "=" + standing[i];
+            var ids = Ids;
+            var parts = new string[Math.Min(ids.Length, standing.Length)];
+            for (int i = 0; i < parts.Length; i++) parts[i] = ids[i] + "=" + standing[i];
             return string.Join(",", parts);
+        }
+
+        /// <summary>Standing that follows the roster: same values by position, zero for factions added since.</summary>
+        public static int[] Fit(int[] standing)
+        {
+            int size = Ids.Length;
+            if (standing != null && standing.Length == size) return standing;
+            var fitted = new int[size];
+            if (standing != null) Array.Copy(standing, fitted, Math.Min(size, standing.Length));
+            return fitted;
+        }
+
+        /// <summary>
+        /// The saved entries for factions the roster no longer has, kept as written so a save that meets a
+        /// smaller book and is saved again still holds their standing for when the faction returns.
+        /// </summary>
+        public static string Strays(string packed)
+        {
+            if (string.IsNullOrEmpty(packed)) return "";
+            var kept = new List<string>();
+            foreach (string part in packed.Split(','))
+            {
+                int cut = part.IndexOf('=');
+                if (cut <= 0) continue;
+                string id = part.Substring(0, cut);
+                if (IndexOf(id) >= 0 || !FactionTable.ValidId(id) || !int.TryParse(part.Substring(cut + 1), out _)) continue;
+                kept.Add(part);
+            }
+            return string.Join(",", kept);
+        }
+
+        public static string Pack(int[] standing, string strays)
+        {
+            string packed = Pack(standing);
+            if (string.IsNullOrEmpty(strays)) return packed;
+            return string.IsNullOrEmpty(packed) ? strays : packed + "," + strays;
         }
 
         public static void Unpack(string packed, int legacy, int[] standing)
         {
             if (standing == null || standing.Length < Ids.Length) return;
-            for (int i = 0; i < Ids.Length; i++) standing[i] = 0;
+            for (int i = 0; i < standing.Length; i++) standing[i] = 0;
             if (string.IsNullOrEmpty(packed))
             {
                 standing[0] = Math.Max(-100, Math.Min(100, legacy));

@@ -1,0 +1,35 @@
+{
+  "id": "Kit_wall_double_door",
+  "category": "Kit",
+  "generator": "generate_kit.build_piece",
+  "generatorHash": "7e6e24495f1d74033ee3aa9b6e03611340809fdd813131898c562e347615c14a",
+  "gitSha": "edff058f31a908ed7de64edaf527c44ea12a41ff",
+  "blender": "4.2.11",
+  "tags": [
+    "kit",
+    "building"
+  ],
+  "pivot": "authored",
+  "collider": "box",
+  "rig": "",
+  "lods": [
+    1.0
+  ],
+  "tris": 36,
+  "lodTris": [
+    36
+  ],
+  "size": {
+    "width": 2.0,
+    "depth": 0.2,
+    "height": 3.0
+  },
+  "floor": 0.0,
+  "center": {
+    "x": 1.0,
+    "y": 0.1
+  },
+  "materials": [
+    "Mat_concrete"
+  ]
+}

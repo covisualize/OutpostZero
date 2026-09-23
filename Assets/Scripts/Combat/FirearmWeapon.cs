@@ -14,6 +14,7 @@ namespace OutpostZero.Combat
         [SerializeField] private int reserveAmmo = 60;
         [SerializeField] private float reloadDuration = 1.8f;
         [SerializeField] private bool isReloading = false;
+        private bool abortReload;
 
         [Header("Shooting Properties")]
         [SerializeField] private Transform muzzlePoint;
@@ -31,6 +32,8 @@ namespace OutpostZero.Combat
 
         public int CurrentAmmo => currentAmmo;
         public int MaxMagazine => MagazineCapacity;
+
+        private int brassRound;
 
         private int MagazineCapacity
         {
@@ -51,6 +54,7 @@ namespace OutpostZero.Combat
         public event Action OnReloadCompleted;
 
         private float heat;
+        private int volley;
         private bool automatic;
         private bool useProjectile;
         private string cardId = "";
@@ -89,7 +93,17 @@ namespace OutpostZero.Combat
             automatic = WeaponCard.FiresAutomatic(weaponType, definition.automatic);
             useProjectile = WeaponCard.FiresProjectile(weaponType, definition.useProjectile);
             if (!string.IsNullOrEmpty(definition.id)) cardId = definition.id;
+            muzzleVfx = definition.muzzleVfx;
+            fireSfx = definition.fireSfx ?? "";
         }
+
+        private VfxEvent muzzleVfx = VfxEvent.None;
+        private string fireSfx = "";
+
+        public string FireSfx => fireSfx;
+
+        /// <summary>The flash this gun plays: its definition's, or the default for its type.</summary>
+        public VfxEvent MuzzleVfx => muzzleVfx != VfxEvent.None ? muzzleVfx : VfxBook.MuzzleFor(weaponType);
 
         public void SetFireMode(bool fullAuto, bool projectile)
         {
@@ -165,18 +179,28 @@ namespace OutpostZero.Combat
 
             // Fire projectiles
             heat = RecoilBloom.AfterShot(heat);
-            float spread = RecoilBloom.Spread(spreadAngle, SpreadMultiplier * FieldHand.Spread(SurvivorRoster.LeaderPractice("Guard")), heat);
+            volley++;
+            brassRound++;
+            bool showTracer = BrassCue.Tracer(weaponType, brassRound);
+            int guard = SurvivorRoster.LeaderPractice("Guard");
+            float spread = RecoilBloom.Spread(spreadAngle, SpreadMultiplier * FieldHand.Spread(guard) * HandDepth.Spread(guard) * TraitHook.Aim(SurvivorRoster.LeaderTrait(), SurvivorRoster.LeaderAside(), SurvivorRoster.LeaderMark()), heat);
+            var sights = ownerGameObject != null ? ownerGameObject.GetComponent<OutpostZero.Player.PlayerController>() : null;
+            spread = SightGroup.Angle(spread, sights != null && sights.IsAimingDownSights);
+            int wound = SurvivorRoster.Instance != null && SurvivorRoster.Instance.Leader != null
+                ? SurvivorRoster.Instance.Leader.injury
+                : 0;
+            spread = OutpostZero.Player.WoundSway.Angle(spread, wound);
             for (int i = 0; i < projectilesPerShot; i++)
             {
                 Vector3 shootDir = ApplySpread(targetDirection, spread);
-                FireSingleProjectile(shootDir);
+                FireSingleProjectile(shootDir, showTracer);
             }
 
             TriggerAttackEvent();
             return true;
         }
 
-        private void FireSingleProjectile(Vector3 direction)
+        private void FireSingleProjectile(Vector3 direction, bool tracer)
         {
             Vector3 spawnPos = muzzlePoint != null ? muzzlePoint.position : transform.position;
 
@@ -185,21 +209,35 @@ namespace OutpostZero.Combat
                 GameObject projObj = bulletPrefab != null
                     ? Instantiate(bulletPrefab, spawnPos, Quaternion.LookRotation(direction))
                     : CreateBullet(spawnPos, direction);
-                var bullet = projObj.GetComponent<BulletProjectile>() ?? projObj.AddComponent<BulletProjectile>();
-                bullet.Setup(direction, ModifiedDamage, ownerGameObject, hitMask, weaponType);
+                var bullet = Attach.Ensure<BulletProjectile>(projObj);
+                bullet.Setup(direction, ModifiedDamage, ownerGameObject, hitMask, weaponType, range, volley);
                 Vector3 eject = muzzlePoint != null ? muzzlePoint.right : transform.right;
-                CombatVfx.Shot(spawnPos, direction, spawnPos + direction * Mathf.Min(range, 8f), eject);
+                CombatVfx.Shot(spawnPos, direction, spawnPos + direction * Mathf.Min(range, 8f), eject, tracer, weaponType, MuzzleVfx);
             }
             else
             {
                 Vector3 end = spawnPos + direction * range;
-                if (Physics.Raycast(spawnPos, direction, out RaycastHit hit, range, hitMask, QueryTriggerInteraction.Ignore))
+                OutpostZero.AI.ZombieAI struck = null;
+                bool solid = Physics.Raycast(spawnPos, direction, out RaycastHit hit, range, hitMask, QueryTriggerInteraction.Ignore);
+                bool doorCast = Physics.Raycast(spawnPos, direction, out RaycastHit slab, range, GameLayers.InteractableMask, QueryTriggerInteraction.Ignore);
+                var door = doorCast && slab.collider != null ? slab.collider.GetComponent<OutpostZero.Expedition.StreetDoor>() : null;
+                if (door != null && door.Barred && (!solid || slab.distance < hit.distance))
+                {
+                    end = slab.point;
+                    door.Shoot(ownerGameObject, weaponType, volley);
+                }
+                else if (solid)
                 {
                     end = hit.point;
-                    DamageResolver.Resolve(hit, ModifiedDamage, ownerGameObject, true, weaponType);
+                    CombatEvents.NoteDir(direction);
+                    float amount = PelletDrop.Damage(ModifiedDamage, hit.distance, range, weaponType);
+                    DamageResolver.Resolve(hit, amount, ownerGameObject, true, weaponType);
+                    struck = hit.collider != null ? hit.collider.GetComponentInParent<OutpostZero.AI.ZombieAI>() : null;
                 }
                 Vector3 eject = muzzlePoint != null ? muzzlePoint.right : transform.right;
-                CombatVfx.Shot(spawnPos, direction, end, eject);
+                CombatVfx.Shot(spawnPos, direction, end, eject, tracer, weaponType, MuzzleVfx);
+                OilPatch.Shot(spawnPos, end);
+                OutpostZero.AI.ZombieAI.WhiffNear(spawnPos.x, spawnPos.z, end.x, end.z, struck);
             }
         }
 
@@ -235,11 +273,37 @@ namespace OutpostZero.Combat
             StartCoroutine(ReloadRoutine());
         }
 
+        public float ReloadSeconds => isReloading && reloadWait > 0f ? reloadWait : reloadDuration;
+
+        /// <summary>The reload clip's end event: finishes the reload when the timer is nearly done, so the rounds land with the animation.</summary>
+        public bool FinishFromAnimation()
+        {
+            if (!isReloading || reloadWait <= 0f) return false;
+            if (!OutpostZero.Player.AimRig.AcceptReloadEvent(reloadElapsed / reloadWait)) return false;
+            reloadElapsed = reloadWait;
+            return true;
+        }
+
+        public bool TryAbortReload(bool sprinting, bool hit)
+        {
+            if (!isReloading) return false;
+            float fill = reloadWait > 0.001f ? reloadElapsed / reloadWait : 0f;
+            if (!ReloadBreak.Abort(sprinting, hit, fill)) return false;
+            abortReload = true;
+            return true;
+        }
+
         private IEnumerator ReloadRoutine()
         {
             isReloading = true;
             reloadElapsed = 0f;
-            reloadWait = reloadDuration * FieldHand.Reload(SurvivorRoster.LeaderPractice("Guard"));
+            int guardSkill = SurvivorRoster.LeaderPractice("Guard");
+            int wound = SurvivorRoster.Instance != null && SurvivorRoster.Instance.Leader != null
+                ? SurvivorRoster.Instance.Leader.injury
+                : 0;
+            reloadWait = OutpostZero.Player.WoundRack.Reload(reloadDuration, guardSkill, wound);
+            string slow = OutpostZero.Player.WoundRack.Line(wound, null);
+            if (slow.Length > 0) GameplayFeedback.Toast(slow);
             OnReloadStarted?.Invoke();
             PlaySound(reloadSound);
             int stage = 0;
@@ -249,6 +313,14 @@ namespace OutpostZero.Combat
 
             while (reloadElapsed < reloadWait)
             {
+                if (abortReload)
+                {
+                    abortReload = false;
+                    isReloading = false;
+                    reloadElapsed = 0f;
+                    Cue("clack");
+                    yield break;
+                }
                 reloadElapsed += Time.deltaTime;
                 string beat = GunCue.Stage(MagPulse.Fill(reloadElapsed, reloadWait), stage);
                 if (beat.Length > 0)
@@ -269,6 +341,14 @@ namespace OutpostZero.Combat
 
             OnAmmoChanged?.Invoke(currentAmmo, reserveAmmo);
             OnReloadCompleted?.Invoke();
+        }
+
+        public void SetAmmo(int magazine, int reserve)
+        {
+            isReloading = false;
+            currentAmmo = Mathf.Clamp(magazine, 0, MagazineCapacity);
+            reserveAmmo = Mathf.Max(0, reserve);
+            OnAmmoChanged?.Invoke(currentAmmo, reserveAmmo);
         }
 
         public void AddReserveAmmo(int amount)

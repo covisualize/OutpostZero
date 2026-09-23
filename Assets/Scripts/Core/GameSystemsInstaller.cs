@@ -24,9 +24,12 @@ namespace OutpostZero.Core
             var host = Object.FindFirstObjectByType<GameManager>();
             if (host == null) return;
 
+            ItemDatabase.Ensure();
+            VfxPool.Prewarm();
             Add<SettingsService>(host.gameObject);
             Add<AudioManager>(host.gameObject);
             Add<SaveSystem>(host.gameObject);
+            Add<StreetRun>(host.gameObject);
             Add<RunArchive>(host.gameObject);
             Add<SurvivorRoster>(host.gameObject);
             Add<WorldClock>(host.gameObject);
@@ -46,10 +49,13 @@ namespace OutpostZero.Core
             Add<TutorialDirector>(host.gameObject);
             Add<CodexDirector>(host.gameObject);
             Add<OutpostZero.UI.SceneFlow>(host.gameObject);
+            Add<DevPanel>(host.gameObject);
             Add<CampServices>(host.gameObject);
+            Add<CampEventDirector>(host.gameObject);
             Add<CampPopulation>(host.gameObject);
             Add<DistrictDressing>(host.gameObject);
             StreetDetail.RaiseHome();
+            MapRim.Raise();
 
             foreach (var root in scene.GetRootGameObjects())
             {
@@ -66,7 +72,9 @@ namespace OutpostZero.Core
                 Add<ImpactDecalPool>(camera.gameObject);
                 Add<GameShellUI>(camera.gameObject);
                 Add<OutpostInterface>(camera.gameObject);
+                Add<HudController>(camera.gameObject);
                 Add<ExpeditionCameraRig>(camera.gameObject);
+                Add<MenuBackdrop>(camera.gameObject);
             }
 
             ExtractionZone.Create(new Vector3(-5.5f, 0.5f, -10f));
@@ -122,6 +130,7 @@ namespace OutpostZero.Core
             definition.useProjectile = true;
             definition.modelPath = ModelPaths.AssaultRifle;
             rifle.Configure(definition);
+            OutpostZero.Combat.HeldModel.Mount(rifleObject.transform, WeaponSet.Find(definition.id, WeaponType.Rifle));
             player.AddWeapon(rifle);
         }
 
@@ -143,12 +152,22 @@ namespace OutpostZero.Core
                 if (name.Contains("Toxic")) hazard.Configure(HazardKind.Toxic);
                 else if (name.Contains("Oil")) hazard.Configure(HazardKind.Oil);
                 else hazard.Configure(HazardKind.Explosive);
+                hazard.Stamp(StreetLedger.Mark(name, go.transform.position.x, go.transform.position.z));
             }
+
+            if (name.Contains("Dumpster") && go.GetComponent<FlyMark>() == null)
+                go.AddComponent<FlyMark>();
+
+            if (name.StartsWith("Building_")) WallSeal.Seal(go);
+            if (name.Contains("StreetLamp")) SodiumLamp.Raise(go);
+            if (name.Contains("Generator")) YardFlood.Raise(go);
+            if (name.Contains("Sedan") || name.Contains("Truck") || name.Contains("Vehicle")) HazardBlink.Raise(go);
 
             if ((name.Contains("Crate") || name.Contains("Dumpster")) && go.GetComponent<LootContainer>() == null)
             {
                 var container = go.AddComponent<LootContainer>();
                 container.Configure(name.Contains("Mil") ? "military" : "crate");
+                container.Stamp(StreetLedger.Mark(name, go.transform.position.x, go.transform.position.z));
                 if (go.GetComponent<Collider>() == null)
                 {
                     var box = go.AddComponent<BoxCollider>();
@@ -181,6 +200,7 @@ namespace OutpostZero.Core
             else if (name.Contains("Merchant"))
             {
                 CharacterVariety.Ensure(go).Bind("merchant", false);
+                Add<StallKeeper>(go);
             }
             else if (name.Contains("Colonist"))
             {

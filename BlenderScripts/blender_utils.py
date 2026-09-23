@@ -1,7 +1,80 @@
 import bpy
+import datetime
+import hashlib
 import os
 import math
 import mathutils
+
+FIXED_EXPORT_TIME = datetime.datetime(2026, 1, 1, 0, 0, 0)
+EXPORTS = []
+
+
+class _PinnedClock(datetime.datetime):
+    @classmethod
+    def now(cls, tz=None):
+        return FIXED_EXPORT_TIME
+
+
+class _PinnedDatetime:
+    datetime = _PinnedClock
+
+
+def _stable_hash(key):
+    digest = hashlib.sha1(repr(key).encode("utf-8")).digest()
+    return int.from_bytes(digest[:8], "little") & (2 ** 63 - 1)
+
+
+def pin_fbx_exporter():
+    """Make FBX bytes depend only on the scene: a fixed header time and object ids
+    hashed from their keys instead of Python's per-process string hash."""
+    from io_scene_fbx import export_fbx_bin, fbx_utils
+
+    export_fbx_bin.datetime = _PinnedDatetime
+    fbx_utils.hash = _stable_hash
+    fbx_utils._keys_to_uuids.clear()
+    fbx_utils._uuids_to_keys.clear()
+
+
+def scene_stats():
+    """Triangles, size in metres, floor height, and materials of every mesh in the scene."""
+    tris = 0
+    materials = set()
+    lows = [float("inf")] * 3
+    highs = [float("-inf")] * 3
+    # bound_box follows the armature's current action frame; size and floor describe the bind pose.
+    posed = [obj for obj in bpy.context.scene.objects if obj.type == 'ARMATURE' and obj.data.pose_position != 'REST']
+    for armature in posed:
+        armature.data.pose_position = 'REST'
+    bpy.context.view_layer.update()
+    for obj in bpy.context.scene.objects:
+        if obj.type != 'MESH':
+            continue
+        mesh = obj.data
+        mesh.calc_loop_triangles()
+        tris += len(mesh.loop_triangles)
+        for slot in obj.material_slots:
+            if slot.material is not None:
+                materials.add(slot.material.name)
+        for corner in obj.bound_box:
+            point = obj.matrix_world @ mathutils.Vector(corner)
+            for axis in range(3):
+                lows[axis] = min(lows[axis], point[axis])
+                highs[axis] = max(highs[axis], point[axis])
+    for armature in posed:
+        armature.data.pose_position = 'POSE'
+    bpy.context.view_layer.update()
+    if tris == 0:
+        lows = highs = [0.0, 0.0, 0.0]
+    return {
+        "tris": tris,
+        "width": round(highs[0] - lows[0], 4),
+        "depth": round(highs[1] - lows[1], 4),
+        "height": round(highs[2] - lows[2], 4),
+        "floor": round(lows[2], 4),
+        "centerX": round((highs[0] + lows[0]) * 0.5, 4),
+        "centerY": round((highs[1] + lows[1]) * 0.5, 4),
+        "materials": sorted(materials),
+    }
 
 def reset_scene():
     """Wipes all objects, meshes, and materials in the current blend context."""
@@ -109,10 +182,29 @@ def create_sphere(name, location, radius, segments=16, rings=12, material=None):
     )
     obj = bpy.context.active_object
     obj.name = name
+    canonical_faces(obj)
     bpy.ops.object.shade_smooth()
     if material is not None:
         assign_material(obj, material)
     return obj
+
+def canonical_faces(obj):
+    """Blender's UV sphere comes out with its faces in a different order each run, which
+    reshuffles the unwrap and the FBX bytes. Rebuild it with faces in a fixed order."""
+    mesh = obj.data
+    verts = [v.co.copy() for v in mesh.vertices]
+    faces = []
+    for poly in mesh.polygons:
+        ring = list(poly.vertices)
+        start = ring.index(min(ring))
+        faces.append((tuple(ring[start:] + ring[:start]), poly.material_index))
+    faces.sort(key=lambda face: face[0])
+    mesh.clear_geometry()
+    mesh.from_pydata(verts, [], [face[0] for face in faces])
+    for poly, (_ring, material_index) in zip(mesh.polygons, faces):
+        poly.material_index = material_index
+    mesh.update()
+
 
 def join_objects(obj_list, final_name):
     """Joins a list of mesh objects into one single object with all material slots intact."""
@@ -219,13 +311,19 @@ def _key_clips(arm_obj, clips):
     bpy.ops.object.mode_set(mode='OBJECT')
 
 
-def export_fbx(output_filepath, animated=False):
+def export_fbx(output_filepath, animated=False, texture_size=None, unwrap=True):
     """Exports the scene to an FBX file configured for Unity's coordinate system."""
     os.makedirs(os.path.dirname(output_filepath), exist_ok=True)
     for obj in list(bpy.context.scene.objects):
-        if obj.type == 'MESH' and not animated:
+        if obj.type == 'MESH' and not animated and unwrap:
             unwrap_mesh(obj)
+    import vertex_ao
+    for obj in list(bpy.context.scene.objects):
+        if obj.type == 'MESH':
+            vertex_ao.bake(obj)
     bpy.ops.object.select_all(action='SELECT')
+    stats = scene_stats()
+    pin_fbx_exporter()
     bpy.ops.export_scene.fbx(
         filepath=output_filepath,
         use_selection=False,
@@ -241,7 +339,13 @@ def export_fbx(output_filepath, animated=False):
         bake_anim_use_all_actions=animated,
         bake_anim_use_nla_strips=False,
         bake_anim_simplify_factor=0.0,
+        colors_type='SRGB',
     )
-    from texture_set import write_set
-    write_set(output_filepath)
+    from texture_set import SIZE, model_meta_text, write_set
+    write_set(output_filepath, texture_size or SIZE)
+    if not os.path.isfile(output_filepath + ".meta"):
+        with open(output_filepath + ".meta", "w", encoding="utf-8", newline="\n") as handle:
+            handle.write(model_meta_text(output_filepath))
+    stats["path"] = output_filepath
+    EXPORTS.append(stats)
     print(f"[Blender] Successfully exported: {output_filepath}")

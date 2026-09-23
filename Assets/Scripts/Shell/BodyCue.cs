@@ -40,7 +40,7 @@ namespace OutpostZero.Shell
         {
             if (gap <= 0f) return false;
             if (last <= 0f) return true;
-            return now - last >= gap;
+            return OutpostZero.Core.Tick.Past(now, last, gap);
         }
     }
 }

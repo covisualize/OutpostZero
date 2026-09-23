@@ -1,0 +1,35 @@
+{
+  "id": "Kit_chair",
+  "category": "Kit",
+  "generator": "generate_kit.build_piece",
+  "generatorHash": "eb07a868dbd95aa67fbec3f09d6325a78028ce9b502a6d1de87bebdde835e4bc",
+  "gitSha": "edff058f31a908ed7de64edaf527c44ea12a41ff",
+  "blender": "4.2.11",
+  "tags": [
+    "kit",
+    "interior"
+  ],
+  "pivot": "authored",
+  "collider": "box",
+  "rig": "",
+  "lods": [
+    1.0
+  ],
+  "tris": 12,
+  "lodTris": [
+    12
+  ],
+  "size": {
+    "width": 0.5,
+    "depth": 0.5,
+    "height": 0.9
+  },
+  "floor": 0.0,
+  "center": {
+    "x": 0.25,
+    "y": 0.25
+  },
+  "materials": [
+    "Mat_wood"
+  ]
+}

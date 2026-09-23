@@ -43,9 +43,12 @@ namespace OutpostZero.Expedition
             RaiseBlocks(blocks);
             RaiseGraph(districtId, seed);
             ObjectiveTracker.Instance?.ExpectPoi(blocks.PoiRole);
-            ExtractionZone.MoveTo(new Vector3(blocks.ExtractX, 0.5f, blocks.ExtractZ));
+            ExpeditionBook.Ensure();
+            if (StreetTerms.Extraction(districtId, seed, out float gateX, out float gateZ)) ExtractionZone.MoveTo(new Vector3(gateX, 0.5f, gateZ));
+            else ExtractionZone.MoveTo(new Vector3(blocks.ExtractX, 0.5f, blocks.ExtractZ));
             RaiseRescue(districtId, blocks);
             RaiseArmory(districtId);
+            RaiseSmg(districtId);
             KitStructure.Raise(districtId, root);
             RaiseCaravan();
             StreetDetail.RaiseStreet(districtId, root);
@@ -64,7 +67,7 @@ namespace OutpostZero.Expedition
                 wall.transform.position = new Vector3(walls[i].X, 1.3f, walls[i].Z);
                 wall.transform.localScale = new Vector3(1.85f, 2.6f, 1.95f);
                 wall.layer = GameLayers.Environment;
-                Paint(wall.GetComponent<Renderer>(), tint);
+                Paint(wall.GetComponent<Renderer>(), tint, OutpostZero.Graphics.SurfaceFamily.BrickRed);
             }
 
             var room = GameObject.CreatePrimitive(PrimitiveType.Cube);
@@ -74,25 +77,39 @@ namespace OutpostZero.Expedition
             room.transform.localScale = new Vector3(1.1f, 1.3f, 1.1f);
             room.layer = GameLayers.Interactable;
             Paint(room.GetComponent<Renderer>(), plan.PoiRole == "radio" ? new Color(0.72f, 0.58f, 0.22f) : new Color(0.45f, 0.5f, 0.42f));
-            room.AddComponent<DistrictPoi>().Configure(plan.PoiRole);
+            var poi = room.AddComponent<DistrictPoi>();
+            poi.Configure(plan.PoiRole);
+            poi.Hold(ObjectiveTracker.Instance != null ? ObjectiveTracker.Instance.RoomItem() : "");
+            string poiMark = StreetLedger.Mark("poi", plan.PoiX, plan.PoiZ);
+            poi.Stamp(poiMark);
+            ObjectiveTracker.Instance?.MarkSpot("poi", room.transform.position);
+            if (WorldMapService.Instance != null && WorldMapService.Instance.StreetTaken(poiMark))
+            {
+                poi.Recall();
+                ObjectiveTracker.Instance?.Waive(ObjectiveKind.Retrieve, "poi");
+                if (!string.IsNullOrEmpty(poi.Grant)) ObjectiveTracker.Instance?.Waive(ObjectiveKind.Retrieve, poi.Grant);
+            }
 
             var nest = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
             nest.name = "DistrictNest";
             nest.transform.SetParent(root, false);
             nest.transform.position = new Vector3(plan.NestX, 0.15f, plan.NestZ);
+            ObjectiveTracker.Instance?.MarkSpot("nest", nest.transform.position);
             nest.transform.localScale = new Vector3(1.2f, 0.08f, 1.2f);
             var nestCollider = nest.GetComponent<Collider>();
             if (nestCollider != null) Destroy(nestCollider);
-            Paint(nest.GetComponent<Renderer>(), new Color(0.25f, 0.12f, 0.1f));
+            Paint(nest.GetComponent<Renderer>(), new Color(0.25f, 0.12f, 0.1f), OutpostZero.Graphics.SurfaceFamily.RotFlesh);
 
             var exit = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
             exit.name = "DistrictExtract";
             exit.transform.SetParent(root, false);
             exit.transform.position = new Vector3(plan.ExtractX, 0.08f, plan.ExtractZ);
+            ObjectiveTracker.Instance?.MarkSpot("extract", exit.transform.position);
             exit.transform.localScale = new Vector3(2.4f, 0.04f, 2.4f);
             var exitCollider = exit.GetComponent<Collider>();
             if (exitCollider != null) Destroy(exitCollider);
             Paint(exit.GetComponent<Renderer>(), new Color(0.25f, 0.75f, 0.45f));
+            ProbeField.Place(root, DistrictBlocks.Open(plan));
             RaiseRoom(plan);
         }
 
@@ -102,19 +119,27 @@ namespace OutpostZero.Expedition
             var cells = map.Cells;
             if (cells == null) return;
             var tint = BlockTint(map.Footprint);
+            foreach (var block in RoadGraph.Blocks(map))
+            {
+                var corner = new Vector3(block.X - KitPlan.LotTile * 0.5f, 0f, block.Z - KitPlan.LotTile * 0.5f);
+                var house = KitPlan.Building(seed, block.X, block.Z, block.Cols, block.Rows, map.Footprint, block.Front);
+                if (KitStructure.RaiseLot(house, corner, root, KitPlan.Variant(districtId), "RoadLot")) continue;
+                float wide = KitPlan.Tiles(block.Cols) * KitPlan.LotTile;
+                float deep = KitPlan.Tiles(block.Rows) * KitPlan.LotTile;
+                var shell = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                shell.name = "RoadLot";
+                shell.transform.SetParent(root, false);
+                shell.transform.position = corner + new Vector3(wide * 0.5f, 1.1f, deep * 0.5f);
+                shell.transform.localScale = new Vector3(wide + 0.4f, 2.2f, deep);
+                shell.layer = GameLayers.Environment;
+                Paint(shell.GetComponent<Renderer>(), tint, OutpostZero.Graphics.SurfaceFamily.BrickRed);
+            }
             for (int i = 0; i < cells.Length; i++)
             {
                 var cell = cells[i];
                 if (cell.Kind == "hole") continue;
                 if (cell.Kind == "lot")
                 {
-                    var shell = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                    shell.name = "RoadLot";
-                    shell.transform.SetParent(root, false);
-                    shell.transform.position = new Vector3(cell.X, 1.1f, cell.Z);
-                    shell.transform.localScale = new Vector3(2.5f, 2.2f, 2.5f);
-                    shell.layer = GameLayers.Environment;
-                    Paint(shell.GetComponent<Renderer>(), tint);
                     if (map.HasLoot && Close(cell.X, map.LootX) && Close(cell.Z, map.LootZ))
                     {
                         var crate = GameObject.CreatePrimitive(PrimitiveType.Cube);
@@ -126,7 +151,7 @@ namespace OutpostZero.Expedition
                         Paint(crate.GetComponent<Renderer>(), new Color(0.42f, 0.36f, 0.24f));
                         string table = map.Footprint == "clinic" || map.Footprint == "hospital" ? "medical"
                             : map.Footprint == "warehouse" || map.Footprint == "station" ? "military" : "crate";
-                        crate.AddComponent<LootContainer>().Configure(table);
+                        Keep(crate.AddComponent<LootContainer>(), table, StreetLedger.Mark("road", cell.X, cell.Z));
                     }
                     continue;
                 }
@@ -162,10 +187,11 @@ namespace OutpostZero.Expedition
             nest.name = "EastNest";
             nest.transform.SetParent(root, false);
             nest.transform.position = new Vector3(map.NestX, 0.08f, map.NestZ);
+            ObjectiveTracker.Instance?.MarkSpot("nest", nest.transform.position);
             nest.transform.localScale = new Vector3(1.4f, 0.05f, 1.4f);
             var nestCollider = nest.GetComponent<Collider>();
             if (nestCollider != null) Destroy(nestCollider);
-            Paint(nest.GetComponent<Renderer>(), new Color(0.28f, 0.1f, 0.08f));
+            Paint(nest.GetComponent<Renderer>(), new Color(0.28f, 0.1f, 0.08f), OutpostZero.Graphics.SurfaceFamily.RotFlesh);
         }
 
         private void RaiseEdges(RoadGraph.Edge[] edges)
@@ -210,6 +236,29 @@ namespace OutpostZero.Expedition
             Paint(body.GetComponent<Renderer>(), color);
         }
 
+        private void Scar(float x, float z)
+        {
+            var scar = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            scar.name = "BarrelScar";
+            scar.transform.SetParent(root, false);
+            scar.transform.position = new Vector3(x, 0.02f, z);
+            scar.transform.localScale = new Vector3(1.15f, 0.02f, 1.15f);
+            var collider = scar.GetComponent<Collider>();
+            if (collider != null) Destroy(collider);
+            Paint(scar.GetComponent<Renderer>(), new Color(0.08f, 0.06f, 0.05f));
+        }
+
+        private static void Keep(LootContainer box, string table, string mark)
+        {
+            box.Configure(table);
+            box.Stamp(mark);
+            if (WorldMapService.Instance == null) return;
+            string left = WorldMapService.Instance.StreetLeft(mark);
+            if (left == null) return;
+            if (left.Length == 0) box.MarkEmpty();
+            else box.Restore(left);
+        }
+
         private static bool Close(float a, float b)
         {
             float d = a - b;
@@ -230,7 +279,7 @@ namespace OutpostZero.Expedition
             slab.transform.localScale = new Vector3(0.18f, 2.2f, 1.05f);
             slab.layer = GameLayers.Interactable;
             Paint(slab.GetComponent<Renderer>(), new Color(0.35f, 0.24f, 0.16f));
-            slab.AddComponent<StreetDoor>().Configure(new Vector3(insideX, 0.05f, insideZ), false);
+            slab.AddComponent<StreetDoor>().Configure(new Vector3(insideX, 0.05f, insideZ), false, true);
 
             var floor = GameObject.CreatePrimitive(PrimitiveType.Cube);
             floor.name = "RoomFloor";
@@ -263,7 +312,7 @@ namespace OutpostZero.Expedition
             crate.transform.localScale = new Vector3(0.8f, 0.7f, 0.8f);
             crate.layer = GameLayers.Interactable;
             Paint(crate.GetComponent<Renderer>(), new Color(0.42f, 0.36f, 0.24f));
-            crate.AddComponent<LootContainer>().Configure(plan.Footprint == "clinic" || plan.PoiRole == "radio" ? "medical" : "crate");
+            Keep(crate.AddComponent<LootContainer>(), plan.Footprint == "clinic" || plan.PoiRole == "radio" ? "medical" : "crate", StreetLedger.Mark("room", insideX + 1.6f, insideZ + 1.2f));
 
             var lamp = new GameObject("RoomLamp");
             lamp.transform.SetParent(root, false);
@@ -305,8 +354,12 @@ namespace OutpostZero.Expedition
         private void RaiseRescue(string districtId, DistrictBlocks.Plan plan)
         {
             var offer = RescueBook.For(districtId);
-            if (string.IsNullOrEmpty(offer.Id)) return;
-            if (SurvivorRoster.Instance != null && SurvivorRoster.Instance.Has(offer.Id)) return;
+            bool waiting = !string.IsNullOrEmpty(offer.Id) && (SurvivorRoster.Instance == null || !SurvivorRoster.Instance.Has(offer.Id));
+            if (!waiting)
+            {
+                ObjectiveTracker.Instance?.Waive(ObjectiveKind.Rescue, "");
+                return;
+            }
 
             var person = GameObject.CreatePrimitive(PrimitiveType.Capsule);
             person.name = "Rescue_" + offer.Id;
@@ -329,6 +382,18 @@ namespace OutpostZero.Expedition
             gun.AddComponent<GroundWeapon>().Configure("rifle_assault", 12, 30);
         }
 
+        private void RaiseSmg(string districtId)
+        {
+            if (districtId != "mall") return;
+            var gun = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            gun.name = "GroundSmg";
+            gun.transform.SetParent(root, false);
+            gun.transform.position = new Vector3(6f, 0.22f, 8f);
+            gun.transform.localScale = new Vector3(0.46f, 0.1f, 0.16f);
+            gun.layer = GameLayers.Interactable;
+            gun.AddComponent<GroundWeapon>().Configure("smg", 18, 25);
+        }
+
         private static Color BlockTint(string footprint)
         {
             if (footprint == "clinic" || footprint == "hospital") return new Color(0.62f, 0.58f, 0.5f);
@@ -337,9 +402,17 @@ namespace OutpostZero.Expedition
             return new Color(0.45f, 0.28f, 0.22f);
         }
 
+        private static void Paint(Renderer renderer, Color color, OutpostZero.Graphics.SurfaceFamily family)
+        {
+            if (renderer == null) return;
+            if (OutpostZero.Graphics.MaterialLibrary.Dress(renderer, family, OutpostZero.Graphics.MaterialLibrary.TintFor(color))) return;
+            Paint(renderer, color);
+        }
+
         private static void Paint(Renderer renderer, Color color)
         {
             if (renderer == null) return;
+            if (OutpostZero.Graphics.MaterialLibrary.DressByName(renderer, color)) return;
             var block = new MaterialPropertyBlock();
             renderer.GetPropertyBlock(block);
             block.SetColor("_BaseColor", color);
@@ -360,10 +433,24 @@ namespace OutpostZero.Expedition
             stall.transform.localScale = new Vector3(1.8f, 1.2f, 0.8f);
             stall.layer = GameLayers.Interactable;
             var stallRenderer = stall.GetComponent<Renderer>();
-            if (stallRenderer != null) stallRenderer.material.color = new Color(0.55f, 0.32f, 0.22f);
+            Paint(stallRenderer, new Color(0.55f, 0.32f, 0.22f));
             stall.AddComponent<CampStation>().Configure(StationKind.Merchant);
             RaiseGuard(new Vector3(6.6f, 0.95f, 3.2f));
             RaiseGuard(new Vector3(9.4f, 0.95f, 3.2f));
+            var board = ObjectiveTracker.Instance != null ? ObjectiveTracker.Instance.Board : null;
+            if (board != null && board.Wants(ObjectiveKind.Escort)) RaisePorter(new Vector3(8f, 0.95f, 2.6f));
+        }
+
+        private void RaisePorter(Vector3 position)
+        {
+            var porter = GameObject.CreatePrimitive(PrimitiveType.Capsule);
+            porter.name = "CaravanPorter";
+            porter.transform.SetParent(root, false);
+            porter.transform.position = position;
+            porter.transform.localScale = new Vector3(0.5f, 0.9f, 0.5f);
+            porter.layer = GameLayers.Interactable;
+            Paint(porter.GetComponent<Renderer>(), new Color(0.6f, 0.48f, 0.3f));
+            porter.AddComponent<CaravanPorter>();
         }
 
         private void RaiseGuard(Vector3 position)
@@ -375,7 +462,7 @@ namespace OutpostZero.Expedition
             guard.transform.localScale = new Vector3(0.5f, 0.9f, 0.5f);
             guard.layer = GameLayers.Environment;
             var renderer = guard.GetComponent<Renderer>();
-            if (renderer != null) renderer.material.color = new Color(0.28f, 0.32f, 0.28f);
+            Paint(renderer, new Color(0.28f, 0.32f, 0.28f));
         }
 
         private void Spawn(DistrictLayout.Piece piece)
@@ -389,20 +476,28 @@ namespace OutpostZero.Expedition
             body.transform.localScale = Scale(piece.Role);
             body.layer = GameLayers.Environment;
             var renderer = body.GetComponent<Renderer>();
-            if (renderer != null) renderer.material.color = ColorFor(piece.Role);
+            Paint(renderer, ColorFor(piece.Role));
 
             if (barrel)
             {
+                string mark = StreetLedger.Mark(piece.Role, piece.X, piece.Z);
+                if (WorldMapService.Instance != null && WorldMapService.Instance.StreetTaken(mark))
+                {
+                    Scar(piece.X, piece.Z);
+                    Destroy(body);
+                    return;
+                }
                 var hazard = body.AddComponent<DestructibleHazard>();
                 if (piece.Role.Contains("toxic")) hazard.Configure(HazardKind.Toxic);
                 else if (piece.Role.Contains("oil")) hazard.Configure(HazardKind.Oil);
                 else hazard.Configure(HazardKind.Explosive);
+                hazard.Stamp(mark);
             }
             else if (piece.Role.StartsWith("crate"))
             {
                 body.layer = GameLayers.Interactable;
-                var container = body.AddComponent<LootContainer>();
-                container.Configure(piece.Role == "crate_medical" ? "medical" : piece.Role == "crate_military" ? "military" : "crate");
+                string table = piece.Role == "crate_medical" ? "medical" : piece.Role == "crate_military" ? "military" : "crate";
+                Keep(body.AddComponent<LootContainer>(), table, StreetLedger.Mark(piece.Role, piece.X, piece.Z));
             }
             else if (piece.Role == "cover")
             {
@@ -413,12 +508,7 @@ namespace OutpostZero.Expedition
                 var lightObject = new GameObject("DistrictLamp");
                 lightObject.transform.SetParent(body.transform, false);
                 lightObject.transform.localPosition = new Vector3(0f, 1.6f, 0f);
-                var light = lightObject.AddComponent<Light>();
-                light.type = LightType.Point;
-                light.range = 9f;
-                light.intensity = 1.4f;
-                light.color = new Color(1f, 0.86f, 0.62f);
-                lightObject.AddComponent<LightSource>().Configure(light.range);
+                SodiumLamp.Dress(lightObject, piece.X, piece.Z, SodiumLamp.Peak);
             }
         }
 

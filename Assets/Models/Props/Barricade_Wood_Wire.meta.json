@@ -1,0 +1,37 @@
+{
+  "id": "Barricade_Wood_Wire",
+  "category": "Props",
+  "generator": "generate_props.build_wood_wire_barricade",
+  "generatorHash": "c1c9de11f11343abfda57dcdc45708819864732fba37b498e6068d411cff06fc",
+  "gitSha": "edff058f31a908ed7de64edaf527c44ea12a41ff",
+  "blender": "4.2.11",
+  "tags": [
+    "barricade",
+    "cover",
+    "codex"
+  ],
+  "pivot": "bottom",
+  "collider": "box",
+  "rig": "",
+  "lods": [
+    1.0
+  ],
+  "tris": 268,
+  "lodTris": [
+    268
+  ],
+  "size": {
+    "width": 2.7678,
+    "depth": 1.628,
+    "height": 1.2
+  },
+  "floor": 0.0,
+  "center": {
+    "x": 0.0267,
+    "y": -0.2545
+  },
+  "materials": [
+    "Mat_Barbed_Wire",
+    "Mat_Pallet_Wood"
+  ]
+}

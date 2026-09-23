@@ -5,6 +5,7 @@ using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 using OutpostZero.AI;
 using OutpostZero.Graphics;
+using OutpostZero.Shell;
 
 namespace OutpostZero.Core
 {
@@ -16,9 +17,11 @@ namespace OutpostZero.Core
         [SerializeField] private float screenShake = 1f;
         [SerializeField] private float masterVolume = 1f;
         [SerializeField] private float textScale = 1f;
+        [SerializeField] private float uiScale = 1f;
         [SerializeField] private bool subtitles = true;
         [SerializeField] private bool quietFlash;
         [SerializeField] private int colorblindMode;
+        [SerializeField] private bool enemyOutline;
         [SerializeField] private string language = "en";
         [SerializeField] private float sfxVolume = 1f;
         [SerializeField] private float musicVolume = 0.7f;
@@ -34,14 +37,17 @@ namespace OutpostZero.Core
         [SerializeField] private int damageNumbers = 1;
         [SerializeField] private float hudOpacity = 1f;
         [SerializeField] private float brightness = 1f;
+        [SerializeField] private float sensitivity = 1f;
         [SerializeField] private int motionBlur;
         [SerializeField] private int windowMode;
         [SerializeField] private int aimAssist;
         [SerializeField] private int invertLook;
         [SerializeField] private int crouchMode;
         [SerializeField] private int sprintMode;
+        [SerializeField] private int aimMode;
         [SerializeField] private int frameCap;
         [SerializeField] private int resolution;
+        [SerializeField] private int renderScale;
 
         public float ScreenShake => screenShake;
         public float MasterVolume => masterVolume;
@@ -50,9 +56,11 @@ namespace OutpostZero.Core
         public float AmbienceVolume => ambienceVolume;
         public float UiVolume => uiVolume;
         public float TextScale => textScale;
+        public float UiScale => uiScale;
         public bool Subtitles => subtitles;
         public bool QuietFlash => quietFlash;
         public int ColorblindMode => colorblindMode;
+        public bool EnemyOutline => enemyOutline;
         public string Language => language;
         public int Quality => quality;
         public bool VSync => vsync != 0;
@@ -68,15 +76,20 @@ namespace OutpostZero.Core
         public int WindowMode => windowMode;
         public int AimAssist => aimAssist <= 0 ? 0 : aimAssist >= 2 ? 2 : 1;
         public bool InvertLook => invertLook == 1;
+        public float Sensitivity => PlayOptions.Sensitivity(sensitivity);
         public int CrouchMode => crouchMode == 1 ? 1 : 0;
         public int SprintMode => sprintMode == 1 ? 1 : 0;
+        public int AimMode => aimMode == 1 ? 1 : 0;
         public int FrameCap => frameCap < 0 || frameCap > 4 ? 0 : frameCap;
         public int Resolution => resolution < 0 || resolution >= DisplayModes.Count ? 0 : resolution;
-        public string DiscreteKey => (subtitles ? "1" : "0") + colorblindMode + quality + vsync + (merciful ? "1" : "0") + NextDifficulty + goreLevel + hitStop + damageNumbers + motionBlur + windowMode + AimAssist + (InvertLook ? 1 : 0) + CrouchMode + SprintMode + FrameCap + Resolution + (quietFlash ? "1" : "0");
+        public int RenderScaleStep => PlayOptions.ScaleStep(renderScale);
+        public string DiscreteKey => (subtitles ? "1" : "0") + colorblindMode + quality + vsync + (merciful ? "1" : "0") + NextDifficulty + goreLevel + hitStop + damageNumbers + motionBlur + windowMode + AimAssist + (InvertLook ? 1 : 0) + CrouchMode + SprintMode + AimMode + FrameCap + Resolution + (quietFlash ? "1" : "0") + RenderScaleStep + (enemyOutline ? "1" : "0");
         public bool ShowSettings { get; private set; }
 
         public event Action OnChanged;
         private bool suppressWrite;
+        private bool hasFocus = true;
+        private string opened;
 
         private void Awake()
         {
@@ -86,11 +99,22 @@ namespace OutpostZero.Core
                 return;
             }
             Instance = this;
+            LoadLanguagePacks();
             LoadFile();
             ApplyVolume();
             ApplyDisplay();
             ApplyWindow();
             Application.focusChanged += OnFocus;
+        }
+
+        private static void LoadLanguagePacks()
+        {
+            var problems = new System.Collections.Generic.List<string>();
+            Loc.ClearPacks();
+            int added = LocPacks.Load(Path.Combine(Application.streamingAssetsPath, LocPacks.Folder), problems);
+            if (added > 0) Debug.Log("[Loc] Loaded " + added + " translated language(s): " + string.Join(", ", Loc.Packs));
+            for (int i = 0; i < problems.Count && i < 20; i++) Debug.LogWarning("[Loc] " + problems[i]);
+            if (problems.Count > 20) Debug.LogWarning("[Loc] " + (problems.Count - 20) + " more translation problems.");
         }
 
         private void OnDestroy()
@@ -100,7 +124,24 @@ namespace OutpostZero.Core
 
         private void OnFocus(bool focused)
         {
-            AudioListener.volume = focused ? masterVolume : 0f;
+            hasFocus = focused;
+            ApplyVolume();
+        }
+
+        /// <summary>
+        /// Every change applies and saves at once. Opening the panel marks where a revert returns to.
+        /// </summary>
+        public void BeginEdit() => opened = ExportSettings();
+
+        public bool HasUnsaved => SettingsDraft.Dirty(opened, ExportSettings());
+
+        public void KeepEdits() => opened = null;
+
+        public void RevertEdits()
+        {
+            string back = opened;
+            opened = null;
+            if (!string.IsNullOrEmpty(back)) ImportSettings(back);
         }
 
         public void SetShake(float value)
@@ -113,6 +154,12 @@ namespace OutpostZero.Core
         {
             masterVolume = Mathf.Clamp01(value);
             ApplyVolume();
+            Raise();
+        }
+
+        public void SetUiScale(float value)
+        {
+            uiScale = PlayOptions.UiScale(value);
             Raise();
         }
 
@@ -136,7 +183,13 @@ namespace OutpostZero.Core
 
         public void CycleColorblind()
         {
-            colorblindMode = (colorblindMode + 1) % 3;
+            colorblindMode = HudPalette.Next(colorblindMode);
+            Raise();
+        }
+
+        public void ToggleEnemyOutline()
+        {
+            enemyOutline = !enemyOutline;
             Raise();
         }
 
@@ -167,6 +220,12 @@ namespace OutpostZero.Core
         public void SetUi(float value)
         {
             uiVolume = Mathf.Clamp01(value);
+            Raise();
+        }
+
+        public void SetSensitivity(float value)
+        {
+            sensitivity = PlayOptions.Sensitivity(value);
             Raise();
         }
 
@@ -291,6 +350,12 @@ namespace OutpostZero.Core
             Raise();
         }
 
+        public void ToggleAimMode()
+        {
+            aimMode = AimMode == 1 ? 0 : 1;
+            Raise();
+        }
+
         public void ToggleSprintMode()
         {
             sprintMode = SprintMode == 1 ? 0 : 1;
@@ -304,14 +369,22 @@ namespace OutpostZero.Core
             Raise();
         }
 
-        public void ApplyPlay(int assist, int invert, int crouch, int sprint, int cap, int display = 0)
+        public void ApplyPlay(int assist, int invert, int crouch, int sprint, int cap, int display = 0, int ads = 0)
         {
             aimAssist = assist <= 0 ? 0 : assist >= 2 ? 2 : 1;
             invertLook = invert == 1 ? 1 : 0;
             crouchMode = crouch == 1 ? 1 : 0;
             sprintMode = sprint == 1 ? 1 : 0;
+            aimMode = ads == 1 ? 1 : 0;
             frameCap = cap < 0 || cap > 4 ? 0 : cap;
             resolution = display < 0 || display >= DisplayModes.Count ? 0 : display;
+            ApplyDisplay();
+            Raise();
+        }
+
+        public void CycleRenderScale()
+        {
+            renderScale = PlayOptions.NextScale(renderScale);
             ApplyDisplay();
             Raise();
         }
@@ -353,23 +426,33 @@ namespace OutpostZero.Core
 
         private void ApplyVolume()
         {
-            AudioListener.volume = masterVolume;
+            if (MixerRig.Live)
+            {
+                MixerRig.Master(masterVolume);
+                AudioListener.volume = SettingsDraft.Heard(1f, hasFocus);
+                return;
+            }
+            AudioListener.volume = SettingsDraft.Heard(masterVolume, hasFocus);
         }
 
         private void ApplyDisplay()
         {
             var tier = QualityProfile.For(quality);
+            if (QualitySettings.count == QualityProfile.Count && QualitySettings.GetQualityLevel() != quality)
+                QualitySettings.SetQualityLevel(quality, true);
+            QualitySettings.lodBias = tier.LodBias;
             QualitySettings.vSyncCount = vsync;
             Application.targetFrameRate = PlayOptions.FrameTarget(FrameCap, vsync != 0);
             QualitySettings.shadowDistance = tier.ShadowDistance;
+            QualitySettings.shadowCascades = ShadowRig.Cascades;
             QualitySettings.antiAliasing = tier.Msaa;
             if (GraphicsSettings.currentRenderPipeline is UniversalRenderPipelineAsset pipeline)
             {
-                pipeline.renderScale = tier.RenderScale;
+                pipeline.renderScale = PlayOptions.RenderScale(renderScale, tier.RenderScale);
                 pipeline.msaaSampleCount = tier.Msaa;
             }
             var spawners = FindObjectsByType<ZombieSpawner>(FindObjectsSortMode.None);
-            for (int i = 0; i < spawners.Length; i++) spawners[i].ApplyCap(tier.Zombies);
+            for (int i = 0; i < spawners.Length; i++) spawners[i].ApplyCap(OutpostZero.AI.DifficultyProfile.AliveCap(quality, OutpostZero.AI.DifficultyProfile.Active));
             WeatherController.Instance?.ApplyBudget(tier.Particles);
             ApplyResolution();
         }
@@ -451,10 +534,13 @@ namespace OutpostZero.Core
                 ambience = ambienceVolume,
                 ui = uiVolume,
                 text = textScale,
+                uiScale = uiScale,
                 fov = fieldOfView,
                 opacity = hudOpacity,
                 brightness = brightness,
+                sensitivity = Sensitivity,
                 colorblind = colorblindMode,
+                outline = enemyOutline ? 1 : 0,
                 quality = quality,
                 vsync = vsync,
                 difficulty = NextDifficulty,
@@ -467,8 +553,10 @@ namespace OutpostZero.Core
                 invert = invertLook,
                 crouch = CrouchMode,
                 sprint = SprintMode,
+                ads = AimMode,
                 frame = FrameCap,
                 resolution = Resolution,
+                render = RenderScaleStep,
                 subtitles = subtitles,
                 merciful = merciful,
                 quietFlash = quietFlash,
@@ -487,10 +575,13 @@ namespace OutpostZero.Core
             ambienceVolume = Mathf.Clamp01(snap.ambience);
             uiVolume = Mathf.Clamp01(snap.ui);
             textScale = Mathf.Clamp(snap.text <= 0f ? 1f : snap.text, 0.8f, 1.6f);
+            uiScale = PlayOptions.UiScale(snap.uiScale);
             fieldOfView = Mathf.Clamp(snap.fov < 40f ? 55f : snap.fov, 40f, 75f);
             hudOpacity = Presentation.Opacity(snap.opacity);
             brightness = Presentation.Brightness(snap.brightness);
-            colorblindMode = snap.colorblind < 0 ? 0 : snap.colorblind % 3;
+            sensitivity = PlayOptions.Sensitivity(snap.sensitivity);
+            colorblindMode = HudPalette.Clamp(snap.colorblind);
+            enemyOutline = snap.outline == 1;
             quality = Mathf.Clamp(snap.quality, 0, 3);
             vsync = snap.vsync == 0 ? 0 : 1;
             nextDifficulty = snap.difficulty <= 0 ? 2 : snap.difficulty >= 3 ? 3 : snap.difficulty;
@@ -503,12 +594,14 @@ namespace OutpostZero.Core
             invertLook = snap.invert == 1 ? 1 : 0;
             crouchMode = snap.crouch == 1 ? 1 : 0;
             sprintMode = snap.sprint == 1 ? 1 : 0;
+            aimMode = snap.ads == 1 ? 1 : 0;
             frameCap = snap.frame < 0 || snap.frame > 4 ? 0 : snap.frame;
             resolution = snap.resolution < 0 || snap.resolution >= DisplayModes.Count ? 0 : snap.resolution;
+            renderScale = PlayOptions.ScaleStep(snap.render);
             subtitles = snap.subtitles;
             merciful = snap.merciful;
             quietFlash = snap.quietFlash;
-            language = string.IsNullOrEmpty(snap.language) ? "en" : snap.language;
+            language = PseudoLoc.Keep(snap.language, DevCheats.Allowed(Application.isEditor, Debug.isDebugBuild));
             OutpostZero.Player.ControlBindings.Unpack(snap.keys);
             OutpostZero.Player.PadBindings.Unpack(snap.pad);
             ApplyVolume();
