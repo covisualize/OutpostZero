@@ -7,6 +7,7 @@ namespace UnityEngine.Rendering
     public class FloatParameter : VolumeParameter<float> { public FloatParameter(float v, bool o = false) { } }
     public class MinFloatParameter : FloatParameter { public MinFloatParameter(float v, float min, bool o = false) : base(v) { } }
     public class ClampedFloatParameter : FloatParameter { public ClampedFloatParameter(float v, float a, float b, bool o = false) : base(v) { } }
+    public class Vector4Parameter : VolumeParameter<Vector4> { public Vector4Parameter(Vector4 v, bool o = false) { } }
     public class ColorParameter : VolumeParameter<Color> { public ColorParameter(Color v, bool a = false, bool b = true, bool c = true, bool o = false) { } }
     public class VolumeComponent : ScriptableObject { public bool active = true; }
     public class VolumeProfile : ScriptableObject { public T Add<T>(bool overrides = false) where T : VolumeComponent { return null; } }
@@ -24,9 +25,12 @@ namespace UnityEngine.Rendering.Universal
     public class DepthOfFieldModeParameter : VolumeParameter<DepthOfFieldMode> { public DepthOfFieldModeParameter(DepthOfFieldMode v, bool o = false) { } }
     public class MotionBlurModeParameter : VolumeParameter<MotionBlurMode> { public MotionBlurModeParameter(MotionBlurMode v, bool o = false) { } }
     public sealed class Bloom : VolumeComponent { public MinFloatParameter threshold = new MinFloatParameter(0.9f, 0f); public MinFloatParameter intensity = new MinFloatParameter(0f, 0f); }
-    public sealed class Vignette : VolumeComponent { public ClampedFloatParameter intensity = new ClampedFloatParameter(0f, 0f, 1f); public ClampedFloatParameter smoothness = new ClampedFloatParameter(0.2f, 0.01f, 1f); }
+    public sealed class Vignette : VolumeComponent { public ColorParameter color = new ColorParameter(Color.black, false, false, true); public ClampedFloatParameter intensity = new ClampedFloatParameter(0f, 0f, 1f); public ClampedFloatParameter smoothness = new ClampedFloatParameter(0.2f, 0.01f, 1f); }
     public sealed class Tonemapping : VolumeComponent { public TonemappingModeParameter mode = new TonemappingModeParameter(TonemappingMode.None); }
     public sealed class ColorAdjustments : VolumeComponent { public FloatParameter postExposure = new FloatParameter(0f); public ClampedFloatParameter contrast = new ClampedFloatParameter(0f, -100f, 100f); public ColorParameter colorFilter = new ColorParameter(Color.white); public ClampedFloatParameter saturation = new ClampedFloatParameter(0f, -100f, 100f); }
+    public sealed class ShadowsMidtonesHighlights : VolumeComponent { public Vector4Parameter shadows = new Vector4Parameter(new Vector4(1f, 1f, 1f, 0f)); public Vector4Parameter midtones = new Vector4Parameter(new Vector4(1f, 1f, 1f, 0f)); public Vector4Parameter highlights = new Vector4Parameter(new Vector4(1f, 1f, 1f, 0f)); public MinFloatParameter shadowsStart = new MinFloatParameter(0f, 0f); public MinFloatParameter shadowsEnd = new MinFloatParameter(0.3f, 0f); public MinFloatParameter highlightsStart = new MinFloatParameter(0.55f, 0f); public MinFloatParameter highlightsEnd = new MinFloatParameter(1f, 0f); }
+    public sealed class LiftGammaGain : VolumeComponent { public Vector4Parameter lift = new Vector4Parameter(new Vector4(1f, 1f, 1f, 0f)); public Vector4Parameter gamma = new Vector4Parameter(new Vector4(1f, 1f, 1f, 0f)); public Vector4Parameter gain = new Vector4Parameter(new Vector4(1f, 1f, 1f, 0f)); }
+    public sealed class ChromaticAberration : VolumeComponent { public ClampedFloatParameter intensity = new ClampedFloatParameter(0f, 0f, 1f); }
     public sealed class FilmGrain : VolumeComponent { public FilmGrainLookupParameter type = new FilmGrainLookupParameter(FilmGrainLookup.Thin1); public ClampedFloatParameter intensity = new ClampedFloatParameter(0f, 0f, 1f); }
     public sealed class MotionBlur : VolumeComponent { public MotionBlurModeParameter mode = new MotionBlurModeParameter(MotionBlurMode.CameraOnly); public ClampedFloatParameter intensity = new ClampedFloatParameter(0f, 0f, 1f); }
     public sealed class DepthOfField : VolumeComponent { public DepthOfFieldModeParameter mode = new DepthOfFieldModeParameter(DepthOfFieldMode.Off); public MinFloatParameter gaussianStart = new MinFloatParameter(10f, 0f); public MinFloatParameter gaussianEnd = new MinFloatParameter(30f, 0f); }

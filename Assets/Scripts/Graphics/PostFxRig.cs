@@ -15,6 +15,8 @@ namespace OutpostZero.Graphics
         private Volume aimDepth;
         private ColorAdjustments color;
         private MotionBlur blur;
+        private LiftGammaGain night;
+        private ChromaticAberration fringe;
 
         private void Start()
         {
@@ -40,14 +42,28 @@ namespace OutpostZero.Graphics
 
             color = profile.Add<ColorAdjustments>();
             color.active = true;
-            color.postExposure.Override(0.15f);
-            color.contrast.Override(12f);
+            color.postExposure.Override(0.2f);
+            color.contrast.Override(ScreenGrade.Contrast);
+            color.saturation.Override(ScreenGrade.BaseSaturation);
             color.colorFilter.Override(new Color(1f, 0.96f, 0.9f));
+
+            var tones = profile.Add<ShadowsMidtonesHighlights>();
+            tones.active = true;
+            tones.shadows.Override(ScreenGrade.Shadows);
+            tones.midtones.Override(ScreenGrade.Midtones);
+            tones.highlights.Override(ScreenGrade.Highlights);
+
+            night = profile.Add<LiftGammaGain>();
+            night.active = true;
+
+            fringe = profile.Add<ChromaticAberration>();
+            fringe.active = true;
+            fringe.intensity.Override(ScreenGrade.Aberration);
 
             grain = profile.Add<FilmGrain>();
             grain.active = false;
-            grain.intensity.Override(0.18f);
-            grain.type.Override(FilmGrainLookup.Medium1);
+            grain.intensity.Override(0.25f);
+            grain.type.Override(FilmGrainLookup.Thin1);
 
             blur = profile.Add<MotionBlur>();
             blur.active = false;
@@ -97,8 +113,24 @@ namespace OutpostZero.Graphics
             }
             bool motion = SettingsService.Instance != null && SettingsService.Instance.MotionBlur;
             bool flash = BoltGlare.Live(Sensory.StormCover.Bolt, Time.time);
+            bool camp = GameManager.Instance != null && GameManager.Instance.CurrentState == GameState.CampManagement;
+            float hurt = 0f;
+            if (PlayerRegistry.Current != null && GameManager.Instance != null && GameManager.Instance.CurrentState == GameState.ExpeditionActive)
+            {
+                var health = PlayerRegistry.Current.GetComponent<OutpostZero.Combat.HealthSystem>();
+                if (health != null && health.MaxHealth > 0f && !health.IsDead) hurt = ScreenGrade.Hurt(health.CurrentHealth / health.MaxHealth);
+            }
+            float dark = DayNightCycle.Instance != null ? DayNightCycle.Instance.NightFactor : 0f;
             bloom.intensity.Override(budget.Bloom);
-            vignette.intensity.Override(PoisonVeil.Shade(RaidGrade.Vignette(raid, tier), poisoned));
+            vignette.intensity.Override(ScreenGrade.Vignette(PoisonVeil.Shade(RaidGrade.Vignette(raid, tier), poisoned), hurt));
+            vignette.color.Override(ScreenGrade.VignetteColor(hurt));
+            if (night != null)
+            {
+                night.lift.Override(ScreenGrade.Lift(dark));
+                night.gamma.Override(ScreenGrade.Gamma(dark));
+                night.gain.Override(ScreenGrade.Gain(dark));
+            }
+            if (fringe != null) fringe.active = ScreenGrade.AberrationOn(tier);
             grain.active = raid || budget.Grain;
             if (aimDepth != null) aimDepth.weight = AimDepth(budget.DepthOfField, aiming, ExpeditionCameraRig.Instance != null, ExpeditionCameraRig.AimWeight);
             if (color != null)
@@ -110,8 +142,9 @@ namespace OutpostZero.Graphics
                 BoltGlare.Wash(flash, red, green, blue, out red, out green, out blue);
                 bool ash = WeatherController.Instance != null && AshFall.Falls(WeatherController.Instance.District);
                 AshVeil.Grit(ash, red, green, blue, out red, out green, out blue);
+                ScreenGrade.Warm(camp, red, green, blue, out red, out green, out blue);
                 color.colorFilter.Override(new Color(red, green, blue));
-                color.saturation.Override(DeathVeil.Saturation(ExpeditionCameraRig.DeathWeight));
+                color.saturation.Override(ScreenGrade.Saturation(hurt, ExpeditionCameraRig.DeathWeight));
             }
             if (blur != null)
             {
