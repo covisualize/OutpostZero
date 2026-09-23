@@ -940,15 +940,20 @@ namespace OutpostZero.AI
             agent.SetDestination(spot);
         }
 
+        /// <summary>Shared by every zombie's sight check so a look allocates nothing.</summary>
+        private static readonly RaycastHit[] sightHits = new RaycastHit[SightLine.Capacity];
+
         private static bool SightBlocked(Vector3 origin, Vector3 direction, float distance, LayerMask mask)
         {
             if (distance <= 0.05f) return false;
-            var hits = Physics.RaycastAll(origin, direction, distance, mask, QueryTriggerInteraction.Ignore);
-            if (hits == null || hits.Length == 0) return false;
-            var names = new string[hits.Length];
-            for (int i = 0; i < hits.Length; i++)
-                names[i] = hits[i].collider != null ? hits[i].collider.name : "";
-            return PaneGlass.Occluded(names);
+            int count = Physics.RaycastNonAlloc(origin, direction, sightHits, distance, mask, QueryTriggerInteraction.Ignore);
+            if (SightLine.Full(count)) return true;
+            for (int i = 0; i < count; i++)
+            {
+                var solid = sightHits[i].collider;
+                if (solid != null && !solid.TryGetComponent(out GlassPane _)) return true;
+            }
+            return false;
         }
 
         private bool StillSees(Transform target)

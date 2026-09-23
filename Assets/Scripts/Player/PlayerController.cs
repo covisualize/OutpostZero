@@ -820,12 +820,15 @@ namespace OutpostZero.Player
             if (yaw > 0.01f || yaw < -0.01f) transform.Rotate(0f, yaw, 0f, Space.World);
         }
 
+        private static readonly Collider[] threats = new Collider[64];
+
         private Transform NearestThreat()
         {
-            var hits = Physics.OverlapSphere(transform.position, 18f, GameLayers.EnemyMask);
+            var hits = threats;
+            int count = Physics.OverlapSphereNonAlloc(transform.position, 18f, hits, GameLayers.EnemyMask);
             Transform best = null;
             float bestDist = 18f * 18f;
-            for (int i = 0; i < hits.Length; i++)
+            for (int i = 0; i < count; i++)
             {
                 var zombie = hits[i].GetComponentInParent<ZombieAI>();
                 if (zombie == null || zombie.CurrentState == ZombieAI.ZombieState.Dead) continue;

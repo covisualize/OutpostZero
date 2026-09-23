@@ -81,13 +81,17 @@ namespace OutpostZero.Player
             return state == GameState.ExpeditionActive || state == GameState.RaidActive || state == GameState.CampManagement;
         }
 
+        /// <summary>The prompt scan has no layer mask, so a kit interior's box colliders share it with the loot.</summary>
+        private static readonly Collider[] inReach = new Collider[128];
+
         private IInteractable FindInteractable()
         {
-            Collider[] hits = Physics.OverlapSphere(transform.position + Vector3.up, reach);
+            int count = Physics.OverlapSphereNonAlloc(transform.position + Vector3.up, reach, inReach);
             IInteractable best = null;
             float bestDist = reach;
-            foreach (var hit in hits)
+            for (int i = 0; i < count; i++)
             {
+                var hit = inReach[i];
                 var interactable = hit.GetComponentInParent<IInteractable>();
                 if (interactable == null || !interactable.CanInteract(inventory)) continue;
                 float dist = Vector3.Distance(transform.position, hit.transform.position);

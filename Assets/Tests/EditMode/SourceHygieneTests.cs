@@ -46,6 +46,35 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void AZombieLooksAndACorpseMeltsWithoutAllocating()
+        {
+            string brain = File.ReadAllText(Path.Combine(Scripts, "AI", "ZombieAI.cs"));
+            StringAssert.DoesNotContain("RaycastAll(", brain, "sight rays fill the shared buffer");
+            StringAssert.DoesNotContain("new string[", brain);
+            StringAssert.Contains("Physics.RaycastNonAlloc(origin, direction, sightHits, distance, mask, QueryTriggerInteraction.Ignore)", brain);
+            StringAssert.Contains("TryGetComponent(out GlassPane _)", brain, "reading collider.name allocates a string");
+            Assert.IsTrue(OutpostZero.Expedition.SightLine.Full(OutpostZero.Expedition.SightLine.Capacity));
+            Assert.IsFalse(OutpostZero.Expedition.SightLine.Full(3));
+
+            string melt = File.ReadAllText(Path.Combine(Scripts, "Graphics", "CorpseMelt.cs"));
+            StringAssert.Contains("if (renderers == null) renderers = GetComponentsInChildren<Renderer>(true);", melt);
+            StringAssert.Contains("if (block == null) block = new MaterialPropertyBlock();", melt);
+
+            foreach (var hot in new[] { "Player/PlayerInteractor.cs:FindInteractable", "Player/PlayerController.cs:NearestThreat", "Expedition/ExtractionZone.cs:ZombiesNear" })
+            {
+                var parts = hot.Split(':');
+                string text = File.ReadAllText(Path.Combine(Scripts, parts[0]));
+                int start = text.Replace("\r\n", "\n").IndexOf(parts[1] + "()\n        {", System.StringComparison.Ordinal);
+                text = text.Replace("\r\n", "\n");
+                Assert.GreaterOrEqual(start, 0, hot);
+                int end = text.IndexOf("\n        }", start, System.StringComparison.Ordinal);
+                string body = text.Substring(start, end - start);
+                StringAssert.Contains("OverlapSphereNonAlloc", body, hot + " runs every frame");
+                StringAssert.DoesNotContain("Physics.OverlapSphere(", body, hot);
+            }
+        }
+
+        [Test]
         public void ZombiesSpawnFromActorPrefabsNotParkedSceneObjects()
         {
             string text = File.ReadAllText(Path.Combine(Scripts, "Editor", "PrototypeSceneBuilder.cs"));

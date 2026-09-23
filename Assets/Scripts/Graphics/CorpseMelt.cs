@@ -10,6 +10,8 @@ namespace OutpostZero.Graphics
         public const float Length = 3f;
 
         private float started = -1f;
+        private Renderer[] renderers;
+        private MaterialPropertyBlock block;
 
         public static float Amount(float age)
         {
@@ -38,13 +40,14 @@ namespace OutpostZero.Graphics
 
         private void Apply(float amount)
         {
-            var renderers = GetComponentsInChildren<Renderer>(true);
+            if (renderers == null) renderers = GetComponentsInChildren<Renderer>(true);
+            if (block == null) block = new MaterialPropertyBlock();
             var edge = new Color(1f, 0.32f, 0.06f, 1f) * amount;
             for (int i = 0; i < renderers.Length; i++)
             {
                 var renderer = renderers[i];
                 if (renderer == null) continue;
-                var block = new MaterialPropertyBlock();
+                block.Clear();
                 renderer.GetPropertyBlock(block);
                 block.SetFloat("_Dissolve", amount);
                 block.SetColor("_Emission", edge);

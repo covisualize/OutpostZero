@@ -89,6 +89,16 @@ namespace OutpostZero.Expedition
     }
 
     /// <summary>
+    /// The sight ray's hit buffer. A ray that fills it has crossed so much that it counts as blocked.
+    /// </summary>
+    public static class SightLine
+    {
+        public const int Capacity = 16;
+
+        public static bool Full(int count) => count >= Capacity;
+    }
+
+    /// <summary>
     /// A brute charge breaks a pane and keeps going. A wall still stops the rush.
     /// </summary>
     public static class PaneCharge

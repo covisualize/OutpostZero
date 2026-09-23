@@ -84,10 +84,13 @@ namespace OutpostZero.Expedition
             return other.CompareTag("Player") || other.GetComponentInParent<Player.PlayerController>() != null;
         }
 
+        private static readonly Collider[] near = new Collider[64];
+
         private bool ZombiesNear()
         {
-            var hits = Physics.OverlapSphere(transform.position, ExtractWatch.ThreatRadius, GameLayers.EnemyMask);
-            for (int i = 0; i < hits.Length; i++)
+            var hits = near;
+            int count = Physics.OverlapSphereNonAlloc(transform.position, ExtractWatch.ThreatRadius, hits, GameLayers.EnemyMask);
+            for (int i = 0; i < count; i++)
             {
                 var zombie = hits[i].GetComponentInParent<ZombieAI>();
                 if (zombie == null || zombie.CurrentState != ZombieAI.ZombieState.Dead) return true;
