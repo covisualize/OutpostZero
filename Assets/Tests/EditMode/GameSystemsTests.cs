@@ -1280,7 +1280,7 @@ namespace OutpostZero.Tests.EditMode
             Assert.AreEqual(0.05f, dark.r, 0.001f);
             Assert.AreEqual(0.12f, dark.b, 0.001f);
             Assert.AreEqual(0.62f, WeatherSurface.Sight(WeatherKind.Fog), 0.001f);
-            Assert.AreEqual(0.8f, WeatherSurface.Sight(WeatherKind.Rain), 0.001f);
+            Assert.AreEqual(0.75f, WeatherSurface.Sight(WeatherKind.Rain), 0.001f);
             Assert.AreEqual(0.65f, WeatherSurface.Wetness(WeatherKind.Rain), 0.001f);
             Assert.IsTrue(AshFall.Falls("ash_market"));
             Assert.IsFalse(AshFall.Falls("rail_yard"));
@@ -1306,7 +1306,7 @@ namespace OutpostZero.Tests.EditMode
             Assert.AreEqual(WeatherKind.Clear, SkyBand.Cast(WeatherKind.Clear, 4));
             Assert.AreEqual(WeatherKind.Clear, DistrictRules.For("ash_market").Weather);
             Assert.AreEqual(WeatherKind.Rain, DistrictRules.For("rail_yard").Weather);
-            Assert.AreEqual(0.8f, WeatherSurface.Sight(WeatherKind.Rain), 0.001f);
+            Assert.AreEqual(0.75f, WeatherSurface.Sight(WeatherKind.Rain), 0.001f);
             Assert.AreEqual(0.62f, WeatherSurface.Sight(WeatherKind.Fog), 0.001f);
             Assert.AreEqual(1f, WeatherSurface.Sight(WeatherKind.Clear), 0.001f);
             Assert.AreEqual(0.7f, WeatherSurface.Sight(WeatherKind.Storm), 0.001f);
@@ -7399,7 +7399,7 @@ namespace OutpostZero.Tests.EditMode
             Assert.IsFalse(StormCover.Masks(10f, 10.6f, NoiseType.WalkFootstep));
             Assert.AreEqual(0f, HearGate.Perceived(0f, 40f, 1f, false, NoiseType.Thunder), 0.001f);
             Assert.AreEqual(0.09f, HearGate.Perceived(8f, 10f, 1f, true, NoiseType.GunshotLoud), 0.001f);
-            Assert.AreEqual(0.8f, WeatherSurface.Sight(WeatherKind.Rain), 0.001f);
+            Assert.AreEqual(0.75f, WeatherSurface.Sight(WeatherKind.Rain), 0.001f);
             Assert.AreEqual(1f, RainMask.Heard(1f, false), 0.001f);
             Assert.AreEqual(0f, RainMask.Heard(0f, true), 0.001f);
             Assert.AreEqual(0.85f, RainMask.Heard(1f, true), 0.001f);

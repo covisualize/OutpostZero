@@ -28,7 +28,7 @@ namespace OutpostZero.Graphics
         {
             if (kind == WeatherKind.Fog) return 0.62f;
             if (kind == WeatherKind.Storm) return 0.7f;
-            if (kind == WeatherKind.Rain) return 0.8f;
+            if (kind == WeatherKind.Rain) return 0.75f;
             if (kind == WeatherKind.Overcast) return 0.9f;
             return 1f;
         }
