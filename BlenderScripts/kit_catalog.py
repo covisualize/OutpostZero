@@ -161,9 +161,11 @@ def at(piece_id, x, y, z, yaw=0):
     return {"id": piece_id, "x": round(x, 3), "y": round(y, 3), "z": round(z, 3), "yaw": int(yaw)}
 
 
-def _slab(placements, piece_id, y, xs, zs):
+def _slab(placements, piece_id, y, xs, zs, skip=()):
     for x in xs:
         for z in zs:
+            if (x, z) in skip:
+                continue
             placements.append(at(piece_id, x, y, z))
 
 
@@ -241,9 +243,12 @@ def apartment():
     placed = []
     xs = (0, 2, 4)
     zs = (0, 2, 4)
+    # The flight climbs from z 0.8 to 4.88 in the middle column; the slab above it opens from z 2 so
+    # there is head room, and the top step lands sideways on the tiles either side.
+    well = ((2, 2), (2, 4))
     for floor in range(3):
         y = floor * 3
-        _slab(placed, "floor", y, xs, zs)
+        _slab(placed, "floor", y, xs, zs, well if floor > 0 else ())
         south = ("wall_door", "wall_plain", "wall_window") if floor == 0 else ("wall_plain", "wall_window", "wall_boarded")
         for index, x in enumerate(xs):
             placed.append(at(south[index], x, y, 0))
@@ -259,7 +264,7 @@ def apartment():
     placed.append(at("shelf", 0.4, 0, 4.4))
     placed.append(at("desk", 0.4, 3, 4.2))
     placed.append(at("chair", 1.6, 3, 4.3))
-    placed.append(at("hospital_bed", 0.4, 6, 4.0))
+    placed.append(at("hospital_bed", 4.0, 6, 4.0))
     placed.append(at("ceiling_light", 1.2, 2.7, 2.2))
     _front_walk(placed, (0, 2))
     return placed

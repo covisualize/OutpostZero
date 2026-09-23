@@ -2,8 +2,8 @@
   "id": "Kit_wall_half",
   "category": "Kit",
   "generator": "generate_kit.build_piece",
-  "generatorHash": "158f0856b7e67077673cbf55a58d3ba7e42ae32ea3c1ff6b6a3829e3a9004b0a",
-  "gitSha": "6d865e2d876840354ba2219ba9ee42e81f47f678",
+  "generatorHash": "69052f3138a7fb456ee08c4176b4c15792e3f2c210f7893ce42296d7d89a3fd8",
+  "gitSha": "30a7decf99109014c8d463f1f5c3458c36fff31c",
   "blender": "4.2.11",
   "tags": [
     "kit",

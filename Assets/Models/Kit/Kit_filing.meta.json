@@ -2,8 +2,8 @@
   "id": "Kit_filing",
   "category": "Kit",
   "generator": "generate_kit.build_piece",
-  "generatorHash": "d9a5d91083472f8241da4ec7eb721e6358dff4a26bff026c899bb6bbb8176c92",
-  "gitSha": "6d865e2d876840354ba2219ba9ee42e81f47f678",
+  "generatorHash": "53bd91deef3ae219e86d446793ad9e07f0326cc355a75e53421271a417681a30",
+  "gitSha": "30a7decf99109014c8d463f1f5c3458c36fff31c",
   "blender": "4.2.11",
   "tags": [
     "kit",

@@ -2,8 +2,8 @@
   "id": "Kit_desk",
   "category": "Kit",
   "generator": "generate_kit.build_piece",
-  "generatorHash": "85251d190778b85ec76c642f65df6e25b2142db7dd9773f491c2f5e83c4e7670",
-  "gitSha": "6d865e2d876840354ba2219ba9ee42e81f47f678",
+  "generatorHash": "81575d1f35acc087cf7164b8106e92275830619af1f620c632c1aea4b579f61b",
+  "gitSha": "30a7decf99109014c8d463f1f5c3458c36fff31c",
   "blender": "4.2.11",
   "tags": [
     "kit",

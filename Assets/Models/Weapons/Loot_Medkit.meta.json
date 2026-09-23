@@ -2,8 +2,8 @@
   "id": "Loot_Medkit",
   "category": "Weapons",
   "generator": "generate_weapons.build_medkit",
-  "generatorHash": "17d0c803c42679d1e6b7c96553292f47d527ac03f90a9d29d0c6499394c470ce",
-  "gitSha": "6d865e2d876840354ba2219ba9ee42e81f47f678",
+  "generatorHash": "73ad5125afe386d0b7a329b3c05e351cc30bd8bd92215d1f03a32783641b13b0",
+  "gitSha": "30a7decf99109014c8d463f1f5c3458c36fff31c",
   "blender": "4.2.11",
   "tags": [
     "loot",

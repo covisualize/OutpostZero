@@ -2,8 +2,8 @@
   "id": "Kit_wall_window",
   "category": "Kit",
   "generator": "generate_kit.build_piece",
-  "generatorHash": "84fd72232a6fffe99daaf248c2fad5ce7ca20b1281a63765c0d7fe04894259a1",
-  "gitSha": "6d865e2d876840354ba2219ba9ee42e81f47f678",
+  "generatorHash": "4ba77a023d6cd2d6b56e68831a312ba4c2e46c8e333269679149d41f7b70c5ca",
+  "gitSha": "30a7decf99109014c8d463f1f5c3458c36fff31c",
   "blender": "4.2.11",
   "tags": [
     "kit",

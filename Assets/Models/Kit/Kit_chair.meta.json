@@ -2,8 +2,8 @@
   "id": "Kit_chair",
   "category": "Kit",
   "generator": "generate_kit.build_piece",
-  "generatorHash": "e0ccec39e802a43a96caeb048a0666b08ffa79eb8d970a7bf115dd1f1a45d1e8",
-  "gitSha": "6d865e2d876840354ba2219ba9ee42e81f47f678",
+  "generatorHash": "b28e4efcc0768acf13da7c5df853a38e0a0f59ea836571b3c7f898c03ed9a32f",
+  "gitSha": "30a7decf99109014c8d463f1f5c3458c36fff31c",
   "blender": "4.2.11",
   "tags": [
     "kit",

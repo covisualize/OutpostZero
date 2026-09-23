@@ -2,8 +2,8 @@
   "id": "Building_Storefront_2Story",
   "category": "Environment",
   "generator": "generate_architecture.build_storefront_building",
-  "generatorHash": "1baf3e5f1e56fc1abb8970d7574c7022feb461c755a77df6977b48b06e1927a7",
-  "gitSha": "6d865e2d876840354ba2219ba9ee42e81f47f678",
+  "generatorHash": "b97bf7fc74dc2737f2c2e673c0c75c6df4eb81dfcda0d02a92524f5224cc983d",
+  "gitSha": "30a7decf99109014c8d463f1f5c3458c36fff31c",
   "blender": "4.2.11",
   "tags": [
     "building"

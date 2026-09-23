@@ -2,8 +2,8 @@
   "id": "Kit_wall_window_broken",
   "category": "Kit",
   "generator": "generate_kit.build_piece",
-  "generatorHash": "8829bcfe99b636c29b29827ba3754d05dfe371b72807d609f8973ddb54990de5",
-  "gitSha": "6d865e2d876840354ba2219ba9ee42e81f47f678",
+  "generatorHash": "427a7fb054311e8b6a6644e0db85033ca6cf70de93cea6824331dd8aa45685d3",
+  "gitSha": "30a7decf99109014c8d463f1f5c3458c36fff31c",
   "blender": "4.2.11",
   "tags": [
     "kit",

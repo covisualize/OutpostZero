@@ -2,8 +2,8 @@
   "id": "Kit_jersey",
   "category": "Kit",
   "generator": "generate_kit.build_piece",
-  "generatorHash": "5e82894f03379a9bccf377532a3b0ae077edf44f73631e4777b007ba9c2c2211",
-  "gitSha": "6d865e2d876840354ba2219ba9ee42e81f47f678",
+  "generatorHash": "4b7168492ab8de597a51199ae279d4c2e3ed1aa60e2038e41213116f16363314",
+  "gitSha": "30a7decf99109014c8d463f1f5c3458c36fff31c",
   "blender": "4.2.11",
   "tags": [
     "kit",

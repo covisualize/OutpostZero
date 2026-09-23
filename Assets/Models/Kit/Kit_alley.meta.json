@@ -2,8 +2,8 @@
   "id": "Kit_alley",
   "category": "Kit",
   "generator": "generate_kit.build_piece",
-  "generatorHash": "d5b2c65f4f55c727c2221fd7bfd25fd539f1cc85737e561ad98831d1ea29e8fc",
-  "gitSha": "6d865e2d876840354ba2219ba9ee42e81f47f678",
+  "generatorHash": "db02578f9cdb778ae189e3364eb2ca6890f6edda7fb0520a0296ad0c6a7c3efa",
+  "gitSha": "30a7decf99109014c8d463f1f5c3458c36fff31c",
   "blender": "4.2.11",
   "tags": [
     "kit",

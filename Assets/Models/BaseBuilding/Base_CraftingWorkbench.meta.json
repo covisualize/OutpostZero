@@ -2,8 +2,8 @@
   "id": "Base_CraftingWorkbench",
   "category": "BaseBuilding",
   "generator": "generate_base_building.build_workbench",
-  "generatorHash": "8e302de3748399a0fe364d01df4a059c3338ea44e37538272158f73b9a85cc16",
-  "gitSha": "6d865e2d876840354ba2219ba9ee42e81f47f678",
+  "generatorHash": "a6bca8f28aada0f410c342fb203c2b8bd956ca50c6ac538fe385edd5739b56ae",
+  "gitSha": "30a7decf99109014c8d463f1f5c3458c36fff31c",
   "blender": "4.2.11",
   "tags": [
     "camp",

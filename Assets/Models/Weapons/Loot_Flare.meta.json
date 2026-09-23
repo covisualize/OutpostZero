@@ -2,8 +2,8 @@
   "id": "Loot_Flare",
   "category": "Weapons",
   "generator": "generate_items.build_flare",
-  "generatorHash": "35df5db64a61cda56a1e27d7eaa4638e215c11162a9d07f40a23378f922de7d6",
-  "gitSha": "6d865e2d876840354ba2219ba9ee42e81f47f678",
+  "generatorHash": "be3048be4757f6e3336540adeb78f39b9e91ad95a3bbff6bfe5fd3495bd26e62",
+  "gitSha": "30a7decf99109014c8d463f1f5c3458c36fff31c",
   "blender": "4.2.11",
   "tags": [
     "loot",

@@ -2,8 +2,8 @@
   "id": "Kit_crosswalk",
   "category": "Kit",
   "generator": "generate_kit.build_piece",
-  "generatorHash": "4e005804c97f24fb80cf368a0889433ca290787df2ce1e4efa3a21287c63ae5f",
-  "gitSha": "6d865e2d876840354ba2219ba9ee42e81f47f678",
+  "generatorHash": "ceb34dfcf8b3d2735727af9a9be0721d45bda0f4c4e0b4ac34ff742606b1b6cf",
+  "gitSha": "30a7decf99109014c8d463f1f5c3458c36fff31c",
   "blender": "4.2.11",
   "tags": [
     "kit",

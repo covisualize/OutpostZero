@@ -2,8 +2,8 @@
   "id": "Kit_workbench",
   "category": "Kit",
   "generator": "generate_kit.build_piece",
-  "generatorHash": "c3463a224a3565236b254ede14f6c563a0786f19486a2b3e4c23d206e3753e65",
-  "gitSha": "6d865e2d876840354ba2219ba9ee42e81f47f678",
+  "generatorHash": "ca028934fa62021d62134e157bf5488d2cbdc953e9bde6c7852ecba1e935c649",
+  "gitSha": "30a7decf99109014c8d463f1f5c3458c36fff31c",
   "blender": "4.2.11",
   "tags": [
     "kit",

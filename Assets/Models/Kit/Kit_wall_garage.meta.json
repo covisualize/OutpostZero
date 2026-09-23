@@ -2,8 +2,8 @@
   "id": "Kit_wall_garage",
   "category": "Kit",
   "generator": "generate_kit.build_piece",
-  "generatorHash": "029cd77417fec7dde2613223524b73bbea2dc7dc9108939c3eccbed0e7a3f880",
-  "gitSha": "6d865e2d876840354ba2219ba9ee42e81f47f678",
+  "generatorHash": "d173e25e8bc85ce38626e5a01ffe7b489fd67c106c5b59af5b0da37f3f501829",
+  "gitSha": "30a7decf99109014c8d463f1f5c3458c36fff31c",
   "blender": "4.2.11",
   "tags": [
     "kit",
