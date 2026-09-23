@@ -572,7 +572,8 @@
       "output": "BaseBuilding/Base_CraftingWorkbench.fbx",
       "tags": [
         "camp",
-        "module"
+        "module",
+        "codex"
       ]
     },
     {
@@ -582,7 +583,8 @@
       "output": "BaseBuilding/Base_Campfire_Cooker.fbx",
       "tags": [
         "camp",
-        "module"
+        "module",
+        "codex"
       ]
     },
     {
@@ -614,7 +616,8 @@
       "output": "BaseBuilding/Base_Watchtower.fbx",
       "tags": [
         "camp",
-        "module"
+        "module",
+        "codex"
       ]
     },
     {
@@ -624,7 +627,8 @@
       "output": "BaseBuilding/Base_WaterCollector.fbx",
       "tags": [
         "camp",
-        "module"
+        "module",
+        "codex"
       ]
     },
     {

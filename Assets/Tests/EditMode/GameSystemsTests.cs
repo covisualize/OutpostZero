@@ -815,7 +815,7 @@ namespace OutpostZero.Tests.EditMode
         [Test]
         public void CodexHintsShowOnceAndZombiesStayHiddenUntilAKill()
         {
-            Assert.AreEqual(12, CodexBook.Hints.Length);
+            Assert.AreEqual(13, CodexBook.Hints.Length);
             Assert.GreaterOrEqual(CodexBook.Entries.Length, 12);
 
             Assert.IsTrue(CodexBook.TryHint("", "move", out string first, out string packed));

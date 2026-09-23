@@ -23,7 +23,15 @@ MonoBehaviour:
     icon: {fileID: 2800000, guid: a22eccedde23e6e257eb278b73a1b084, type: 3}
   - id: Barricade_Wood_Wire
     icon: {fileID: 2800000, guid: 65efee83d49c0c2e8d7c9ba484ebac0e, type: 3}
+  - id: Base_CraftingWorkbench
+    icon: {fileID: 2800000, guid: 68d12279ccd8c375675d4be8b3b55a15, type: 3}
+  - id: Base_Campfire_Cooker
+    icon: {fileID: 2800000, guid: c72cdb058cc82198493aecf75c50bc65, type: 3}
   - id: Base_Generator_Diesel
     icon: {fileID: 2800000, guid: 8356092251edf6b7fac52759d434cd47, type: 3}
   - id: Base_MedicalCot
     icon: {fileID: 2800000, guid: ce5cfadabfb56a9da546d308e196c97f, type: 3}
+  - id: Base_Watchtower
+    icon: {fileID: 2800000, guid: 91f05e27894a3f78aef26f9ca2d48e9c, type: 3}
+  - id: Base_WaterCollector
+    icon: {fileID: 2800000, guid: 83aeab087ed9e00e3e1a9d5c7d330f35, type: 3}

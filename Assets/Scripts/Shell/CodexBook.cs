@@ -1,7 +1,7 @@
 namespace OutpostZero.Shell
 {
     /// <summary>
-    /// Codex pages and the twelve one-time hints. Seen ids are packed as id|id so the save stays schema 1.
+    /// Codex pages and the thirteen one-time hints. Seen ids are packed as id|id so the save stays schema 1.
     /// </summary>
     public static class CodexBook
     {
@@ -31,6 +31,17 @@ namespace OutpostZero.Shell
             new Entry { Id = "module.barricade", Model = "Barricade_Wood_Wire", Title = "Barricade", Body = "The night raid hits the nearest boards. A guard slows the damage.", LockedUntilSeen = false },
             new Entry { Id = "module.cot", Model = "Base_MedicalCot", Title = "Medical cot", Body = "Rest and a medic close wounds faster than waiting the night out.", LockedUntilSeen = false },
             new Entry { Id = "faction.market", Model = "NPC_Merchant", Title = "Ash Market", Body = "The merchant trades medkits, rifle ammo, and water for camp scrap.", LockedUntilSeen = false },
+            new Entry { Id = "item.bandage", Title = "Bandage", Body = "Stops a bleed. It will not close a deep wound on its own.", LockedUntilSeen = false },
+            new Entry { Id = "item.street_bottle", Title = "Street bottle", Body = "Throw it and it breaks loud enough to pull a group off your path.", LockedUntilSeen = false },
+            new Entry { Id = "item.pipe_bomb", Title = "Pipe bomb", Body = "A short fuse and a wide blast. It scorches the road and wakes the block.", LockedUntilSeen = false },
+            new Entry { Id = "item.antibiotics", Title = "Antibiotics", Body = "Clears infection a medkit cannot. The clinic keeps them for friends.", LockedUntilSeen = false },
+            new Entry { Id = "module.workbench", Model = "Base_CraftingWorkbench", Title = "Workbench", Body = "Crafts gear and weapon mods, and takes apart what you carry home.", LockedUntilSeen = false },
+            new Entry { Id = "module.campfire", Model = "Base_Campfire_Cooker", Title = "Campfire", Body = "Cooks raw food into meals and boils water clean.", LockedUntilSeen = false },
+            new Entry { Id = "module.watchtower", Model = "Base_Watchtower", Title = "Watchtower", Body = "A guard up here sees the raid coming sooner.", LockedUntilSeen = false },
+            new Entry { Id = "module.water", Model = "Base_WaterCollector", Title = "Water collector", Body = "Fills the stores a little every day, more in the rain.", LockedUntilSeen = false },
+            new Entry { Id = "faction.militia", Model = "NPC_Merchant", Title = "Iron Militia", Body = "Rifle rounds and shells, at a price. Trusted camps get pipe bombs.", LockedUntilSeen = false },
+            new Entry { Id = "faction.clinic", Model = "NPC_Merchant", Title = "The Clinic", Body = "Medkits and bandages. Earn their trust and they part with antibiotics.", LockedUntilSeen = false },
+            new Entry { Id = "faction.farmers", Model = "NPC_Merchant", Title = "Free Farmers", Body = "Food and water, cheaper than anyone. Friends get raw food by the sack.", LockedUntilSeen = false },
             new Entry { Id = "mechanic.noise", Title = "Noise", Body = "Shots, sprints, and breaking barrels carry. Crouching cuts the footfall.", LockedUntilSeen = false },
             new Entry { Id = "mechanic.exposure", Title = "Exposure", Body = "Lamplight and the flashlight make you easier to spot. Dark is cover.", LockedUntilSeen = false },
             new Entry { Id = "mechanic.infection", Title = "Infection", Body = "A dirty wound worsens until a medkit or the cot clears it.", LockedUntilSeen = false },
@@ -59,7 +70,8 @@ namespace OutpostZero.Shell
             new Hint { Id = "hint.sprint", Signal = "sprint", Text = "Sprint is loud and spends stamina." },
             new Hint { Id = "hint.aim", Signal = "aim", Text = "Aim tightens the shot and narrows what you can see." },
             new Hint { Id = "hint.extract", Signal = "extract", Text = "The gate is the way home. Unfinished work will not let you through." },
-            new Hint { Id = "hint.weight", Signal = "weight", Text = "The pack is near its limit. Drop or use something." }
+            new Hint { Id = "hint.weight", Signal = "weight", Text = "The pack is near its limit. Drop or use something." },
+            new Hint { Id = "hint.throw", Signal = "throwable", Text = "{key:Throw} throws it. The noise pulls them to where it lands." }
         };
 
         public static bool Has(string packed, string id)

@@ -20,6 +20,21 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void EveryHintTheIssueListsHasASignalAndTheCodexCoversEachFaction()
+        {
+            foreach (var signal in new[] { "move", "aim", "near", "empty", "dark", "throwable", "loot", "weight", "extract" })
+                Assert.IsTrue(CodexBook.Hints.Any(h => h.Signal == signal), signal);
+            foreach (var id in new[] { "street_bottle", "noise_lure", "molotov", "flare", "pipe_bomb" })
+                Assert.AreNotEqual(TossKind.None, TossKind.Of(id), id);
+            Assert.IsTrue(CodexBook.TryHint("", "throwable", out string text, out _));
+            StringAssert.DoesNotContain("{key:", text);
+            foreach (var faction in new[] { "militia", "clinic", "farmers" })
+                Assert.IsTrue(CodexBook.Entries.Any(e => e.Id == "faction." + faction), faction);
+            foreach (var entry in CodexBook.Entries)
+                Assert.AreNotEqual("?", Loc.EntryTitle(entry.Id, "?"), entry.Id + " has no title in the table");
+        }
+
+        [Test]
         public void DayOneWalksTheCampInOrder()
         {
             var gates = TutorialTrack.Camp.Select(s => s.Gate).ToArray();

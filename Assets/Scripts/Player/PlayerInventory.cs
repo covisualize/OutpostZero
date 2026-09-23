@@ -140,6 +140,7 @@ namespace OutpostZero.Player
             RecalculateWeight();
             OnInventoryChanged?.Invoke();
             if (WeightRatio >= 0.8f) OutpostZero.Shell.CodexDirector.Hear("weight");
+            if (TossKind.Of(id) != TossKind.None) OutpostZero.Shell.CodexDirector.Hear("throwable");
             return true;
         }
 
