@@ -16,10 +16,10 @@ MonoBehaviour:
   label: Suppressor
   outputId: suppressor
   outputCount: 1
-  scrap: 12
+  scrap: 8
   cloth: 0
   chemicals: 0
-  tape: 0
+  tape: 2
   raw: 0
   station: 1
   skill: 

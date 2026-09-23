@@ -27,7 +27,7 @@ namespace OutpostZero.Colony
 
         public static int CodeTier(string recipe)
         {
-            if (recipe == "flare" || recipe == "repair_kit" || recipe == "barricade_kit" || recipe == "radio_spare") return 2;
+            if (recipe == "antibiotics" || recipe == "flare" || recipe == "repair_kit" || recipe == "barricade_kit" || recipe == "radio_spare") return 2;
             return 1;
         }
 

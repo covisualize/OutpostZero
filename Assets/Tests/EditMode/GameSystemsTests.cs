@@ -2485,12 +2485,11 @@ namespace OutpostZero.Tests.EditMode
             Assert.AreEqual(50f, PackOps.Limit(2), 0.001f);
             Assert.IsTrue(PackOps.Fits(48f, PackOps.RaisedLimit, 2f));
             Assert.IsFalse(PackOps.Fits(49f, PackOps.RaisedLimit, 2f));
-            Assert.IsTrue(PackOps.CanRaise(1, 2, 12, 3, 1));
-            Assert.IsFalse(PackOps.CanRaise(1, 1, 12, 3, 1));
-            Assert.IsFalse(PackOps.CanRaise(2, 2, 12, 3, 1));
-            Assert.IsFalse(PackOps.CanRaise(1, 2, 11, 3, 1));
-            Assert.IsFalse(PackOps.CanRaise(1, 2, 12, 2, 1));
-            Assert.IsFalse(PackOps.CanRaise(1, 2, 12, 3, 0));
+            Assert.IsTrue(PackOps.CanRaise(1, 2, 0, 6, 3), "the issue's Backpack T2: cloth 6 and duct tape 3");
+            Assert.IsFalse(PackOps.CanRaise(1, 1, 0, 6, 3), "needs the tier 2 bench");
+            Assert.IsFalse(PackOps.CanRaise(2, 2, 0, 6, 3));
+            Assert.IsFalse(PackOps.CanRaise(1, 2, 0, 5, 3));
+            Assert.IsFalse(PackOps.CanRaise(1, 2, 0, 6, 2));
             var packSave = new SaveGameData { packTier = 2 };
             Assert.IsTrue(SaveCodec.TryDeserialize(SaveCodec.Serialize(packSave), out var packLoaded, out var packError), packError);
             Assert.AreEqual(2, packLoaded.packTier);

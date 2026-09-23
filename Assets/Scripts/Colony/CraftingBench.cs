@@ -45,7 +45,7 @@ namespace OutpostZero.Colony
             new Recipe { Id = "noise_lure", Label = "Noise lure", ScrapCost = 2, OutputId = "noise_lure", OutputCount = 1 },
             new Recipe { Id = "molotov", Label = "Molotov", ScrapCost = 6, OutputId = "molotov", OutputCount = 1 },
             new Recipe { Id = "pipe_bomb", Label = "Pipe Bomb", ScrapCost = 8, OutputId = "pipe_bomb", OutputCount = 1 },
-            new Recipe { Id = "suppressor", Label = "Suppressor", ScrapCost = 12, OutputId = "suppressor", OutputCount = 1 },
+            new Recipe { Id = "suppressor", Label = "Suppressor", ScrapCost = 8, OutputId = "suppressor", OutputCount = 1 },
             new Recipe { Id = "rail", Label = "Flashlight rail", ScrapCost = 5, OutputId = "rail", OutputCount = 1 },
             new Recipe { Id = "optic", Label = "Optic", ScrapCost = 9, OutputId = "optic", OutputCount = 1 },
             new Recipe { Id = "extended_mag", Label = "Extended mag", ScrapCost = 8, OutputId = "extended_mag", OutputCount = 1 },

@@ -153,5 +153,25 @@ namespace OutpostZero.Tests.EditMode
             Assert.IsFalse(CraftBill.Fits(78, 80, 0, 1, 0, 0));
             Assert.IsTrue(CraftBill.Fits(0, 80, 0, 0, 0, 0));
         }
+
+        [Test]
+        public void TheIssueBillsHoldForTheSuppressorAntibioticsAndFieldPack()
+        {
+            Assert.IsTrue(CraftBill.CodeOf("suppressor", out var suppressor));
+            Assert.AreEqual(8, suppressor.Scrap);
+            Assert.AreEqual(2, suppressor.Tape);
+            Assert.AreEqual("Build", suppressor.Know);
+            Assert.AreEqual(4, suppressor.Level);
+
+            Assert.IsTrue(CraftBill.CodeOf("antibiotics", out var antibiotics));
+            Assert.AreEqual(3, antibiotics.Chemicals);
+            Assert.AreEqual(5, antibiotics.Level);
+            Assert.AreEqual(2, CraftGate.CodeTier("antibiotics"), "antibiotics wait on the raised bench");
+            Assert.AreEqual("tier", CraftGate.Deny("antibiotics", 1, ""));
+
+            Assert.AreEqual(6, PackOps.RaiseCloth);
+            Assert.AreEqual(3, PackOps.RaiseTape);
+            Assert.AreEqual(0, PackOps.RaiseScrap);
+        }
     }
 }

@@ -44,7 +44,7 @@ namespace OutpostZero.Colony
             cost = new Cost();
             if (id == "bandage") cost = Make(1, 2, 0, 0, Any, "");
             else if (id == "medkit") cost = Make(8, 1, 1, 1, Cot, "Medic");
-            else if (id == "antibiotics") cost = Make(10, 0, 2, 0, Cot, "Medic");
+            else if (id == "antibiotics") cost = Make(10, 0, 3, 0, Cot, "Medic");
             else if (id == "painkillers") cost = Make(5, 0, 1, 0, Any, "");
             else if (id == "ammo_9mm") cost = Make(4, 0, 1, 0, Workbench, "");
             else if (id == "ammo_shells") cost = Make(5, 0, 1, 0, Workbench, "");
@@ -53,7 +53,7 @@ namespace OutpostZero.Colony
             else if (id == "noise_lure") cost = Make(2, 0, 0, 0, Any, "");
             else if (id == "molotov") cost = Make(6, 1, 0, 0, Any, "");
             else if (id == "pipe_bomb") cost = Make(8, 0, 1, 1, Workbench, "");
-            else if (id == "suppressor") cost = Make(12, 0, 0, 0, Workbench, "");
+            else if (id == "suppressor") cost = Make(8, 0, 0, 2, Workbench, "");
             else if (id == "rail") cost = Make(5, 0, 0, 0, Workbench, "");
             else if (id == "optic") cost = Make(9, 0, 0, 0, Workbench, "");
             else if (id == "extended_mag") cost = Make(8, 0, 0, 0, Workbench, "");

@@ -929,7 +929,7 @@ namespace OutpostZero.UI
             if (carriedTier >= 2) camp.Add(Body(Loc.T("camp.pack_t2")));
             else if (bench && benchTier >= 2)
             {
-                camp.Add(Button(Loc.T("camp.pack_raise") + "  " + PackOps.RaiseScrap + "  " + Loc.T("camp.cloth") + " " + PackOps.RaiseCloth + "  " + Loc.T("camp.tape") + " " + PackOps.RaiseTape, () =>
+                camp.Add(Button(Loc.T("camp.pack_raise") + "  " + Loc.T("camp.cloth") + " " + PackOps.RaiseCloth + "  " + Loc.T("camp.tape") + " " + PackOps.RaiseTape, () =>
                 {
                     int tierNow = GridBuilder.Instance != null ? GridBuilder.Instance.BenchTier() : 1;
                     PlayerRegistry.Current?.GetComponent<PlayerInventory>()?.TryRaisePack(tierNow, ColonyStorage.Instance);
