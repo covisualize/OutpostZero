@@ -90,6 +90,7 @@ The plan lives in the Linear project [Outpost Zero — Full Playable Game](https
 - [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md) — setup, building, tests, CI, conventions
 - [docs/QA_CHECKLIST.md](docs/QA_CHECKLIST.md) — playtest checklist
 - [docs/AUDIO_ATTRIBUTION.md](docs/AUDIO_ATTRIBUTION.md) — sound credits
+- [docs/ACCESSIBILITY.md](docs/ACCESSIBILITY.md) — accessibility review
 
 ---
 
