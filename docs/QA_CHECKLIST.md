@@ -47,7 +47,7 @@ Play this in a player build, not the editor. Use Survivor difficulty and a fixed
 - [ ] Back in camp the haul is in storage. Advance the day and needs, morale and stores move.
 - [ ] Survive a night raid. Barricade damage and injuries carry into the next day.
 - [ ] Save & Quit from the pause menu. Relaunch, choose Continue, and the day, roster, storage, base and district match.
-  - Automated (PlayMode, PRO-15): `CampaignLoopTests` starts a New Game in the arena, plays three camp and expedition cycles (street, extraction, results, camp, a night's sleep), saves in camp, travels to the menu and runs Continue's load. `SaveDiff` must find no field that differs between the saved state and the state read back, apart from the save's timestamp and thumbnail.
+  - Automated (PlayMode, PRO-15): `CampaignLoopTests` starts a New Game in the arena, plays three camp and expedition cycles (street, extraction, results, camp, a night's sleep; on the first trip the leader carries 7 scrap and 2 cloth home and the test checks both reach the camp stores and the pack empties at the gate, M1's loot-carried-home criterion), saves in camp, travels to the menu and runs Continue's load. `SaveDiff` must find no field that differs between the saved state and the state read back, apart from the save's timestamp and thumbnail.
 - [ ] Lose a leader on purpose. The successor wakes at the gate, the corpse is on the map and its gear can be recovered, and the memorial lists the fallen.
 - [ ] Open districts along the road until all ten are open, then clear the tower. The victory screen shows and the run ends.
 - [ ] Start a new game and kill the whole roster. The outpost-falls screen is the only way forward.

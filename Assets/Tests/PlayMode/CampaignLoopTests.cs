@@ -55,6 +55,8 @@ namespace OutpostZero.Tests.PlayMode
             gm.BeginNewOutpost("campaign", true);
             yield return Until(() => gm.CurrentState == GameState.CampManagement || gm.CurrentState == GameState.ExpeditionActive, 10f);
             int firstDay = WorldClock.Instance != null ? WorldClock.Instance.Day : 0;
+            int scrapBefore = 0;
+            int clothBefore = 0;
 
             for (int cycle = 0; cycle < Cycles; cycle++)
             {
@@ -67,11 +69,27 @@ namespace OutpostZero.Tests.PlayMode
                 yield return Until(() => gm.CurrentState == GameState.ExpeditionActive, 10f);
                 Assert.AreEqual(GameState.ExpeditionActive, gm.CurrentState, "cycle " + cycle + " reaches the street");
                 yield return new WaitForSeconds(1f);
+                var pack = PlayerRegistry.Current != null ? PlayerRegistry.Current.GetComponent<OutpostZero.Player.PlayerInventory>() : null;
+                if (cycle == 0)
+                {
+                    Assert.IsNotNull(pack, "the leader carries a pack on the street");
+                    Assert.IsNotNull(ColonyStorage.Instance, "the camp has stores");
+                    scrapBefore = ColonyStorage.Instance.Scrap;
+                    clothBefore = ColonyStorage.Instance.Cloth;
+                    pack.AddScrap(7);
+                    Assert.IsTrue(pack.TryAddItem("cloth", "Cloth", ItemCategory.ScrapMaterial, 2, 0.2f), "street loot fits the pack");
+                }
                 gm.CompleteExpedition();
                 yield return Until(() => gm.CurrentState == GameState.ExpeditionResults || gm.CurrentState == GameState.Victory, 10f);
                 gm.EnterCamp();
                 yield return Until(() => gm.CurrentState == GameState.CampManagement, 10f);
                 Assert.AreEqual(GameState.CampManagement, gm.CurrentState, "cycle " + cycle + " comes home");
+                if (cycle == 0)
+                {
+                    Assert.GreaterOrEqual(ColonyStorage.Instance.Scrap, scrapBefore + 7, "the street's scrap reaches the camp stores");
+                    Assert.GreaterOrEqual(ColonyStorage.Instance.Cloth, clothBefore + 2, "the street's cloth reaches the camp stores");
+                    Assert.AreEqual(0, pack.ScrapCount, "the pack is emptied at the gate");
+                }
                 WorldClock.Instance?.SleepUntilMorning();
                 yield return null;
             }
