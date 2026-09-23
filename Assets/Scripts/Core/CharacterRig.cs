@@ -19,6 +19,24 @@ namespace OutpostZero.Core
         public const string Windup = "Windup";
         /// <summary>Held while a lunge or charge carries the body.</summary>
         public const string Dash = "Dash";
+        /// <summary>Int parameter for a standing chore. It only takes effect while the body stands still.</summary>
+        public const string Activity = "Activity";
+        public const int ActivityNone = 0;
+        public const int ActivityWork = 1;
+        public const int ActivityTalk = 2;
+        /// <summary>Base-layer states for each chore, indexed by code - 1.</summary>
+        public static readonly string[] ActivityStates = { "Work", "Talk" };
+
+        public static string ActivityState(int code)
+        {
+            return code >= 1 && code <= ActivityStates.Length ? ActivityStates[code - 1] : "";
+        }
+
+        /// <summary>The merchant talks while the stall is open and tinkers with stock the rest of the time.</summary>
+        public static int MerchantActivity(bool tradeOpen)
+        {
+            return tradeOpen ? ActivityTalk : ActivityWork;
+        }
 
         /// <summary>The model id is the FBX file stem, e.g. "Zombie_Walker".</summary>
         public static string ModelId(string modelPath)

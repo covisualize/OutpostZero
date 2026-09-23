@@ -1,4 +1,5 @@
 using UnityEngine;
+using OutpostZero.Core;
 
 namespace OutpostZero.Colony
 {
@@ -36,6 +37,31 @@ namespace OutpostZero.Colony
             if (action == "Clear") return ClearLean * Stir(age);
             if (action == "Scavenge") return ScavengeLean;
             return 0f;
+        }
+
+        /// <summary>The chore clip a yard action plays once the colonist reaches its spot.</summary>
+        public static int Activity(string action)
+        {
+            switch (action)
+            {
+                case "Cook":
+                case "Build":
+                case "Clear":
+                case "Medic":
+                case CraftQueue.Task:
+                    return CharacterRig.ActivityWork;
+                case "Visit":
+                    return CharacterRig.ActivityTalk;
+                default:
+                    return CharacterRig.ActivityNone;
+            }
+        }
+
+        /// <summary>A rigged body playing its chore clip gets no extra tilt; capsules and clipless bodies still lean.</summary>
+        public static float Lean(string action, float age, bool animated)
+        {
+            if (animated && Activity(action) != CharacterRig.ActivityNone) return 0f;
+            return Lean(action, age);
         }
 
         public static float Scale(string action)

@@ -198,6 +198,7 @@ namespace OutpostZero.Core
             else if (name.Contains("Merchant"))
             {
                 CharacterVariety.Ensure(go).Bind("merchant", false);
+                Add<StallKeeper>(go);
             }
             else if (name.Contains("Colonist"))
             {

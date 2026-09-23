@@ -21,8 +21,12 @@ namespace OutpostZero.Colony
         private Vector3 lastPosition;
         private bool hasSpeed;
         private bool hasRate;
+        private bool hasActivity;
+        private int activity = -1;
 
         public bool Steered => agent != null && agent.enabled && agent.isOnNavMesh;
+        /// <summary>True when the model's controller has chore clips, so the yard skips its procedural tilt.</summary>
+        public bool Acts => hasActivity;
 
         public void Dress(bool model)
         {
@@ -56,6 +60,7 @@ namespace OutpostZero.Colony
             {
                 if (parameter.name == "Speed") hasSpeed = true;
                 if (parameter.name == StrideSheet.MoveRate) hasRate = true;
+                if (parameter.name == CharacterRig.Activity) hasActivity = true;
             }
         }
 
@@ -86,6 +91,14 @@ namespace OutpostZero.Colony
             Vector3 heading = Steered && agent.desiredVelocity.sqrMagnitude > 0.01f ? agent.desiredVelocity : goal - transform.position;
             heading.y = 0f;
             return heading;
+        }
+
+        /// <summary>Sets the chore the body plays once it stands at its spot (<see cref="CharacterRig.ActivityWork"/> and so on).</summary>
+        public void Chore(int code)
+        {
+            if (!hasActivity || code == activity || animator == null) return;
+            activity = code;
+            animator.SetInteger(CharacterRig.Activity, code);
         }
 
         private void Animate(float speed)

@@ -110,9 +110,10 @@ namespace OutpostZero.Colony
                 float pace = ShiftWear.Stride(survivor.fatigue, raid);
                 var walker = body.GetComponent<CampMateBody>();
                 Vector3 face = walker.Drive(goal, pace);
+                walker.Chore(YardPose.Activity(action));
                 var beat = body.GetComponent<YardBeat>();
                 if (beat == null) beat = body.gameObject.AddComponent<YardBeat>();
-                float lean = YardPose.Lean(action, beat.Age);
+                float lean = YardPose.Lean(action, beat.Age, walker.Acts);
                 float yaw = face.sqrMagnitude > 0.01f ? Quaternion.LookRotation(face).eulerAngles.y : body.eulerAngles.y;
                 body.rotation = Quaternion.Euler(lean, yaw, 0f);
                 float squat = YardPose.Scale(action);

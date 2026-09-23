@@ -122,6 +122,7 @@ namespace OutpostZero.EditorTools
             EnsureParameter(controller, CharacterRig.DeathVariant, AnimatorControllerParameterType.Float);
             EnsureParameter(controller, CharacterRig.Windup, AnimatorControllerParameterType.Trigger);
             EnsureParameter(controller, CharacterRig.Dash, AnimatorControllerParameterType.Bool);
+            EnsureParameter(controller, CharacterRig.Activity, AnimatorControllerParameterType.Int);
             var parameters = controller.parameters;
             bool changed = false;
             for (int i = 0; i < parameters.Length; i++)
@@ -338,7 +339,30 @@ namespace OutpostZero.EditorTools
                 if (TryLink(from, dash, false, out var toDash)) toDash.AddCondition(AnimatorConditionMode.If, 0f, CharacterRig.Dash);
             }
             if (TryLink(dash, walk, false, out var fromDash)) fromDash.AddCondition(AnimatorConditionMode.IfNot, 0f, CharacterRig.Dash);
+            for (int i = 0; i < CharacterRig.ActivityStates.Length; i++)
+            {
+                var chore = FindOrAdd(machine, CharacterRig.ActivityStates[i], new Vector3(40, 80 * i, 0));
+                Chore(idle, walk, hit, chore, i + 1);
+            }
             AnyTrigger(machine, death, "Death");
+        }
+
+        /// <summary>A standing body settles into its chore; walking off or dropping the chore returns it to the idle.</summary>
+        private static void Chore(AnimatorState idle, AnimatorState walk, AnimatorState hit, AnimatorState chore, int code)
+        {
+            if (TryLink(idle, chore, false, out var start))
+            {
+                start.duration = 0.25f;
+                start.AddCondition(AnimatorConditionMode.Equals, code, CharacterRig.Activity);
+                start.AddCondition(AnimatorConditionMode.Less, 0.2f, "Speed");
+            }
+            if (TryLink(chore, idle, false, out var stop))
+            {
+                stop.duration = 0.25f;
+                stop.AddCondition(AnimatorConditionMode.NotEqual, code, CharacterRig.Activity);
+            }
+            if (TryLink(chore, walk, false, out var leave)) leave.AddCondition(AnimatorConditionMode.Greater, 0.2f, "Speed");
+            TriggerFrom(chore, hit, "Hit");
         }
 
         private static AnimatorState FindOrAdd(AnimatorStateMachine machine, string name, Vector3 position)
