@@ -24,7 +24,7 @@ namespace OutpostZero.AI
             return next;
         }
 
-        public static Report Run(int difficulty, float opening, float interval, int tier)
+        public static Report Run(int difficulty, float opening, float interval, int tier, bool night = false)
         {
             const int steps = 600;
             const float dt = 0.5f;
@@ -34,6 +34,7 @@ namespace OutpostZero.AI
             float timer = 2f;
             float elapsed = 0f;
             float cursor = 0f;
+            bool runnersOut = false;
             float min = tension;
             float max = tension;
             int calm = state == TensionState.Calm ? 1 : 0;
@@ -61,6 +62,11 @@ namespace OutpostZero.AI
                     if (advanced == cursor) break;
                     cursor = advanced;
                     if (!string.IsNullOrEmpty(kind)) spawns += HordeSchedule.Count(kind);
+                }
+                if (HordeSchedule.RunnerPack(elapsed, night, tier, runnersOut))
+                {
+                    runnersOut = true;
+                    spawns += HordeSchedule.Count("runners");
                 }
                 timer -= dt;
                 if (timer <= 0f)

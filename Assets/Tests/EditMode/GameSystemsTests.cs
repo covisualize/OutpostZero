@@ -2128,16 +2128,17 @@ namespace OutpostZero.Tests.EditMode
             Assert.AreEqual(45f, cursor);
             cursor = HordeSchedule.Advance(400f, cursor, 1, out kind);
             Assert.AreEqual("", kind);
-            Assert.AreEqual(90f, cursor);
-            cursor = HordeSchedule.Advance(400f, cursor, 1, out kind);
-            Assert.AreEqual("", kind);
             Assert.AreEqual(300f, cursor);
 
+            Assert.IsTrue(HordeSchedule.RunnerPack(90f, true, 2, false));
+            Assert.IsFalse(HordeSchedule.RunnerPack(400f, false, 3, false), "runner packs hunt at night only");
+            Assert.IsFalse(HordeSchedule.RunnerPack(89f, true, 3, false));
+            Assert.IsFalse(HordeSchedule.RunnerPack(400f, true, 1, false));
+            Assert.IsFalse(HordeSchedule.RunnerPack(400f, true, 3, true), "one pack per street");
+            Assert.AreEqual(4, HordeSchedule.Count("runners"));
+            Assert.AreEqual("Runner", HordeSchedule.Prefer("runners"));
+
             cursor = HordeSchedule.Advance(400f, 45f, 3, out kind);
-            Assert.AreEqual("runners", kind);
-            Assert.AreEqual(4, HordeSchedule.Count(kind));
-            Assert.AreEqual("Runner", HordeSchedule.Prefer(kind));
-            cursor = HordeSchedule.Advance(400f, cursor, 3, out kind);
             Assert.AreEqual("brute", kind);
             Assert.AreEqual(1, HordeSchedule.Count(kind));
             Assert.AreEqual("Brute", HordeSchedule.Prefer(kind));
@@ -2214,8 +2215,9 @@ namespace OutpostZero.Tests.EditMode
             Assert.Greater(survivor.Max, 75f);
             Assert.GreaterOrEqual(survivor.Calm, 1);
             Assert.GreaterOrEqual(survivor.Peak, 1);
-            Assert.AreEqual(35, survivor.Spawns);
-            Assert.AreEqual(56, nightmare.Spawns);
+            Assert.AreEqual(31, survivor.Spawns);
+            Assert.AreEqual(52, nightmare.Spawns);
+            Assert.AreEqual(35, PressureClock.Run(2, 20f, 8f, 2, true).Spawns, "a night street adds the runner pack");
             Assert.Greater(nightmare.Spawns, survivor.Spawns);
 
             Assert.AreEqual(1f, ExtractWatch.Advance(0f, 1f, true, false));

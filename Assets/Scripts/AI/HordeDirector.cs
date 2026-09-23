@@ -35,6 +35,7 @@ namespace OutpostZero.AI
         private int tier = 1;
         private float elapsed;
         private float eventCursor;
+        private bool runnersOut;
         private string openingPrefer = "";
         private bool scripted;
         private bool nearHeard;
@@ -112,6 +113,17 @@ namespace OutpostZero.AI
                     spawner.SpawnZombies(HordeSchedule.Count(kind));
                     spawner.Prefer(openingPrefer);
                 }
+                bool night = WorldClock.Instance != null && RaidWatch.Night(WorldClock.Instance.Hour);
+                if (HordeSchedule.RunnerPack(elapsed, night, tier, runnersOut))
+                {
+                    runnersOut = true;
+                    if (spawner != null)
+                    {
+                        spawner.Prefer(HordeSchedule.Prefer("runners"));
+                        spawner.SpawnZombies(HordeSchedule.Count("runners"));
+                        spawner.Prefer(openingPrefer);
+                    }
+                }
             }
 
             if (spawner == null || Time.time < nextSpawn) return;
@@ -152,6 +164,7 @@ namespace OutpostZero.AI
             tier = threat < 1 ? 1 : threat;
             elapsed = 0f;
             eventCursor = 0f;
+            runnersOut = false;
             openingPrefer = preferredVariant ?? "";
             scripted = false;
             nearHeard = false;
