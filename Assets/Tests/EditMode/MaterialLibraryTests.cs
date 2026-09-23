@@ -180,7 +180,7 @@ namespace OutpostZero.Tests.EditMode
                     Assert.IsTrue(File.Exists(Path(MaterialLibrary.Folder, "Textures", family + "_" + map + ".png")), family + " " + map);
                 Assert.IsTrue(File.Exists(Path(MaterialLibrary.LitPath(family))), family + " lit");
                 bool triplanar = File.Exists(Path(MaterialLibrary.TriplanarPath(family)));
-                Assert.AreEqual(family != SurfaceFamily.Glass, triplanar, family + " triplanar");
+                Assert.AreEqual(MaterialLibrary.HasTriplanar(family), triplanar, family + " triplanar");
             }
         }
 
@@ -193,7 +193,7 @@ namespace OutpostZero.Tests.EditMode
             {
                 StringAssert.Contains("- family: " + (int)family + "\n", asset);
                 StringAssert.Contains("guid: " + GuidOf(MaterialLibrary.LitPath(family)), asset, family + " lit");
-                if (family != SurfaceFamily.Glass)
+                if (MaterialLibrary.HasTriplanar(family))
                     StringAssert.Contains("guid: " + GuidOf(MaterialLibrary.TriplanarPath(family)), asset, family + " triplanar");
             }
         }
@@ -217,7 +217,7 @@ namespace OutpostZero.Tests.EditMode
             string shader = GuidOf("Assets/Shaders/OutpostEnvironment.shader");
             foreach (var family in Families())
             {
-                if (family == SurfaceFamily.Glass) continue;
+                if (!MaterialLibrary.HasTriplanar(family)) continue;
                 StringAssert.Contains("guid: " + shader, Read(MaterialLibrary.TriplanarPath(family)), family.ToString());
             }
         }

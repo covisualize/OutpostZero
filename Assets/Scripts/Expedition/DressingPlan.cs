@@ -29,9 +29,66 @@ namespace OutpostZero.Expedition
             return seed;
         }
 
+        public const float DebrisMinX = -6f;
+        public const float DebrisMaxX = 16f;
+        public const float DebrisMinZ = 1.5f;
+        public const float DebrisMaxZ = 19.5f;
+
         public static Mark[] Debris(string districtId)
         {
-            return Scatter(SeedFor(districtId), 18, -4f, 16f, 2f, 16f, 0.85f);
+            return Debris(DebrisProfile.Default(districtId), StreetEdges());
+        }
+
+        /// <summary>
+        /// Poisson-disk litter over the street, thickest within a couple of metres of
+        /// <paramref name="anchors"/> (x, z pairs on curbs and wall faces).
+        /// </summary>
+        public static Mark[] Debris(DebrisProfile.Row row, float[] anchors)
+        {
+            var mask = DebrisMask.Street(anchors, row.baseDensity, row.edgeDensity, row.reach);
+            var points = PoissonScatter.Sample(row.seed, DebrisMinX, DebrisMaxX, DebrisMinZ, DebrisMaxZ, row.spacing, OnTheStreet, mask.At);
+            var marks = new Mark[points.Count];
+            for (int i = 0; i < points.Count; i++)
+            {
+                string role = DebrisRoles[(int)(PoissonScatter.Unit(row.seed + 31, i) * DebrisRoles.Length) % DebrisRoles.Length];
+                marks[i] = Sized(role, points[i].X, points[i].Z, PoissonScatter.Unit(row.seed + 53, i) * 360f);
+            }
+            return marks;
+        }
+
+        public const int AnchorLimit = 1200;
+
+        /// <summary>Appends (x, z) pairs round a footprint rectangle, about <paramref name="step"/> metres apart.</summary>
+        public static void Perimeter(List<float> points, float minX, float minZ, float maxX, float maxZ, float step)
+        {
+            int along = System.Math.Max(1, (int)System.Math.Ceiling((maxX - minX) / step));
+            int across = System.Math.Max(1, (int)System.Math.Ceiling((maxZ - minZ) / step));
+            for (int i = 0; i <= along; i++)
+            {
+                float x = minX + (maxX - minX) * i / along;
+                points.Add(x); points.Add(minZ);
+                points.Add(x); points.Add(maxZ);
+            }
+            for (int i = 1; i < across; i++)
+            {
+                float z = minZ + (maxZ - minZ) * i / across;
+                points.Add(minX); points.Add(z);
+                points.Add(maxX); points.Add(z);
+            }
+        }
+
+        /// <summary>The street's long edges, one anchor a metre, for when no curbs are known.</summary>
+        public static float[] StreetEdges()
+        {
+            var anchors = new List<float>();
+            for (float x = DebrisMinX; x <= DebrisMaxX; x += 1f)
+            {
+                anchors.Add(x);
+                anchors.Add(DebrisMinZ);
+                anchors.Add(x);
+                anchors.Add(DebrisMaxZ);
+            }
+            return anchors.ToArray();
         }
 
         public static Mark[] Patches(string districtId)
@@ -57,7 +114,17 @@ namespace OutpostZero.Expedition
                 Box("skyline", -4f, 0f, 28.5f, 0f, 2.4f, 12f, 0.5f),
                 Box("skyline", 5f, 0f, 28f, 0f, 2.8f, 7f, 0.5f),
                 Box("skyline", 13f, 0f, 29f, 0f, 3.4f, 14f, 0.5f),
-                Box("tower", 18f, 0f, 25f, 0f, 2.2f, 8f, 2.2f),
+                Box("tower", 18f, 4.6f, 25f, 0f, 3.2f, 1.4f, 3.2f),
+                Box("tower_leg", 16.9f, 0f, 23.9f, 0f, 0.18f, 4.8f, 0.18f),
+                Box("tower_leg", 19.1f, 0f, 23.9f, 0f, 0.18f, 4.8f, 0.18f),
+                Box("tower_leg", 16.9f, 0f, 26.1f, 0f, 0.18f, 4.8f, 0.18f),
+                Box("tower_leg", 19.1f, 0f, 26.1f, 0f, 0.18f, 4.8f, 0.18f),
+                Box("billboard", -19f, 4.4f, 23.6f, 0f, 5.2f, 2.2f, 0.14f),
+                Box("billboard_post", -20.8f, 0f, 23.75f, 0f, 0.16f, 3.4f, 0.16f),
+                Box("billboard_post", -17.2f, 0f, 23.75f, 0f, 0.16f, 3.4f, 0.16f),
+                Box("billboard", 26f, 3.8f, 22.6f, -18f, 4.2f, 1.8f, 0.12f),
+                Box("billboard_post", 24.6f, 0f, 22.2f, 0f, 0.14f, 2.9f, 0.14f),
+                Box("billboard_post", 27.4f, 0f, 23.1f, 0f, 0.14f, 2.9f, 0.14f),
                 Box("pole", -6f, 0f, 16f, 0f, 0.22f, 4.6f, 0.22f),
                 Box("pole", 8f, 0f, 16.4f, 0f, 0.22f, 4.6f, 0.22f),
                 Box("overpass", -9f, 2.6f, 21.2f, 8f, 6f, 0.55f, 2.4f),
@@ -136,36 +203,6 @@ namespace OutpostZero.Expedition
             -13.5f, -8.5f
         };
 
-        private static Mark[] Scatter(int seed, int count, float minX, float maxX, float minZ, float maxZ, float spacing)
-        {
-            var marks = new List<Mark>();
-            int attempt = 0;
-            int guard = 0;
-            while (marks.Count < count && guard < count * 30)
-            {
-                guard++;
-                float x = Lerp(minX, maxX, Unit(seed, attempt++));
-                float z = Lerp(minZ, maxZ, Unit(seed, attempt++));
-                if (!OnTheStreet(x, z)) continue;
-                if (!FarFrom(marks, x, z, spacing)) continue;
-                string role = DebrisRoles[UnitIndex(seed, attempt++) % DebrisRoles.Length];
-                marks.Add(Sized(role, x, z, Unit(seed, attempt++) * 360f));
-            }
-            return marks.ToArray();
-        }
-
-        private static bool FarFrom(List<Mark> marks, float x, float z, float spacing)
-        {
-            float min = spacing * spacing;
-            for (int i = 0; i < marks.Count; i++)
-            {
-                float dx = marks[i].X - x;
-                float dz = marks[i].Z - z;
-                if (dx * dx + dz * dz < min) return false;
-            }
-            return true;
-        }
-
         private static Mark Sized(string role, float x, float z, float yaw)
         {
             switch (role)
@@ -191,8 +228,6 @@ namespace OutpostZero.Expedition
             uint mixed = Mix(seed, index);
             return (mixed & 0xFFFFFFu) / 16777215f;
         }
-
-        private static int UnitIndex(int seed, int index) => (int)(Mix(seed, index) & 0x7FFFFFFFu);
 
         private static uint Mix(int seed, int index)
         {

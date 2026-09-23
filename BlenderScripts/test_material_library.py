@@ -30,7 +30,7 @@ class MaterialLibraryTests(unittest.TestCase):
     def test_every_map_has_the_expected_layout(self):
         for family, maps in self.maps.items():
             self.assertEqual(set(maps), {"Albedo", "Normal", "Mask"}, family)
-            self.assertEqual(maps["Albedo"].shape[-1], 4 if family == "Glass" else 3, family)
+            self.assertEqual(maps["Albedo"].shape[-1], 4 if family in ml.ALPHA_FAMILIES else 3, family)
             self.assertEqual(maps["Normal"].shape, (SMALL, SMALL, 3), family)
             self.assertEqual(maps["Mask"].shape, (SMALL, SMALL, 4), family)
             self.assertTrue(np.all(maps["Mask"][..., 2] == 0), family)
@@ -85,9 +85,21 @@ class MaterialLibraryTests(unittest.TestCase):
                 self.assertIn(ml.texture_guid(family, suffix), text, family)
         self.assertIn("RenderType: Transparent", ml.lit_material("Glass"))
 
-    def test_glass_has_no_triplanar_material(self):
-        self.assertNotIn("Glass", ml.triplanar_families())
-        self.assertEqual(len(ml.triplanar_families()), len(ml.FAMILIES) - 1)
+    def test_alpha_families_have_no_triplanar_material(self):
+        for family in ml.ALPHA_FAMILIES:
+            self.assertNotIn(family, ml.triplanar_families())
+        self.assertEqual(len(ml.triplanar_families()), len(ml.FAMILIES) - len(ml.ALPHA_FAMILIES))
+
+    def test_chain_link_is_a_double_sided_cutout(self):
+        text = ml.lit_material("ChainLink")
+        self.assertIn("_ALPHATEST_ON", text)
+        self.assertIn("- _AlphaClip: 1\n", text)
+        self.assertIn("- _Cull: 0\n", text)
+        self.assertIn("m_CustomRenderQueue: 2450", text)
+        alpha = ml.render("ChainLink", 512)["Albedo"][..., 3]
+        coverage = (alpha > 127).mean()
+        self.assertGreater(coverage, 0.05)
+        self.assertLess(coverage, 0.3, "mostly holes")
 
     def test_guids_are_unique(self):
         guids = []

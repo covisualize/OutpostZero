@@ -99,10 +99,10 @@ python3 BlenderScripts/texture_set.py
 
 ## Material library
 
-`BlenderScripts/material_library.py` (numpy) paints twelve seamless 1024 px surface families: Asphalt, ConcreteCracked, BrickRed, BrickGrey, MetalRusted, MetalPainted, Plywood, TarpFabric, Glass, Rubber, RotFlesh and Cloth. Each family gets `<Family>_Albedo`, `_Normal` and `_Mask` PNGs in `Assets/Materials/Library/Textures`. The mask is packed like URP/Lit wants it: R metallic, G occlusion, A smoothness, so one texture fills both the metallic and occlusion slots. All noise is periodic on the tile, and stretched noise must pass `freq_y` rather than scaling `u` or `v`, or the tile gets a seam. From those maps it writes:
+`BlenderScripts/material_library.py` (numpy) paints thirteen seamless 1024 px surface families: Asphalt, ConcreteCracked, BrickRed, BrickGrey, MetalRusted, MetalPainted, Plywood, TarpFabric, Glass, Rubber, RotFlesh, Cloth and ChainLink. Each family gets `<Family>_Albedo`, `_Normal` and `_Mask` PNGs in `Assets/Materials/Library/Textures`. The mask is packed like URP/Lit wants it: R metallic, G occlusion, A smoothness, so one texture fills both the metallic and occlusion slots. All noise is periodic on the tile, and stretched noise must pass `freq_y` rather than scaling `u` or `v`, or the tile gets a seam. From those maps it writes:
 
 - `ML_<Family>.mat`: URP/Lit, UV mapped, for imported models. Glass is transparent.
-- `MT_<Family>.mat`: `OutpostZero/EnvironmentTriplanar`, world-space triplanar at the family's real-world tile size, for primitives and kit boxes without UVs. It adds a top-surface dust layer, grime near the ground, vertex AO, wetness from the global `_OutpostWet`, and URP decals. Glass has no triplanar version.
+- `MT_<Family>.mat`: `OutpostZero/EnvironmentTriplanar`, world-space triplanar at the family's real-world tile size, for primitives and kit boxes without UVs. It adds a top-surface dust layer, grime near the ground, vertex AO, wetness from the global `_OutpostWet`, and URP decals. Glass and ChainLink carry alpha, so they have no triplanar version. ChainLink is a double-sided alpha-clipped cutout whose UVs are meant to run in metres (see `MapRim.Strip`).
 - `Resources/MaterialLibrary.asset`, which `MaterialLibrary` loads at runtime.
 
 ```powershell

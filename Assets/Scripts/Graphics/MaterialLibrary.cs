@@ -21,11 +21,12 @@ namespace OutpostZero.Graphics
         Rubber = 10,
         RotFlesh = 11,
         Cloth = 12,
+        ChainLink = 13,
     }
 
     /// <summary>
     /// Runtime handle on the material library: each family has a URP/Lit material (ML_*, UV mapped)
-    /// and, except glass, a world-space triplanar one (MT_*) for boxes and primitives with no UVs.
+    /// and, except glass and chain-link, a world-space triplanar one (MT_*) for boxes and primitives with no UVs.
     /// Also owns the naming convention that maps Blender materials (Mat_Family_Variant) and
     /// primitive names onto families, so nothing in the scene keeps Unity's grey default.
     /// </summary>
@@ -76,7 +77,13 @@ namespace OutpostZero.Graphics
             return entry != null ? entry.lit : null;
         }
 
-        /// <summary>The world-space material for a family; glass (no triplanar) gives its lit one.</summary>
+        /// <summary>Glass and chain-link carry alpha, so they only come UV mapped.</summary>
+        public static bool HasTriplanar(SurfaceFamily family)
+        {
+            return family != SurfaceFamily.None && family != SurfaceFamily.Glass && family != SurfaceFamily.ChainLink;
+        }
+
+        /// <summary>The world-space material for a family; glass and chain-link give their lit one.</summary>
         public static Material Triplanar(SurfaceFamily family)
         {
             var entry = Active != null ? Active.Find(family) : null;
@@ -194,6 +201,7 @@ namespace OutpostZero.Graphics
             new[] { "Rubber", "rubber", "tire", "tyre", "pad", "polymer", "lid", "cord", "hose" },
             new[] { "Plywood", "wood", "timber", "lumber", "pallet", "bracing", "stock", "pegboard", "crate", "logs", "stakes", "plank", "shelf", "desk", "table", "counter", "door", "board", "barricade" },
             new[] { "ConcreteCracked", "concrete", "curb", "plaster", "foundation", "stones", "floor", "trim", "jersey", "pillar", "block", "room", "roof" },
+            new[] { "ChainLink", "chainlink", "chain", "mesh" },
             new[] { "MetalPainted", "metal", "steel", "iron", "ironwork", "chrome", "gunmetal", "tin", "ibeam", "beam", "frame", "latch", "latches", "clasp", "clasps", "buckle", "buckles", "silver", "panel", "engine", "tube", "mag", "spigot", "wire", "barbed", "pipe", "blade", "guard", "car", "truck", "sedan", "vehicle", "post", "pole", "fence", "gun", "rifle", "shotgun", "rollup", "generator", "locker" },
         };
 

@@ -9,13 +9,13 @@ check compares decoded pixels). Run with plain Python 3 and numpy:
 
 Outputs, per family ``<Family>``:
 
-- ``Assets/Materials/Library/Textures/<Family>_Albedo.png`` (sRGB; RGBA for glass)
+- ``Assets/Materials/Library/Textures/<Family>_Albedo.png`` (sRGB; RGBA for glass and chain-link)
 - ``Assets/Materials/Library/Textures/<Family>_Normal.png`` (OpenGL, tangent space)
 - ``Assets/Materials/Library/Textures/<Family>_Mask.png``   (R metallic, G occlusion, B 0,
   A smoothness: URP/Lit reads R and A from ``_MetallicGlossMap`` and G from ``_OcclusionMap``)
 - ``Assets/Materials/Library/ML_<Family>.mat``  URP/Lit (UV mapped; imports and props)
 - ``Assets/Materials/Library/MT_<Family>.mat``  OutpostZero/EnvironmentTriplanar (world UVs;
-  the primitive-built architecture), except glass
+  the primitive-built architecture), except glass and chain-link
 - ``Assets/Resources/MaterialLibrary.asset`` listing both sets for runtime lookup
 """
 
@@ -52,7 +52,11 @@ FAMILIES = (
     "Rubber",
     "RotFlesh",
     "Cloth",
+    "ChainLink",
 )
+
+# Families with an alpha channel; they get no triplanar material.
+ALPHA_FAMILIES = ("Glass", "ChainLink")
 
 # Metres one texture tile covers on the triplanar material.
 TILE_METRES = {
@@ -68,6 +72,7 @@ TILE_METRES = {
     "Rubber": 1.0,
     "RotFlesh": 1.0,
     "Cloth": 0.8,
+    "ChainLink": 1.0,
 }
 
 MASK32 = np.uint64(0xFFFFFFFF)
@@ -332,6 +337,25 @@ def rot_flesh(u, v):
     return albedo, height, 0.0, 0.35 + sores * 0.35 + mottle * 0.1, None
 
 
+def chain_link(u, v):
+    """Galvanised diamond mesh, 20 links a metre; alpha keeps only the wire."""
+    links = 20
+    a = (u + v) * links
+    b = (u - v) * links
+    da = np.abs(a - np.round(a)) / (links * 1.41421356)
+    db = np.abs(b - np.round(b)) / (links * 1.41421356)
+    wire_r = 0.002
+    near = np.minimum(da, db)
+    wire = 1.0 - _step(wire_r * 0.6, wire_r, near)
+    profile = np.sqrt(np.clip(1.0 - (near / wire_r) ** 2, 0.0, 1.0))
+    rust = _step(0.6, 0.75, fbm(u, v, 4, 121, 4))
+    zinc = _rgb(0.6, 0.62, 0.62, u.shape) * (0.9 + value_noise(u, v, 64, 122)[..., None] * 0.15)
+    albedo = _mix(zinc, _rgb(0.4, 0.22, 0.1, u.shape), rust * 0.8)
+    metallic = 0.85 * (1.0 - rust)
+    smooth = 0.55 - rust * 0.35
+    return albedo, profile * wire, metallic, smooth, wire
+
+
 def cloth(u, v):
     x = u * 128
     y = v * 128
@@ -356,12 +380,14 @@ BUILDERS = {
     "Rubber": rubber,
     "RotFlesh": rot_flesh,
     "Cloth": cloth,
+    "ChainLink": chain_link,
 }
 
 NORMAL_STRENGTH = {
     "Asphalt": 3.0, "ConcreteCracked": 3.0, "BrickRed": 4.0, "BrickGrey": 4.0,
     "MetalRusted": 2.5, "MetalPainted": 2.5, "Plywood": 2.0, "TarpFabric": 2.0,
     "Glass": 0.5, "Rubber": 1.5, "RotFlesh": 2.5, "Cloth": 1.5,
+    "ChainLink": 1.5,
 }
 
 
@@ -497,7 +523,9 @@ def texture_meta(family, suffix):
             line = line.replace("256", "1024")
         elif line.strip() == "aniso: 1":
             line = line.replace("1", "4")
-        elif line.strip() == "alphaIsTransparency: 0" and family == "Glass" and suffix == "Albedo":
+        elif line.strip() == "alphaIsTransparency: 0" and family in ALPHA_FAMILIES and suffix == "Albedo":
+            line = line.replace("0", "1")
+        elif line.strip() == "mipMapsPreserveCoverage: 0" and family == "ChainLink" and suffix == "Albedo":
             line = line.replace("0", "1")
         lines.append(line)
     return "\n".join(lines)
@@ -571,6 +599,7 @@ def lit_material(family):
     normal = texture_guid(family, "Normal")
     mask = texture_guid(family, "Mask")
     transparent = family == "Glass"
+    cutout = family == "ChainLink"
     textures = [
         _tex("_BaseMap", albedo),
         _tex("_BumpMap", normal),
@@ -585,8 +614,8 @@ def lit_material(family):
         _tex("_SpecGlossMap", None),
     ]
     floats = [
-        ("_AlphaClip", 0), ("_AlphaToMask", 0), ("_Blend", 0), ("_BlendModePreserveSpecular", 1),
-        ("_BumpScale", 1), ("_ClearCoatMask", 0), ("_ClearCoatSmoothness", 0), ("_Cull", 2),
+        ("_AlphaClip", 1 if cutout else 0), ("_AlphaToMask", 0), ("_Blend", 0), ("_BlendModePreserveSpecular", 1),
+        ("_BumpScale", 1), ("_ClearCoatMask", 0), ("_ClearCoatSmoothness", 0), ("_Cull", 0 if cutout else 2),
         ("_Cutoff", 0.5), ("_DetailAlbedoMapScale", 1), ("_DetailNormalMapScale", 1),
         ("_DstBlend", 10 if transparent else 0), ("_DstBlendAlpha", 10 if transparent else 0),
         ("_EnvironmentReflections", 1), ("_GlossMapScale", 1), ("_Glossiness", 0),
@@ -600,9 +629,12 @@ def lit_material(family):
     keywords = ["_METALLICSPECGLOSSMAP", "_NORMALMAP", "_OCCLUSIONMAP"]
     if transparent:
         keywords.append("_SURFACE_TYPE_TRANSPARENT")
-    tags = [("RenderType", "Transparent" if transparent else "Opaque")]
+    if cutout:
+        keywords.append("_ALPHATEST_ON")
+    tags = [("RenderType", "Transparent" if transparent else "TransparentCutout" if cutout else "Opaque")]
     shader = "{fileID: 4800000, guid: %s, type: 3}" % LIT_SHADER_GUID
-    return _material("ML_" + family, shader, sorted(keywords), textures, floats, colors, tags, 3000 if transparent else -1)
+    queue = 3000 if transparent else 2450 if cutout else -1
+    return _material("ML_" + family, shader, sorted(keywords), textures, floats, colors, tags, queue)
 
 
 def triplanar_material(family, shader_guid):
@@ -636,7 +668,7 @@ def material_meta(family, triplanar):
 
 
 def triplanar_families():
-    return [f for f in FAMILIES if f != "Glass"]
+    return [f for f in FAMILIES if f not in ALPHA_FAMILIES]
 
 
 def library_asset(script_guid):
@@ -658,7 +690,7 @@ def library_asset(script_guid):
         "  entries:",
     ]
     for index, family in enumerate(FAMILIES):
-        tri = family != "Glass"
+        tri = family not in ALPHA_FAMILIES
         lines.append("  - family: %d" % (index + 1))
         lines.append("    lit: {fileID: 2100000, guid: %s, type: 2}" % material_guid(family, False))
         lines.append("    triplanar: " + ("{fileID: 2100000, guid: %s, type: 2}" % material_guid(family, True) if tri else "{fileID: 0}"))
@@ -691,7 +723,7 @@ def text_files(root):
             files[texture_path(family, suffix) + ".meta"] = texture_meta(family, suffix)
         files[material_path(family, False)] = lit_material(family)
         files[material_path(family, False) + ".meta"] = material_meta(family, False)
-        if family != "Glass":
+        if family not in ALPHA_FAMILIES:
             files[material_path(family, True)] = triplanar_material(family, shader_guid)
             files[material_path(family, True) + ".meta"] = material_meta(family, True)
     files[LIBRARY_ASSET] = library_asset(_script_guid(root, LIBRARY_SCRIPT))
