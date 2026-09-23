@@ -161,6 +161,13 @@ namespace OutpostZero.Core
             SaveSystem.Instance?.Save(false);
         }
 
+        /// <summary>The results screen's Retry: home through camp, so needs, the autosave and the trip's fuel all count, then out again.</summary>
+        public void HeadOutAgain()
+        {
+            if (currentState == GameState.ExpeditionResults) EnterCamp();
+            BeginExpedition();
+        }
+
         public void BeginExpedition()
         {
             if (WorldMapService.Instance != null && WorldMapService.Instance.Current != null && WorldMapService.Instance.Current.cleared && !WorldMapService.Instance.Endless)

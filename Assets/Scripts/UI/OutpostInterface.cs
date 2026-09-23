@@ -486,6 +486,8 @@ namespace OutpostZero.UI
                     DrawHaul(menu);
                     if (map != null && map.Current != null) menu.Add(Body(Loc.T("menu.next") + " " + Loc.District(map.Current.id)));
                     menu.Add(Button(Loc.T("menu.enter"), () => Go(FlowStep.Sanctuary)));
+                    if (map != null && ResultsRetry.Open(map.Current != null, map.Current != null && map.Current.cleared, map.Endless, map.CampaignWon))
+                        menu.Add(Button(Loc.T("menu.retry"), () => Go(FlowStep.Expedition, () => GameManager.Instance.HeadOutAgain())));
                     break;
                 case GameState.GameOver:
                     menu.Add(Title(Loc.T("gameover.title")));
