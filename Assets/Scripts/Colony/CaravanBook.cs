@@ -9,6 +9,8 @@ namespace OutpostZero.Colony
     public static class CaravanBook
     {
         public static readonly string[] Ids = { "caravan", "militia", "clinic", "farmers" };
+        public const int Trusted = 30;
+        public const int HaggleCap = 10;
 
         public static string Display(string id)
         {
@@ -32,10 +34,34 @@ namespace OutpostZero.Colony
             }
         }
 
+        /// <summary>What a faction adds to its table once the camp is trusted.</summary>
+        public static string Premium(string id)
+        {
+            switch (id)
+            {
+                case "militia": return "pipe_bomb";
+                case "clinic": return "antibiotics";
+                case "farmers": return "raw_food";
+                default: return "flare";
+            }
+        }
+
+        public static string[] Stock(string id, int standing)
+        {
+            string[] table = Stock(id);
+            if (standing < Trusted) return table;
+            var list = new List<string>(table) { Premium(id) };
+            return list.ToArray();
+        }
+
         public static int BasePrice(string itemId)
         {
             switch (itemId)
             {
+                case "antibiotics": return 16;
+                case "pipe_bomb": return 12;
+                case "flare": return 8;
+                case "raw_food": return 3;
                 case "medkit": return 14;
                 case "ammo_rifle": return 9;
                 case "ammo_smg": return 7;
@@ -44,7 +70,9 @@ namespace OutpostZero.Colony
                 case "water": return 6;
                 case "canned_food": return 5;
                 case "bandage": return 4;
-                default: return 6;
+                default:
+                    int value = CraftBill.Value(itemId);
+                    return value > 0 ? value : 6;
             }
         }
 
@@ -54,6 +82,33 @@ namespace OutpostZero.Colony
             float scale = 1f - (clamped / 100f) * 0.3f;
             if (leader) scale *= 0.95f;
             return Math.Max(1, (int)Math.Round(BasePrice(itemId) * scale, MidpointRounding.AwayFromZero));
+        }
+
+        /// <summary>The leader haggles one percent off per point of Leadership, up to ten.</summary>
+        public static int Price(string itemId, int standing, int leadership)
+        {
+            int clamped = Math.Max(-100, Math.Min(100, standing));
+            float scale = 1f - (clamped / 100f) * 0.3f;
+            if (leadership > 0) scale *= 1f - Math.Min(leadership, HaggleCap) * 0.01f;
+            return Math.Max(1, (int)Math.Round(BasePrice(itemId) * scale, MidpointRounding.AwayFromZero));
+        }
+
+        /// <summary>Buy-back pays half the base price, a little more for a trusted camp.</summary>
+        public static int Offer(string itemId, int standing)
+        {
+            int clamped = Math.Max(-100, Math.Min(100, standing));
+            float scale = 1f + (clamped / 100f) * 0.1f;
+            return Math.Max(1, (int)Math.Round(BasePrice(itemId) * 0.5f * scale, MidpointRounding.AwayFromZero));
+        }
+
+        public static bool Sellable(string itemId)
+        {
+            if (string.IsNullOrEmpty(itemId) || itemId == "scrap" || itemId.StartsWith("print_", StringComparison.Ordinal)) return false;
+            for (int i = 0; i < Ids.Length; i++)
+            {
+                if (Premium(Ids[i]) == itemId || Array.IndexOf(Stock(Ids[i]), itemId) >= 0) return true;
+            }
+            return CraftBill.Value(itemId) > 0;
         }
 
         public static bool Refuses(string id, int standing) => id == "militia" && standing < -20;

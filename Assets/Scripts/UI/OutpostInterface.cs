@@ -330,14 +330,25 @@ namespace OutpostZero.UI
             }
             else
             {
-                string[] stock = CaravanBook.Stock(id);
+                string[] stock = faction.Stock;
                 for (int i = 0; i < stock.Length; i++)
                 {
                     string itemId = stock[i];
                     string label = Loc.Item(itemId);
+                    if (itemId == CaravanBook.Premium(id)) label += "  " + Loc.T("stall.trusted");
                     parent.Add(Button(StallVoice.Buy(label, faction.Price(itemId), null), () => faction.Buy(itemId)));
                 }
-                parent.Add(Button(Loc.T("stall.sell"), () => faction.SellBandage()));
+                if (standing < CaravanBook.Trusted) parent.Add(Body(Loc.T("stall.trust_at") + " " + CaravanBook.Trusted));
+                var pack = PlayerRegistry.Current != null ? PlayerRegistry.Current.GetComponent<PlayerInventory>() : null;
+                if (pack != null)
+                {
+                    foreach (var carried in pack.Items)
+                    {
+                        if (carried == null || carried.Quantity <= 0 || !CaravanBook.Sellable(carried.ItemId)) continue;
+                        string sold = carried.ItemId;
+                        parent.Add(Button(Loc.T("stall.sell_item") + " " + Loc.Item(sold) + " x" + carried.Quantity + "  +" + faction.Offer(sold), () => faction.Sell(sold)));
+                    }
+                }
             }
             string questId = id == "clinic" || id == "farmers" ? id : "caravan";
             parent.Add(Body(StallVoice.Quest(id, CaravanBook.QuestDone(faction.Quests, questId), null)));

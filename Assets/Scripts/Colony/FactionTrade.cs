@@ -39,7 +39,7 @@ namespace OutpostZero.Colony
 
         private int Day => WorldClock.Instance != null ? WorldClock.Instance.Day : 1;
         private bool PostBuilt => GridBuilder.Instance != null && GridBuilder.Instance.HasKind("TradingPost");
-        private bool LeaderPresent => SurvivorRoster.Instance != null && SurvivorRoster.Instance.Leader != null;
+        private int Leadership => SurvivorRoster.Instance != null && SurvivorRoster.Instance.Leader != null ? SurvivorRoster.Instance.Leader.leadership : 0;
 
         private void Awake()
         {
@@ -68,7 +68,9 @@ namespace OutpostZero.Colony
             return standing[index];
         }
 
-        public int Price(string itemId) => CaravanBook.Price(itemId, StandingOf(ActiveId), LeaderPresent);
+        public int Price(string itemId) => CaravanBook.Price(itemId, StandingOf(ActiveId), Leadership);
+        public int Offer(string itemId) => CaravanBook.Offer(itemId, StandingOf(ActiveId));
+        public string[] Stock => CaravanBook.Stock(ActiveId, StandingOf(ActiveId));
 
         public bool Buy(string itemId)
         {
@@ -79,6 +81,11 @@ namespace OutpostZero.Colony
                 return false;
             }
             if (CaravanBook.Refuses(faction, StandingOf(faction)))
+            {
+                GameplayFeedback.Toast(StallVoice.Refuse(StallVoice.Name(faction, null), null));
+                return false;
+            }
+            if (System.Array.IndexOf(Stock, itemId) < 0)
             {
                 GameplayFeedback.Toast(StallVoice.Refuse(StallVoice.Name(faction, null), null));
                 return false;
@@ -114,20 +121,22 @@ namespace OutpostZero.Colony
             return true;
         }
 
-        public bool SellBandage()
+        public bool SellBandage() => Sell("bandage");
+
+        public bool Sell(string itemId)
         {
             string faction = ActiveId;
             var inventory = PlayerRegistry.Current != null ? PlayerRegistry.Current.GetComponent<PlayerInventory>() : null;
-            if (string.IsNullOrEmpty(faction) || inventory == null || !inventory.TryConsume("bandage", 1))
+            if (string.IsNullOrEmpty(faction) || inventory == null || !CaravanBook.Sellable(itemId) || !inventory.TryConsume(itemId, 1))
             {
                 GameplayFeedback.Toast(StallVoice.NoBandage(null));
                 return false;
             }
-            int payout = Mathf.Max(1, Price("bandage") / 2);
+            int payout = Offer(itemId);
             int stored = ColonyStorage.Instance != null ? ColonyStorage.Instance.AddScrap(payout) : 0;
             if (stored <= 0)
             {
-                var record = ItemCatalog.Find("bandage");
+                var record = ItemCatalog.Find(itemId);
                 if (record != null) inventory.TryAddItem(record.Id, record.DisplayName, record.Category, 1, record.Weight);
                 GameplayFeedback.Toast(YardSay.Stores(null));
                 return false;
