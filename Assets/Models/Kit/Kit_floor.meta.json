@@ -2,7 +2,7 @@
   "id": "Kit_floor",
   "category": "Kit",
   "generator": "generate_kit.build_piece",
-  "generatorHash": "c628ca264c3e81cb15972544bdd567ba745f391ffa9a830dcdeb088b460f6268",
+  "generatorHash": "7e09d68f5b2aea52e2fa92901fad2c646bcb061d99e56e68ef701d33ca9a2de8",
   "gitSha": "21ed7f54ecaf729a3b2fd74b6f3babebc62fce0b",
   "blender": "4.2.11",
   "tags": [

@@ -2,7 +2,7 @@
   "id": "Kit_manhole",
   "category": "Kit",
   "generator": "generate_kit.build_piece",
-  "generatorHash": "7d4e8a81c729ca1e63d96d1cdf46cf0bd53822a02f0ada51246df7d182be19c6",
+  "generatorHash": "b73bff2dc4a77f95c43983616bbb95a5c14cb6504d76b2d2d4a0362cad9383cd",
   "gitSha": "21ed7f54ecaf729a3b2fd74b6f3babebc62fce0b",
   "blender": "4.2.11",
   "tags": [

@@ -2,7 +2,7 @@
   "id": "Kit_balcony",
   "category": "Kit",
   "generator": "generate_kit.build_piece",
-  "generatorHash": "d5839b1ecfe0070df9ede0436d6071032ac09ee52c54ca53b4b639bd20c3bd4a",
+  "generatorHash": "6517e7c3ec5bde119fd02ea9ddf66d31e10147bf31e3416c9b82072c086ff4cf",
   "gitSha": "21ed7f54ecaf729a3b2fd74b6f3babebc62fce0b",
   "blender": "4.2.11",
   "tags": [

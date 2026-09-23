@@ -7,6 +7,7 @@ import sys
 import zlib
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import fbx_uv  # noqa: E402
 from icon_render import rendered as icon_rendered  # noqa: E402
 
 TEXTURES = ("Albedo", "Normal", "AO", "Mask", "Icon")
@@ -163,6 +164,8 @@ def audit(root=None, manifest=None):
         text = blob.decode("latin1", errors="ignore")
         if "LayerElementUV" not in text:
             problems.append(relative + " missing uvs")
+        elif (entry.get("bake") or {}).get("uv", True):
+            problems.extend(fbx_uv.problems(path, relative))
         if "/Characters/" in relative and "Hips" not in text:
             problems.append(relative + " missing hips")
         tris = triangle_count(path)

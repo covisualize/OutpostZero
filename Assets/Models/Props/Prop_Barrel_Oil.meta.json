@@ -2,7 +2,7 @@
   "id": "Prop_Barrel_Oil",
   "category": "Props",
   "generator": "generate_props.build_barrel_oil",
-  "generatorHash": "cfbe530f3ca876e29b13d1ede6e9af77e6e32c87c7f7288a36c5132b7f5fee02",
+  "generatorHash": "1d85c10ed63d4d60342ff55c09846928b48faa94b7ed3e7f7b619b925a478b85",
   "gitSha": "21ed7f54ecaf729a3b2fd74b6f3babebc62fce0b",
   "blender": "4.2.11",
   "tags": [

@@ -2,7 +2,7 @@
   "id": "Base_MedicalCot",
   "category": "BaseBuilding",
   "generator": "generate_base_building.build_medical_cot",
-  "generatorHash": "ce31b0d7d05df479fc2dabbc3ac406e35fdeb1c5bda67cdd35d5086430186f2b",
+  "generatorHash": "69ef00d281ebb3dd651dd099063a6cbeea2805e7a005f2241b4629e019a4842b",
   "gitSha": "21ed7f54ecaf729a3b2fd74b6f3babebc62fce0b",
   "blender": "4.2.11",
   "tags": [

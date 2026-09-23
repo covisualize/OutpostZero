@@ -2,7 +2,7 @@
   "id": "Barricade_Wood_Wire",
   "category": "Props",
   "generator": "generate_props.build_wood_wire_barricade",
-  "generatorHash": "3beb1de18531d15f9c3c5ab551cbd2626e4dfd409c5a8699095287b9424c97ae",
+  "generatorHash": "9a953f41126645b515b40313ac9e8a240fff22891717d1cebe4509664d41dd08",
   "gitSha": "21ed7f54ecaf729a3b2fd74b6f3babebc62fce0b",
   "blender": "4.2.11",
   "tags": [

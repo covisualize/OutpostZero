@@ -2,7 +2,7 @@
   "id": "Loot_WaterBottle",
   "category": "Weapons",
   "generator": "generate_items.build_water_bottle",
-  "generatorHash": "ad6e87223f7c094a35688769e5eac3361484cdfecb1053bbd1e618dfb9ee09d6",
+  "generatorHash": "e85eae70c728d897f5ae9820243ef48a3c0b87b46a34be7514bedc675726508e",
   "gitSha": "21ed7f54ecaf729a3b2fd74b6f3babebc62fce0b",
   "blender": "4.2.11",
   "tags": [

@@ -2,7 +2,7 @@
   "id": "Loot_NoiseLure",
   "category": "Weapons",
   "generator": "generate_items.build_noise_lure",
-  "generatorHash": "3f3493ccf498c0d46bc5b1ccdb2adac1547818ba9116e7b0f54181dbeff09ef0",
+  "generatorHash": "73cfa089adf4e8f342d4d00d6178967b6148fa23e0fd87c96714020afdd1bbd1",
   "gitSha": "21ed7f54ecaf729a3b2fd74b6f3babebc62fce0b",
   "blender": "4.2.11",
   "tags": [

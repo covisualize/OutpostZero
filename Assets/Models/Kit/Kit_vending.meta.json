@@ -2,7 +2,7 @@
   "id": "Kit_vending",
   "category": "Kit",
   "generator": "generate_kit.build_piece",
-  "generatorHash": "93e3c6defe2452d11ec8d9a5f76f9bfa74735b6c3ba94f11dd58bd84f72cfff3",
+  "generatorHash": "5d2d5531aec89439a7bf5b987f4a0b4b0cffbf58e0cf1da96683edcb5f7d9497",
   "gitSha": "21ed7f54ecaf729a3b2fd74b6f3babebc62fce0b",
   "blender": "4.2.11",
   "tags": [

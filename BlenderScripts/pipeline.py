@@ -131,6 +131,12 @@ def build_one(entry, models_root):
     blender_utils.export_fbx(output, animated=rigged, texture_size=bake.get("size"), unwrap=bake.get("uv", True))
     stats = dict(blender_utils.EXPORTS[-1])
     stats["lodTris"] = lod_triangles(names)
+    if bake.get("uv", True):
+        import fbx_uv
+
+        overlapping = fbx_uv.problems(output, entry["output"])
+        if overlapping:
+            raise plan.PlanError("; ".join(overlapping))
     if icon_rendered(entry.get("tags")):
         render_item_icon(output)
     return stats

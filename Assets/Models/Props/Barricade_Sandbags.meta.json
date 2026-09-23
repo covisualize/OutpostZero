@@ -2,7 +2,7 @@
   "id": "Barricade_Sandbags",
   "category": "Props",
   "generator": "generate_props.build_sandbags",
-  "generatorHash": "82af855843aeb063981afc295e7dfbd98223acd68af671821f12c2c7a28b0f91",
+  "generatorHash": "c6c1479927be92275b251747c715fadb8156f299d7a2e7dfea4c921a114ec796",
   "gitSha": "21ed7f54ecaf729a3b2fd74b6f3babebc62fce0b",
   "blender": "4.2.11",
   "tags": [

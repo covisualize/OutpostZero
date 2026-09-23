@@ -2,7 +2,7 @@
   "id": "Kit_road_t",
   "category": "Kit",
   "generator": "generate_kit.build_piece",
-  "generatorHash": "b55d9fda7ae952199fbfd5835a9d926a01edcafc8a78dfb54371c737e538d98a",
+  "generatorHash": "cc0dee81df4098c8c1b504b73f625f4a0763385373a95e177ae4f6cb8b1cd300",
   "gitSha": "21ed7f54ecaf729a3b2fd74b6f3babebc62fce0b",
   "blender": "4.2.11",
   "tags": [

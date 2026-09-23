@@ -2,7 +2,7 @@
   "id": "Kit_toilet",
   "category": "Kit",
   "generator": "generate_kit.build_piece",
-  "generatorHash": "c7bab34a50c713b4eb2564aeeab47a16cd463d97804f67db149a4c1357a6db54",
+  "generatorHash": "3a5cd2b4eb335f67572996a4b5a0a709eb0ec85ffde246ae475f7c09381980cf",
   "gitSha": "21ed7f54ecaf729a3b2fd74b6f3babebc62fce0b",
   "blender": "4.2.11",
   "tags": [

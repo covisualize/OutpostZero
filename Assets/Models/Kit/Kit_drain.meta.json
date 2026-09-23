@@ -2,7 +2,7 @@
   "id": "Kit_drain",
   "category": "Kit",
   "generator": "generate_kit.build_piece",
-  "generatorHash": "cfeee39602c524d6ef8cca3dcc47da72ba3d5282ae1931eb6c1da70a53144248",
+  "generatorHash": "897c259b39cf262bc3af498d960153b93b2b896d4e09d7c26584059f7619f838",
   "gitSha": "21ed7f54ecaf729a3b2fd74b6f3babebc62fce0b",
   "blender": "4.2.11",
   "tags": [

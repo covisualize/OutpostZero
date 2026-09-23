@@ -2,7 +2,7 @@
   "id": "Kit_workbench",
   "category": "Kit",
   "generator": "generate_kit.build_piece",
-  "generatorHash": "22acc7cc0375038f610018c382f2ff43847a0c783394f951a70877ffc824cd52",
+  "generatorHash": "a1efa534b887ea3b08939001b6b7fe2cf322842a18989acf242cf1451dacef1c",
   "gitSha": "21ed7f54ecaf729a3b2fd74b6f3babebc62fce0b",
   "blender": "4.2.11",
   "tags": [
