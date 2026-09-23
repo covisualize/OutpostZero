@@ -44,7 +44,7 @@ namespace OutpostZero.Tests.EditMode
             var listed = new List<string>();
             foreach (Match m in Regex.Matches(book, "- \\{fileID: 11400000, guid: (\\w+), type: 2\\}")) listed.Add(m.Groups[1].Value);
             var rows = NoiseTable.BuiltInRows();
-            Assert.AreEqual(21, rows.Count);
+            Assert.AreEqual(22, rows.Count);
             Assert.AreEqual(rows.Count, listed.Count);
             string script = Guid("Assets/Scripts/Sensory/NoiseDefinition.cs.meta");
             var seen = new HashSet<string>();
@@ -130,6 +130,8 @@ namespace OutpostZero.Tests.EditMode
             StringAssert.Contains("StepNoise.Base(crouchNoiseRadius, NoiseTable.StepCrouch)", steps);
             StringAssert.Contains("NoiseTable.Loud(stepRow)", steps);
             StringAssert.Contains("AshCough.Carry(IsCrouching, NoiseTable.Radius(NoiseTable.Cough))", steps);
+            StringAssert.Contains("BladeClang.Radius(body != null && body.IsCrouching, OutpostZero.Sensory.NoiseTable.Radius(OutpostZero.Sensory.NoiseTable.BladeClang))", Read("Assets/Scripts/Combat/MeleeWeapon.cs"));
+            Assert.AreEqual(OutpostZero.Combat.BladeClang.Reach, NoiseTable.Radius(NoiseTable.BladeClang));
         }
     }
 }

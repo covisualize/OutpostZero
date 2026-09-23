@@ -39,6 +39,7 @@ namespace OutpostZero.Sensory
         public const string Thunder = "thunder";
         public const string RaidTurret = "raid_turret";
         public const string RaidGuard = "raid_guard";
+        public const string BladeClang = "blade_clang";
 
         private static readonly Dictionary<string, Row> rows = new Dictionary<string, Row>();
         private static List<Row> builtIn;
@@ -115,7 +116,8 @@ namespace OutpostZero.Sensory
                 new Row { Id = BarrelBurst, Radius = 10f, Loud = 1f },
                 new Row { Id = Thunder, Radius = StormCover.Radius, Loud = 1f },
                 new Row { Id = RaidTurret, Radius = 18f, Loud = 0.7f },
-                new Row { Id = RaidGuard, Radius = 14f, Loud = 0.45f }
+                new Row { Id = RaidGuard, Radius = 14f, Loud = 0.45f },
+                new Row { Id = BladeClang, Radius = Combat.BladeClang.Reach, Loud = 0.9f }
             };
             return builtIn;
         }

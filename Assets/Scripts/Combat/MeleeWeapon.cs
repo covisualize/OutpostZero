@@ -127,9 +127,9 @@ namespace OutpostZero.Combat
             {
                 OutpostZero.Shell.AudioManager.Instance?.PlayAt("clang", origin, 0.42f, 0.85f);
                 var body = ownerGameObject != null ? ownerGameObject.GetComponent<OutpostZero.Player.PlayerController>() : null;
-                float radius = BladeClang.Radius(body != null && body.IsCrouching);
+                float radius = BladeClang.Radius(body != null && body.IsCrouching, OutpostZero.Sensory.NoiseTable.Radius(OutpostZero.Sensory.NoiseTable.BladeClang));
                 if (OutpostZero.Sensory.NoiseManager.Instance != null && radius > 0f)
-                    OutpostZero.Sensory.NoiseManager.Instance.EmitNoise(origin, radius, 0.9f, NoiseType.MeleeSwing, ownerGameObject);
+                    OutpostZero.Sensory.NoiseManager.Instance.EmitNoise(origin, radius, OutpostZero.Sensory.NoiseTable.Loud(OutpostZero.Sensory.NoiseTable.BladeClang), NoiseType.MeleeSwing, ownerGameObject);
             }
             else
             {

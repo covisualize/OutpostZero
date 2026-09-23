@@ -10,7 +10,13 @@ namespace OutpostZero.Combat
 
         public static float Radius(bool crouch)
         {
-            return crouch ? Reach * Crouch : Reach;
+            return Radius(crouch, Reach);
+        }
+
+        public static float Radius(bool crouch, float reach)
+        {
+            if (reach < 0f) reach = 0f;
+            return crouch ? reach * Crouch : reach;
         }
     }
 }
