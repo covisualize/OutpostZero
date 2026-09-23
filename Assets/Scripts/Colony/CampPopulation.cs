@@ -26,6 +26,7 @@ namespace OutpostZero.Colony
                 return;
             }
             Instance = this;
+            if (GetComponent<CampSelect>() == null) gameObject.AddComponent<CampSelect>();
         }
 
         private void OnDestroy()

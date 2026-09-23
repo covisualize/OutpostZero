@@ -720,6 +720,8 @@ namespace OutpostZero.UI
             camp.style.display = open ? DisplayStyle.Flex : DisplayStyle.None;
             if (!open) return;
             camp.Add(Title(Loc.T("camp.title")));
+            string picked = CampSelect.Instance != null ? CampSelect.Instance.Card(null) : "";
+            if (picked.Length > 0) camp.Add(Body(Loc.T("pick.title") + " " + picked));
             var guide = TutorialDirector.Instance;
             campMark = guide != null ? guide.CampMark : "";
             campLit.Clear();
@@ -784,6 +786,7 @@ namespace OutpostZero.UI
                 foreach (var survivor in roster.Survivors)
                 {
                     string flag = survivor.leader ? "*" : survivor.alive ? "" : "x";
+                    if (CampSelect.Instance != null && CampSelect.Instance.SurvivorId == survivor.id) flag = ">" + flag;
                     string mood = ColonyDay.Mood(survivor.morale, survivor.trait, survivor.aside, survivor.mark);
                     string doing = CampRoutine.Choose(survivor.task, survivor.hunger, survivor.thirst, survivor.morale, survivor.injury, survivor.fatigue);
                     string host = YardVisit.Host(survivor.id, doing, survivor.kin, survivor.fatigue, mateIds, mateActs, mateHere);
@@ -819,6 +822,7 @@ namespace OutpostZero.UI
                     row.Add(Button(Loc.Task(CraftQueue.Task), () => roster.Assign(id, CraftQueue.Task)));
                     row.Add(Button(Loc.Task("Clear"), () => roster.Assign(id, "Clear")));
                     if (!survivor.leader) row.Add(Button(Loc.Task(TaskPick.Auto), () => roster.Assign(id, TaskPick.Auto)));
+                    if (CompanionKit.Fit(survivor.alive, survivor.leader, survivor.injury)) row.Add(Button(Loc.Task(CompanionKit.Task), () => roster.Assign(id, CompanionKit.Task)));
                     if (survivor.injury > 0) row.Add(Button(Loc.Task("Quarantine"), () => roster.Assign(id, "Quarantine")));
                     if (FeverChoice.Offered(survivor.alive, survivor.leader, survivor.injury)) row.Add(Button(Loc.T("camp.mercy"), () => roster.Release(id)));
                     if (!survivor.leader) row.Add(Button(Loc.T("camp.gift"), () => roster.OfferMeal(id)));
@@ -1327,6 +1331,11 @@ namespace OutpostZero.UI
                 key.Add(InputGlyphs.UsingPad);
             }
             if (WorldClock.Instance != null) key.Add(WorldClock.Instance.Day);
+            if (CampSelect.Instance != null)
+            {
+                key.Add(CampSelect.Instance.Version);
+                key.Add(CampSelect.Instance.Card(null));
+            }
             var storage = ColonyStorage.Instance;
             if (storage != null)
             {

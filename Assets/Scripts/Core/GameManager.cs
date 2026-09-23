@@ -124,6 +124,7 @@ namespace OutpostZero.Core
             if (currentState == newState) return;
 
             currentState = newState;
+            if (newState != GameState.ExpeditionActive && newState != GameState.Paused) CompanionFollower.Dismiss();
             if (newState == GameState.Victory || newState == GameState.GameOver) RunArchive.NoteCurrent(newState == GameState.Victory);
             Time.timeScale = FlowArrival.Frozen(newState) ? 0f : 1f;
             OnGameStateChanged?.Invoke(currentState);
@@ -241,6 +242,8 @@ namespace OutpostZero.Core
             BalanceTelemetry.ExpeditionStarted();
             if (fromCamp) CodexDirector.Hear("launch");
             SetState(GameState.ExpeditionActive);
+            var mate = SurvivorRoster.Instance == null ? null : fromCamp ? SurvivorRoster.Instance.PackCompanion() : SurvivorRoster.Instance.Companion;
+            CompanionFollower.Raise(mate);
             return true;
         }
 
@@ -304,6 +307,7 @@ namespace OutpostZero.Core
             LastOutcome = ResultsSheet.Trained(LastOutcome, SurvivorRoster.Instance != null ? SurvivorRoster.Instance.Leader : null);
             if (LastOutcome.bonusScrap > 0) ColonyStorage.Instance?.AddScrap(LastOutcome.bonusScrap);
             SurvivorRoster.Instance?.RewardReturn();
+            CompanionFollower.Home(true);
             BringHomeBite();
             FactionTrade.Instance?.NoteExtracted(ObjectiveTracker.Instance != null ? ObjectiveTracker.Instance.Board : null);
             SetState(won ? GameState.Victory : GameState.ExpeditionResults);
@@ -319,6 +323,7 @@ namespace OutpostZero.Core
             if (merciful && SurvivorRoster.Instance != null && SurvivorRoster.Instance.WoundLeader())
             {
                 CloseExpedition(ExpeditionEnd.Dragged);
+                CompanionFollower.Home(false);
                 outcomeAnnounced = true;
                 BringHomeBite();
                 BringToCamp(false);
@@ -329,6 +334,7 @@ namespace OutpostZero.Core
             Vector3 corpse = PlayerRegistry.Current != null ? PlayerRegistry.Current.transform.position : Vector3.zero;
             var effects = PlayerRegistry.Current != null ? PlayerRegistry.Current.GetComponent<StatusEffectController>() : null;
             string cause = effects != null && effects.IsInfected ? "infection" : "killed";
+            CompanionFollower.Home(false);
             bool successor = SurvivorRoster.Instance == null || SurvivorRoster.Instance.MarkLeaderDead(corpse, cause);
             CloseExpedition(successor ? ExpeditionEnd.Succession : ExpeditionEnd.Wiped);
             AudioManager.Instance?.Sting("death");

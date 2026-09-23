@@ -570,6 +570,12 @@ namespace OutpostZero.Colony
                 CodexDirector.Hear("assign");
                 return;
             }
+            if (task == CompanionKit.Task)
+            {
+                if (!CompanionKit.Fit(survivor.alive, survivor.leader, survivor.injury)) return;
+                for (int i = 0; i < survivors.Count; i++)
+                    if (survivors[i] != survivor && survivors[i].task == CompanionKit.Task) survivors[i].task = "Rest";
+            }
             survivor.ownCall = false;
             if (task == "Quarantine")
             {
@@ -792,6 +798,50 @@ namespace OutpostZero.Colony
                 Orders = CraftingBench.Instance != null ? CraftingBench.Instance.Orders.Count : 0,
                 Bench = GridBuilder.Instance != null && GridBuilder.Instance.HasKind("Workbench")
             };
+        }
+
+        public Survivor Companion
+        {
+            get
+            {
+                for (int i = 0; i < survivors.Count; i++)
+                {
+                    var survivor = survivors[i];
+                    if (survivor.task == CompanionKit.Task && CompanionKit.Fit(survivor.alive, survivor.leader, survivor.injury)) return survivor;
+                }
+                return null;
+            }
+        }
+
+        /// <summary>The companion packs a ration from storage at the gate; with none to take they leave hungry.</summary>
+        public Survivor PackCompanion()
+        {
+            var mate = Companion;
+            if (mate == null) return null;
+            var storage = ColonyStorage.Instance;
+            bool packed = CompanionKit.Pack(storage != null ? storage.Food : 0, storage != null ? storage.Water : 0, out int food, out int water);
+            if (storage != null && food > 0) storage.AddFood(-food);
+            if (storage != null && water > 0) storage.AddWater(-water);
+            if (!packed)
+            {
+                mate.morale = Mathf.Max(0f, mate.morale - CompanionKit.HungryMorale);
+                GameplayFeedback.Toast(mate.displayName + " " + Loc.T("companion.hungry"));
+            }
+            OnRosterChanged?.Invoke();
+            return mate;
+        }
+
+        public void CompanionHome(string id, int bites, bool fell, bool cameHome)
+        {
+            var mate = Find(id);
+            if (mate == null || !mate.alive) return;
+            mate.injury = CompanionKit.Wounds(mate.injury, bites, fell);
+            if (!fell) Practice.Train(ref mate.combat, ref mate.combatXp);
+            int haul = CompanionKit.Haul(mate.scavenge, cameHome && !fell);
+            if (haul > 0) ColonyStorage.Instance?.AddScrap(haul);
+            if (!CompanionKit.Fit(mate.alive, mate.leader, mate.injury)) mate.task = "Rest";
+            GameplayFeedback.Toast(CompanionKit.Line(mate.displayName, fell, haul, null));
+            OnRosterChanged?.Invoke();
         }
 
         public void RewardReturn()
