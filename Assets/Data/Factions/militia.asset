@@ -20,3 +20,4 @@ MonoBehaviour:
   - ammo_smg
   premium: pipe_bomb
   refuseBelow: -20
+  markup: 120

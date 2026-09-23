@@ -1,3 +1,4 @@
+using System.IO;
 using NUnit.Framework;
 using OutpostZero.Colony;
 using OutpostZero.Items;
@@ -49,6 +50,27 @@ namespace OutpostZero.Tests.EditMode
             Assert.AreEqual(CaravanBook.Price("antibiotics", 0, 10), CaravanBook.Price("antibiotics", 0, 40));
             Assert.Less(CaravanBook.Price("antibiotics", 0, 10), CaravanBook.Price("antibiotics", 0, 0));
             Assert.Less(CaravanBook.Price("medkit", 100, 0), CaravanBook.Price("medkit", -100, 0));
+        }
+
+        [Test]
+        public void EachFactionAsksItsOwnMarkup()
+        {
+            Assert.AreEqual(14, CaravanBook.Price("caravan", "medkit", 0, 0));
+            Assert.AreEqual(15, CaravanBook.Price("clinic", "medkit", 0, 0));
+            Assert.AreEqual(17, CaravanBook.Price("militia", "medkit", 0, 0));
+            Assert.AreEqual(13, CaravanBook.Price("farmers", "medkit", 0, 0));
+            Assert.AreEqual(CaravanBook.Price("medkit", 40, 7), CaravanBook.Price("caravan", "medkit", 40, 7), "the Caravan asks the base price");
+            Assert.Less(CaravanBook.Price("militia", "ammo_rifle", 100, 0), CaravanBook.Price("militia", "ammo_rifle", -100, 0));
+            Assert.Less(CaravanBook.Price("militia", "ammo_rifle", 0, 10), CaravanBook.Price("militia", "ammo_rifle", 0, 0));
+            foreach (var faction in CaravanBook.Ids)
+            {
+                foreach (var id in CaravanBook.Stock(faction, 100))
+                {
+                    for (int standing = -100; standing <= 100; standing += 25)
+                        Assert.Greater(CaravanBook.Price(faction, id, standing, 10), CaravanBook.Offer(id, 100), faction + " " + id + " can be flipped for profit");
+                }
+            }
+            StringAssert.Contains("CaravanBook.Price(ActiveId, itemId", File.ReadAllText(Path.Combine(Directory.GetCurrentDirectory(), "Assets/Scripts/Colony/FactionTrade.cs")));
         }
 
         [Test]

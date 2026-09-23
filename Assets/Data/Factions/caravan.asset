@@ -20,3 +20,4 @@ MonoBehaviour:
   - medkit
   premium: flare
   refuseBelow: -101
+  markup: 100

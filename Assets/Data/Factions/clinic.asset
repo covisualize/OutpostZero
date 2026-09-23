@@ -19,3 +19,4 @@ MonoBehaviour:
   - bandage
   premium: antibiotics
   refuseBelow: -101
+  markup: 110

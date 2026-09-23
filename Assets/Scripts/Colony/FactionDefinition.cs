@@ -21,6 +21,10 @@ namespace OutpostZero.Colony
         [Tooltip("Standing below which the faction won't trade; -101 means it always trades.")]
         [Range(-101, 100)] public int refuseBelow = CaravanBook.Never;
 
+        [Header("Prices")]
+        [Tooltip("Percent of the base price this faction asks before standing and haggling (90 to 150).")]
+        [Range(CaravanBook.MarkupFloor, CaravanBook.MarkupCeiling)] public int markup = 100;
+
         public FactionTable.Row ToRow()
         {
             return new FactionTable.Row
@@ -29,7 +33,8 @@ namespace OutpostZero.Colony
                 Label = label,
                 Stock = stock != null ? (string[])stock.Clone() : new string[0],
                 Premium = premium ?? "",
-                RefuseBelow = refuseBelow
+                RefuseBelow = refuseBelow,
+                Markup = markup
             };
         }
 
@@ -40,6 +45,7 @@ namespace OutpostZero.Colony
             stock = row.Stock != null ? (string[])row.Stock.Clone() : new string[0];
             premium = row.Premium ?? "";
             refuseBelow = row.RefuseBelow;
+            markup = row.Markup;
         }
     }
 }

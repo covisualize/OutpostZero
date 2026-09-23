@@ -62,6 +62,7 @@ namespace OutpostZero.Tests.EditMode
                 CollectionAssert.AreEqual(row.Stock, Stock(text), row.Id);
                 Assert.AreEqual(row.Premium, f["premium"], row.Id);
                 Assert.AreEqual(row.RefuseBelow.ToString(), f["refuseBelow"], row.Id);
+                Assert.AreEqual(row.Markup.ToString(), f["markup"], row.Id);
             }
             Assert.AreEqual(rows.Count, Directory.GetFiles(Path.Combine(Root, "Assets", "Data", "Factions"), "*.asset").Length, "no stray faction assets");
         }
@@ -78,6 +79,7 @@ namespace OutpostZero.Tests.EditMode
                 clinic.Stock = new[] { "antibiotics" };
                 clinic.Premium = "";
                 clinic.RefuseBelow = 0;
+                clinic.Markup = 400;
                 var stranger = new FactionTable.Row { Id = "raiders", Label = "Raiders" };
                 FactionTable.Use(new List<FactionTable.Row> { clinic, stranger });
 
@@ -89,6 +91,9 @@ namespace OutpostZero.Tests.EditMode
                 Assert.IsFalse(CaravanBook.Refuses("clinic", 0));
                 CaravanBook.Stock("clinic")[0] = "rock";
                 Assert.AreEqual("antibiotics", CaravanBook.Stock("clinic")[0], "callers get a copy of the table");
+                Assert.AreEqual(CaravanBook.MarkupCeiling, CaravanBook.Markup("clinic"), "a book markup is held to the range");
+                Assert.AreEqual(21, CaravanBook.Price("clinic", "medkit", 0, 0));
+                Assert.AreEqual(120, CaravanBook.Markup("militia"), "a faction the book lacks keeps its built-in markup");
                 Assert.IsTrue(CaravanBook.Refuses("militia", -21), "a faction the book lacks keeps its built-in temper");
                 Assert.AreEqual("Iron Militia", CaravanBook.Display("militia"));
             }

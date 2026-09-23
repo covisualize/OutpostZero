@@ -19,3 +19,4 @@ MonoBehaviour:
   - water
   premium: raw_food
   refuseBelow: -101
+  markup: 90

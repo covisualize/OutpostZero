@@ -69,7 +69,7 @@ namespace OutpostZero.Colony
             return standing[index];
         }
 
-        public int Price(string itemId) => CaravanBook.Price(itemId, StandingOf(ActiveId), Leadership);
+        public int Price(string itemId) => CaravanBook.Price(ActiveId, itemId, StandingOf(ActiveId), Leadership);
         public int Offer(string itemId) => CaravanBook.Offer(itemId, StandingOf(ActiveId));
         public string[] Stock => CaravanBook.Stock(ActiveId, StandingOf(ActiveId));
 

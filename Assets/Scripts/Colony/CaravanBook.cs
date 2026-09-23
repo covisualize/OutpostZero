@@ -109,6 +109,39 @@ namespace OutpostZero.Colony
             return Math.Max(1, (int)Math.Round(BasePrice(itemId) * scale, MidpointRounding.AwayFromZero));
         }
 
+        /// <summary>
+        /// The price at one faction's table: its markup on top of standing and haggling, never at or
+        /// below the best buy-back, so nothing can be flipped for profit.
+        /// </summary>
+        public static int Price(string faction, string itemId, int standing, int leadership)
+        {
+            int clamped = Math.Max(-100, Math.Min(100, standing));
+            float scale = (1f - (clamped / 100f) * 0.3f) * (Markup(faction) / 100f);
+            if (leadership > 0) scale *= 1f - Math.Min(leadership, HaggleCap) * 0.01f;
+            int price = (int)Math.Round(BasePrice(itemId) * scale, MidpointRounding.AwayFromZero);
+            return Math.Max(Offer(itemId, 100) + 1, price);
+        }
+
+        public const int MarkupFloor = 90;
+        public const int MarkupCeiling = 150;
+
+        /// <summary>Percent of the base price a faction asks before standing and haggling.</summary>
+        public static int Markup(string id)
+        {
+            return FactionTable.TryRow(id, out var row) ? row.Markup : CodeMarkup(id);
+        }
+
+        public static int CodeMarkup(string id)
+        {
+            switch (id)
+            {
+                case "militia": return 120;
+                case "clinic": return 110;
+                case "farmers": return 90;
+                default: return 100;
+            }
+        }
+
         /// <summary>Buy-back pays half the base price, a little more for a trusted camp.</summary>
         public static int Offer(string itemId, int standing)
         {

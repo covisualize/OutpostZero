@@ -18,6 +18,7 @@ namespace OutpostZero.Colony
             public string[] Stock = Array.Empty<string>();
             public string Premium = "";
             public int RefuseBelow = CaravanBook.Never;
+            public int Markup = 100;
         }
 
         private static readonly Dictionary<string, Row> rows = new Dictionary<string, Row>();
@@ -34,6 +35,7 @@ namespace OutpostZero.Colony
                 if (row == null || CaravanBook.IndexOf(row.Id) < 0 || rows.ContainsKey(row.Id)) continue;
                 if (row.Stock == null) row.Stock = Array.Empty<string>();
                 if (row.Premium == null) row.Premium = "";
+                row.Markup = Math.Max(CaravanBook.MarkupFloor, Math.Min(CaravanBook.MarkupCeiling, row.Markup));
                 rows[row.Id] = row;
             }
         }
@@ -61,7 +63,8 @@ namespace OutpostZero.Colony
                     Label = CaravanBook.CodeDisplay(id),
                     Stock = CaravanBook.CodeStock(id),
                     Premium = CaravanBook.CodePremium(id),
-                    RefuseBelow = CaravanBook.CodeRefuseBelow(id)
+                    RefuseBelow = CaravanBook.CodeRefuseBelow(id),
+                    Markup = CaravanBook.CodeMarkup(id)
                 });
             }
             return list;
