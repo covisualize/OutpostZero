@@ -16,7 +16,7 @@ Every folder under `Assets/Scripts` is one namespace.
 | `OutpostZero.Items` | `Items/` | `ItemDatabase`, `ItemDefinition` / `AmmoDefinition` / `LootTableDefinition` assets, `ItemCatalog` fallback, loot tables, `LootContainer` |
 | `OutpostZero.Expedition` | `Expedition/` | `ObjectiveTracker`, `ExtractionZone`, street doors, rescue followers |
 | `OutpostZero.Colony` | `Colony/` | `SurvivorRoster`, `WorldClock`, `ColonyStorage`, `GridBuilder`, `CraftingBench`, `NightRaidController`, `FactionTrade`, camp modules, needs and morale |
-| `OutpostZero.Graphics` | `Graphics/` | `DayNightCycle`, `WeatherController`, `PostFxRig`, `UrpMaterialPass`, `PerfBudget`, `LodGovernor`, `ImpactDecalPool`, `DistrictDressing` |
+| `OutpostZero.Graphics` | `Graphics/` | `DayNightCycle`, `WeatherController`, `PostFxRig`, `UrpMaterialPass`, `PerfBudget`, `PerfGate`, `QualityProfile`, `LodBands`, `TextureRules`, `LodGovernor`, `ImpactDecalPool`, `DistrictDressing` |
 | `OutpostZero.Shell` | `Shell/` | `SaveSystem`, `AudioManager`, `WorldMapService` campaign, `TutorialDirector`, `CodexDirector`, `Loc` localization (English, Spanish), `SceneRoute`, `BootPlan`, `DevCheats`, district generators |
 | `OutpostZero.UI` | `UI/` | `HudController` (UI Toolkit street HUD from `Assets/UI/Resources/HUD.uxml`/`HUD.uss`, laid out by `HudTree`), `OutpostInterface` (menus, camp board, pack), `GameShellUI`, `SceneFlow` and `LoadCard` transitions, `BootLoader`, `DevPanel` |
 | `OutpostZero.EditorTools` | `Editor/` | `PrototypeSceneBuilder`, `DefaultDataGenerator`, `FbxPrefabPostprocessor`, `SurvivorAnimatorBuilder`, `RendererFeatureSetup` |
@@ -28,7 +28,7 @@ Most gameplay rules live in small `static` classes with no Unity state (for exam
 
 **Services** are MonoBehaviour singletons with a static `Instance`. `GameSystemsInstaller.Install(scene)` attaches them all to the `GameManager` object, which is `DontDestroyOnLoad`, so they survive scene loads:
 
-`SettingsService`, `AudioManager`, `SaveSystem`, `RunArchive`, `SurvivorRoster`, `WorldClock`, `ColonyStorage`, `GridBuilder`, `CraftingBench`, `NightRaidController`, `FactionTrade`, `ObjectiveTracker`, `DayNightCycle`, `WeatherController`, `PostFxRig`, `UrpMaterialPass`, `PerfBudget`, `LodGovernor`, `WorldMapService`, `TutorialDirector`, `CodexDirector`, `SceneFlow`, `DevPanel`, `CampServices`, `CampPopulation`, `DistrictDressing`.
+`SettingsService`, `AudioManager`, `SaveSystem`, `RunArchive`, `SurvivorRoster`, `WorldClock`, `ColonyStorage`, `GridBuilder`, `CraftingBench`, `NightRaidController`, `FactionTrade`, `ObjectiveTracker`, `DayNightCycle`, `WeatherController`, `PostFxRig`, `UrpMaterialPass`, `PerfBudget`, `PerfGate`, `QualityProfile`, `LodBands`, `TextureRules`, `LodGovernor`, `WorldMapService`, `TutorialDirector`, `CodexDirector`, `SceneFlow`, `DevPanel`, `CampServices`, `CampPopulation`, `DistrictDressing`.
 
 The installer also outfits the player (`SurvivalNeeds`, `StatusEffectController`, `PlayerInteractor`, locomotion), and adds `HitFeedback`, `ImpactDecalPool`, `GameShellUI`, `OutpostInterface`, `HudController` and `ExpeditionCameraRig` to the main camera. The rig builds the Cinemachine cameras (follow, aim, camp overview, fallen-leader zoom, results sequence) around the proxies that `CameraTargetDriver` moves, and reads every shot and shake from `Resources/CameraProfile.asset`. The saved arena scene predates most of these components, so they are added when the scene loads.
 
