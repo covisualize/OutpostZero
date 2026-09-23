@@ -204,5 +204,35 @@ namespace OutpostZero.Tests.EditMode
             Assert.AreEqual("Objetivos: 1/3", ResultsSheet.ObjectivesLine(lost, "es"));
             Assert.AreEqual("", ResultsSheet.ObjectivesLine(ResultsSheet.Scored(home, null), "en"));
         }
+
+        [Test]
+        public void AshMarketSendsTheLeaderForARealGeneratorPart()
+        {
+            var board = new ObjectiveBoard(ObjectivePlan.For(ObjectivePlan.Prototype));
+            CollectionAssert.AreEqual(new[] { ObjectivePlan.GeneratorPart }, board.OpenTargets(ObjectiveKind.Retrieve));
+            var part = OutpostZero.Items.ItemCatalog.Find(ObjectivePlan.GeneratorPart);
+            Assert.IsNotNull(part);
+            Assert.AreEqual(OutpostZero.Core.ItemCategory.KeyItem, part.Category, "a key item notes the Retrieve on pickup");
+            Assert.AreEqual("Loot_GeneratorPart", OutpostZero.Items.ItemVisuals.ModelFor(part.Id));
+            Assert.AreNotEqual("item.generator_part", Loc.Raw("item.generator_part", "es"));
+
+            Assert.AreEqual(0, board.Note(ObjectiveKind.Retrieve, "poi", 1).Count, "searching the room alone is not the part");
+            Assert.AreEqual(1, board.Note(ObjectiveKind.Retrieve, ObjectivePlan.GeneratorPart, 1).Count);
+            Assert.IsEmpty(board.OpenTargets(ObjectiveKind.Retrieve), "a finished objective no longer asks for the part");
+        }
+
+        [Test]
+        public void OpenTargetsSkipBlankRepeatedAndOtherKinds()
+        {
+            var board = new ObjectiveBoard(new[]
+            {
+                new ObjectiveSpec("a", ObjectiveKind.Retrieve, "cell", 1, true, 1, "", "A"),
+                new ObjectiveSpec("b", ObjectiveKind.Retrieve, "cell", 2, true, 1, "", "B"),
+                new ObjectiveSpec("c", ObjectiveKind.Retrieve, "", 1, true, 1, "", "C"),
+                new ObjectiveSpec("d", ObjectiveKind.Collect, "Medical", 1, true, 1, "", "D"),
+            });
+            CollectionAssert.AreEqual(new[] { "cell" }, board.OpenTargets(ObjectiveKind.Retrieve));
+            CollectionAssert.AreEqual(new[] { "Medical" }, board.OpenTargets(ObjectiveKind.Collect));
+        }
     }
 }

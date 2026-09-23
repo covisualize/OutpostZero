@@ -18,7 +18,7 @@ ITEM_IDS = (
     "Loot_Bandage", "Loot_Antibiotics", "Loot_Painkillers", "Loot_CannedFood", "Loot_RawFood",
     "Loot_WaterBottle", "Loot_AmmoBox_Rifle", "Loot_AmmoBox_SMG", "Loot_Cloth", "Loot_Chemicals",
     "Loot_DuctTape", "Loot_NoiseLure", "Loot_Bottle", "Loot_Molotov", "Loot_Flare",
-    "Loot_PipeBomb", "Loot_Blueprint", "Loot_LampCell",
+    "Loot_PipeBomb", "Loot_Blueprint", "Loot_LampCell", "Loot_GeneratorPart",
 )
 
 UPRIGHT = (0, 0, 0)
@@ -220,6 +220,24 @@ def build_lamp_cell(ctx):
     ring = create_cylinder("CellBand", (0, 0, 0.055), 0.0225, 0.014, vertices=16, material=band)
     nub = create_cylinder("CellContact", (0, 0, 0.084), 0.008, 0.008, vertices=10, material=contact)
     return join_objects([body, ring, nub], "Loot_LampCell")
+
+
+def build_generator_part(ctx):
+    casing = _mat("Mat_Item_AlternatorSteel", (0.52, 0.54, 0.56), metallic=0.8, roughness=0.4)
+    rust = _mat("Mat_Item_AlternatorRust", (0.46, 0.24, 0.12), metallic=0.5, roughness=0.8)
+    copper = _mat("Mat_Item_AlternatorCopper", (0.78, 0.44, 0.22), metallic=0.95, roughness=0.3)
+    strap = _mat("Mat_Item_AlternatorStrap", (0.12, 0.12, 0.12), roughness=0.8)
+    parts = [create_cylinder("AlternatorBody", (0, 0, 0.07), 0.07, 0.14, vertices=16, material=casing, rotation=LYING)]
+    for i in range(5):
+        x = -0.05 + i * 0.025
+        parts.append(create_cylinder(f"AlternatorFin_{i}", (x, 0, 0.07), 0.076, 0.008, vertices=16, material=rust, rotation=LYING))
+    parts.append(create_cylinder("AlternatorShaft", (0.09, 0, 0.07), 0.012, 0.05, vertices=10, material=casing, rotation=LYING))
+    parts.append(create_cylinder("AlternatorPulley", (0.11, 0, 0.07), 0.035, 0.018, vertices=16, material=strap, rotation=LYING))
+    for y in (-0.02, 0.02):
+        parts.append(create_cylinder(f"AlternatorTerminal_{y}", (-0.03, y, 0.145), 0.008, 0.02, vertices=8, material=copper))
+    parts.append(create_box("AlternatorBracket", (-0.02, 0.075, 0.07), (0.06, 0.012, 0.05), rust))
+    parts.append(create_box("AlternatorTag", (0.0, -0.071, 0.07), (0.05, 0.004, 0.03), copper))
+    return join_objects(parts, "Loot_GeneratorPart")
 
 
 if __name__ == "__main__":

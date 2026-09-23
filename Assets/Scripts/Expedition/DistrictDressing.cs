@@ -77,6 +77,7 @@ namespace OutpostZero.Expedition
             Paint(room.GetComponent<Renderer>(), plan.PoiRole == "radio" ? new Color(0.72f, 0.58f, 0.22f) : new Color(0.45f, 0.5f, 0.42f));
             var poi = room.AddComponent<DistrictPoi>();
             poi.Configure(plan.PoiRole);
+            poi.Hold(ObjectiveTracker.Instance != null ? ObjectiveTracker.Instance.RoomItem() : "");
             string poiMark = StreetLedger.Mark("poi", plan.PoiX, plan.PoiZ);
             poi.Stamp(poiMark);
             ObjectiveTracker.Instance?.MarkSpot("poi", room.transform.position);
@@ -84,6 +85,7 @@ namespace OutpostZero.Expedition
             {
                 poi.Recall();
                 ObjectiveTracker.Instance?.Waive(ObjectiveKind.Retrieve, "poi");
+                if (!string.IsNullOrEmpty(poi.Grant)) ObjectiveTracker.Instance?.Waive(ObjectiveKind.Retrieve, poi.Grant);
             }
 
             var nest = GameObject.CreatePrimitive(PrimitiveType.Cylinder);

@@ -66,7 +66,8 @@ namespace OutpostZero.Items
             new ItemRecord { Id = "print_repair", DisplayName = "Repair Blueprint", Category = Core.ItemCategory.KeyItem, Weight = 0.05f },
             new ItemRecord { Id = "print_wall", DisplayName = "Wall Blueprint", Category = Core.ItemCategory.KeyItem, Weight = 0.05f },
             new ItemRecord { Id = "print_radio", DisplayName = "Radio Blueprint", Category = Core.ItemCategory.KeyItem, Weight = 0.05f },
-            new ItemRecord { Id = "cell", DisplayName = "Lamp Cell", Category = Core.ItemCategory.KeyItem, Weight = 0.15f, Use = ItemUse.Cell }
+            new ItemRecord { Id = "cell", DisplayName = "Lamp Cell", Category = Core.ItemCategory.KeyItem, Weight = 0.15f, Use = ItemUse.Cell },
+            new ItemRecord { Id = "generator_part", DisplayName = "Generator Part", Category = Core.ItemCategory.KeyItem, Weight = 1.2f }
         };
 
         public static IReadOnlyList<ItemRecord> All => records;

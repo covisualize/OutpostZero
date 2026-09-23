@@ -36,7 +36,8 @@ namespace OutpostZero.Items
             ["print_repair"] = "Loot_Blueprint",
             ["print_wall"] = "Loot_Blueprint",
             ["print_radio"] = "Loot_Blueprint",
-            ["cell"] = "Loot_LampCell"
+            ["cell"] = "Loot_LampCell",
+            ["generator_part"] = "Loot_GeneratorPart"
         };
 
         public static IEnumerable<string> ItemIds => models.Keys;

@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: OutpostZero::OutpostZero.Expedition.ObjectiveDefinition
   id: am.part
   kind: 2
-  target: poi
+  target: generator_part
   count: 1
   bonus: 1
   reward: 5

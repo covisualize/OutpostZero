@@ -88,6 +88,19 @@ namespace OutpostZero.Expedition
             return false;
         }
 
+        /// <summary>Targets of the open objectives of a kind, in board order, without repeats or empty targets.</summary>
+        public List<string> OpenTargets(ObjectiveKind kind)
+        {
+            var targets = new List<string>();
+            for (int i = 0; i < specs.Count; i++)
+            {
+                string target = specs[i].Target;
+                if (Done(i) || specs[i].Kind != kind || string.IsNullOrEmpty(target) || targets.Contains(target)) continue;
+                targets.Add(target);
+            }
+            return targets;
+        }
+
         /// <summary>Adds progress to every open objective the note matches and returns the ones it finished.</summary>
         public List<ObjectiveSpec> Note(ObjectiveKind kind, string key, int amount)
         {
@@ -197,6 +210,7 @@ namespace OutpostZero.Expedition
     public static class ObjectivePlan
     {
         public const string Prototype = "ash_market";
+        public const string GeneratorPart = "generator_part";
 
         public static readonly KeyValuePair<string, ObjectiveSpec[]>[] Code =
         {
@@ -204,7 +218,7 @@ namespace OutpostZero.Expedition
             {
                 new ObjectiveSpec("am.medical", ObjectiveKind.Collect, "Medical", 2, true, 4, "obj.am.medical", "Find medical supplies"),
                 new ObjectiveSpec("am.nest", ObjectiveKind.ClearNest, "nest", 3, true, 6, "obj.am.nest", "Clear the nest by the stalls"),
-                new ObjectiveSpec("am.part", ObjectiveKind.Retrieve, "poi", 1, true, 5, "obj.am.part", "Recover the generator part from the cache"),
+                new ObjectiveSpec("am.part", ObjectiveKind.Retrieve, ObjectivePlan.GeneratorPart, 1, true, 5, "obj.am.part", "Recover the generator part from the cache"),
             }),
             new KeyValuePair<string, ObjectiveSpec[]>("old_hospital", new[]
             {

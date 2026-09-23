@@ -140,6 +140,15 @@ namespace OutpostZero.Expedition
             OnObjectivesChanged?.Invoke();
         }
 
+        /// <summary>The item an open Retrieve objective sends the leader to the marked room for, or "".</summary>
+        public string RoomItem()
+        {
+            if (board == null) return "";
+            foreach (string target in board.OpenTargets(ObjectiveKind.Retrieve))
+                if (OutpostZero.Items.ItemCatalog.Find(target) != null) return target;
+            return "";
+        }
+
         public void MarkSpot(string name, Vector3 at)
         {
             if (string.IsNullOrEmpty(name)) return;

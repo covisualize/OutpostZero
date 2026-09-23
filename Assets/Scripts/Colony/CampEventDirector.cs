@@ -249,6 +249,12 @@ namespace OutpostZero.Colony
         public bool Repair()
         {
             if (!log.GeneratorBroken) return false;
+            var pack = PlayerRegistry.Current != null ? PlayerRegistry.Current.GetComponent<OutpostZero.Player.PlayerInventory>() : null;
+            if (pack != null && pack.TryConsume(OutpostZero.Expedition.ObjectivePlan.GeneratorPart))
+            {
+                Mend("event.repaired_part");
+                return true;
+            }
             var roster = SurvivorRoster.Instance;
             var storage = ColonyStorage.Instance;
             int skill = roster != null ? roster.BestEngineering() : 0;
@@ -258,18 +264,23 @@ namespace OutpostZero.Colony
                 GameplayFeedback.Toast(RepairNeed(null));
                 return false;
             }
+            Mend("event.repaired");
+            return true;
+        }
+
+        private void Mend(string line)
+        {
             log.GeneratorBroken = false;
             CampServices.Instance?.SetGeneratorBroken(false);
-            GameplayFeedback.Toast(Loc.T("event.repaired"));
+            GameplayFeedback.Toast(Loc.T(line));
             OnChanged?.Invoke();
-            return true;
         }
 
         public static string RepairNeed(string language)
         {
             string head = string.IsNullOrEmpty(language) ? Loc.T("event.repair_need") : Loc.T("event.repair_need", language);
             return head + " " + CampEventTable.RepairSkill + ", " + CampEventTable.RepairScrap + " " + Word("result.scrap", language)
-                + ", " + CampEventTable.RepairTape + " " + Word("event.tape", language);
+                + ", " + CampEventTable.RepairTape + " " + Word("event.tape", language) + " " + Word("event.repair_part", language);
         }
 
         public static string Title(CampEventRow row)

@@ -2,8 +2,8 @@
   "id": "Loot_RawFood",
   "category": "Weapons",
   "generator": "generate_items.build_raw_food",
-  "generatorHash": "309f6c108fcda708a9025b579a7351e5b9c01fc8361184dd48a1256a607b245f",
-  "gitSha": "30a7decf99109014c8d463f1f5c3458c36fff31c",
+  "generatorHash": "01ea08a539cf4857c413e6dbb6176e8945b3bba9c96782314fc272e4e436d93e",
+  "gitSha": "095ef7563e3ad5583de1caa905472738cbc2f04f",
   "blender": "4.2.11",
   "tags": [
     "loot",

@@ -104,6 +104,11 @@ namespace OutpostZero.Tests.EditMode
             Assert.IsFalse(CampEventTable.CanRepair(5, 2, 5));
             Assert.IsFalse(CampEventTable.CanRepair(5, 10, 0));
             StringAssert.Contains("Engineering 3", CampEventDirector.RepairNeed("en"));
+            Assert.IsTrue(CampEventTable.CanRepair(0, 0, 0, 1), "a generator part needs no engineer or supplies");
+            Assert.IsFalse(CampEventTable.CanRepair(0, 0, 0, 0));
+            Assert.IsTrue(CampEventTable.CanRepair(3, 3, 1, 0));
+            StringAssert.Contains("generator part", CampEventDirector.RepairNeed("en"));
+            StringAssert.Contains("pieza de generador", CampEventDirector.RepairNeed("es"));
         }
 
         [Test]

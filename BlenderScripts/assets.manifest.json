@@ -381,6 +381,16 @@
       ]
     },
     {
+      "id": "Loot_GeneratorPart",
+      "category": "Weapons",
+      "generator": "generate_items.build_generator_part",
+      "output": "Weapons/Loot_GeneratorPart.fbx",
+      "tags": [
+        "loot",
+        "item"
+      ]
+    },
+    {
       "id": "Road_Tile_Straight",
       "category": "Environment",
       "generator": "generate_architecture.build_road_straight",

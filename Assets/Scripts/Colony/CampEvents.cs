@@ -154,6 +154,12 @@ namespace OutpostZero.Colony
             return bestEngineering >= RepairSkill && scrap >= RepairScrap && tape >= RepairTape;
         }
 
+        /// <summary>A carried generator part drops straight in: no engineer, scrap or tape needed.</summary>
+        public static bool CanRepair(int bestEngineering, int scrap, int tape, int parts)
+        {
+            return parts > 0 || CanRepair(bestEngineering, scrap, tape);
+        }
+
         public static int Mix(int seed, int salt)
         {
             unchecked
