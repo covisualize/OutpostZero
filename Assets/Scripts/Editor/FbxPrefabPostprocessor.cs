@@ -141,7 +141,7 @@ namespace OutpostZero.EditorTools
                 if (clip == null || clip.name.StartsWith("__preview")) continue;
                 clips.Add(clip);
             }
-            if (clips.Count > 0) SurvivorAnimatorBuilder.AssignMotions(clips);
+            if (clips.Count > 0) SurvivorAnimatorBuilder.AssignMotions(OutpostZero.Core.CharacterRig.ControllerAsset(Path.GetFileNameWithoutExtension(path)), clips);
         }
     }
 }

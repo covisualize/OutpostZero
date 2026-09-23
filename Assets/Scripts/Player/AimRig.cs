@@ -25,6 +25,8 @@ namespace OutpostZero.Player
 
         public const string ReloadDone = "OnReloadAnimComplete";
         public const string Footstep = "OnFootstep";
+        public const string AttackImpact = "OnAttackImpact";
+        public const float ImpactAt = 0.5f;
 
         public static float Weight(bool alive, bool sprinting, bool reloading, bool aimingDownSights)
         {
@@ -119,6 +121,10 @@ namespace OutpostZero.Player
                 case "Reload":
                     function = ReloadDone;
                     return new[] { 0.95f };
+                case "Attack":
+                case "AttackB":
+                    function = AttackImpact;
+                    return new[] { ImpactAt };
                 default:
                     function = "";
                     return new float[0];

@@ -1,6 +1,8 @@
 using System.IO;
 using NUnit.Framework;
 using UnityEngine;
+using OutpostZero.AI;
+using OutpostZero.Core;
 using OutpostZero.Player;
 
 namespace OutpostZero.Tests.EditMode
@@ -83,6 +85,48 @@ namespace OutpostZero.Tests.EditMode
             Assert.AreEqual(AimRig.ReloadDone, done);
             Assert.GreaterOrEqual(reload[0], AimRig.ReloadEarliest);
             Assert.IsEmpty(AimRig.EventsFor("Idle", out _));
+            var bite = AimRig.EventsFor("AttackB", out string impact);
+            Assert.AreEqual(AimRig.AttackImpact, impact);
+            Assert.Less(bite[0], SwingClock.LateHit);
+            Assert.AreEqual("Zombie_Walker", ClipEvents.Bare("Armature|Zombie_Walker"));
+        }
+
+        [Test]
+        public void EachCharacterModelGetsItsOwnController()
+        {
+            Assert.AreEqual("Zombie_Brute", CharacterRig.ModelId(ModelPaths.ZombieBrute));
+            Assert.AreEqual("Zombie_Runner", CharacterRig.ModelId("Assets\\Models\\Zombie_Runner.fbx"));
+            Assert.AreEqual("", CharacterRig.ModelId(null));
+            Assert.AreEqual("SurvivorLocomotion", CharacterRig.ResourcePath(CharacterRig.ModelId(ModelPaths.SurvivorLeader)));
+            Assert.AreEqual("Animators/Zombie_Walker", CharacterRig.ResourcePath("Zombie_Walker"));
+            Assert.AreEqual("Assets/Resources/Animators/Zombie_Walker.controller", CharacterRig.ControllerAsset("Zombie_Walker"));
+            Assert.AreEqual("Assets/Resources/SurvivorLocomotion.controller", CharacterRig.ControllerAsset(CharacterRig.PlayerModel));
+            Assert.AreEqual("", CharacterRig.ResourcePath(""));
+        }
+
+        [Test]
+        public void ASwingBitesExactlyOnceWhetherTheClipOrTheClockLandsIt()
+        {
+            Assert.IsTrue(SwingClock.Bites(0.5f, 0.65f, false, false));
+            Assert.IsFalse(SwingClock.Bites(0.5f, 0.65f, true, false));
+            Assert.IsFalse(SwingClock.Bites(0.5f, 0.65f, false, true), "a clip-driven swing waits for the contact frame");
+            Assert.IsTrue(SwingClock.Bites(0.9f, 1f, false, true), "the clock still lands a swing whose event never fired");
+            Assert.IsFalse(SwingClock.Bites(0.9f, 1f, true, true));
+            Assert.IsTrue(SwingClock.Hears(0.4f, false));
+            Assert.IsFalse(SwingClock.Hears(0.4f, true));
+            Assert.IsFalse(SwingClock.Hears(-1f, false), "no bite between swings");
+
+            int bites = 0;
+            bool bitten = false;
+            float swing = 0f;
+            while (swing < 1f)
+            {
+                float before = swing;
+                swing = SwingClock.Advance(swing, 1f / 60f, 1.2f);
+                if (before < AimRig.ImpactAt && swing >= AimRig.ImpactAt && SwingClock.Hears(swing, bitten)) { bitten = true; bites++; }
+                if (SwingClock.Bites(before, swing, bitten, true)) { bitten = true; bites++; }
+            }
+            Assert.AreEqual(1, bites);
         }
 
         [Test]

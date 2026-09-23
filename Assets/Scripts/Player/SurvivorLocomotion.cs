@@ -79,29 +79,11 @@ namespace OutpostZero.Player
             Shell.AudioManager.Instance?.Footfall();
         }
 
-        /// <summary>Adds footfalls and the reload finish to the imported clips, once per shared clip.</summary>
         private void AddClipEvents(RuntimeAnimatorController rig)
         {
             foreach (var clip in rig.animationClips)
-            {
-                if (clip == null) continue;
-                string name = clip.name;
-                int bar = name.LastIndexOf('|');
-                if (bar >= 0) name = name.Substring(bar + 1);
-                if (name == "Reload") reloadClip = clip.length;
-                float[] marks = AimRig.EventsFor(name, out string function);
-                if (marks.Length == 0 || Carries(clip, function)) continue;
-                for (int i = 0; i < marks.Length; i++)
-                    clip.AddEvent(new AnimationEvent { time = clip.length * marks[i], functionName = function });
-            }
-        }
-
-        private static bool Carries(AnimationClip clip, string function)
-        {
-            var events = clip.events;
-            for (int i = 0; i < events.Length; i++)
-                if (events[i].functionName == function) return true;
-            return false;
+                if (clip != null && ClipEvents.Bare(clip.name) == "Reload") reloadClip = clip.length;
+            ClipEvents.Arm(rig);
         }
 
         public void OnReloadAnimComplete()

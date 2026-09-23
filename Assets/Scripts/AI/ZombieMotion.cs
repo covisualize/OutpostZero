@@ -1,16 +1,20 @@
 using UnityEngine;
+using OutpostZero.Core;
+using OutpostZero.Player;
 
 namespace OutpostZero.AI
 {
     /// <summary>
-    /// Drives the imported humanoid clips from the AI state.
-    /// A mesh with no avatar still leans and bobs.
+    /// Drives the imported clips from the AI state through the model's own controller.
+    /// A mesh with no animator or controller still leans and bobs.
     /// </summary>
     public class ZombieMotion : MonoBehaviour
     {
         private ZombieAI brain;
         private Transform visual;
         private Animator animator;
+        private bool rigged;
+        private int swings;
         private ZombieAI.ZombieState driven = (ZombieAI.ZombieState)(-1);
         private float posed;
         private float bob;
@@ -24,7 +28,7 @@ namespace OutpostZero.AI
         {
             if (brain == null) return;
             if (animator == null) animator = GetComponentInChildren<Animator>();
-            if (animator != null) animator.cullingMode = AnimatorCullingMode.CullUpdateTransforms;
+            if (animator != null && !rigged) Rig();
             if (animator != null && animator.runtimeAnimatorController != null)
             {
                 DriveRig();
@@ -62,17 +66,53 @@ namespace OutpostZero.AI
             visual.localPosition = new Vector3(0f, hop, 0f);
         }
 
+        /// <summary>Loads the model's controller once and arms its clips; the bite then waits for the contact frame.</summary>
+        private void Rig()
+        {
+            animator.cullingMode = AnimatorCullingMode.CullUpdateTransforms;
+            if (animator.runtimeAnimatorController == null)
+            {
+                string resource = CharacterRig.ResourcePath(brain.ModelId);
+                if (string.IsNullOrEmpty(resource)) return;
+                animator.runtimeAnimatorController = Resources.Load<RuntimeAnimatorController>(resource);
+            }
+            rigged = true;
+            if (animator.runtimeAnimatorController == null) return;
+            if (animator.GetComponent<ZombieClipRelay>() == null)
+                animator.gameObject.AddComponent<ZombieClipRelay>();
+            brain.ClipDriven = ClipEvents.Arm(animator.runtimeAnimatorController, AimRig.AttackImpact);
+            swings = brain.Swings;
+        }
+
         private void DriveRig()
         {
             var state = brain.CurrentState;
             animator.SetFloat("Speed", PoseSheet.Speed(state));
             animator.SetBool("Sprint", PoseSheet.Sprint(state));
             animator.SetBool("Crouch", false);
+            if (brain.Swings != swings)
+            {
+                swings = brain.Swings;
+                animator.SetTrigger("Attack");
+            }
             if (state == driven) return;
-            if (state == ZombieAI.ZombieState.Attack) animator.SetTrigger("Attack");
-            else if (state == ZombieAI.ZombieState.Stunned) animator.SetTrigger("Hit");
+            if (state == ZombieAI.ZombieState.Stunned) animator.SetTrigger("Hit");
             else if (state == ZombieAI.ZombieState.Dead) animator.SetTrigger("Death");
             driven = state;
+        }
+    }
+
+    /// <summary>Receives clip events on the mesh child and forwards them to the zombie.</summary>
+    public class ZombieClipRelay : MonoBehaviour
+    {
+        public void OnAttackImpact()
+        {
+            var brain = GetComponentInParent<ZombieAI>();
+            if (brain != null) brain.OnAttackImpact();
+        }
+
+        public void OnFootstep()
+        {
         }
     }
 }

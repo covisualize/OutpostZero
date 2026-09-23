@@ -32,6 +32,15 @@ namespace OutpostZero.AI
         [SerializeField] private ZombieState currentState = ZombieState.Wander;
         public ZombieState CurrentState => currentState;
 
+        /// <summary>FBX stem of this zombie's model; picks its Animator controller.</summary>
+        public string ModelId { get; private set; } = "";
+
+        /// <summary>Counts swings started, so the rig replays the attack clip per swing.</summary>
+        public int Swings { get; private set; }
+
+        /// <summary>Set by ZombieMotion when an imported attack clip will call <see cref="OnAttackImpact"/>.</summary>
+        public bool ClipDriven { get; set; }
+
         public static void CountAlerts(float x, float z, out int bangs, out int questions)
         {
             bangs = 0;
@@ -80,6 +89,7 @@ namespace OutpostZero.AI
 
         private float nextAttackTime = 0f;
         private float swing = -1f;
+        private bool bitten;
         private float stateTimer = 0f;
         private float pendingStun = 0.8f;
         private SpecialBeat.Clock abilityClock;
@@ -281,6 +291,7 @@ namespace OutpostZero.AI
             hordeAlertRadius = archetype.hordeAlertRadius;
             specialAbility = archetype.specialAbility;
             archetypeId = archetype.id;
+            ModelId = CharacterRig.ModelId(archetype.modelPath);
             visionMask = GameLayers.VisionOcclusionMask;
 
             if (agent == null) agent = GetComponent<NavMeshAgent>();
@@ -969,14 +980,31 @@ namespace OutpostZero.AI
             {
                 if (Time.time < nextAttackTime) return;
                 swing = 0f;
+                bitten = false;
+                Swings++;
                 nextAttackTime = Time.time + attackCooldown;
                 Voice("bite");
             }
 
             float before = swing;
             swing = SwingClock.Advance(swing, Time.deltaTime, attackCooldown);
-            if (SwingClock.Connects(before, swing)) PerformBiteAttack();
+            if (SwingClock.Bites(before, swing, bitten, ClipDriven)) Bite();
             if (swing >= 1f) swing = -1f;
+        }
+
+        /// <summary>Animation event from the attack clip's contact frame.</summary>
+        public void OnAttackImpact()
+        {
+            if (currentState != ZombieState.Attack || currentTarget == null) return;
+            if (!SwingClock.Hears(swing, bitten)) return;
+            if (Vector3.Distance(transform.position, currentTarget.position) > attackRange * 1.35f) return;
+            Bite();
+        }
+
+        private void Bite()
+        {
+            bitten = true;
+            PerformBiteAttack();
         }
 
         private void PerformBiteAttack()

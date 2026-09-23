@@ -15,11 +15,23 @@ namespace OutpostZero.EditorTools
 
         public static AnimatorController Build()
         {
+            return Build(ControllerPath);
+        }
+
+        /// <summary>Creates or refreshes the shared graph at <paramref name="path"/>; each character model gets its own copy.</summary>
+        public static AnimatorController Build(string path)
+        {
             DirectoryEnsure();
-            var controller = AssetDatabase.LoadAssetAtPath<AnimatorController>(ControllerPath);
+            string folder = System.IO.Path.GetDirectoryName(path)?.Replace('\\', '/');
+            if (!string.IsNullOrEmpty(folder) && !AssetDatabase.IsValidFolder(folder))
+            {
+                string parent = System.IO.Path.GetDirectoryName(folder)?.Replace('\\', '/');
+                AssetDatabase.CreateFolder(parent, System.IO.Path.GetFileName(folder));
+            }
+            var controller = AssetDatabase.LoadAssetAtPath<AnimatorController>(path);
             if (controller == null)
             {
-                controller = AnimatorController.CreateAnimatorControllerAtPath(ControllerPath);
+                controller = AnimatorController.CreateAnimatorControllerAtPath(path);
             }
             EnsureParameters(controller);
             EnsureGraph(controller);
@@ -31,8 +43,13 @@ namespace OutpostZero.EditorTools
 
         public static void AssignMotions(IReadOnlyList<AnimationClip> clips)
         {
+            AssignMotions(ControllerPath, clips);
+        }
+
+        public static void AssignMotions(string path, IReadOnlyList<AnimationClip> clips)
+        {
             if (clips == null || clips.Count == 0) return;
-            var controller = Build();
+            var controller = Build(path);
             var byName = new Dictionary<string, AnimationClip>();
             for (int i = 0; i < clips.Count; i++)
             {
