@@ -424,19 +424,22 @@ namespace OutpostZero.UI
                     menu.Add(Title(Loc.T("menu.pause")));
                     menu.Add(Button(Loc.T("menu.resume"), () => GameManager.Instance.TogglePause()));
                     menu.Add(Button(Loc.T("menu.settings"), () => SettingsService.Instance?.TogglePanel()));
-                    menu.Add(Button(Loc.T("menu.save"), () => SaveSystem.Instance?.Save()));
+                    bool canSave = SaveSystem.CanSaveManually;
+                    var saveButton = Button(Loc.T(canSave ? "menu.save" : "menu.save_camp"), () => SaveSystem.Instance?.Save());
+                    if (!canSave) saveButton.style.opacity = TutorialMark.Dim;
+                    menu.Add(saveButton);
                     menu.Add(Button(Loc.T("menu.codex"), () => { codexId = ""; Open(MenuScreen.Codex); }));
                     menu.Add(Button(Loc.T("menu.skip"), () => TutorialDirector.Instance?.Dismiss()));
                     menu.Add(Button(Loc.T("menu.camp"), () => Go(FlowStep.Sanctuary)));
                     menu.Add(Button(Loc.T("menu.restart"), () => Go(FlowStep.Boot, () => GameManager.Instance.ReturnToBoot())));
-                    menu.Add(Button(Loc.T("menu.save_quit"), () =>
+                    menu.Add(Button(Loc.T(canSave ? "menu.save_quit" : "menu.quit_menu"), () =>
                     {
-                        SaveSystem.Instance?.Save();
+                        if (canSave) SaveSystem.Instance?.Save();
                         Go(FlowStep.MainMenu);
                     }));
                     menu.Add(Button(Loc.T("menu.quit"), () =>
                     {
-                        SaveSystem.Instance?.Save();
+                        if (canSave) SaveSystem.Instance?.Save();
                         Quit();
                     }));
                     break;

@@ -129,6 +129,9 @@ namespace OutpostZero.Core
             OnGameStateChanged?.Invoke(currentState);
         }
 
+        /// <summary>The state a pause will resume into.</summary>
+        public GameState ResumeState => resumeState;
+
         public void TogglePause()
         {
             if (currentState == GameState.Paused)

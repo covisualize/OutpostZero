@@ -71,8 +71,16 @@ namespace OutpostZero.Shell
 
         public bool Save() => Save(true);
 
+        public static bool CanSaveManually =>
+            GameManager.Instance == null || SaveSlots.ManualAllowed(GameManager.Instance.CurrentState, GameManager.Instance.ResumeState);
+
         public bool Save(bool announce)
         {
+            if (announce && !CanSaveManually)
+            {
+                GameplayFeedback.Toast(GateLine.CampOnly(null));
+                return false;
+            }
             var data = Capture();
             data.savedAt = SaveStamp.Now(System.DateTime.UtcNow);
             data.thumbnail = SaveThumb.Take();

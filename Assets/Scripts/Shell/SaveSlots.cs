@@ -24,6 +24,13 @@ namespace OutpostZero.Shell
             public string Thumbnail;
         }
 
+        /// <summary>Manual saves are made in camp only, so a save taken on the street can't undo what happens there.</summary>
+        public static bool ManualAllowed(OutpostZero.Core.GameState state, OutpostZero.Core.GameState resume)
+        {
+            var at = state == OutpostZero.Core.GameState.Paused ? resume : state;
+            return at == OutpostZero.Core.GameState.CampManagement;
+        }
+
         public static int Manual(int slot)
         {
             if (slot < 0) return 0;

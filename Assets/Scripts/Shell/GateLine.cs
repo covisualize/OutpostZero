@@ -20,6 +20,7 @@ namespace OutpostZero.Shell
         public static string Extracted(string language) => Word("gate.extracted", language);
         public static string SaveFail(string language) => Word("save.fail", language);
         public static string Saved(string language) => Word("save.ok", language);
+        public static string CampOnly(string language) => Word("save.camp_only", language);
         public static string NoFile(string language) => Word("save.none", language);
         public static string Unread(string language) => Word("save.bad", language);
         public static string Loaded(string language) => Word("save.loaded", language);

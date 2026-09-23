@@ -1,6 +1,7 @@
 using System.IO;
 using NUnit.Framework;
 using OutpostZero.Colony;
+using OutpostZero.Core;
 using OutpostZero.Shell;
 
 namespace OutpostZero.Tests.EditMode
@@ -162,6 +163,17 @@ namespace OutpostZero.Tests.EditMode
             Assert.IsTrue(SaveCodec.TryDeserialize(written, out var second, out error), error);
             CollectionAssert.IsEmpty(SaveDiff.Compare(first, second));
             Assert.AreEqual(written, SaveCodec.Serialize(second));
+        }
+
+        [Test]
+        public void ManualSavesAreMadeInCampOnly()
+        {
+            Assert.IsTrue(SaveSlots.ManualAllowed(GameState.CampManagement, GameState.CampManagement));
+            Assert.IsTrue(SaveSlots.ManualAllowed(GameState.Paused, GameState.CampManagement));
+            Assert.IsFalse(SaveSlots.ManualAllowed(GameState.Paused, GameState.ExpeditionActive));
+            Assert.IsFalse(SaveSlots.ManualAllowed(GameState.ExpeditionActive, GameState.CampManagement));
+            Assert.IsFalse(SaveSlots.ManualAllowed(GameState.RaidActive, GameState.CampManagement));
+            Assert.AreNotEqual("save.camp_only", Loc.Raw("save.camp_only", "es"));
         }
     }
 }
