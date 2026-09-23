@@ -628,6 +628,7 @@ namespace OutpostZero.UI
             parent.Add(Button(settings.InvertLook ? Loc.T("set.invert") : Loc.T("set.look"), settings.ToggleInvert));
             parent.Add(Button(settings.CrouchMode == 1 ? Loc.T("set.crouch_toggle") : Loc.T("set.crouch_hold"), settings.ToggleCrouchMode));
             parent.Add(Button(settings.SprintMode == 1 ? Loc.T("set.sprint_toggle") : Loc.T("set.sprint_hold"), settings.ToggleSprintMode));
+            parent.Add(Button(settings.AimMode == 1 ? Loc.T("set.aim_toggle") : Loc.T("set.aim_hold"), settings.ToggleAimMode));
             parent.Add(Button(settings.Merciful ? Loc.T("set.merciful") : Loc.T("set.perma"), settings.ToggleMerciful));
             parent.Add(Button(Loc.T("set.next") + " " + Loc.Difficulty(settings.NextDifficulty), settings.CycleDifficulty));
             parent.Add(Button(Loc.T("set.gore") + " " + Presentation.GoreName(settings.Gore == 0 ? 3 : settings.Gore), settings.CycleGore));

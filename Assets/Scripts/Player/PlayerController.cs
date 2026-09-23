@@ -63,6 +63,7 @@ namespace OutpostZero.Player
         /// <summary>Where the leader is aiming on the ground plane, for the rig's spine and head turn.</summary>
         public Vector3 AimPoint { get; private set; }
         private bool sprintLatch;
+        private bool aimLatch;
         public bool FlashlightOn => flashlightOn;
         public bool ActiveHasRail
         {
@@ -419,7 +420,9 @@ namespace OutpostZero.Player
                 if (firearm.IsReloading) CodexDirector.Hear("reload");
             }
 
-            IsAimingDownSights = ExpeditionInput.AimHeld && !WheelOpen && Time.time >= dodgeUntil;
+            int aimMode = SettingsService.Instance != null ? SettingsService.Instance.AimMode : 0;
+            aimLatch = PlayOptions.Stance(ExpeditionInput.AimHeld, ExpeditionInput.AimPressed, aimLatch, aimMode);
+            IsAimingDownSights = aimLatch && !WheelOpen && Time.time >= dodgeUntil;
             if (IsAimingDownSights) CodexDirector.Hear("aim");
 
             if (!TrackWheel())
@@ -545,6 +548,7 @@ namespace OutpostZero.Player
             currentStamina = Mathf.Max(0f, currentStamina - DodgeClock.Cost);
             lastStaminaDrainTime = Time.time;
             IsAimingDownSights = false;
+            aimLatch = false;
             IsSprinting = false;
             float cap = StaminaPool();
             OnStaminaChanged?.Invoke(currentStamina, cap);

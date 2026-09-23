@@ -85,6 +85,7 @@ namespace OutpostZero.Player
                 return Mouse.current != null ? Mouse.current.rightButton.isPressed : false;
             }
         }
+        public static bool AimPressed => PadDown(PadBindings.Action.Aim) || (Mouse.current != null && Mouse.current.rightButton.wasPressedThisFrame);
         public static bool PausePressed => Pressed(ControlBindings.Action.Pause) || PadDown(PadBindings.Action.Pause);
         public static bool ReloadPressed => Pressed(ControlBindings.Action.Reload) || PadDown(PadBindings.Action.Reload);
         public static bool InteractPressed => Pressed(ControlBindings.Action.Interact) || PadDown(PadBindings.Action.Interact);

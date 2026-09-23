@@ -32,6 +32,34 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void AimingCanHoldOrToggleLikeCrouchAndSprint()
+        {
+            var snap = SettingsFile.Defaults();
+            Assert.AreEqual(0, snap.ads, "aiming holds by default");
+            snap.ads = 1;
+            Assert.IsTrue(SettingsFile.TryFromJson(SettingsFile.ToJson(snap), out var back));
+            Assert.AreEqual(1, back.ads);
+            Assert.IsTrue(SettingsFile.TryFromJson("{\"shake\":1}", out var old));
+            Assert.AreEqual(0, old.ads, "an older settings file keeps hold");
+
+            bool aiming = PlayOptions.Stance(false, true, false, 1);
+            Assert.IsTrue(aiming, "a press latches aim on");
+            aiming = PlayOptions.Stance(false, false, aiming, 1);
+            Assert.IsTrue(aiming, "it stays on with the button up");
+            Assert.IsFalse(PlayOptions.Stance(true, true, aiming, 1), "the next press lets go");
+            Assert.IsFalse(PlayOptions.Stance(false, false, true, 0), "hold mode follows the button");
+
+            string root = Directory.GetCurrentDirectory();
+            string player = File.ReadAllText(Path.Combine(root, "Assets/Scripts/Player/PlayerController.cs"));
+            StringAssert.Contains("aimLatch = PlayOptions.Stance(ExpeditionInput.AimHeld, ExpeditionInput.AimPressed, aimLatch, aimMode);", player);
+            StringAssert.Contains("IsAimingDownSights = false;\n            aimLatch = false;", player.Replace("\r\n", "\n"), "a dodge drops a toggled aim");
+            StringAssert.Contains("data.aimMode", File.ReadAllText(Path.Combine(root, "Assets/Scripts/Shell/SaveSystem.cs")));
+            StringAssert.Contains("settings.ToggleAimMode", File.ReadAllText(Path.Combine(root, "Assets/Scripts/UI/OutpostInterface.cs")));
+            Assert.AreEqual("Aim: toggle", Loc.T("set.aim_toggle", "en"));
+            Assert.AreEqual("Apuntar: mantener", Loc.T("set.aim_hold", "es"));
+        }
+
+        [Test]
         public void EveryPanelFollowsTheInterfaceSize()
         {
             string ui = Path.Combine(Directory.GetCurrentDirectory(), "Assets", "Scripts", "UI");

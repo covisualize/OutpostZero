@@ -94,6 +94,7 @@ namespace OutpostZero.Shell
         public int invertLook;
         public int crouchMode;
         public int sprintMode;
+        public int aimMode;
         public int frameCap;
         public int resolution;
         public int slot;

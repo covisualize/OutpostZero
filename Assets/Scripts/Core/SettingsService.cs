@@ -43,6 +43,7 @@ namespace OutpostZero.Core
         [SerializeField] private int invertLook;
         [SerializeField] private int crouchMode;
         [SerializeField] private int sprintMode;
+        [SerializeField] private int aimMode;
         [SerializeField] private int frameCap;
         [SerializeField] private int resolution;
         [SerializeField] private int renderScale;
@@ -76,10 +77,11 @@ namespace OutpostZero.Core
         public bool InvertLook => invertLook == 1;
         public int CrouchMode => crouchMode == 1 ? 1 : 0;
         public int SprintMode => sprintMode == 1 ? 1 : 0;
+        public int AimMode => aimMode == 1 ? 1 : 0;
         public int FrameCap => frameCap < 0 || frameCap > 4 ? 0 : frameCap;
         public int Resolution => resolution < 0 || resolution >= DisplayModes.Count ? 0 : resolution;
         public int RenderScaleStep => PlayOptions.ScaleStep(renderScale);
-        public string DiscreteKey => (subtitles ? "1" : "0") + colorblindMode + quality + vsync + (merciful ? "1" : "0") + NextDifficulty + goreLevel + hitStop + damageNumbers + motionBlur + windowMode + AimAssist + (InvertLook ? 1 : 0) + CrouchMode + SprintMode + FrameCap + Resolution + (quietFlash ? "1" : "0") + RenderScaleStep + (enemyOutline ? "1" : "0");
+        public string DiscreteKey => (subtitles ? "1" : "0") + colorblindMode + quality + vsync + (merciful ? "1" : "0") + NextDifficulty + goreLevel + hitStop + damageNumbers + motionBlur + windowMode + AimAssist + (InvertLook ? 1 : 0) + CrouchMode + SprintMode + AimMode + FrameCap + Resolution + (quietFlash ? "1" : "0") + RenderScaleStep + (enemyOutline ? "1" : "0");
         public bool ShowSettings { get; private set; }
 
         public event Action OnChanged;
@@ -340,6 +342,12 @@ namespace OutpostZero.Core
             Raise();
         }
 
+        public void ToggleAimMode()
+        {
+            aimMode = AimMode == 1 ? 0 : 1;
+            Raise();
+        }
+
         public void ToggleSprintMode()
         {
             sprintMode = SprintMode == 1 ? 0 : 1;
@@ -353,12 +361,13 @@ namespace OutpostZero.Core
             Raise();
         }
 
-        public void ApplyPlay(int assist, int invert, int crouch, int sprint, int cap, int display = 0)
+        public void ApplyPlay(int assist, int invert, int crouch, int sprint, int cap, int display = 0, int ads = 0)
         {
             aimAssist = assist <= 0 ? 0 : assist >= 2 ? 2 : 1;
             invertLook = invert == 1 ? 1 : 0;
             crouchMode = crouch == 1 ? 1 : 0;
             sprintMode = sprint == 1 ? 1 : 0;
+            aimMode = ads == 1 ? 1 : 0;
             frameCap = cap < 0 || cap > 4 ? 0 : cap;
             resolution = display < 0 || display >= DisplayModes.Count ? 0 : display;
             ApplyDisplay();
@@ -529,6 +538,7 @@ namespace OutpostZero.Core
                 invert = invertLook,
                 crouch = CrouchMode,
                 sprint = SprintMode,
+                ads = AimMode,
                 frame = FrameCap,
                 resolution = Resolution,
                 render = RenderScaleStep,
@@ -568,6 +578,7 @@ namespace OutpostZero.Core
             invertLook = snap.invert == 1 ? 1 : 0;
             crouchMode = snap.crouch == 1 ? 1 : 0;
             sprintMode = snap.sprint == 1 ? 1 : 0;
+            aimMode = snap.ads == 1 ? 1 : 0;
             frameCap = snap.frame < 0 || snap.frame > 4 ? 0 : snap.frame;
             resolution = snap.resolution < 0 || snap.resolution >= DisplayModes.Count ? 0 : snap.resolution;
             renderScale = PlayOptions.ScaleStep(snap.render);

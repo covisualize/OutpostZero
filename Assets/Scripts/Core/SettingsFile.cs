@@ -39,6 +39,7 @@ namespace OutpostZero.Core
             public int invert;
             public int crouch;
             public int sprint;
+            public int ads;
             public int frame;
             public int resolution;
             public int render;
@@ -79,6 +80,7 @@ namespace OutpostZero.Core
                 invert = 0,
                 crouch = 0,
                 sprint = 0,
+                ads = 0,
                 frame = 0,
                 resolution = 0,
                 render = 0,
@@ -120,6 +122,7 @@ namespace OutpostZero.Core
             Int(builder, "invert", snap.invert);
             Int(builder, "crouch", snap.crouch);
             Int(builder, "sprint", snap.sprint);
+            Int(builder, "ads", snap.ads);
             Int(builder, "frame", snap.frame);
             Int(builder, "resolution", snap.resolution);
             Int(builder, "render", snap.render);
@@ -162,6 +165,7 @@ namespace OutpostZero.Core
             snap.invert = (int)Num(json, "invert", snap.invert);
             snap.crouch = (int)Num(json, "crouch", snap.crouch);
             snap.sprint = (int)Num(json, "sprint", snap.sprint);
+            snap.ads = (int)Num(json, "ads", snap.ads);
             snap.frame = (int)Num(json, "frame", snap.frame);
             snap.resolution = (int)Num(json, "resolution", snap.resolution);
             snap.render = (int)Num(json, "render", snap.render);
