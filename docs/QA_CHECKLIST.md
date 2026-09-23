@@ -278,9 +278,25 @@ Use the busiest raid and a rainy night street for each tier. Read fps and draw c
 - [ ] Crash upload stays off unless the `outpost.crash_upload` PlayerPrefs key is set to 1.
 - [ ] With `-telemetry` on a release build, `Telemetry/expeditions.csv` and `Telemetry/days.csv` fill in.
 
+## 8. Bug bash and triage
+
+Every bug found in a playtest or reported by a player is filed in the Outpost Zero Linear project with the `Bug` label, using the fields in `.github/ISSUE_TEMPLATE/bug_report.md`: build version (from the menu or `version.json`), platform and input device, steps, expected and actual result, and the `Logs/outpost.log` from that session. Triage sets one severity as the Linear priority:
+
+| Severity | Linear priority | Meaning | Triage within | Fix by |
+| --- | --- | --- | --- | --- |
+| P0 | Urgent | Crash, hang, save loss or corruption, a run that can't be finished, or a build that won't launch | 1 day | Before the next build; blocks any release |
+| P1 | High | A core system broken with no workaround (combat, extraction, saving, raids, succession, the win), or a failed accessibility setting | 2 days | Before the release candidate |
+| P2 | Medium | Wrong behaviour with a workaround, a balance miss against the section 2 targets, or a visible art or audio fault | 1 week | Next minor release, or waived with a note |
+| P3 | Low | Cosmetic, text or polish | Next triage | When convenient |
+
+- A bug that loses progress is P0 whatever else it does. A crash with a `[CrashLog]` warning on the next launch is at least P1.
+- Triage runs at the start of each bug bash and then weekly. It confirms the steps on the current build, merges duplicates, and sets the severity and milestone.
+- A fix links its issue in the commit (`fix(PRO-xx): ...`) and names the check or test that now covers it. The reporter or QA closes the issue after checking it on a build that has the fix.
+- During a release candidate, only P0 and P1 fixes land on the release branch. Fixes after launch follow the hotfix policy in `docs/CONTRIBUTING.md`.
+
 ## Sign-off
 
-A release candidate ships when sections 1 and 2 are fully checked, every row in sections 4 and 6 has a result, and any unchecked item in section 3 has a linked issue.
+A release candidate ships when sections 1 and 2 are fully checked, every row in sections 4 and 6 has a result, any unchecked item in section 3 has a linked issue, and the Linear board has no open P0 or P1 bugs (section 8).
 
 | Role | Name | Date |
 | --- | --- | --- |
