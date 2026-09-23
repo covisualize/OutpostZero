@@ -14,6 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: OutpostZero::OutpostZero.Colony.BuildingModuleDefinition
   id: Spikes
   scrap: 8
+  cloth: 0
+  chemicals: 0
+  tape: 0
   buildHours: 1
   size: {x: 1.6, y: 0.08, z: 1.6}
   wears: 0

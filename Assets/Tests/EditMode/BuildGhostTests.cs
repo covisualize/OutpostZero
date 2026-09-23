@@ -82,6 +82,49 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void ModulesAskForSuppliesBesideScrapAndATeardownGivesHalfOfEachBack()
+        {
+            var generator = GridBuilder.Bill(ModuleKind.Generator);
+            Assert.AreEqual(14, generator.Scrap);
+            Assert.AreEqual(1, generator.Chemicals);
+            Assert.AreEqual(1, generator.Tape);
+            Assert.AreEqual(1, GridBuilder.Bill(ModuleKind.Cot).Cloth, "a cot wants canvas");
+            Assert.AreEqual(2, GridBuilder.Bill(ModuleKind.Purifier).Chemicals);
+            Assert.IsTrue(GridBuilder.Bill(ModuleKind.Barricade).ScrapOnly, "the Day 1 barricade stays scrap only");
+            Assert.IsTrue(GridBuilder.Bill(ModuleKind.Campfire).ScrapOnly);
+            int needSupplies = 0;
+            foreach (ModuleKind kind in Enum.GetValues(typeof(ModuleKind)))
+            {
+                Assert.AreEqual(GridBuilder.Cost(kind), GridBuilder.Bill(kind).Scrap, kind.ToString());
+                if (!GridBuilder.Bill(kind).ScrapOnly) needSupplies++;
+            }
+            Assert.GreaterOrEqual(needSupplies, 8, "most modules need more than scrap");
+
+            Assert.IsTrue(generator.Affords(14, 0, 1, 1));
+            Assert.IsFalse(generator.Affords(99, 9, 0, 9), "scrap alone can't buy a generator");
+            Assert.IsFalse(generator.Affords(13, 9, 9, 9));
+
+            var half = new ModuleBill(15, 3, 1, 2).Half();
+            Assert.AreEqual(7, half.Scrap);
+            Assert.AreEqual(1, half.Cloth);
+            Assert.AreEqual(0, half.Chemicals);
+            Assert.AreEqual(1, half.Tape);
+            Assert.AreEqual(0, new ModuleBill(-4, -1, 0, 0).Scrap);
+
+            Assert.AreEqual("Need 14 scrap, 1 chem, 1 tape", YardSay.Need(generator, "en"));
+            Assert.AreEqual("Hacen falta 14 chatarra, 1 quím, 1 cinta", YardSay.Need(generator, "es"));
+            Assert.AreEqual("Need 6 camp scrap", YardSay.Need(GridBuilder.Bill(ModuleKind.Barricade), "en"), "a scrap-only bill keeps the old line");
+            Assert.AreEqual("Recovered 7 scrap, 1 cloth, 1 tape", YardSay.Recovered(half, "en"));
+            Assert.AreEqual("Recovered 3 scrap", YardSay.Recovered(new ModuleBill(3, 0, 0, 0), "en"));
+            StringAssert.StartsWith("Generator 14 +", generator.Button("Generator"));
+            StringAssert.Contains("+1 tape", generator.Button("Generator"));
+            Assert.AreEqual("Barricade 6", GridBuilder.Bill(ModuleKind.Barricade).Button("Barricade"));
+            Assert.IsFalse(BuildMenu.Affordable(generator, null), "no stores, nothing to spend");
+            Assert.AreEqual(BuildGhost.Verdict.Short, BuildGhost.Check(null, 0f, 0f, generator, null));
+            Assert.AreEqual(BuildGhost.Verdict.Outside, BuildGhost.Check(null, MapRim.Half + 2f, 0f, generator, null));
+        }
+
+        [Test]
         public void FindReadsTheTable()
         {
             var looks = new[] { new ModuleLooks.Look { kind = "Cot", prefab = null } };

@@ -14,6 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: OutpostZero::OutpostZero.Colony.BuildingModuleDefinition
   id: Campfire
   scrap: 7
+  cloth: 0
+  chemicals: 0
+  tape: 0
   buildHours: 1
   size: {x: 1.2, y: 0.2, z: 1.2}
   wears: 0

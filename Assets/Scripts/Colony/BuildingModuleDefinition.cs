@@ -3,7 +3,7 @@ using OutpostZero.Graphics;
 
 namespace OutpostZero.Colony
 {
-    /// <summary>One yard module: what it costs, how long a builder takes over it, and how its stand-in looks.</summary>
+    /// <summary>One yard module: what it costs in scrap and supplies, how long a builder takes over it, and how its stand-in looks.</summary>
     [CreateAssetMenu(menuName = "Outpost Zero/Building Module", fileName = "Module")]
     public class BuildingModuleDefinition : ScriptableObject
     {
@@ -13,6 +13,10 @@ namespace OutpostZero.Colony
         [Header("Cost")]
         [Tooltip("Scrap spent when the site is laid; half comes back on a teardown.")]
         [Min(0)] public int scrap;
+        [Tooltip("Cloth, chemicals and tape also spent when the site is laid; half of each comes back on a teardown.")]
+        [Min(0)] public int cloth;
+        [Min(0)] public int chemicals;
+        [Min(0)] public int tape;
         [Tooltip("Builder hours before the site becomes the finished module.")]
         [Min(1)] public int buildHours = 1;
 
@@ -31,6 +35,9 @@ namespace OutpostZero.Colony
             {
                 Id = id,
                 Scrap = scrap,
+                Cloth = cloth,
+                Chemicals = chemicals,
+                Tape = tape,
                 Hours = buildHours,
                 Size = size,
                 Wears = wears,
@@ -43,6 +50,9 @@ namespace OutpostZero.Colony
         {
             id = row.Id;
             scrap = row.Scrap;
+            cloth = row.Cloth;
+            chemicals = row.Chemicals;
+            tape = row.Tape;
             buildHours = row.Hours;
             size = row.Size;
             wears = row.Wears;

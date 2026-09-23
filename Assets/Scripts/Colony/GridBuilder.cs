@@ -135,8 +135,7 @@ namespace OutpostZero.Colony
             Vector3 point = ray.GetPoint(enter);
             float x = BuildGhost.Snap(point.x, cell);
             float z = BuildGhost.Snap(point.z, cell);
-            int scrap = ColonyStorage.Instance != null ? ColonyStorage.Instance.Scrap : 0;
-            var verdict = BuildGhost.Check(placed, x, z, Cost(selected), scrap);
+            var verdict = BuildGhost.Check(placed, x, z, Bill(selected), ColonyStorage.Instance);
             if (ghost == null)
             {
                 ghost = GameObject.CreatePrimitive(PrimitiveType.Cube);
@@ -180,11 +179,18 @@ namespace OutpostZero.Colony
                 if (Mathf.Abs(module.x - x) < 0.01f && Mathf.Abs(module.z - z) < 0.01f) target = module;
             }
             if (target == null) return false;
-            int refund = 0;
-            if (System.Enum.TryParse(target.kind, out ModuleKind kind)) refund = ScrapRefund.Half(Cost(kind));
+            var refund = new ModuleBill();
+            if (System.Enum.TryParse(target.kind, out ModuleKind kind)) refund = Bill(kind).Half();
             placed.Remove(target);
             RefreshViews();
-            if (refund > 0) ColonyStorage.Instance?.RestoreScrap(refund);
+            var storage = ColonyStorage.Instance;
+            if (storage != null)
+            {
+                if (refund.Scrap > 0) storage.RestoreScrap(refund.Scrap);
+                if (refund.Cloth > 0) storage.RestoreCloth(refund.Cloth);
+                if (refund.Chemicals > 0) storage.RestoreChemicals(refund.Chemicals);
+                if (refund.Tape > 0) storage.RestoreTape(refund.Tape);
+            }
             GameplayFeedback.Toast(YardSay.Recovered(refund, null));
             return true;
         }
@@ -258,10 +264,10 @@ namespace OutpostZero.Colony
                 return false;
             }
 
-            int cost = Cost(kind);
-            if (ColonyStorage.Instance == null || !ColonyStorage.Instance.TrySpendScrap(cost))
+            var bill = Bill(kind);
+            if (ColonyStorage.Instance == null || !ColonyStorage.Instance.TrySpendBill(bill.Scrap, bill.Cloth, bill.Chemicals, bill.Tape))
             {
-                GameplayFeedback.Toast(YardSay.Need(cost, null));
+                GameplayFeedback.Toast(YardSay.Need(bill, null));
                 return false;
             }
             var record = new PlacedModule { kind = kind.ToString(), x = x, z = z, rotation = facing, integrity = 100, site = 1 };
@@ -873,6 +879,35 @@ namespace OutpostZero.Colony
         public static int Cost(ModuleKind kind)
         {
             return ModuleTable.TryRow(kind.ToString(), out var row) ? row.Scrap : CodeCost(kind);
+        }
+
+        public static ModuleBill Bill(ModuleKind kind)
+        {
+            if (ModuleTable.TryRow(kind.ToString(), out var row)) return new ModuleBill(row.Scrap, row.Cloth, row.Chemicals, row.Tape);
+            CodeSupplies(kind, out int cloth, out int chemicals, out int tape);
+            return new ModuleBill(CodeCost(kind), cloth, chemicals, tape);
+        }
+
+        /// <summary>Supplies a module needs beside its scrap: canvas for beds and banners, tape and chemicals for machines.</summary>
+        public static void CodeSupplies(ModuleKind kind, out int cloth, out int chemicals, out int tape)
+        {
+            cloth = 0;
+            chemicals = 0;
+            tape = 0;
+            switch (kind)
+            {
+                case ModuleKind.Cot: cloth = 1; break;
+                case ModuleKind.Water: tape = 1; break;
+                case ModuleKind.Watchtower: tape = 1; break;
+                case ModuleKind.Generator: chemicals = 1; tape = 1; break;
+                case ModuleKind.Workbench: tape = 1; break;
+                case ModuleKind.TradingPost: cloth = 2; break;
+                case ModuleKind.Farm: chemicals = 1; break;
+                case ModuleKind.Purifier: chemicals = 2; break;
+                case ModuleKind.Turret: chemicals = 1; tape = 2; break;
+                case ModuleKind.Lamp: tape = 1; break;
+                case ModuleKind.Memorial: cloth = 1; break;
+            }
         }
 
         public static int CodeCost(ModuleKind kind)

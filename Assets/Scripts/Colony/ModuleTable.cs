@@ -15,6 +15,9 @@ namespace OutpostZero.Colony
         {
             public string Id;
             public int Scrap;
+            public int Cloth;
+            public int Chemicals;
+            public int Tape;
             public int Hours = 1;
             public Vector3 Size = Vector3.one;
             public bool Wears;
@@ -56,10 +59,14 @@ namespace OutpostZero.Colony
             foreach (ModuleKind kind in System.Enum.GetValues(typeof(ModuleKind)))
             {
                 string id = kind.ToString();
+                GridBuilder.CodeSupplies(kind, out int cloth, out int chemicals, out int tape);
                 list.Add(new Row
                 {
                     Id = id,
                     Scrap = GridBuilder.CodeCost(kind),
+                    Cloth = cloth,
+                    Chemicals = chemicals,
+                    Tape = tape,
                     Hours = BuildSite.CodeNeed(id),
                     Size = GridBuilder.CodeSize(id),
                     Wears = GridBuilder.CodeWears(id),

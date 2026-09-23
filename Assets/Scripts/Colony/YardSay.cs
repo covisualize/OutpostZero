@@ -22,6 +22,18 @@ namespace OutpostZero.Colony
             return Word("yard.recovered", language) + " " + scrap + " " + Word("yard.scrap", language);
         }
 
+        public static string Recovered(ModuleBill refund, string language)
+        {
+            if (refund.ScrapOnly) return Recovered(refund.Scrap, language);
+            return Word("yard.recovered", language) + " " + refund.Parts(language);
+        }
+
+        public static string Need(ModuleBill bill, string language)
+        {
+            if (bill.ScrapOnly) return Need(bill.Scrap, language);
+            return Word("yard.need", language) + " " + bill.Parts(language);
+        }
+
         public static string Taken(string language)
         {
             return Word("yard.taken", language);

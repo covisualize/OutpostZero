@@ -820,14 +820,13 @@ namespace OutpostZero.UI
                 tabs.Add(tabButton);
             }
             camp.Add(tabs);
-            int scrapHeld = ColonyStorage.Instance != null ? ColonyStorage.Instance.Scrap : 0;
             var build = new VisualElement { style = { flexDirection = FlexDirection.Row, flexWrap = Wrap.Wrap } };
             foreach (var kind in BuildMenu.Kinds(buildTab))
             {
                 var pick = kind;
-                int cost = GridBuilder.Cost(kind);
-                var moduleButton = Button(Loc.T(BuildMenu.LabelKey(kind)) + " " + cost, () => GridBuilder.Instance?.Select(pick));
-                if (!BuildMenu.Affordable(cost, scrapHeld)) moduleButton.style.color = new Color(0.55f, 0.5f, 0.48f);
+                var bill = GridBuilder.Bill(kind);
+                var moduleButton = Button(bill.Button(Loc.T(BuildMenu.LabelKey(kind))), () => GridBuilder.Instance?.Select(pick));
+                if (!BuildMenu.Affordable(bill, ColonyStorage.Instance)) moduleButton.style.color = new Color(0.55f, 0.5f, 0.48f);
                 if (GridBuilder.Instance != null && GridBuilder.Instance.Selected == kind) moduleButton.style.backgroundColor = new Color(0.25f, 0.32f, 0.22f);
                 build.Add(kind == ModuleKind.Barricade ? Lit(moduleButton, TutorialMark.Barricade) : moduleButton);
             }

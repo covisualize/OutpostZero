@@ -51,5 +51,10 @@ namespace OutpostZero.Colony
         }
 
         public static bool Affordable(int cost, int scrap) => scrap >= cost;
+
+        public static bool Affordable(ModuleBill bill, ColonyStorage storage)
+        {
+            return storage != null && bill.Affords(storage.Scrap, storage.Cloth, storage.Chemicals, storage.Tape);
+        }
     }
 }

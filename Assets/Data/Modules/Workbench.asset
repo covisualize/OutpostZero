@@ -14,6 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: OutpostZero::OutpostZero.Colony.BuildingModuleDefinition
   id: Workbench
   scrap: 12
+  cloth: 0
+  chemicals: 0
+  tape: 1
   buildHours: 3
   size: {x: 1.6, y: 0.9, z: 0.8}
   wears: 0

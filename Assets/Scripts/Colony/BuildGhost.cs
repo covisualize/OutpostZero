@@ -6,7 +6,7 @@ namespace OutpostZero.Colony
 {
     /// <summary>
     /// Whether the snapped cell under the pointer takes the selected module: free, inside the fence, and
-    /// affordable. The ghost wears the verdict's colour before the click, and placement refuses the same cases.
+    /// affordable in scrap and supplies. The ghost wears the verdict's colour before the click, and placement refuses the same cases.
     /// </summary>
     public static class BuildGhost
     {
@@ -36,6 +36,15 @@ namespace OutpostZero.Colony
                     if (Mathf.Abs(placed[i].x - x) < 0.01f && Mathf.Abs(placed[i].z - z) < 0.01f) return Verdict.Taken;
             }
             if (scrap < cost) return Verdict.Short;
+            return Verdict.Ok;
+        }
+
+        /// <summary>The same check against a full bill and the camp's stores; no stores means nothing is affordable.</summary>
+        public static Verdict Check(IReadOnlyList<PlacedModule> placed, float x, float z, ModuleBill bill, ColonyStorage storage)
+        {
+            var verdict = Check(placed, x, z, 0, 0);
+            if (verdict != Verdict.Ok) return verdict;
+            if (storage == null || !bill.Affords(storage.Scrap, storage.Cloth, storage.Chemicals, storage.Tape)) return Verdict.Short;
             return Verdict.Ok;
         }
 

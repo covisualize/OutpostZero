@@ -14,6 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: OutpostZero::OutpostZero.Colony.BuildingModuleDefinition
   id: Generator
   scrap: 14
+  cloth: 0
+  chemicals: 1
+  tape: 1
   buildHours: 3
   size: {x: 1.1, y: 0.8, z: 0.7}
   wears: 0

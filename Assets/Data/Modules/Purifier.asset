@@ -14,6 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: OutpostZero::OutpostZero.Colony.BuildingModuleDefinition
   id: Purifier
   scrap: 15
+  cloth: 0
+  chemicals: 2
+  tape: 0
   buildHours: 3
   size: {x: 0.7, y: 1.3, z: 0.7}
   wears: 0

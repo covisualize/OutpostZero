@@ -60,6 +60,9 @@ namespace OutpostZero.Tests.EditMode
                 var f = Fields(text);
                 Assert.AreEqual(row.Id, f["id"]);
                 Assert.AreEqual(row.Scrap.ToString(), f["scrap"], row.Id);
+                Assert.AreEqual(row.Cloth.ToString(), f["cloth"], row.Id);
+                Assert.AreEqual(row.Chemicals.ToString(), f["chemicals"], row.Id);
+                Assert.AreEqual(row.Tape.ToString(), f["tape"], row.Id);
                 Assert.AreEqual(row.Hours.ToString(), f["buildHours"], row.Id);
                 Assert.AreEqual(row.Wears ? "1" : "0", f["wears"], row.Id);
                 Assert.AreEqual(((int)row.Family).ToString(), f["surface"], row.Id);
@@ -82,6 +85,8 @@ namespace OutpostZero.Tests.EditMode
                 var rows = ModuleTable.BuiltInRows();
                 var tower = rows.Find(r => r.Id == "Watchtower");
                 tower.Scrap = 30;
+                tower.Tape = 0;
+                tower.Cloth = 3;
                 tower.Hours = 0;
                 tower.Size = new Vector3(2f, 3f, 2f);
                 tower.Family = SurfaceFamily.MetalRusted;
@@ -91,6 +96,9 @@ namespace OutpostZero.Tests.EditMode
 
                 Assert.IsTrue(ModuleTable.FromAsset);
                 Assert.AreEqual(30, GridBuilder.Cost(ModuleKind.Watchtower));
+                var bill = GridBuilder.Bill(ModuleKind.Watchtower);
+                Assert.AreEqual(3, bill.Cloth);
+                Assert.AreEqual(0, bill.Tape);
                 Assert.AreEqual(1, BuildSite.Need("Watchtower"), "a site always takes at least an hour");
                 Assert.AreEqual(new Vector3(2f, 3f, 2f), GridBuilder.Scale("Watchtower", 10), "only walls shrink as they wear");
                 Assert.AreEqual(SurfaceFamily.MetalRusted, GridBuilder.FamilyFor("Watchtower"));
@@ -104,6 +112,8 @@ namespace OutpostZero.Tests.EditMode
                 ModuleTable.Clear();
             }
             Assert.AreEqual(16, GridBuilder.Cost(ModuleKind.Watchtower));
+            Assert.AreEqual(1, GridBuilder.Bill(ModuleKind.Watchtower).Tape);
+            Assert.AreEqual(0, GridBuilder.Bill(ModuleKind.Watchtower).Cloth);
             Assert.AreEqual(4, BuildSite.Need("Watchtower"));
             Assert.AreEqual(SurfaceFamily.Plywood, GridBuilder.FamilyFor("Watchtower"));
             Assert.AreEqual(new Vector3(1.8f, 1.1f, 0.4f), GridBuilder.Scale("Barricade", 100));

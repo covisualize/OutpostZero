@@ -14,6 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: OutpostZero::OutpostZero.Colony.BuildingModuleDefinition
   id: Crate
   scrap: 10
+  cloth: 0
+  chemicals: 0
+  tape: 0
   buildHours: 2
   size: {x: 1.1, y: 0.9, z: 0.8}
   wears: 0
