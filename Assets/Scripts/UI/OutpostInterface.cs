@@ -578,6 +578,19 @@ namespace OutpostZero.UI
             menu.Add(Body(ExtractSlip.Line(district, kills, killGoal, scrap, scrapGoal, Loc.T("result.kills"), Loc.T("result.scrap"))));
             if (closed) menu.Add(Body(ExpeditionLedger.TimeLine(outcome, null)));
             if (tracker != null && tracker.PoiLine().Length > 0) menu.Add(Body(tracker.PoiLine()));
+            if (!closed) return;
+            var player = PlayerRegistry.Current;
+            var pack = new List<KeyValuePair<string, int>>();
+            var inventory = player != null ? player.GetComponent<PlayerInventory>() : null;
+            if (inventory != null)
+                foreach (var item in inventory.Items) pack.Add(new KeyValuePair<string, int>(item.ItemId, item.Quantity));
+            menu.Add(Body(ResultsSheet.BroughtLine(ResultsSheet.Brought(outcome.loadout, pack), null)));
+            var health = player != null ? player.GetComponent<HealthSystem>() : null;
+            var effects = player != null ? player.GetComponent<StatusEffectController>() : null;
+            var leader = SurvivorRoster.Instance != null ? SurvivorRoster.Instance.Leader : null;
+            if (health != null)
+                menu.Add(Body(ResultsSheet.ConditionLine(leader != null ? leader.displayName : "", health.CurrentHealth, health.MaxHealth, effects != null && effects.IsBleeding, leader != null ? leader.injury : 0, null)));
+            menu.Add(Body(ResultsSheet.PracticeLine(outcome, null)));
         }
 
         private void DrawBoard(VisualElement menu)

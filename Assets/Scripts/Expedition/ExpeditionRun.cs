@@ -48,6 +48,11 @@ namespace OutpostZero.Expedition
         public int scrap;
         public int scrapGoal;
         public float seconds;
+        public string[] loadout;
+        public int combatShifts;
+        public int scavengeShifts;
+        public int combatLevel;
+        public int scavengeLevel;
 
         public bool LeaderCameHome => end == ExpeditionEnd.Extracted || end == ExpeditionEnd.Victory || end == ExpeditionEnd.Dragged;
         public bool QuotaMet => kills >= killGoal && scrap >= scrapGoal;
@@ -97,6 +102,7 @@ namespace OutpostZero.Expedition
                 scrap = scrap < 0 ? 0 : scrap,
                 scrapGoal = scrapGoal < 1 ? 1 : scrapGoal,
                 seconds = seconds < 0f ? 0f : seconds,
+                loadout = context.loadout ?? Array.Empty<string>(),
             };
         }
 

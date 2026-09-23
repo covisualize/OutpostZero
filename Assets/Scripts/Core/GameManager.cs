@@ -259,6 +259,7 @@ namespace OutpostZero.Core
             ObjectiveTracker.Instance?.MarkExtracted();
             bool won = WorldMapService.Instance != null && WorldMapService.Instance.CampaignWon && !WorldMapService.Instance.Endless;
             CloseExpedition(won ? ExpeditionEnd.Victory : ExpeditionEnd.Extracted);
+            LastOutcome = ResultsSheet.Trained(LastOutcome, SurvivorRoster.Instance != null ? SurvivorRoster.Instance.Leader : null);
             SurvivorRoster.Instance?.RewardReturn();
             BringHomeBite();
             FactionTrade.Instance?.NoteExtracted();
