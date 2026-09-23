@@ -72,5 +72,14 @@ namespace OutpostZero.Core
         /// <summary>FBX under Assets/Models used for the held model.</summary>
         [Tooltip("FBX under Assets/Models used for the held model.")]
         public string modelPath;
+        /// <summary>Generated prefab shown in the hand; mounted at runtime for weapons picked up or bought.</summary>
+        [Tooltip("Generated prefab shown in the hand; mounted at runtime for weapons picked up or bought.")]
+        public GameObject heldPrefab;
+        /// <summary>Metres from the hand socket to the model's grip, in the socket's space.</summary>
+        [Tooltip("Metres from the hand socket to the model's grip, in the socket's space.")]
+        public Vector3 holdOffset = Vector3.zero;
+        /// <summary>Degrees that turn the model so its barrel or blade points along the aim.</summary>
+        [Tooltip("Degrees that turn the model so its barrel or blade points along the aim.")]
+        public Vector3 holdEuler = new Vector3(0f, 90f, 0f);
     }
 }

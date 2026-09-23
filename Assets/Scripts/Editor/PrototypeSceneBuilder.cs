@@ -523,24 +523,21 @@ namespace OutpostZero.EditorTools
             var pistol = pistolObj.AddComponent<FirearmWeapon>();
             pistol.Configure(pistolDef);
             GameObject pistolMesh = InstantiateModel("Weapon_Pistol_9mm", "Pistol_Mesh", Vector3.zero, Quaternion.identity, Vector3.one, pistolObj.transform, isStatic: false, layer: GameLayers.Player);
-            pistolMesh.transform.localPosition = Vector3.zero;
-            pistolMesh.transform.localRotation = Quaternion.Euler(0, 90, 0);
+            HeldModel.Place(pistolMesh.transform, pistolDef);
 
             GameObject shotgunObj = new GameObject("Shotgun_Pump");
             shotgunObj.transform.SetParent(socket.transform, false);
             var shotgun = shotgunObj.AddComponent<FirearmWeapon>();
             shotgun.Configure(shotgunDef);
             GameObject shotgunMesh = InstantiateModel("Weapon_Shotgun_Pump", "Shotgun_Mesh", Vector3.zero, Quaternion.identity, Vector3.one, shotgunObj.transform, isStatic: false, layer: GameLayers.Player);
-            shotgunMesh.transform.localPosition = new Vector3(0, 0, 0.1f);
-            shotgunMesh.transform.localRotation = Quaternion.Euler(0, 90, 0);
+            HeldModel.Place(shotgunMesh.transform, shotgunDef);
 
             GameObject macheteObj = new GameObject("Combat_Machete");
             macheteObj.transform.SetParent(socket.transform, false);
             var machete = macheteObj.AddComponent<MeleeWeapon>();
             machete.Configure(macheteDef);
             GameObject macheteMesh = InstantiateModel("Weapon_Machete", "Machete_Mesh", Vector3.zero, Quaternion.identity, Vector3.one, macheteObj.transform, isStatic: false, layer: GameLayers.Player);
-            macheteMesh.transform.localPosition = new Vector3(0, 0, 0.15f);
-            macheteMesh.transform.localRotation = Quaternion.Euler(0, 90, 0);
+            HeldModel.Place(macheteMesh.transform, macheteDef);
 
             var rifleDef = DefaultDataGenerator.LoadWeapon("Rifle_Assault");
             GameObject rifleObj = new GameObject("Assault_Rifle");
@@ -548,8 +545,7 @@ namespace OutpostZero.EditorTools
             var rifle = rifleObj.AddComponent<FirearmWeapon>();
             rifle.Configure(rifleDef);
             GameObject rifleMesh = InstantiateModel("Weapon_AssaultRifle", "Rifle_Mesh", Vector3.zero, Quaternion.identity, Vector3.one, rifleObj.transform, isStatic: false, layer: GameLayers.Player);
-            rifleMesh.transform.localPosition = Vector3.zero;
-            rifleMesh.transform.localRotation = Quaternion.Euler(0, 90, 0);
+            HeldModel.Place(rifleMesh.transform, rifleDef);
 
             var pc = player.AddComponent<PlayerController>();
             pc.Configure(new WeaponBase[] { pistol, shotgun, rifle, machete }, spot);

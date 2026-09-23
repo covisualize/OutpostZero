@@ -52,6 +52,7 @@ namespace OutpostZero.EditorTools
                 weapon.noiseType = NoiseType.GunshotLoud;
                 weapon.useProjectile = true;
                 weapon.modelPath = ModelPaths.Shotgun;
+                weapon.holdOffset = new Vector3(0f, 0f, 0.1f);
             });
 
             SaveWeapon("Machete", weapon =>
@@ -67,6 +68,7 @@ namespace OutpostZero.EditorTools
                 weapon.noiseType = NoiseType.MeleeSwing;
                 weapon.isMelee = true;
                 weapon.modelPath = ModelPaths.Machete;
+                weapon.holdOffset = new Vector3(0f, 0f, 0.15f);
             });
 
             SaveWeapon("Rifle_Assault", weapon =>
@@ -133,6 +135,7 @@ namespace OutpostZero.EditorTools
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
             foreach (var problem in ItemDatabaseSync.Sync()) Debug.LogWarning("[DefaultDataGenerator] " + problem);
+            SyncWeaponSet();
         }
 
         public static WeaponDefinition LoadWeapon(string assetName)
@@ -156,7 +159,32 @@ namespace OutpostZero.EditorTools
             }
             fill(asset);
             asset.name = assetName;
+            if (asset.heldPrefab == null && !string.IsNullOrEmpty(asset.modelPath))
+            {
+                asset.heldPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/Weapons/" + PrefabCatalog.Id(asset.modelPath) + ".prefab");
+            }
             EditorUtility.SetDirty(asset);
+        }
+
+        /// <summary>Lists every weapon definition in Resources/WeaponSet so runtime weapons find their model.</summary>
+        public static void SyncWeaponSet()
+        {
+            const string path = "Assets/Resources/" + WeaponSet.ResourcePath + ".asset";
+            var set = AssetDatabase.LoadAssetAtPath<WeaponSet>(path);
+            if (set == null)
+            {
+                set = ScriptableObject.CreateInstance<WeaponSet>();
+                AssetDatabase.CreateAsset(set, path);
+            }
+            var found = new System.Collections.Generic.List<WeaponDefinition>();
+            foreach (string guid in AssetDatabase.FindAssets("t:WeaponDefinition", new[] { WeaponsDir }))
+            {
+                var weapon = AssetDatabase.LoadAssetAtPath<WeaponDefinition>(AssetDatabase.GUIDToAssetPath(guid));
+                if (weapon != null) found.Add(weapon);
+            }
+            set.weapons = found.ToArray();
+            EditorUtility.SetDirty(set);
+            AssetDatabase.SaveAssets();
         }
 
         private static void SaveZombie(string assetName, System.Action<ZombieArchetype> fill)

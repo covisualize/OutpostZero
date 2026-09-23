@@ -126,6 +126,7 @@ namespace OutpostZero.Core
             definition.useProjectile = true;
             definition.modelPath = ModelPaths.AssaultRifle;
             rifle.Configure(definition);
+            OutpostZero.Combat.HeldModel.Mount(rifleObject.transform, WeaponSet.Find(definition.id, WeaponType.Rifle));
             player.AddWeapon(rifle);
         }
 

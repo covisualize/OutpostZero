@@ -31,3 +31,6 @@ MonoBehaviour:
   automatic: 0
   useProjectile: 0
   modelPath: Assets/Models/Weapons/Weapon_Machete.fbx
+  heldPrefab: {fileID: 7622646078682463550, guid: 5ec5149ad47ade84a8a4a53faca27cc7, type: 3}
+  holdOffset: {x: 0, y: 0, z: 0.15}
+  holdEuler: {x: 0, y: 90, z: 0}
