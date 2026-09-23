@@ -121,6 +121,7 @@ namespace OutpostZero.Shell
         public bool Finished => finished;
         public bool CampFinished => campFinished;
         public int CampIndex => campIndex;
+        public int Index => index;
 
         public string Current
         {

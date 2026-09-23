@@ -1,0 +1,156 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+    <Style src="HUD.uss" />
+    <ui:VisualElement name="hud-root" class="hud" picking-mode="Ignore">
+        <ui:VisualElement name="veil" class="hud-fill hud-veil" picking-mode="Ignore" />
+        <ui:VisualElement name="vignette" class="hud-fill" picking-mode="Ignore">
+            <ui:VisualElement name="edge-top" class="hud-edge hud-edge-top" picking-mode="Ignore" />
+            <ui:VisualElement name="edge-right" class="hud-edge hud-edge-right" picking-mode="Ignore" />
+            <ui:VisualElement name="edge-bottom" class="hud-edge hud-edge-bottom" picking-mode="Ignore" />
+            <ui:VisualElement name="edge-left" class="hud-edge hud-edge-left" picking-mode="Ignore" />
+        </ui:VisualElement>
+        <ui:VisualElement name="popups" class="hud-fill" picking-mode="Ignore" />
+        <ui:VisualElement name="vitals" class="hud-panel hud-vitals" picking-mode="Ignore">
+            <ui:VisualElement name="health-row" class="hud-row" picking-mode="Ignore">
+                <ui:Label name="health-caption" class="hud-caption" picking-mode="Ignore" />
+                <ui:Label name="health-value" class="hud-value" picking-mode="Ignore" />
+                <ui:Label name="health-max" class="hud-dim" picking-mode="Ignore" />
+            </ui:VisualElement>
+            <ui:VisualElement name="health-track" class="hud-track hud-track-main" picking-mode="Ignore">
+                <ui:VisualElement name="health-ghost" class="hud-bar hud-ghost" picking-mode="Ignore" />
+                <ui:VisualElement name="health-fill" class="hud-bar hud-health" picking-mode="Ignore" />
+            </ui:VisualElement>
+            <ui:VisualElement name="stamina-track" class="hud-track hud-track-thin" picking-mode="Ignore">
+                <ui:VisualElement name="stamina-fill" class="hud-bar hud-stamina" picking-mode="Ignore" />
+            </ui:VisualElement>
+            <ui:VisualElement name="needs" class="hud-row hud-needs" picking-mode="Ignore">
+                <ui:VisualElement name="need-hunger" class="hud-need" picking-mode="Ignore">
+                    <ui:Label name="need-hunger-label" class="hud-caption" picking-mode="Ignore" />
+                    <ui:VisualElement name="need-hunger-track" class="hud-track hud-track-mini" picking-mode="Ignore">
+                        <ui:VisualElement name="need-hunger-fill" class="hud-bar hud-need-fill" picking-mode="Ignore" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+                <ui:VisualElement name="need-thirst" class="hud-need" picking-mode="Ignore">
+                    <ui:Label name="need-thirst-label" class="hud-caption" picking-mode="Ignore" />
+                    <ui:VisualElement name="need-thirst-track" class="hud-track hud-track-mini" picking-mode="Ignore">
+                        <ui:VisualElement name="need-thirst-fill" class="hud-bar hud-need-fill" picking-mode="Ignore" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+                <ui:VisualElement name="need-fatigue" class="hud-need" picking-mode="Ignore">
+                    <ui:Label name="need-fatigue-label" class="hud-caption" picking-mode="Ignore" />
+                    <ui:VisualElement name="need-fatigue-track" class="hud-track hud-track-mini" picking-mode="Ignore">
+                        <ui:VisualElement name="need-fatigue-fill" class="hud-bar hud-need-fill" picking-mode="Ignore" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+            </ui:VisualElement>
+            <ui:VisualElement name="status" class="hud-row hud-status" picking-mode="Ignore">
+                <ui:Label name="status-bleed" class="hud-pill hud-pill-bleed" picking-mode="Ignore" />
+                <ui:Label name="status-poison" class="hud-pill hud-pill-poison" picking-mode="Ignore" />
+                <ui:Label name="status-infect" class="hud-pill hud-pill-infect" picking-mode="Ignore" />
+                <ui:Label name="status-adrenaline" class="hud-pill hud-pill-adrenaline" picking-mode="Ignore" />
+                <ui:Label name="status-burn" class="hud-pill hud-pill-burn" picking-mode="Ignore" />
+                <ui:Label name="status-hungry" class="hud-pill hud-pill-hungry" picking-mode="Ignore" />
+                <ui:Label name="status-thirsty" class="hud-pill hud-pill-thirsty" picking-mode="Ignore" />
+                <ui:Label name="status-tired" class="hud-pill hud-pill-tired" picking-mode="Ignore" />
+                <ui:Label name="status-lamp" class="hud-pill hud-pill-lamp" picking-mode="Ignore" />
+                <ui:Label name="status-watch" class="hud-pill hud-pill-watch" picking-mode="Ignore" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+        <ui:VisualElement name="objectives" class="hud-panel hud-objectives" picking-mode="Ignore">
+            <ui:Label name="objective-quota" class="hud-line" picking-mode="Ignore" />
+            <ui:Label name="objective-poi" class="hud-line" picking-mode="Ignore" />
+            <ui:Label name="objective-rescue" class="hud-line" picking-mode="Ignore" />
+            <ui:Label name="objective-district" class="hud-line hud-dim" picking-mode="Ignore" />
+            <ui:Label name="objective-clock" class="hud-line hud-dim" picking-mode="Ignore" />
+            <ui:Label name="objective-timer" class="hud-line hud-warn" picking-mode="Ignore" />
+        </ui:VisualElement>
+        <ui:VisualElement name="compass" class="hud-compass" picking-mode="Ignore">
+            <ui:VisualElement name="compass-strip" class="hud-strip" picking-mode="Ignore">
+                <ui:Label name="compass-n" class="hud-cardinal" picking-mode="Ignore" />
+                <ui:Label name="compass-e" class="hud-cardinal" picking-mode="Ignore" />
+                <ui:Label name="compass-s" class="hud-cardinal" picking-mode="Ignore" />
+                <ui:Label name="compass-w" class="hud-cardinal" picking-mode="Ignore" />
+                <ui:Label name="compass-poi" class="hud-marker hud-marker-poi" picking-mode="Ignore" />
+                <ui:Label name="compass-gate" class="hud-marker hud-marker-gate" picking-mode="Ignore" />
+                <ui:VisualElement name="compass-center" class="hud-compass-center" picking-mode="Ignore" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+        <ui:VisualElement name="feed" class="hud-feed" picking-mode="Ignore">
+            <ui:Label name="kill-feed" class="hud-line hud-right" picking-mode="Ignore" />
+            <ui:Label name="threats" class="hud-line hud-right hud-strong" picking-mode="Ignore" />
+            <ui:Label name="watch" class="hud-panel hud-watch" picking-mode="Ignore" />
+        </ui:VisualElement>
+        <ui:VisualElement name="toasts" class="hud-toasts" picking-mode="Ignore">
+            <ui:Label name="toast-0" class="hud-toast" picking-mode="Ignore" />
+            <ui:Label name="toast-1" class="hud-toast" picking-mode="Ignore" />
+            <ui:Label name="toast-2" class="hud-toast" picking-mode="Ignore" />
+            <ui:Label name="toast-3" class="hud-toast" picking-mode="Ignore" />
+        </ui:VisualElement>
+        <ui:Label name="subtitle" class="hud-subtitle" picking-mode="Ignore" />
+        <ui:Label name="hurt" class="hud-hurt" picking-mode="Ignore" />
+        <ui:Label name="tutorial" class="hud-tutorial" picking-mode="Ignore" />
+        <ui:Label name="prompt" class="hud-prompt" picking-mode="Ignore" />
+        <ui:VisualElement name="hit-marker" class="hud-hit" picking-mode="Ignore">
+            <ui:VisualElement name="hit-top" class="hud-hit-tick hud-hit-top" picking-mode="Ignore" />
+            <ui:VisualElement name="hit-right" class="hud-hit-tick hud-hit-right" picking-mode="Ignore" />
+            <ui:VisualElement name="hit-bottom" class="hud-hit-tick hud-hit-bottom" picking-mode="Ignore" />
+            <ui:VisualElement name="hit-left" class="hud-hit-tick hud-hit-left" picking-mode="Ignore" />
+        </ui:VisualElement>
+        <ui:VisualElement name="meters" class="hud-panel hud-meters" picking-mode="Ignore">
+            <ui:VisualElement name="noise-row" class="hud-row" picking-mode="Ignore">
+                <ui:Label name="noise-label" class="hud-caption" picking-mode="Ignore" />
+                <ui:VisualElement name="noise-track" class="hud-track hud-track-meter" picking-mode="Ignore">
+                    <ui:VisualElement name="noise-fill" class="hud-bar" picking-mode="Ignore" />
+                </ui:VisualElement>
+                <ui:Label name="noise-mark" class="hud-caption hud-strong" picking-mode="Ignore" />
+            </ui:VisualElement>
+            <ui:VisualElement name="exposure-row" class="hud-row" picking-mode="Ignore">
+                <ui:Label name="exposure-label" class="hud-caption" picking-mode="Ignore" />
+                <ui:VisualElement name="exposure-track" class="hud-track hud-track-meter" picking-mode="Ignore">
+                    <ui:VisualElement name="exposure-fill" class="hud-bar hud-exposure" picking-mode="Ignore" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+            <ui:VisualElement name="tension-row" class="hud-row" picking-mode="Ignore">
+                <ui:VisualElement name="tension-beat" class="hud-beat" picking-mode="Ignore" />
+                <ui:Label name="tension-label" class="hud-caption" picking-mode="Ignore" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+        <ui:VisualElement name="loadout" class="hud-panel hud-loadout" picking-mode="Ignore">
+            <ui:VisualElement name="ammo-row" class="hud-row hud-ammo" picking-mode="Ignore">
+                <ui:VisualElement name="reload-radial" class="hud-radial" picking-mode="Ignore" />
+                <ui:Label name="ammo-mag" class="hud-mag" picking-mode="Ignore" />
+                <ui:Label name="ammo-split" class="hud-dim" picking-mode="Ignore" />
+                <ui:Label name="ammo-reserve" class="hud-reserve" picking-mode="Ignore" />
+            </ui:VisualElement>
+            <ui:Label name="weapon-name" class="hud-line hud-right" picking-mode="Ignore" />
+            <ui:VisualElement name="slots" class="hud-row hud-slots" picking-mode="Ignore">
+                <ui:VisualElement name="slot-0" class="hud-slot" picking-mode="Ignore">
+                    <ui:VisualElement name="slot-0-icon" class="hud-slot-icon" picking-mode="Ignore" />
+                    <ui:Label name="slot-0-key" class="hud-slot-key" picking-mode="Ignore" />
+                    <ui:Label name="slot-0-name" class="hud-slot-name" picking-mode="Ignore" />
+                </ui:VisualElement>
+                <ui:VisualElement name="slot-1" class="hud-slot" picking-mode="Ignore">
+                    <ui:VisualElement name="slot-1-icon" class="hud-slot-icon" picking-mode="Ignore" />
+                    <ui:Label name="slot-1-key" class="hud-slot-key" picking-mode="Ignore" />
+                    <ui:Label name="slot-1-name" class="hud-slot-name" picking-mode="Ignore" />
+                </ui:VisualElement>
+                <ui:VisualElement name="slot-2" class="hud-slot" picking-mode="Ignore">
+                    <ui:VisualElement name="slot-2-icon" class="hud-slot-icon" picking-mode="Ignore" />
+                    <ui:Label name="slot-2-key" class="hud-slot-key" picking-mode="Ignore" />
+                    <ui:Label name="slot-2-name" class="hud-slot-name" picking-mode="Ignore" />
+                </ui:VisualElement>
+                <ui:VisualElement name="slot-3" class="hud-slot" picking-mode="Ignore">
+                    <ui:VisualElement name="slot-3-icon" class="hud-slot-icon" picking-mode="Ignore" />
+                    <ui:Label name="slot-3-key" class="hud-slot-key" picking-mode="Ignore" />
+                    <ui:Label name="slot-3-name" class="hud-slot-name" picking-mode="Ignore" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+            <ui:Label name="belt" class="hud-line hud-right hud-dim" picking-mode="Ignore" />
+        </ui:VisualElement>
+        <ui:VisualElement name="wheel" class="hud-wheel" picking-mode="Ignore">
+            <ui:Label name="wheel-0" class="hud-wheel-slot hud-wheel-0" picking-mode="Ignore" />
+            <ui:Label name="wheel-1" class="hud-wheel-slot hud-wheel-1" picking-mode="Ignore" />
+            <ui:Label name="wheel-2" class="hud-wheel-slot hud-wheel-2" picking-mode="Ignore" />
+            <ui:Label name="wheel-3" class="hud-wheel-slot hud-wheel-3" picking-mode="Ignore" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

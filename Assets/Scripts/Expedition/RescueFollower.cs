@@ -39,6 +39,14 @@ namespace OutpostZero.Expedition
             }
         }
 
+        /// <summary>Changes whenever <see cref="Status"/> would read differently, so the HUD rebuilds it only then.</summary>
+        public static int StatusKey()
+        {
+            var person = Current;
+            if (person == null) return 0;
+            return person.GetInstanceID() * 31 + (person.joined ? 1 : 0) + (person.following ? 2 : 0) + person.bites * 4;
+        }
+
         public static string Status()
         {
             var person = Current;

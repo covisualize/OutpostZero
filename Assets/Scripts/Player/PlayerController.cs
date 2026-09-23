@@ -86,6 +86,13 @@ namespace OutpostZero.Player
         public float CurrentStamina => currentStamina;
         public float MaxStamina => maxStamina;
         public WeaponBase ActiveWeapon => (equippedWeapons != null && equippedWeapons.Length > activeWeaponIndex) ? equippedWeapons[activeWeaponIndex] : null;
+        public int ActiveSlot => activeWeaponIndex;
+
+        public WeaponBase WeaponAt(int slot)
+        {
+            if (equippedWeapons == null || slot < 0 || slot >= equippedWeapons.Length) return null;
+            return equippedWeapons[slot];
+        }
 
         public int WeaponCount
         {

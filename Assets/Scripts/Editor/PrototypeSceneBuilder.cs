@@ -59,7 +59,6 @@ namespace OutpostZero.EditorTools
             SetupCamera(player.transform);
 
             // 6. UI HUD
-            SetupHUD(player);
 
             // 7. Zombie Prototype Variants & Spawner
             SetupZombies(player.transform);
@@ -95,7 +94,6 @@ namespace OutpostZero.EditorTools
             BakeNavMeshOnGround(ground);
             GameObject player = CreatePlayer();
             SetupCamera(player.transform);
-            SetupHUD(player);
             SetupZombies(player.transform);
 
             // In-game auto screen capture utility
@@ -533,17 +531,6 @@ namespace OutpostZero.EditorTools
 
             var follow = Attach.Ensure<CameraTargetDriver>(cam.gameObject);
             follow.SetFollowTarget(playerTarget);
-        }
-
-        private static void SetupHUD(GameObject playerObj)
-        {
-            if (Object.FindFirstObjectByType<SurvivalHUD>() == null)
-            {
-                GameObject hudObj = new GameObject("--- SURVIVAL HUD ---");
-                var hud = hudObj.AddComponent<SurvivalHUD>();
-                hud.Bind(playerObj.GetComponent<PlayerController>());
-                Undo.RegisterCreatedObjectUndo(hudObj, "Create Survival HUD");
-            }
         }
 
         private static void SetupZombies(Transform playerTransform)

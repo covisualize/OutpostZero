@@ -19,6 +19,7 @@ namespace OutpostZero.Player
         private float windup = -1f;
 
         public string Prompt => current != null ? current.Prompt : string.Empty;
+        public IInteractable Current => current;
         public bool TakingDown => windup >= 0f;
 
         private void Awake()

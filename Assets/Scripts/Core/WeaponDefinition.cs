@@ -84,5 +84,9 @@ namespace OutpostZero.Core
         /// <summary>Muzzle effect (a VfxLibrary event); None picks the flash for the weapon type.</summary>
         [Tooltip("Muzzle effect (a VfxLibrary event); None picks the flash for the weapon type.")]
         public VfxEvent muzzleVfx = VfxEvent.None;
+
+        /// <summary>HUD slot icon rendered from the weapon model by the Blender pipeline.</summary>
+        [Tooltip("HUD slot icon rendered from the weapon model by the Blender pipeline.")]
+        public Texture2D icon;
     }
 }

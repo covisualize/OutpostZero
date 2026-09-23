@@ -23,6 +23,12 @@ namespace OutpostZero.Core
             return loaded != null ? FindIn(loaded.weapons, id, type) : null;
         }
 
+        public static Texture2D Icon(string id, WeaponType type)
+        {
+            var definition = Find(id, type);
+            return definition != null ? definition.icon : null;
+        }
+
         /// <summary>The definition with this id, else the first of this type; null when neither exists.</summary>
         public static WeaponDefinition FindIn(WeaponDefinition[] weapons, string id, WeaponType type)
         {

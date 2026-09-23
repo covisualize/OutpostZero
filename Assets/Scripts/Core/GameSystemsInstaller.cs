@@ -70,6 +70,7 @@ namespace OutpostZero.Core
                 Add<ImpactDecalPool>(camera.gameObject);
                 Add<GameShellUI>(camera.gameObject);
                 Add<OutpostInterface>(camera.gameObject);
+                Add<HudController>(camera.gameObject);
                 Add<ExpeditionCameraRig>(camera.gameObject);
                 Add<MenuBackdrop>(camera.gameObject);
             }

@@ -29,6 +29,7 @@ namespace OutpostZero.Core
         private KillTape killTape;
 
         public string KillFeed => KillTape.Show(killTape.Text(), null);
+        public int KillTapeVersion { get; private set; }
 
         public float ExpeditionTime => expeditionTimer;
         public int ZombiesKilled => zombiesKilled;
@@ -181,6 +182,7 @@ namespace OutpostZero.Core
             scrapLooted = 0;
             expeditionTimer = 0f;
             killTape = default;
+            KillTapeVersion++;
             OnZombiesKilledChanged?.Invoke(zombiesKilled);
             OnScrapLootedChanged?.Invoke(scrapLooted);
             ObjectiveTracker.Instance?.ResetProgress();
@@ -226,6 +228,7 @@ namespace OutpostZero.Core
             zombiesKilled++;
             lifetimeKills++;
             killTape.Note(KillTape.Name(archetypeId));
+            KillTapeVersion++;
             PlayerRegistry.Current?.GetComponent<StatusEffectController>()?.ApplyAdrenaline(Affliction.AdrenalineSeconds);
             OnZombiesKilledChanged?.Invoke(zombiesKilled);
             if (!string.IsNullOrEmpty(archetypeId)) CodexDirector.Instance?.Unlock("zombie." + archetypeId);
@@ -358,6 +361,7 @@ namespace OutpostZero.Core
             scrapLooted = 0;
             expeditionTimer = 0f;
             killTape = default;
+            KillTapeVersion++;
             OnZombiesKilledChanged?.Invoke(zombiesKilled);
             OnScrapLootedChanged?.Invoke(scrapLooted);
             var player = PlayerRegistry.Current;
@@ -393,6 +397,7 @@ namespace OutpostZero.Core
             scrapLooted = 0;
             expeditionTimer = 0f;
             killTape = default;
+            KillTapeVersion++;
             currentState = GameState.ExpeditionActive;
             rebooting = true;
             if (Application.CanStreamedLevelBeLoaded(BootPlan.BootScene))

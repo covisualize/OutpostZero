@@ -20,6 +20,21 @@ namespace OutpostZero.Colony
         public string Quests => quests;
         public string ActiveId => CaravanBook.Counterparty(Day, PostBuilt);
         public string Signature => open + "|" + CaravanBook.Pack(standing) + "|" + quests + "|" + Day + "|" + PostBuilt;
+
+        /// <summary>The same inputs as <see cref="Signature"/>, hashed without building a string.</summary>
+        public int Key
+        {
+            get
+            {
+                var key = new UiKey();
+                key.Add(open);
+                for (int i = 0; i < standing.Length; i++) key.Add(standing[i]);
+                key.Add(quests);
+                key.Add(Day);
+                key.Add(PostBuilt);
+                return key.Value;
+            }
+        }
         public bool Ambush => CaravanBook.Ambush(StandingOf("militia"));
 
         private int Day => WorldClock.Instance != null ? WorldClock.Instance.Day : 1;

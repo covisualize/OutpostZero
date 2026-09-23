@@ -18,7 +18,7 @@ Every folder under `Assets/Scripts` is one namespace.
 | `OutpostZero.Colony` | `Colony/` | `SurvivorRoster`, `WorldClock`, `ColonyStorage`, `GridBuilder`, `CraftingBench`, `NightRaidController`, `FactionTrade`, camp modules, needs and morale |
 | `OutpostZero.Graphics` | `Graphics/` | `DayNightCycle`, `WeatherController`, `PostFxRig`, `UrpMaterialPass`, `PerfBudget`, `LodGovernor`, `ImpactDecalPool`, `DistrictDressing` |
 | `OutpostZero.Shell` | `Shell/` | `SaveSystem`, `AudioManager`, `WorldMapService` campaign, `TutorialDirector`, `CodexDirector`, `Loc` localization (English, Spanish), `SceneRoute`, `BootPlan`, `DevCheats`, district generators |
-| `OutpostZero.UI` | `UI/` | `OutpostInterface` (UI Toolkit HUD, menus, camp board), `GameShellUI`, `SceneFlow` and `LoadCard` transitions, `BootLoader`, `DevPanel` |
+| `OutpostZero.UI` | `UI/` | `HudController` (UI Toolkit street HUD from `Assets/UI/Resources/HUD.uxml`/`HUD.uss`, laid out by `HudTree`), `OutpostInterface` (menus, camp board, pack), `GameShellUI`, `SceneFlow` and `LoadCard` transitions, `BootLoader`, `DevPanel` |
 | `OutpostZero.EditorTools` | `Editor/` | `PrototypeSceneBuilder`, `DefaultDataGenerator`, `FbxPrefabPostprocessor`, `SurvivorAnimatorBuilder`, `RendererFeatureSetup` |
 | `OutpostZero.Utils` | `Utils/` | Small shared utilities |
 
@@ -30,7 +30,7 @@ Most gameplay rules live in small `static` classes with no Unity state (for exam
 
 `SettingsService`, `AudioManager`, `SaveSystem`, `RunArchive`, `SurvivorRoster`, `WorldClock`, `ColonyStorage`, `GridBuilder`, `CraftingBench`, `NightRaidController`, `FactionTrade`, `ObjectiveTracker`, `DayNightCycle`, `WeatherController`, `PostFxRig`, `UrpMaterialPass`, `PerfBudget`, `LodGovernor`, `WorldMapService`, `TutorialDirector`, `CodexDirector`, `SceneFlow`, `DevPanel`, `CampServices`, `CampPopulation`, `DistrictDressing`.
 
-The installer also outfits the player (`SurvivalNeeds`, `StatusEffectController`, `PlayerInteractor`, locomotion), and adds `HitFeedback`, `ImpactDecalPool`, `GameShellUI`, `OutpostInterface` and `ExpeditionCameraRig` to the main camera. The rig builds the Cinemachine cameras (follow, aim, camp overview, fallen-leader zoom, results sequence) around the proxies that `CameraTargetDriver` moves, and reads every shot and shake from `Resources/CameraProfile.asset`. The saved arena scene predates most of these components, so they are added when the scene loads.
+The installer also outfits the player (`SurvivalNeeds`, `StatusEffectController`, `PlayerInteractor`, locomotion), and adds `HitFeedback`, `ImpactDecalPool`, `GameShellUI`, `OutpostInterface`, `HudController` and `ExpeditionCameraRig` to the main camera. The rig builds the Cinemachine cameras (follow, aim, camp overview, fallen-leader zoom, results sequence) around the proxies that `CameraTargetDriver` moves, and reads every shot and shake from `Resources/CameraProfile.asset`. The saved arena scene predates most of these components, so they are added when the scene loads.
 
 Always reach a service through `Instance` with a null check (`SaveSystem.Instance?.Save()`), because EditMode tests and the Boot scene run without them.
 

@@ -1,6 +1,5 @@
 using System.Collections;
 using System.Collections.Generic;
-using System.Text;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UIElements;
@@ -17,8 +16,9 @@ using OutpostZero.Shell;
 namespace OutpostZero.UI
 {
     /// <summary>
-    /// Runtime UI Toolkit surface for the HUD, pack, camp, and menus.
-    /// Refreshes on unscaled time so pause, succession, and the main menu stay interactive.
+    /// Runtime UI Toolkit surface for the pack, camp board, and menus; the street HUD is <see cref="HudController"/>.
+    /// Refreshes on unscaled time so pause, succession, and the main menu stay interactive. During play with no
+    /// panel open the refresh compares cached or hashed keys, so it allocates nothing.
     /// </summary>
     public class OutpostInterface : MonoBehaviour
     {
@@ -30,28 +30,10 @@ namespace OutpostZero.UI
         private VisualElement guideBox;
         private string campMark = "";
         private VisualElement pack;
-        private VisualElement damageLayer;
-        private Label vitals;
-        private Label objectives;
-        private Label weapon;
-        private Label tutorial;
-        private Label toast;
-        private Label subtitle;
-        private Label compass;
-        private Label hurt;
-        private Label feed;
-        private Label threats;
-        private Label watch;
-        private VisualElement veil;
-        private VisualElement noiseFill;
-        private Label noiseMark;
-        private VisualElement healthFill;
-        private VisualElement ghostFill;
-        private float ghostRatio = 1f;
         private string menuKey = "";
-        private string campKey = "";
-        private string packKey = "";
-        private readonly List<Label> popups = new List<Label>();
+        private int campKey = int.MinValue + 1;
+        private int packKey = int.MinValue + 1;
+        private GameShellUI shell;
         private int listening = -1;
         private int padListen = -1;
         private bool askKeep;
@@ -113,6 +95,8 @@ namespace OutpostZero.UI
             var panel = ScriptableObject.CreateInstance<PanelSettings>();
             panel.scaleMode = PanelScaleMode.ScaleWithScreenSize;
             panel.referenceResolution = new Vector2Int(1920, 1080);
+            panel.screenMatchMode = PanelScreenMatchMode.MatchWidthOrHeight;
+            panel.match = 1f;
             panel.sortingOrder = 20;
             document = Attach.Ensure<UIDocument>(gameObject);
             document.panelSettings = panel;
@@ -123,141 +107,6 @@ namespace OutpostZero.UI
 
             root.style.flexGrow = 1;
             root.pickingMode = PickingMode.Position;
-
-            veil = new VisualElement();
-            veil.pickingMode = PickingMode.Ignore;
-            veil.style.position = Position.Absolute;
-            veil.style.left = 0;
-            veil.style.top = 0;
-            veil.style.right = 0;
-            veil.style.bottom = 0;
-            veil.style.backgroundColor = new Color(0.02f, 0.02f, 0.04f, 0.28f);
-            veil.style.display = DisplayStyle.None;
-            root.Add(veil);
-
-            var left = Column(16, 16, 420);
-            vitals = Body();
-            objectives = Body();
-            var healthTrack = new VisualElement();
-            healthTrack.style.height = 8;
-            healthTrack.style.width = Length.Percent(40);
-            healthTrack.style.marginBottom = 6;
-            healthTrack.style.backgroundColor = new Color(0.12f, 0.12f, 0.12f);
-            ghostFill = new VisualElement();
-            ghostFill.style.position = Position.Absolute;
-            ghostFill.style.left = 0;
-            ghostFill.style.top = 0;
-            ghostFill.style.height = 8;
-            ghostFill.style.backgroundColor = new Color(0.45f, 0.18f, 0.14f);
-            healthFill = new VisualElement();
-            healthFill.style.position = Position.Absolute;
-            healthFill.style.left = 0;
-            healthFill.style.top = 0;
-            healthFill.style.height = 8;
-            healthFill.style.backgroundColor = new Color(0.75f, 0.2f, 0.16f);
-            healthTrack.Add(ghostFill);
-            healthTrack.Add(healthFill);
-            left.Add(vitals);
-            left.Add(healthTrack);
-            left.Add(objectives);
-            root.Add(left);
-
-            var bottom = Column(16, 0, 420);
-            bottom.style.bottom = 16;
-            bottom.style.top = StyleKeyword.Auto;
-            weapon = Body();
-            noiseFill = Bar();
-            noiseMark = Body();
-            noiseMark.style.unityFontStyleAndWeight = FontStyle.Bold;
-            noiseMark.style.display = DisplayStyle.None;
-            threats = Body();
-            threats.style.unityFontStyleAndWeight = FontStyle.Bold;
-            threats.style.display = DisplayStyle.None;
-            bottom.Add(weapon);
-            bottom.Add(threats);
-            bottom.Add(noiseMark);
-            bottom.Add(noiseFill);
-            root.Add(bottom);
-
-            tutorial = Body();
-            tutorial.style.position = Position.Absolute;
-            tutorial.style.bottom = 72;
-            tutorial.style.left = Length.Percent(20);
-            tutorial.style.width = Length.Percent(60);
-            tutorial.style.unityTextAlign = TextAnchor.MiddleCenter;
-            tutorial.style.backgroundColor = new Color(0.08f, 0.08f, 0.08f, 0.8f);
-            tutorial.pickingMode = PickingMode.Ignore;
-            root.Add(tutorial);
-
-            toast = Body();
-            toast.style.position = Position.Absolute;
-            toast.style.top = 80;
-            toast.style.left = Length.Percent(30);
-            toast.style.width = Length.Percent(40);
-            toast.style.unityTextAlign = TextAnchor.MiddleCenter;
-            toast.style.backgroundColor = new Color(0.12f, 0.1f, 0.08f, 0.9f);
-            toast.pickingMode = PickingMode.Ignore;
-            root.Add(toast);
-
-            subtitle = Body();
-            subtitle.style.position = Position.Absolute;
-            subtitle.style.top = 116;
-            subtitle.style.left = Length.Percent(25);
-            subtitle.style.width = Length.Percent(50);
-            subtitle.style.unityTextAlign = TextAnchor.MiddleCenter;
-            subtitle.style.backgroundColor = new Color(0.05f, 0.07f, 0.1f, 0.88f);
-            subtitle.pickingMode = PickingMode.Ignore;
-            root.Add(subtitle);
-
-            compass = Body();
-            compass.style.position = Position.Absolute;
-            compass.style.top = 12;
-            compass.style.left = Length.Percent(28);
-            compass.style.width = Length.Percent(44);
-            compass.style.unityTextAlign = TextAnchor.MiddleCenter;
-            compass.pickingMode = PickingMode.Ignore;
-            root.Add(compass);
-
-            watch = Body();
-            watch.style.position = Position.Absolute;
-            watch.style.top = 12;
-            watch.style.right = 16;
-            watch.style.width = 280;
-            watch.style.whiteSpace = WhiteSpace.PreWrap;
-            watch.style.backgroundColor = new Color(0.05f, 0.06f, 0.08f, 0.82f);
-            watch.style.display = DisplayStyle.None;
-            watch.pickingMode = PickingMode.Ignore;
-            root.Add(watch);
-
-            hurt = Body();
-            hurt.style.position = Position.Absolute;
-            hurt.style.top = Length.Percent(42);
-            hurt.style.left = Length.Percent(36);
-            hurt.style.width = Length.Percent(28);
-            hurt.style.unityTextAlign = TextAnchor.MiddleCenter;
-            hurt.style.backgroundColor = new Color(0.45f, 0.08f, 0.06f, 0.82f);
-            hurt.pickingMode = PickingMode.Ignore;
-            hurt.style.display = DisplayStyle.None;
-            root.Add(hurt);
-
-            feed = Body();
-            feed.style.position = Position.Absolute;
-            feed.style.top = 16;
-            feed.style.right = 16;
-            feed.style.width = 180;
-            feed.style.unityTextAlign = TextAnchor.UpperRight;
-            feed.style.whiteSpace = WhiteSpace.PreWrap;
-            feed.pickingMode = PickingMode.Ignore;
-            root.Add(feed);
-
-            damageLayer = new VisualElement();
-            damageLayer.pickingMode = PickingMode.Ignore;
-            damageLayer.style.position = Position.Absolute;
-            damageLayer.style.left = 0;
-            damageLayer.style.top = 0;
-            damageLayer.style.right = 0;
-            damageLayer.style.bottom = 0;
-            root.Add(damageLayer);
 
             menu = Overlay();
             camp = Overlay();
@@ -293,181 +142,7 @@ namespace OutpostZero.UI
             PanelScale.Apply(SettingsService.Instance != null ? SettingsService.Instance.UiScale : 1f);
             FontFallback.Apply(SettingsService.Instance != null ? SettingsService.Instance.Language : "en");
             root.style.fontSize = Mathf.RoundToInt(14 * scale);
-            root.style.opacity = SettingsService.Instance != null ? SettingsService.Instance.HudOpacity : 1f;
-            int vision = SettingsService.Instance != null ? SettingsService.Instance.ColorblindMode : 0;
-            var player = PlayerRegistry.Current;
-            var hud = FindFirstObjectByType<SurvivalHUD>();
-            var life = player != null ? player.GetComponent<HealthSystem>() : null;
-            var needs = player != null ? player.GetComponent<SurvivalNeeds>() : null;
-            var effects = player != null ? player.GetComponent<StatusEffectController>() : null;
-            var visibility = player != null ? player.GetComponent<PlayerVisibility>() : null;
-            var tracker = ObjectiveTracker.Instance;
-
-            var vitalText = new StringBuilder();
-            vitalText.AppendLine(Loc.T("hud.expedition"));
-            if (life != null)
-            {
-                vitalText.AppendLine(Loc.T("hud.health") + " " + Mathf.CeilToInt(life.CurrentHealth) + " / " + Mathf.CeilToInt(life.MaxHealth));
-                float actual = life.CurrentHealth / Mathf.Max(1f, life.MaxHealth);
-                ghostRatio = HealthGhost.Follow(ghostRatio, actual, 0.05f);
-                ghostFill.style.width = Length.Percent(ghostRatio * 100f);
-                ghostFill.style.backgroundColor = HudPalette.Ghost(vision);
-                healthFill.style.width = Length.Percent(actual * 100f);
-                healthFill.style.backgroundColor = HudPalette.Health(vision);
-            }
-            if (player != null) vitalText.AppendLine(Loc.T("hud.stamina") + " " + Mathf.CeilToInt(player.CurrentStamina));
-            if (player != null && (player.FlashlightOn || player.LampCellCharge < LampCell.Full - 0.1f))
-                vitalText.AppendLine(Loc.T("hud.lamp") + " " + Mathf.CeilToInt(player.LampCellCharge));
-            if (needs != null)
-            {
-                vitalText.AppendLine(StreetHud.Needs(Mathf.RoundToInt(needs.Hunger), Mathf.RoundToInt(needs.Thirst), Mathf.RoundToInt(needs.Fatigue), null));
-                if (NeedsPressure.Hungry(needs.Hunger)) vitalText.Append("  ").Append(StreetHud.Flag("hud.hungry", null));
-                if (NeedsPressure.Dry(needs.Thirst)) vitalText.Append("  ").Append(StreetHud.Flag("hud.thirsty", null));
-                if (NeedsPressure.Tired(needs.Fatigue)) vitalText.Append("  ").Append(StreetHud.Flag("hud.exhausted", null));
-            }
-            if (veil != null) veil.style.display = needs != null && NeedsPressure.Tired(needs.Fatigue) ? DisplayStyle.Flex : DisplayStyle.None;
-            if (visibility != null) vitalText.Append(StreetHud.Exposure(Mathf.RoundToInt(visibility.Exposure * 100f), null));
-            if (effects != null)
-            {
-                if (effects.IsBleeding) vitalText.Append("  ").Append(StreetHud.Flag("hud.bleeding", null));
-                if (effects.IsPoisoned) vitalText.Append("  ").Append(StreetHud.Flag("hud.poison", null));
-                if (effects.InfectionStage > 0) vitalText.Append("  ").Append(StreetHud.Infection(effects.InfectionStage, null));
-                if (effects.SprintBonus > 1f) vitalText.Append("  ").Append(StreetHud.Flag("hud.adrenaline", null));
-                if (effects.IsBurning) vitalText.Append("  ").Append(StreetHud.Flag("hud.burn", null));
-            }
-            var services = CampServices.Instance;
-            if (services != null && services.Contacts > 0) vitalText.Append("  ").Append(StreetHud.Watch(services.Contacts, null));
-            vitals.text = vitalText.ToString();
-
-            var objectiveText = new StringBuilder();
-            if (tracker != null)
-            {
-                objectiveText.AppendLine(StreetHud.Quota(tracker.Kills, tracker.KillGoal, tracker.Scrap, tracker.ScrapGoal, null));
-                if (!string.IsNullOrEmpty(tracker.PoiLine())) objectiveText.AppendLine(tracker.PoiLine());
-            }
-            if (!string.IsNullOrEmpty(RescueFollower.Status())) objectiveText.AppendLine(RescueFollower.Status());
-            var district = WorldMapService.Instance != null ? WorldMapService.Instance.Current : null;
-            if (district != null) objectiveText.AppendLine(StreetAsk.Place(district.id, district.displayName, district.encounter, null));
-            if (HordeDirector.Instance != null) objectiveText.AppendLine(StreetHud.Tension(Mathf.RoundToInt(HordeDirector.Instance.Tension), HordeDirector.Instance.State.ToString(), null));
-            if (WorldClock.Instance != null) objectiveText.AppendLine(WorldClock.Instance.Label);
-            var interactor = player != null ? player.GetComponent<PlayerInteractor>() : null;
-            if (interactor != null && !string.IsNullOrEmpty(interactor.Prompt)) objectiveText.Append(KeyPrompt.Interact(interactor.Prompt));
-            var raid = NightRaidController.Instance;
-            if (raid != null && raid.Running) objectiveText.Append("   ").Append(StreetHud.Raid(Mathf.CeilToInt(raid.Remaining), null));
-            var gate = ExtractionZone.Current;
-            if (gate != null && gate.Holding) objectiveText.AppendLine(StreetHud.Hold(Mathf.CeilToInt(ExtractWatch.HoldSeconds - gate.Hold), null));
-            objectives.text = objectiveText.ToString();
-
-            var flow = GameManager.Instance != null ? GameManager.Instance.CurrentState : GameState.ExpeditionActive;
-            bool street = flow == GameState.ExpeditionActive || flow == GameState.RaidActive;
-            compass.style.display = street ? DisplayStyle.Flex : DisplayStyle.None;
-            if (street && player != null)
-            {
-                var poi = FindFirstObjectByType<DistrictPoi>();
-                bool showPoi = poi != null && (tracker == null || !tracker.PoiFound);
-                var face = player.transform.forward;
-                var at = player.transform.position;
-                compass.text = StreetHeading.Readout(
-                    face.x, face.z, at.x, at.z,
-                    showPoi, showPoi ? poi.transform.position.x : 0f, showPoi ? poi.transform.position.z : 0f,
-                    gate != null, gate != null ? gate.transform.position.x : 0f, gate != null ? gate.transform.position.z : 0f,
-                    null);
-            }
-            else compass.text = "";
-
-            hurt.style.display = DisplayStyle.None;
-            if (street && life != null && player != null && Time.time - life.LastHitTime < 1.2f)
-            {
-                var hit = life.LastHitDirection;
-                if (hit.sqrMagnitude > 0.0001f)
-                {
-                    var face = player.transform.forward;
-                    string sector = StreetHeading.Sector(StreetHeading.Incoming(face.x, face.z, hit.x, hit.z));
-                    hurt.style.backgroundColor = HudPalette.Hurt(vision);
-                    hurt.text = StreetHud.Hit(sector, null);
-                    hurt.style.display = DisplayStyle.Flex;
-                }
-            }
-
-            feed.text = GameManager.Instance != null ? GameManager.Instance.KillFeed : "";
-            feed.style.display = string.IsNullOrEmpty(feed.text) ? DisplayStyle.None : DisplayStyle.Flex;
-
-            if (player != null && player.WheelOpen)
-            {
-                weapon.style.whiteSpace = WhiteSpace.PreWrap;
-                weapon.style.color = new Color(0.82f, 0.9f, 1f);
-                weapon.style.opacity = 1f;
-                weapon.text = player.WheelLine();
-            }
-            else if (player != null && player.ActiveWeapon is FirearmWeapon gun)
-            {
-                bool low = MagPulse.Low(gun.CurrentAmmo, gun.MaxMagazine, gun.IsReloading);
-                string reload = StreetHud.Ammo("", gun.CurrentAmmo, gun.ReserveAmmo, gun.IsReloading, Mathf.RoundToInt(gun.ReloadFill * 100f), low, null);
-                int split = reload.IndexOf("   ");
-                weapon.text = FightSay.Gun(gun.CardId, gun.WeaponName, null) + (split >= 0 ? reload.Substring(split) : "");
-                weapon.style.color = low ? HudPalette.Warn(vision) : Color.white;
-                weapon.style.opacity = MagPulse.Alpha(Time.unscaledTime, low);
-            }
-            else if (player != null && player.ActiveWeapon != null)
-            {
-                weapon.text = FightSay.Gun(WeaponCard.IdFor(player.ActiveWeapon.Type), player.ActiveWeapon.WeaponName, null);
-                weapon.style.color = Color.white;
-                weapon.style.opacity = 1f;
-            }
-            else
-            {
-                weapon.text = StreetHud.None(null);
-                weapon.style.color = Color.white;
-                weapon.style.opacity = 1f;
-            }
-            var carried = player != null ? player.GetComponent<PlayerInventory>() : null;
-            if (carried != null)
-            {
-                weapon.style.whiteSpace = WhiteSpace.PreWrap;
-                weapon.text += "\n" + carried.BeltLine;
-            }
-
-            float noise = hud != null ? hud.NoiseLevel : 0f;
-            int bangs = 0;
-            int questions = 0;
-            if (player != null) ZombieAI.CountAlerts(player.transform.position.x, player.transform.position.z, out bangs, out questions);
-            threats.text = ThreatMark.Line(bangs, questions);
-            threats.style.display = string.IsNullOrEmpty(threats.text) ? DisplayStyle.None : DisplayStyle.Flex;
-            threats.style.color = bangs > 0 ? HudPalette.Alarm(vision) : HudPalette.Ask(vision);
-            noiseFill.style.width = Length.Percent(noise * 100f);
-            noiseFill.style.backgroundColor = HudPalette.Noise(vision, noise);
-            noiseFill.style.height = NoiseCue.Height(vision, noise);
-            noiseMark.text = NoiseCue.Mark(vision, noise);
-            noiseMark.style.display = string.IsNullOrEmpty(noiseMark.text) ? DisplayStyle.None : DisplayStyle.Flex;
-            if (watch != null)
-            {
-                if (!AiWatch.Open)
-                {
-                    watch.style.display = DisplayStyle.None;
-                }
-                else
-                {
-                    var rows = new string[12];
-                    int count = ZombieAI.CopyWatch(rows, Time.time);
-                    var shown = new string[count];
-                    for (int i = 0; i < count; i++) shown[i] = rows[i];
-                    watch.text = AiWatch.Page(shown, 6, null) + "\n" + VfxLedger.Line(null);
-                    watch.style.display = DisplayStyle.Flex;
-                }
-            }
-            toast.text = hud != null ? hud.Toast ?? "" : "";
-            toast.style.display = string.IsNullOrEmpty(toast.text) ? DisplayStyle.None : DisplayStyle.Flex;
-            bool captions = SettingsService.Instance == null || SettingsService.Instance.Subtitles;
-            subtitle.text = captions && hud != null ? hud.Caption ?? "" : "";
-            subtitle.style.display = string.IsNullOrEmpty(subtitle.text) ? DisplayStyle.None : DisplayStyle.Flex;
-
-            var tutorialDirector = TutorialDirector.Instance;
-            bool showTutorial = tutorialDirector != null && !tutorialDirector.Finished && !string.IsNullOrEmpty(tutorialDirector.Current)
-                && (SettingsService.Instance == null || SettingsService.Instance.Subtitles);
-            tutorial.text = showTutorial ? tutorialDirector.Current : "";
-            tutorial.style.display = showTutorial ? DisplayStyle.Flex : DisplayStyle.None;
-
-            var shell = FindFirstObjectByType<GameShellUI>();
+            if (shell == null) shell = FindFirstObjectByType<GameShellUI>();
             bool inventory = shell != null && shell.InventoryOpen;
             var state = GameManager.Instance != null ? GameManager.Instance.CurrentState : GameState.ExpeditionActive;
             if (state != screensState)
@@ -481,31 +156,49 @@ namespace OutpostZero.UI
             if (!settings) askKeep = false;
             settingsWasOpen = settings;
             bool trade = FactionTrade.Instance != null && FactionTrade.Instance.Open;
-            string language = SettingsService.Instance != null ? SettingsService.Instance.Language : "en";
-            string discrete = SettingsService.Instance != null ? SettingsService.Instance.DiscreteKey : "";
-            string tradeKey = FactionTrade.Instance != null ? FactionTrade.Instance.Signature : "";
-            string nextMenu = state + "|" + settings + "|" + trade + "|" + language + "|" + discrete + "|" + ControlBindings.Signature() + "|" + PadBindings.Signature() + "|" + listening + "|" + padListen + "|" + screens.Signature() + "|" + NewGameSignature() + "|" + codexId + "|" + tradeKey + "|" + askKeep + "|" + bindNote + "|" + InputGlyphs.UsingPad;
+            string nextMenu;
+            if (!settings && !trade && MenuQuiet(state)) nextMenu = QuietKey(state);
+            else
+            {
+                string language = SettingsService.Instance != null ? SettingsService.Instance.Language : "en";
+                string discrete = SettingsService.Instance != null ? SettingsService.Instance.DiscreteKey : "";
+                string tradeKey = FactionTrade.Instance != null ? FactionTrade.Instance.Signature : "";
+                nextMenu = state + "|" + settings + "|" + trade + "|" + language + "|" + discrete + "|" + ControlBindings.Signature() + "|" + PadBindings.Signature() + "|" + listening + "|" + padListen + "|" + screens.Signature() + "|" + NewGameSignature() + "|" + codexId + "|" + tradeKey + "|" + askKeep + "|" + bindNote + "|" + InputGlyphs.UsingPad;
+            }
             if (nextMenu != menuKey)
             {
                 menuKey = nextMenu;
                 RebuildMenu(state, settings, trade);
             }
 
-            string nextCamp = state == GameState.CampManagement ? CampSignature() : "";
+            int nextCamp = state == GameState.CampManagement ? CampKey() : Closed;
             if (nextCamp != campKey)
             {
                 campKey = nextCamp;
                 RebuildCamp(state == GameState.CampManagement);
             }
 
-            string nextPack = inventory ? PackSignature() + "|" + inspected + "|" + packFilter : "";
+            int nextPack = inventory ? PackKey() : Closed;
             if (nextPack != packKey)
             {
                 packKey = nextPack;
                 RebuildPack(inventory);
             }
 
-            DrawPopups();
+        }
+
+        /// <summary>States whose menu panel is empty unless settings or a trade stall is open.</summary>
+        public static bool MenuQuiet(GameState state)
+        {
+            return state == GameState.ExpeditionActive || state == GameState.RaidActive || state == GameState.CampManagement;
+        }
+
+        private static readonly string[] quietKeys = new string[16];
+
+        private static string QuietKey(GameState state)
+        {
+            int slot = (int)state & 15;
+            return quietKeys[slot] ?? (quietKeys[slot] = "quiet|" + state);
         }
 
         private void Back()
@@ -1386,33 +1079,6 @@ namespace OutpostZero.UI
             inspected = inspected == id ? "" : id ?? "";
         }
 
-        private void DrawPopups()
-        {
-            var feedback = HitFeedback.Instance;
-            if (feedback == null || document.rootVisualElement.panel == null || Camera.main == null)
-            {
-                damageLayer.Clear();
-                return;
-            }
-            feedback.PrunePopups();
-            damageLayer.Clear();
-            int mode = SettingsService.Instance != null ? SettingsService.Instance.ColorblindMode : 0;
-            foreach (var popup in feedback.Popups)
-            {
-                Vector3 screen = Camera.main.WorldToScreenPoint(popup.World);
-                if (screen.z < 0f) continue;
-                Vector2 panelPos = RuntimePanelUtils.CameraTransformWorldToPanel(document.rootVisualElement.panel, popup.World, Camera.main);
-                var label = new Label(mode == 2 && popup.Crit ? popup.Text + " !" : popup.Text);
-                label.pickingMode = PickingMode.Ignore;
-                label.style.position = Position.Absolute;
-                label.style.left = panelPos.x;
-                label.style.top = panelPos.y;
-                label.style.color = popup.Crit ? HudPalette.Crit(mode) : Color.white;
-                label.style.unityFontStyleAndWeight = FontStyle.Bold;
-                damageLayer.Add(label);
-            }
-        }
-
         private void DrawSlots(VisualElement menu)
         {
             menu.Add(Title(MenuLine.Title(null)));
@@ -1508,62 +1174,110 @@ namespace OutpostZero.UI
             return ids;
         }
 
-        private static string CampSignature()
+        private const int Closed = int.MinValue;
+
+        private static int CampKey()
         {
-            var builder = new StringBuilder();
-            builder.Append(SettingsService.Instance != null ? SettingsService.Instance.Language : "en").Append('|');
-            if (TutorialDirector.Instance != null) builder.Append(TutorialDirector.Instance.CampIndex).Append(InputGlyphs.UsingPad ? 'p' : 'k').Append('|');
-            if (WorldClock.Instance != null) builder.Append(WorldClock.Instance.Day);
-            if (ColonyStorage.Instance != null)
+            var key = new UiKey();
+            key.Add(SettingsService.Instance != null ? SettingsService.Instance.Language : "en");
+            if (TutorialDirector.Instance != null)
             {
-                builder.Append(ColonyStorage.Instance.Scrap).Append(ColonyStorage.Instance.Food).Append(ColonyStorage.Instance.Water).Append(ColonyStorage.Instance.Security);
-                builder.Append(ColonyStorage.Instance.Cloth).Append(ColonyStorage.Instance.Chemicals).Append(ColonyStorage.Instance.Tape).Append(ColonyStorage.Instance.Raw);
+                key.Add(TutorialDirector.Instance.CampIndex);
+                key.Add(InputGlyphs.UsingPad);
             }
-            if (SurvivorRoster.Instance != null)
+            if (WorldClock.Instance != null) key.Add(WorldClock.Instance.Day);
+            var storage = ColonyStorage.Instance;
+            if (storage != null)
             {
-                foreach (var survivor in SurvivorRoster.Instance.Survivors)
+                key.Add(storage.Scrap);
+                key.Add(storage.Food);
+                key.Add(storage.Water);
+                key.Add(storage.Security);
+                key.Add(storage.Cloth);
+                key.Add(storage.Chemicals);
+                key.Add(storage.Tape);
+                key.Add(storage.Raw);
+            }
+            var roster = SurvivorRoster.Instance;
+            if (roster != null)
+            {
+                var survivors = roster.Survivors;
+                for (int i = 0; i < survivors.Count; i++)
                 {
-                    builder.Append(survivor.id).Append(survivor.task).Append(survivor.alive).Append(survivor.leader);
-                    builder.Append(Mathf.RoundToInt(survivor.morale)).Append(Mathf.RoundToInt(survivor.hunger)).Append(survivor.opinion).Append(survivor.injury);
-                    builder.Append(survivor.leadership).Append(survivor.combat).Append(survivor.medicine).Append(survivor.engineering).Append(survivor.cooking).Append(survivor.scavenge);
+                    var survivor = survivors[i];
+                    key.Add(survivor.id);
+                    key.Add(survivor.task);
+                    key.Add(survivor.alive);
+                    key.Add(survivor.leader);
+                    key.Add(Mathf.RoundToInt(survivor.morale));
+                    key.Add(Mathf.RoundToInt(survivor.hunger));
+                    key.Add(survivor.opinion);
+                    key.Add(survivor.injury);
+                    key.Add(survivor.leadership);
+                    key.Add(survivor.combat);
+                    key.Add(survivor.medicine);
+                    key.Add(survivor.engineering);
+                    key.Add(survivor.cooking);
+                    key.Add(survivor.scavenge);
                 }
-                builder.Append(SurvivorRoster.Instance.DayNotes);
-                builder.Append(SurvivorRoster.Instance.PackMemorials());
+                key.Add(roster.DayNotes);
+                var memorials = roster.Memorials;
+                key.Add(memorials.Count);
+                for (int i = 0; i < memorials.Count; i++) key.Add(memorials[i] != null ? memorials[i].name : null);
             }
-            if (GridBuilder.Instance != null)
+            var grid = GridBuilder.Instance;
+            if (grid != null)
             {
-                builder.Append(GridBuilder.Instance.Selected).Append(GridBuilder.Instance.Facing);
-                foreach (var module in GridBuilder.Instance.Placed) builder.Append(module.kind).Append(module.age).Append(module.integrity).Append(module.site).Append(module.hours);
+                key.Add((int)grid.Selected);
+                key.Add(grid.Facing);
+                var placed = grid.Placed;
+                for (int i = 0; i < placed.Count; i++)
+                {
+                    var module = placed[i];
+                    key.Add(module.kind);
+                    key.Add(module.age);
+                    key.Add(module.integrity);
+                    key.Add(module.site);
+                    key.Add(module.hours);
+                }
             }
-            if (CampServices.Instance != null) builder.Append(CampServices.Instance.GeneratorOnline);
-            if (WorldMapService.Instance != null && WorldMapService.Instance.Current != null)
+            if (CampServices.Instance != null) key.Add(CampServices.Instance.GeneratorOnline);
+            var map = WorldMapService.Instance;
+            if (map != null && map.Current != null)
             {
-                builder.Append(WorldMapService.Instance.Current.id);
-                builder.Append(WorldMapService.Instance.Parts);
-                builder.Append(WorldMapService.Instance.BroadcastWon);
-                builder.Append(WorldMapService.Instance.ClearedCount);
-                builder.Append(WorldMapService.Instance.WorldSeed);
-                builder.Append(WorldMapService.Instance.Street);
+                key.Add(map.Current.id);
+                key.Add(map.Parts);
+                key.Add(map.BroadcastWon);
+                key.Add(map.ClearedCount);
+                key.Add(map.WorldSeed);
+                key.Add(map.Street);
             }
-            if (FactionTrade.Instance != null) builder.Append(FactionTrade.Instance.Signature);
-            return builder.ToString();
+            if (FactionTrade.Instance != null) key.Add(FactionTrade.Instance.Key);
+            return key.Value;
         }
 
-        private static string PackSignature()
+        private int PackKey()
         {
             var inventory = PlayerRegistry.Current != null ? PlayerRegistry.Current.GetComponent<PlayerInventory>() : null;
-            if (inventory == null) return "";
-            var builder = new StringBuilder();
-            builder.Append(SettingsService.Instance != null ? SettingsService.Instance.Language : "en").Append('|');
-            foreach (var item in inventory.Items) builder.Append(item.ItemId).Append(item.Quantity);
-            builder.Append(inventory.MedicalKits);
-            builder.Append(inventory.ScrapCount);
-            builder.Append(Mathf.RoundToInt(inventory.CurrentWeight * 10f));
-            if (LootContainer.Open != null) builder.Append(LootContainer.Open.Contents);
-            builder.Append(inventory.BeltLine);
+            var key = new UiKey();
+            key.Add(inspected);
+            key.Add(packFilter);
+            if (inventory == null) return key.Value;
+            key.Add(SettingsService.Instance != null ? SettingsService.Instance.Language : "en");
+            var items = inventory.Items;
+            for (int i = 0; i < items.Count; i++)
+            {
+                key.Add(items[i].ItemId);
+                key.Add(items[i].Quantity);
+            }
+            key.Add(inventory.MedicalKits);
+            key.Add(inventory.ScrapCount);
+            key.Add(Mathf.RoundToInt(inventory.CurrentWeight * 10f));
+            if (LootContainer.Open != null) key.Add(LootContainer.Open.Contents);
+            key.Add(inventory.BeltLine);
             var body = inventory.GetComponent<PlayerController>();
-            if (body != null) builder.Append(body.GearLine());
-            return builder.ToString();
+            if (body != null) key.Add(body.GearLine());
+            return key.Value;
         }
 
         private static VisualElement Overlay()
@@ -1579,21 +1293,6 @@ namespace OutpostZero.UI
             element.style.paddingRight = 12;
             element.style.backgroundColor = new Color(0.05f, 0.05f, 0.06f, 0.92f);
             element.style.display = DisplayStyle.None;
-            return element;
-        }
-
-        private static VisualElement Column(float left, float top, float width)
-        {
-            var element = new VisualElement();
-            element.pickingMode = PickingMode.Ignore;
-            element.style.position = Position.Absolute;
-            element.style.left = left;
-            element.style.top = top;
-            element.style.width = width;
-            element.style.backgroundColor = new Color(0.05f, 0.05f, 0.06f, 0.72f);
-            element.style.paddingTop = 8;
-            element.style.paddingLeft = 8;
-            element.style.paddingBottom = 8;
             return element;
         }
 
@@ -1632,16 +1331,6 @@ namespace OutpostZero.UI
             label.style.whiteSpace = WhiteSpace.Normal;
             label.style.marginBottom = 4;
             return label;
-        }
-
-        private static VisualElement Bar()
-        {
-            var bar = new VisualElement();
-            bar.style.height = 8;
-            bar.style.width = Length.Percent(40);
-            bar.style.backgroundColor = new Color(0.7f, 0.2f, 0.15f);
-            bar.style.marginBottom = 6;
-            return bar;
         }
 
         private static Button Button(string text, System.Action action)
