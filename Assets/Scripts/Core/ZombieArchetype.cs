@@ -59,5 +59,8 @@ namespace OutpostZero.Core
         /// <summary>Effect played where this body falls.</summary>
         [Tooltip("Effect played where this body falls.")]
         public VfxEvent deathVfx = VfxEvent.DeathBurst;
+        /// <summary>Loot table the body rolls when it dies; empty drops the old scrap chance.</summary>
+        [Tooltip("Loot table id rolled on death (walker, runner, brute). Empty keeps the plain scrap drop.")]
+        public string lootTable = "";
     }
 }

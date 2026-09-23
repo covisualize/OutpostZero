@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c75b23f8091a2b3c4d5e6f708192a451, type: 3}
+  m_Name: brute
+  m_EditorClassIdentifier: OutpostZero::OutpostZero.Items.LootTableDefinition
+  id: brute
+  entries:
+  - itemId: scrap
+    altItemId: 
+    roll: 3
+    threshold: 0
+    count: 3
+    spread: 4
+  - itemId: ammo_9mm
+    altItemId: 
+    roll: 2
+    threshold: 0.6
+    count: 1
+    spread: 0
+  - itemId: chemicals
+    altItemId: 
+    roll: 2
+    threshold: 0.7
+    count: 1
+    spread: 0

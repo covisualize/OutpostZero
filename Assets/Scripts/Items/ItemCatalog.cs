@@ -124,6 +124,7 @@ namespace OutpostZero.Items
         public static LootEntry Fixed(string id, int count) => new LootEntry { itemId = id, roll = LootRoll.Fixed, count = count };
         public static LootEntry Pick(string above, float threshold, string otherwise) => new LootEntry { itemId = above, altItemId = otherwise, roll = LootRoll.Pick, threshold = threshold, count = 1 };
         public static LootEntry Chance(string id, float threshold) => new LootEntry { itemId = id, roll = LootRoll.Chance, threshold = threshold, count = 1 };
+        public static LootEntry Chance(string id, float threshold, int count) => new LootEntry { itemId = id, roll = LootRoll.Chance, threshold = threshold, count = count };
         public static LootEntry Spread(string id, int count, int spread) => new LootEntry { itemId = id, roll = LootRoll.Spread, count = count, spread = spread };
     }
 
@@ -136,6 +137,9 @@ namespace OutpostZero.Items
         }
 
         public const string Crate = "crate";
+        public const string Walker = "walker";
+        public const string Runner = "runner";
+        public const string Brute = "brute";
 
         private static readonly Dictionary<string, LootEntry[]> builtin = new Dictionary<string, LootEntry[]>
         {
@@ -161,8 +165,39 @@ namespace OutpostZero.Items
                 LootEntry.Chance("flare", 0.72f),
                 LootEntry.Chance("pipe_bomb", 0.88f),
                 LootEntry.Chance("raw_food", 0.5f)
+            },
+            [Walker] = new[]
+            {
+                LootEntry.Chance("scrap", 0.55f, 3),
+                LootEntry.Chance("cloth", 0.85f)
+            },
+            [Runner] = new[]
+            {
+                LootEntry.Chance("scrap", 0.6f, 2),
+                LootEntry.Chance("bandage", 0.88f)
+            },
+            [Brute] = new[]
+            {
+                LootEntry.Spread("scrap", 3, 4),
+                LootEntry.Chance("ammo_9mm", 0.6f),
+                LootEntry.Chance("chemicals", 0.7f)
             }
         };
+
+        /// <summary>What a body drops: the rolled grants that came up, without the empty ones.</summary>
+        public static Grant[] Drops(string tableId, int salt)
+        {
+            if (string.IsNullOrEmpty(tableId) || !tables.ContainsKey(tableId)) return new Grant[0];
+            var rng = new System.Random(salt);
+            var entries = tables[tableId];
+            var list = new List<Grant>();
+            for (int i = 0; i < entries.Length; i++)
+            {
+                var grant = Evaluate(entries[i], rng);
+                if (grant.Count > 0 && !string.IsNullOrEmpty(grant.ItemId)) list.Add(grant);
+            }
+            return list.ToArray();
+        }
 
         private static readonly Dictionary<string, LootEntry[]> tables = new Dictionary<string, LootEntry[]>(builtin);
 

@@ -29,3 +29,4 @@ MonoBehaviour:
   specialAbility: 2
   hitVfx: 11
   deathVfx: 14
+  lootTable: brute

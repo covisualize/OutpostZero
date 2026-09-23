@@ -3,6 +3,7 @@ using System.IO;
 using UnityEditor;
 using UnityEngine;
 using OutpostZero.Core;
+using OutpostZero.Items;
 
 namespace OutpostZero.EditorTools
 {
@@ -101,6 +102,7 @@ namespace OutpostZero.EditorTools
                 zombie.attackDamage = 18f;
                 zombie.attackCooldown = 1.4f;
                 zombie.specialAbility = ZombieSpecialAbility.None;
+                zombie.lootTable = LootTables.Walker;
             });
 
             SaveZombie("Runner", zombie =>
@@ -115,6 +117,7 @@ namespace OutpostZero.EditorTools
                 zombie.attackCooldown = 1.0f;
                 zombie.sightRange = 16f;
                 zombie.specialAbility = ZombieSpecialAbility.Lunge;
+                zombie.lootTable = LootTables.Runner;
             });
 
             SaveZombie("Brute", zombie =>
@@ -130,6 +133,7 @@ namespace OutpostZero.EditorTools
                 zombie.attackRange = 2.1f;
                 zombie.sightRange = 12f;
                 zombie.specialAbility = ZombieSpecialAbility.Charge;
+                zombie.lootTable = LootTables.Brute;
             });
 
             AssetDatabase.SaveAssets();

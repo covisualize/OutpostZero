@@ -9,6 +9,7 @@ using OutpostZero.Graphics;
 using OutpostZero.Player;
 using OutpostZero.Expedition;
 using OutpostZero.Colony;
+using OutpostZero.Items;
 
 namespace OutpostZero.AI
 {
@@ -121,6 +122,7 @@ namespace OutpostZero.AI
         private static readonly float[] crowdZ = new float[48];
         [SerializeField] private ZombieSpecialAbility specialAbility;
         private string archetypeId = "";
+        private string lootTable = "";
         private int sightToken;
 
         public Vector3 Position => transform.position;
@@ -333,6 +335,7 @@ namespace OutpostZero.AI
             hordeAlertRadius = archetype.hordeAlertRadius;
             specialAbility = archetype.specialAbility;
             archetypeId = archetype.id;
+            lootTable = archetype.lootTable ?? "";
             ModelId = CharacterRig.ModelId(archetype.modelPath);
             if (archetype.hitVfx != VfxEvent.None) HitVfx = archetype.hitVfx;
             if (archetype.deathVfx != VfxEvent.None) DeathVfx = archetype.deathVfx;
@@ -1208,10 +1211,7 @@ namespace OutpostZero.AI
                 GameManager.Instance.RecordZombieKill(archetypeId);
             }
 
-            if (Random.value < 0.45f)
-            {
-                LootPickup.Spawn(LootKind.Scrap, Random.Range(2, 6), transform.position);
-            }
+            DropLoot();
 
             var melt = GetComponent<CorpseMelt>();
             if (melt == null) melt = gameObject.AddComponent<CorpseMelt>();
@@ -1224,6 +1224,22 @@ namespace OutpostZero.AI
             else
             {
                 Destroy(gameObject, CorpseMelt.Length);
+            }
+        }
+
+        private void DropLoot()
+        {
+            if (string.IsNullOrEmpty(lootTable))
+            {
+                if (Random.value < 0.45f) LootPickup.Spawn(LootKind.Scrap, Random.Range(2, 6), transform.position);
+                return;
+            }
+            var drops = LootTables.Drops(lootTable, GetInstanceID() ^ Time.frameCount);
+            for (int i = 0; i < drops.Length; i++)
+            {
+                var spot = transform.position + Quaternion.Euler(0f, i * 137f, 0f) * Vector3.forward * 0.5f;
+                if (drops[i].ItemId == "scrap") LootPickup.Spawn(LootKind.Scrap, drops[i].Count, spot);
+                else ItemDatabase.SpawnWorld(drops[i].ItemId, drops[i].Count, spot + Vector3.up * 0.15f, Quaternion.Euler(0f, i * 61f, 0f));
             }
         }
 
