@@ -113,3 +113,7 @@ Repository secrets required for the Unity jobs:
 | `UNITY_PASSWORD` | Unity account password |
 
 See [GameCI](https://game.ci/) for activating a personal or serial license. Without those secrets the Unity jobs cannot start; the Blender path tests do not need them.
+
+## License
+
+Copyright (c) 2026 covisualize. All rights reserved. The source is published for reference only; see [LICENSE](LICENSE). Third-party components are listed in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
