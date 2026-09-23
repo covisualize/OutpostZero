@@ -92,7 +92,9 @@ namespace OutpostZero.Core
         /// <summary>Base-layer states that move to the upper layer.</summary>
         public static readonly string[] UpperStates = { "Attack", "Reload" };
         /// <summary>Full-body triggers that clear the upper layer so the whole body shows the pose.</summary>
-        public static readonly string[] UpperClears = { "Death", "Hit" };
+        public static readonly string[] UpperClears = { "Death", "Hit", Stagger };
+        /// <summary>Trigger and state for a long stun's reel; only models with the take get the state.</summary>
+        public const string Stagger = "Stagger";
 
         public static bool IsUpperState(string state)
         {

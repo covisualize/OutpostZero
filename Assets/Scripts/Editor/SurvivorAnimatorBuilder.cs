@@ -96,6 +96,7 @@ namespace OutpostZero.EditorTools
             Variants(controller, machine, "Death", CharacterRig.DeathVariant, byName, "Death", "DeathB", "DeathC");
             if (upper != null) Variants(controller, upper, "Reload", CharacterRig.ReloadVariant, byName, CharacterRig.ReloadTakes);
             if (byName.TryGetValue(CharacterRig.Dissolve, out var heap)) Melt(machine, heap);
+            if (byName.TryGetValue(CharacterRig.Stagger, out var reel)) Reel(machine, reel);
             EditorUtility.SetDirty(controller);
             AssetDatabase.SaveAssets();
         }
@@ -123,6 +124,7 @@ namespace OutpostZero.EditorTools
             EnsureParameter(controller, CharacterRig.GaitVariant, AnimatorControllerParameterType.Float);
             EnsureParameter(controller, CharacterRig.DeathVariant, AnimatorControllerParameterType.Float);
             EnsureParameter(controller, CharacterRig.ReloadVariant, AnimatorControllerParameterType.Float);
+            EnsureParameter(controller, CharacterRig.Stagger, AnimatorControllerParameterType.Trigger);
             EnsureParameter(controller, CharacterRig.Windup, AnimatorControllerParameterType.Trigger);
             EnsureParameter(controller, CharacterRig.Dash, AnimatorControllerParameterType.Bool);
             EnsureParameter(controller, CharacterRig.Activity, AnimatorControllerParameterType.Int);
@@ -167,6 +169,24 @@ namespace OutpostZero.EditorTools
             var melt = FindOrAdd(machine, CharacterRig.Dissolve, new Vector3(280, 380, 0));
             melt.motion = heap;
             ExitTo(death, melt);
+        }
+
+        /// <summary>A long stun reels from any standing or moving state, then settles back to the idle.</summary>
+        private static void Reel(AnimatorStateMachine machine, AnimationClip clip)
+        {
+            var from = new List<AnimatorState>();
+            AnimatorState idle = null;
+            foreach (var child in machine.states)
+            {
+                string name = child.state.name;
+                if (name == "Idle") idle = child.state;
+                if (name == "Idle" || name == "Walk" || name == "Sprint" || name == CharacterRig.Windup || name == CharacterRig.Dash) from.Add(child.state);
+            }
+            if (idle == null) return;
+            var reel = FindOrAdd(machine, CharacterRig.Stagger, new Vector3(760, 180, 0));
+            reel.motion = clip;
+            for (int i = 0; i < from.Count; i++) TriggerFrom(from[i], reel, CharacterRig.Stagger);
+            ExitTo(reel, idle);
         }
 
         public const string UpperMaskName = "UpperBodyMask";

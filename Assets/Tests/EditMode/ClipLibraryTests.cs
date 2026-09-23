@@ -1,5 +1,6 @@
 using System.IO;
 using NUnit.Framework;
+using OutpostZero.Combat;
 using OutpostZero.Core;
 using OutpostZero.Player;
 
@@ -52,6 +53,27 @@ namespace OutpostZero.Tests.EditMode
             string body = Read("Assets/Scripts/Player/SurvivorLocomotion.cs");
             StringAssert.Contains("animator.SetFloat(CharacterRig.ReloadVariant, CharacterRig.ReloadBlend(gun.Type));", body);
             StringAssert.Contains("AimRig.ReloadSpeed(ReloadClipLength(gun.Type), gun.ReloadSeconds)", body);
+        }
+
+        [Test]
+        public void ALongStunReelsAndAShortOneFlinches()
+        {
+            Assert.IsTrue(HitStun.Staggers(HitStun.Seconds(WeaponType.Shotgun)));
+            Assert.IsFalse(HitStun.Staggers(HitStun.Seconds(WeaponType.Pistol)));
+            Assert.IsFalse(HitStun.Staggers(HitStun.Seconds(WeaponType.Melee)));
+            Assert.IsFalse(HitStun.Staggers(HitStun.Resist(HitStun.Seconds(WeaponType.Shotgun), true)), "a brute shrugs off the blast");
+            Assert.AreEqual(OutpostZero.AI.SpecialBeat.WallStun, HitStun.Taken(OutpostZero.AI.SpecialBeat.WallStun, true, false), 1e-5f, "a brute's own wall crash is not resisted");
+            Assert.AreEqual(0.18f, HitStun.Taken(HitStun.Seconds(WeaponType.Shotgun), true, true), 1e-5f);
+            Assert.IsTrue(HitStun.Staggers(HitStun.Taken(OutpostZero.AI.SpecialBeat.WallStun, true, false)), "a brute that charges a wall reels");
+            StringAssert.Contains("ApplyImpulse(-dash, 0.4f, SpecialBeat.WallStun, false);", Read("Assets/Scripts/AI/ZombieAI.cs"));
+            CollectionAssert.Contains(CharacterRig.UpperClears, CharacterRig.Stagger);
+
+            string builder = Read("Assets/Scripts/Editor/SurvivorAnimatorBuilder.cs");
+            StringAssert.Contains("if (byName.TryGetValue(CharacterRig.Stagger, out var reel)) Reel(machine, reel);", builder);
+            StringAssert.Contains("EnsureParameter(controller, CharacterRig.Stagger, AnimatorControllerParameterType.Trigger)", builder);
+            string motion = Read("Assets/Scripts/AI/ZombieMotion.cs");
+            StringAssert.Contains("animator.SetTrigger(Reel());", motion);
+            StringAssert.Contains("HitStun.Staggers(brain.StunSeconds)", motion);
         }
 
         [Test]

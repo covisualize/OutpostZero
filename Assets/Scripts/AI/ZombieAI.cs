@@ -487,10 +487,13 @@ namespace OutpostZero.AI
             emberLight = null;
         }
 
-        public void ApplyImpulse(Vector3 direction, float force, float stun)
+        /// <summary>Length of the current or next stun, after the brute's resistance.</summary>
+        public float StunSeconds => pendingStun;
+
+        public void ApplyImpulse(Vector3 direction, float force, float stun, bool fromBlow = true)
         {
             if (currentState == ZombieState.Dead || healthSystem != null && healthSystem.IsDead) return;
-            stun = HitStun.Resist(stun, specialAbility == ZombieSpecialAbility.Charge);
+            stun = HitStun.Taken(stun, specialAbility == ZombieSpecialAbility.Charge, fromBlow);
             direction.y = 0f;
             if (direction.sqrMagnitude < 0.001f) direction = -transform.forward;
             if (agent != null && agent.enabled && agent.isOnNavMesh)
@@ -992,7 +995,7 @@ namespace OutpostZero.AI
             abilityClock.Phase = 0;
             abilityClock.Left = 0f;
             abilityClock.Ready = Time.time + AbilityCooldown;
-            ApplyImpulse(-dash, 0.4f, SpecialBeat.WallStun);
+            ApplyImpulse(-dash, 0.4f, SpecialBeat.WallStun, false);
         }
 
         private bool RipBar(Vector3 origin, Vector3 dash, float reach, bool wallHit, RaycastHit wall)
@@ -1006,7 +1009,7 @@ namespace OutpostZero.AI
             abilityClock.Phase = 0;
             abilityClock.Left = 0f;
             abilityClock.Ready = Time.time + AbilityCooldown;
-            ApplyImpulse(-dash, 0.4f, SpecialBeat.WallStun);
+            ApplyImpulse(-dash, 0.4f, SpecialBeat.WallStun, false);
             return true;
         }
 

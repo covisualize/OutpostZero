@@ -1,4 +1,5 @@
 using UnityEngine;
+using OutpostZero.Combat;
 using OutpostZero.Core;
 using OutpostZero.Player;
 
@@ -121,6 +122,12 @@ namespace OutpostZero.AI
             if (parameters.Contains(Animator.StringToHash(name))) animator.SetBool(name, value);
         }
 
+        private string Reel()
+        {
+            bool reels = HitStun.Staggers(brain.StunSeconds) && animator.HasState(0, Animator.StringToHash(CharacterRig.Stagger));
+            return reels ? CharacterRig.Stagger : "Hit";
+        }
+
         private void SetTrigger(string name)
         {
             if (parameters.Contains(Animator.StringToHash(name))) animator.SetTrigger(name);
@@ -162,7 +169,7 @@ namespace OutpostZero.AI
                 animator.SetTrigger("Attack");
             }
             if (state == driven) return;
-            if (state == ZombieAI.ZombieState.Stunned) animator.SetTrigger("Hit");
+            if (state == ZombieAI.ZombieState.Stunned) animator.SetTrigger(Reel());
             else if (state == ZombieAI.ZombieState.Dead) animator.SetTrigger("Death");
             driven = state;
         }
