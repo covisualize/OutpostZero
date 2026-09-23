@@ -935,7 +935,9 @@ namespace OutpostZero.UI
                 int due = CraftingBench.Priced(bill.Scrap, bench, benchTier);
                 string line = CraftSay.Line(Loc.Recipe(id, recipe.Label), due, bill.Cloth, bill.Chemicals, bill.Tape, null);
                 if (bill.Raw > 0) line += "   " + Loc.T("camp.raw") + " " + bill.Raw;
+                if (bill.Level > 0) line += "   " + Loc.Task(bill.Know) + " " + bill.Level;
                 var craft = Button(line, () => CraftingBench.Instance?.Craft(id));
+                if (!CraftBill.Knows(bill.Know, bill.Level, CraftingBench.BestSkill(bill.Know))) craft.style.color = new Color(0.55f, 0.5f, 0.48f);
                 var recipeRow = new VisualElement();
                 recipeRow.style.flexDirection = FlexDirection.Row;
                 recipeRow.Add(id == TutorialMark.Bandage ? Lit(craft, TutorialMark.Bandage) : craft);

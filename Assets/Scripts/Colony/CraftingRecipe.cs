@@ -37,6 +37,10 @@ namespace OutpostZero.Colony
         public CraftStation station = CraftStation.Any;
         [Tooltip("Task someone must hold for the craft to go ahead (\"Medic\"), or empty.")]
         public string skill = "";
+        [Tooltip("Skill someone in camp must hold, by task name (Build, Medic, Cook), or empty.")]
+        public string know = "";
+        [Tooltip("Level of that skill the recipe needs, 0 for none.")]
+        [Range(0, Practice.Cap)] public int level;
         [Tooltip("Bench tier the recipe needs: 1, or 2 once the workbench is raised.")]
         [Range(1, 2)] public int tier = 1;
         [Tooltip("Blueprint id found on the street that reveals the recipe, or empty.")]
@@ -58,7 +62,9 @@ namespace OutpostZero.Colony
                     Tape = tape,
                     Raw = raw,
                     Station = (int)station,
-                    Skill = skill ?? ""
+                    Skill = skill ?? "",
+                    Know = know ?? "",
+                    Level = level
                 },
                 Tier = tier,
                 Print = blueprint ?? ""
@@ -78,6 +84,8 @@ namespace OutpostZero.Colony
             raw = row.Cost.Raw;
             station = (CraftStation)row.Cost.Station;
             skill = row.Cost.Skill ?? "";
+            know = row.Cost.Know ?? "";
+            level = row.Cost.Level;
             tier = row.Tier;
             blueprint = row.Print ?? "";
         }

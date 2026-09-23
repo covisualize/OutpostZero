@@ -32,6 +32,13 @@ namespace OutpostZero.Colony
             return name + " " + Word("craft.fitted", language);
         }
 
+        /// <summary>"Need Build 4 in camp": the recipe waits on a survivor that skilled.</summary>
+        public static string Know(string know, int level, string language)
+        {
+            string task = string.IsNullOrEmpty(language) ? Loc.Task(know) : Loc.Task(know, language);
+            return string.Format(Word("gate.know", language), task, level);
+        }
+
         private static string Word(string key, string language)
         {
             if (string.IsNullOrEmpty(language)) return Loc.T(key);

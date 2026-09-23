@@ -160,6 +160,11 @@ namespace OutpostZero.Colony
                 GameplayFeedback.Toast(StallVoice.Block(block, null));
                 return false;
             }
+            if (!CraftBill.Knows(bill.Know, bill.Level, BestSkill(bill.Know)))
+            {
+                GameplayFeedback.Toast(CraftSay.Know(bill.Know, bill.Level, null));
+                return false;
+            }
             if (storage.Raw < bill.Raw || !storage.TrySpendBill(due, bill.Cloth, bill.Chemicals, bill.Tape))
             {
                 GameplayFeedback.Toast(Loc.T("stall.short"));
@@ -275,6 +280,21 @@ namespace OutpostZero.Colony
                 if (CraftBill.OnDuty(person.trait, person.task, person.alive, skill)) return true;
             }
             return false;
+        }
+
+        /// <summary>The highest level of a skill among survivors still in camp.</summary>
+        public static int BestSkill(string know)
+        {
+            var roster = SurvivorRoster.Instance;
+            if (roster == null || string.IsNullOrEmpty(know)) return 0;
+            int best = 0;
+            foreach (var person in roster.Survivors)
+            {
+                if (person == null || !person.alive || person.task == "Left") continue;
+                int level = CraftBill.SkillFor(know, person.medicine, person.engineering, person.cooking);
+                if (level > best) best = level;
+            }
+            return best;
         }
 
         private static void Refund(int scrap, CraftBill.Cost bill)

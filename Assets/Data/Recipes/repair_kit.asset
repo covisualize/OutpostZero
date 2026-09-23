@@ -23,5 +23,7 @@ MonoBehaviour:
   raw: 0
   station: 1
   skill: 
+  know: Build
+  level: 2
   tier: 2
   blueprint: repair

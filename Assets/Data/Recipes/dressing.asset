@@ -23,5 +23,7 @@ MonoBehaviour:
   raw: 0
   station: 0
   skill: 
+  know: 
+  level: 0
   tier: 1
   blueprint: dressing

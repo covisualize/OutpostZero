@@ -23,5 +23,7 @@ MonoBehaviour:
   raw: 0
   station: 1
   skill: 
+  know: Build
+  level: 4
   tier: 1
   blueprint: 

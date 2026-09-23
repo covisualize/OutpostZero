@@ -23,5 +23,7 @@ MonoBehaviour:
   raw: 0
   station: 2
   skill: Medic
+  know: Medic
+  level: 5
   tier: 1
   blueprint: 

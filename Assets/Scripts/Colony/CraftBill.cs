@@ -23,6 +23,9 @@ namespace OutpostZero.Colony
             public int Raw;
             public int Station;
             public string Skill;
+            /// <summary>Skill someone living in camp must hold, named by its task ("Build", "Medic", "Cook"), or empty.</summary>
+            public string Know;
+            public int Level;
         }
 
         public static bool TryOf(string id, out Cost cost)
@@ -64,7 +67,38 @@ namespace OutpostZero.Colony
             else if (id == "purified_water") cost = Make(1, 0, 1, 0, Campfire, "");
             else if (id == "bottle") cost = Make(1, 0, 0, 0, Any, "");
             else return false;
+            CodeKnow(id, out cost.Know, out cost.Level);
             return true;
+        }
+
+        public static void CodeKnow(string id, out string know, out int level)
+        {
+            know = "";
+            level = 0;
+            switch (id)
+            {
+                case "medkit": know = "Medic"; level = 1; break;
+                case "antibiotics": know = "Medic"; level = 5; break;
+                case "pipe_bomb":
+                case "repair_kit": know = "Build"; level = 2; break;
+                case "optic":
+                case "extended_mag": know = "Build"; level = 3; break;
+                case "suppressor": know = "Build"; level = 4; break;
+                case "radio_spare": know = "Build"; level = 5; break;
+            }
+        }
+
+        public static int SkillFor(string know, int medicine, int engineering, int cooking)
+        {
+            if (know == "Medic") return medicine;
+            if (know == "Build") return engineering;
+            if (know == "Cook") return cooking;
+            return 0;
+        }
+
+        public static bool Knows(string know, int level, int best)
+        {
+            return string.IsNullOrEmpty(know) || level <= 0 || best >= level;
         }
 
         public static int ScrapDue(int scrap, bool workbench)

@@ -59,6 +59,8 @@ namespace OutpostZero.Tests.EditMode
                 Assert.AreEqual(row.Cost.Raw.ToString(), f["raw"], row.Id);
                 Assert.AreEqual(row.Cost.Station.ToString(), f["station"], row.Id);
                 Assert.AreEqual(row.Cost.Skill ?? "", f["skill"], row.Id);
+                Assert.AreEqual(row.Cost.Know ?? "", f["know"], row.Id);
+                Assert.AreEqual(row.Cost.Level.ToString(), f["level"], row.Id);
                 Assert.AreEqual(row.Tier.ToString(), f["tier"], row.Id);
                 Assert.AreEqual(row.Print ?? "", f["blueprint"], row.Id);
             }

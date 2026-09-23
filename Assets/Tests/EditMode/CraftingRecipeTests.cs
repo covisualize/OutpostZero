@@ -99,6 +99,43 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void AdvancedRecipesWaitOnASkilledSurvivorInCamp()
+        {
+            Assert.IsTrue(CraftBill.TryOf("suppressor", out var suppressor));
+            Assert.AreEqual("Build", suppressor.Know);
+            Assert.AreEqual(4, suppressor.Level);
+            Assert.IsTrue(CraftBill.TryOf("antibiotics", out var antibiotics));
+            Assert.AreEqual("Medic", antibiotics.Know);
+            Assert.AreEqual(5, antibiotics.Level);
+            foreach (var id in new[] { "bandage", "ammo_9mm", "ammo_shells", "ammo_rifle", "ammo_smg", "cooked_meal", "purified_water", "bottle", "molotov" })
+            {
+                Assert.IsTrue(CraftBill.TryOf(id, out var open), id);
+                Assert.AreEqual(0, open.Level, id + " must stay open to a fresh camp");
+            }
+            foreach (var recipe in CraftingBench.Recipes)
+            {
+                Assert.IsTrue(CraftBill.TryOf(recipe.Id, out var bill), recipe.Id);
+                if (bill.Level <= 0) continue;
+                CollectionAssert.Contains(new[] { "Build", "Medic", "Cook" }, bill.Know, recipe.Id);
+                Assert.LessOrEqual(bill.Level, Practice.Cap, recipe.Id + " can never be learned");
+            }
+
+            Assert.AreEqual(3, CraftBill.SkillFor("Build", 1, 3, 2));
+            Assert.AreEqual(1, CraftBill.SkillFor("Medic", 1, 3, 2));
+            Assert.AreEqual(2, CraftBill.SkillFor("Cook", 1, 3, 2));
+            Assert.IsFalse(CraftBill.Knows("Build", 4, 3));
+            Assert.IsTrue(CraftBill.Knows("Build", 4, 4));
+            Assert.IsTrue(CraftBill.Knows("", 0, 0));
+
+            Assert.AreEqual("Need Build 4 in camp", CraftSay.Know("Build", 4, "en"));
+            StringAssert.Contains("5", CraftSay.Know("Medic", 5, "es"));
+            StringAssert.Contains("campamento", CraftSay.Know("Medic", 5, "es"));
+            string root = System.IO.Directory.GetCurrentDirectory();
+            StringAssert.Contains("CraftBill.Knows(bill.Know, bill.Level, BestSkill(bill.Know))", System.IO.File.ReadAllText(System.IO.Path.Combine(root, "Assets/Scripts/Colony/CraftingBench.cs")));
+            StringAssert.Contains("Loc.Task(bill.Know) + \" \" + bill.Level", System.IO.File.ReadAllText(System.IO.Path.Combine(root, "Assets/Scripts/UI/OutpostInterface.cs")));
+        }
+
+        [Test]
         public void DismantledPartsNeedRoomInTheStores()
         {
             Assert.IsTrue(CraftBill.Fits(70, 80, 4, 0, 0, 0));
