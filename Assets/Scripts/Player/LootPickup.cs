@@ -1,5 +1,6 @@
 using UnityEngine;
 using OutpostZero.Core;
+using OutpostZero.Graphics;
 using OutpostZero.Sensory;
 using OutpostZero.Shell;
 
@@ -49,10 +50,21 @@ namespace OutpostZero.Player
             go.name = "Loot_" + lootKind;
             go.transform.position = worldPosition + Vector3.up * 0.45f;
             go.transform.localScale = Vector3.one * 0.35f;
+            MaterialLibrary.Dress(go.GetComponent<Renderer>(), FamilyFor(lootKind));
 
             var pickup = go.AddComponent<LootPickup>();
             pickup.Configure(lootKind, lootAmount);
             return pickup;
+        }
+
+        public static SurfaceFamily FamilyFor(LootKind kind)
+        {
+            switch (kind)
+            {
+                case LootKind.Scrap: return SurfaceFamily.MetalRusted;
+                case LootKind.Medkit: return SurfaceFamily.MetalPainted;
+                default: return SurfaceFamily.Plywood;
+            }
         }
 
         private void EnsureTrigger()

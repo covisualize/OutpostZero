@@ -92,6 +92,7 @@ namespace OutpostZero.Items
                 drop = GameObject.CreatePrimitive(PrimitiveType.Cube);
                 drop.transform.SetPositionAndRotation(position, rotation);
                 drop.transform.localScale = new Vector3(0.28f, 0.18f, 0.28f);
+                OutpostZero.Graphics.MaterialLibrary.Dress(drop.GetComponent<Renderer>(), OutpostZero.Graphics.SurfaceFamily.TarpFabric);
             }
             drop.name = "Dropped_" + id;
             drop.layer = GameLayers.Interactable;

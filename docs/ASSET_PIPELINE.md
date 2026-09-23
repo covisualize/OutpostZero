@@ -97,6 +97,23 @@ Model prefixes in use: `Survivor_`, `Zombie_`, `NPC_`, `Colonist_`, `Weapon_`, `
 python3 BlenderScripts/texture_set.py
 ```
 
+## Material library
+
+`BlenderScripts/material_library.py` (numpy) paints twelve seamless 1024 px surface families: Asphalt, ConcreteCracked, BrickRed, BrickGrey, MetalRusted, MetalPainted, Plywood, TarpFabric, Glass, Rubber, RotFlesh and Cloth. Each family gets `<Family>_Albedo`, `_Normal` and `_Mask` PNGs in `Assets/Materials/Library/Textures`. The mask is packed like URP/Lit wants it: R metallic, G occlusion, A smoothness, so one texture fills both the metallic and occlusion slots. All noise is periodic on the tile, and stretched noise must pass `freq_y` rather than scaling `u` or `v`, or the tile gets a seam. From those maps it writes:
+
+- `ML_<Family>.mat`: URP/Lit, UV mapped, for imported models. Glass is transparent.
+- `MT_<Family>.mat`: `OutpostZero/EnvironmentTriplanar`, world-space triplanar at the family's real-world tile size, for primitives and kit boxes without UVs. It adds a top-surface dust layer, grime near the ground, vertex AO, wetness from the global `_OutpostWet`, and URP decals. Glass has no triplanar version.
+- `Resources/MaterialLibrary.asset`, which `MaterialLibrary` loads at runtime.
+
+```powershell
+python BlenderScripts\material_library.py          # repaint the library (about 80 s)
+python BlenderScripts\material_library.py --check  # exit 1 if anything committed is stale
+```
+
+Blender materials follow `Mat_<Family>_<Variant>`. `MaterialLibrary.FamilyFor` splits a name into words (`Mat_Car_TireRubber` gives car, tire, rubber) and matches them against its rules. Eyes, skin, labels, hazard stripes and signs stay unmapped, so their authored colour survives. `FbxMaterialPostprocessor` swaps mapped FBX materials for the library's Lit material. Unmapped ones become URP/Lit from the Principled values Blender exports: `Shininess` is (1 - roughness) x 10, `ReflectionFactor` is metallic, and emission sets `_EMISSION`. Runtime code calls `MaterialLibrary.Dress(renderer, family, tint)`, which shares the family material and puts the tint on a property block.
+
+Every shader property sits in `UnityPerMaterial`, so both custom shaders are SRP-batcher compatible, and both carry ShadowCaster, DepthOnly and DepthNormals passes. `MaterialLibraryTests` checks those, the GUID wiring, and that no flat `Mat_*` placeholder material comes back.
+
 ## Decal atlas
 
 `BlenderScripts/decal_atlas.py` draws `Assets/Textures/Decals/DecalAtlas.png`, a 1024 x 512 sheet of 128 px cells: 8 blood splats, 4 drips, 3 bullet holes each for concrete, metal and wood, 2 scorches, 2 oil puddles and a left and right boot print. The shapes come from value noise and Voronoi cells in plain Python, so the PNG is byte-identical on every machine. Each cell keeps a clear border, and the texture clamps, so neighbouring cells never bleed in. `Assets/Resources/Decals/DecalAtlas.mat` puts the atlas on URP's Decal shader graph with GPU instancing on. `ImpactDecalPool` picks a cell through `DecalAtlas`, whose table a test keeps matched to the generator.

@@ -108,14 +108,7 @@ namespace OutpostZero.Combat
 
         private static void Flash(GameObject target)
         {
-            var renderers = target.GetComponentsInChildren<Renderer>();
-            foreach (var renderer in renderers)
-            {
-                var block = new MaterialPropertyBlock();
-                renderer.GetPropertyBlock(block);
-                block.SetColor("_BaseColor", Color.white);
-                renderer.SetPropertyBlock(block);
-            }
+            OutpostZero.Graphics.HitGlow.Strike(target);
         }
 
         public void PrunePopups()

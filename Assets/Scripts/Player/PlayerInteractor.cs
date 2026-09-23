@@ -157,6 +157,7 @@ namespace OutpostZero.Player
             lure.name = molotov ? "Molotov" : "NoiseLure";
             lure.transform.position = transform.position + Vector3.up * 1.4f + transform.forward;
             lure.transform.localScale = Vector3.one * 0.25f;
+            MaterialLibrary.Dress(lure.GetComponent<Renderer>(), molotov ? SurfaceFamily.Glass : SurfaceFamily.MetalRusted);
             var body = lure.AddComponent<Rigidbody>();
             body.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
             body.AddForce(transform.forward * ThrowArc.Forward + Vector3.up * ThrowArc.Lift, ForceMode.VelocityChange);
@@ -182,6 +183,7 @@ namespace OutpostZero.Player
             lure.name = "PipeBomb";
             lure.transform.position = transform.position + Vector3.up * 1.4f + transform.forward;
             lure.transform.localScale = Vector3.one * 0.22f;
+            MaterialLibrary.Dress(lure.GetComponent<Renderer>(), SurfaceFamily.MetalRusted);
             var body = lure.AddComponent<Rigidbody>();
             body.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
             body.AddForce(transform.forward * ThrowArc.Forward + Vector3.up * ThrowArc.Lift, ForceMode.VelocityChange);

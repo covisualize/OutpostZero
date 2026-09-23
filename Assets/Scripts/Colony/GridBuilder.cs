@@ -329,11 +329,13 @@ namespace OutpostZero.Colony
             var renderer = view.GetComponent<Renderer>();
             if (renderer != null)
             {
-                renderer.material.color = module.site != 0
+                var color = module.site != 0
                     ? Color.Lerp(ColorFor(module.kind), new Color(0.72f, 0.7f, 0.58f), module.hours > 0 ? 0.35f : 0.7f)
                     : module.kind == "Oil" && module.lit >= 0f
                     ? new Color(0.95f, 0.42f, 0.08f)
                     : ColorFor(module.kind);
+                var family = module.site != 0 ? SurfaceFamily.Plywood : FamilyFor(module.kind);
+                if (!MaterialLibrary.Dress(renderer, family, MaterialLibrary.TintFor(color))) renderer.material.color = color;
             }
             if (module.kind == "Spikes" || module.kind == "Oil" || module.kind == "Campfire")
             {
@@ -800,6 +802,29 @@ namespace OutpostZero.Colony
                 case "Lamp": return new Vector3(0.35f, 2.2f, 0.35f);
                 case "Campfire": return new Vector3(1.2f, 0.2f, 1.2f);
                 default: return new Vector3(1.8f * health, 1.1f * Mathf.Lerp(0.35f, 1f, health), 0.4f);
+            }
+        }
+
+        /// <summary>Library surface for a module stand-in; lamps and fires keep flat colour.</summary>
+        public static SurfaceFamily FamilyFor(string kind)
+        {
+            switch (kind)
+            {
+                case "Cot": return SurfaceFamily.Cloth;
+                case "Water":
+                case "Purifier": return SurfaceFamily.MetalPainted;
+                case "Watchtower":
+                case "Workbench":
+                case "TradingPost":
+                case "Crate": return SurfaceFamily.Plywood;
+                case "Generator":
+                case "Turret":
+                case "Spikes": return SurfaceFamily.MetalRusted;
+                case "Oil": return SurfaceFamily.Rubber;
+                case "Farm": return SurfaceFamily.TarpFabric;
+                case "Lamp":
+                case "Campfire": return SurfaceFamily.None;
+                default: return SurfaceFamily.ConcreteCracked;
             }
         }
 

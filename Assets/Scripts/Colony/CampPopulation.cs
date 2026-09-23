@@ -125,7 +125,8 @@ namespace OutpostZero.Colony
             body.transform.position = new Vector3(-12f, 1f, -14f);
             body.transform.localScale = new Vector3(0.45f, 0.9f, 0.45f);
             var renderer = body.GetComponent<Renderer>();
-            if (renderer != null) renderer.material.color = new Color(0.55f, 0.48f, 0.36f);
+            if (renderer != null && !OutpostZero.Graphics.MaterialLibrary.Dress(renderer, OutpostZero.Graphics.SurfaceFamily.Cloth, OutpostZero.Graphics.MaterialLibrary.TintFor(new Color(0.55f, 0.48f, 0.36f))))
+                renderer.material.color = new Color(0.55f, 0.48f, 0.36f);
             bodies[id] = body.transform;
             return body.transform;
         }

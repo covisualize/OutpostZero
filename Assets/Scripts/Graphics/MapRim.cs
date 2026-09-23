@@ -45,7 +45,7 @@ namespace OutpostZero.Graphics
             obstacle.carving = true;
             obstacle.shape = NavMeshObstacleShape.Box;
             var renderer = wall.GetComponent<Renderer>();
-            if (renderer != null) renderer.material.color = new Color(0.24f, 0.22f, 0.2f);
+            if (renderer != null && !MaterialLibrary.Dress(renderer, SurfaceFamily.BrickGrey)) renderer.material.color = new Color(0.24f, 0.22f, 0.2f);
         }
     }
 }

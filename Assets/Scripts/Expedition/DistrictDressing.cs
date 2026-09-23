@@ -65,7 +65,7 @@ namespace OutpostZero.Expedition
                 wall.transform.position = new Vector3(walls[i].X, 1.3f, walls[i].Z);
                 wall.transform.localScale = new Vector3(1.85f, 2.6f, 1.95f);
                 wall.layer = GameLayers.Environment;
-                Paint(wall.GetComponent<Renderer>(), tint);
+                Paint(wall.GetComponent<Renderer>(), tint, OutpostZero.Graphics.SurfaceFamily.BrickRed);
             }
 
             var room = GameObject.CreatePrimitive(PrimitiveType.Cube);
@@ -88,7 +88,7 @@ namespace OutpostZero.Expedition
             nest.transform.localScale = new Vector3(1.2f, 0.08f, 1.2f);
             var nestCollider = nest.GetComponent<Collider>();
             if (nestCollider != null) Destroy(nestCollider);
-            Paint(nest.GetComponent<Renderer>(), new Color(0.25f, 0.12f, 0.1f));
+            Paint(nest.GetComponent<Renderer>(), new Color(0.25f, 0.12f, 0.1f), OutpostZero.Graphics.SurfaceFamily.RotFlesh);
 
             var exit = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
             exit.name = "DistrictExtract";
@@ -120,7 +120,7 @@ namespace OutpostZero.Expedition
                     shell.transform.position = new Vector3(cell.X, 1.1f, cell.Z);
                     shell.transform.localScale = new Vector3(2.5f, 2.2f, 2.5f);
                     shell.layer = GameLayers.Environment;
-                    Paint(shell.GetComponent<Renderer>(), tint);
+                    Paint(shell.GetComponent<Renderer>(), tint, OutpostZero.Graphics.SurfaceFamily.BrickRed);
                     if (map.HasLoot && Close(cell.X, map.LootX) && Close(cell.Z, map.LootZ))
                     {
                         var crate = GameObject.CreatePrimitive(PrimitiveType.Cube);
@@ -171,7 +171,7 @@ namespace OutpostZero.Expedition
             nest.transform.localScale = new Vector3(1.4f, 0.05f, 1.4f);
             var nestCollider = nest.GetComponent<Collider>();
             if (nestCollider != null) Destroy(nestCollider);
-            Paint(nest.GetComponent<Renderer>(), new Color(0.28f, 0.1f, 0.08f));
+            Paint(nest.GetComponent<Renderer>(), new Color(0.28f, 0.1f, 0.08f), OutpostZero.Graphics.SurfaceFamily.RotFlesh);
         }
 
         private void RaiseEdges(RoadGraph.Edge[] edges)
@@ -378,9 +378,17 @@ namespace OutpostZero.Expedition
             return new Color(0.45f, 0.28f, 0.22f);
         }
 
+        private static void Paint(Renderer renderer, Color color, OutpostZero.Graphics.SurfaceFamily family)
+        {
+            if (renderer == null) return;
+            if (OutpostZero.Graphics.MaterialLibrary.Dress(renderer, family, OutpostZero.Graphics.MaterialLibrary.TintFor(color))) return;
+            Paint(renderer, color);
+        }
+
         private static void Paint(Renderer renderer, Color color)
         {
             if (renderer == null) return;
+            if (OutpostZero.Graphics.MaterialLibrary.DressByName(renderer, color)) return;
             var block = new MaterialPropertyBlock();
             renderer.GetPropertyBlock(block);
             block.SetColor("_BaseColor", color);
@@ -401,7 +409,7 @@ namespace OutpostZero.Expedition
             stall.transform.localScale = new Vector3(1.8f, 1.2f, 0.8f);
             stall.layer = GameLayers.Interactable;
             var stallRenderer = stall.GetComponent<Renderer>();
-            if (stallRenderer != null) stallRenderer.material.color = new Color(0.55f, 0.32f, 0.22f);
+            Paint(stallRenderer, new Color(0.55f, 0.32f, 0.22f));
             stall.AddComponent<CampStation>().Configure(StationKind.Merchant);
             RaiseGuard(new Vector3(6.6f, 0.95f, 3.2f));
             RaiseGuard(new Vector3(9.4f, 0.95f, 3.2f));
@@ -416,7 +424,7 @@ namespace OutpostZero.Expedition
             guard.transform.localScale = new Vector3(0.5f, 0.9f, 0.5f);
             guard.layer = GameLayers.Environment;
             var renderer = guard.GetComponent<Renderer>();
-            if (renderer != null) renderer.material.color = new Color(0.28f, 0.32f, 0.28f);
+            Paint(renderer, new Color(0.28f, 0.32f, 0.28f));
         }
 
         private void Spawn(DistrictLayout.Piece piece)
@@ -430,7 +438,7 @@ namespace OutpostZero.Expedition
             body.transform.localScale = Scale(piece.Role);
             body.layer = GameLayers.Environment;
             var renderer = body.GetComponent<Renderer>();
-            if (renderer != null) renderer.material.color = ColorFor(piece.Role);
+            Paint(renderer, ColorFor(piece.Role));
 
             if (barrel)
             {

@@ -82,7 +82,7 @@ namespace OutpostZero.Tests.EditMode
             {
                 Assert.AreEqual(CharacterLook.Eye(person).R, CharacterLook.Eye(person, HudPalette.Tritan).R);
                 CharacterLook.Rim(person, 1, true, out var rim, out float alpha, out float power);
-                Assert.AreEqual(CharacterLook.RimWarm.R, rim.R);
+                Assert.AreEqual(CharacterLook.RimSurvivor.R, rim.R);
                 Assert.AreEqual(0.35f, alpha);
                 Assert.AreEqual(3.2f, power);
             }

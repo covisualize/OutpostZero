@@ -306,7 +306,7 @@ namespace OutpostZero.Expedition
                     }
                     else
                     {
-                        Paint(renderer, tint);
+                        if (!OutpostZero.Graphics.MaterialLibrary.Dress(renderer, KitFamily(piece.id, kind), OutpostZero.Graphics.MaterialLibrary.TintFor(tint))) Paint(renderer, tint);
                         block.AddComponent<SurfaceTag>().Set(kind);
                     }
                 }
@@ -370,6 +370,14 @@ namespace OutpostZero.Expedition
                 block.SetColor("_Tint", shade);
                 renderer.SetPropertyBlock(block);
             }
+        }
+
+        /// <summary>Library family for a kit box: the piece id's words first, then its surface tag.</summary>
+        public static OutpostZero.Graphics.SurfaceFamily KitFamily(string pieceId, SurfaceKind kind)
+        {
+            var family = OutpostZero.Graphics.MaterialLibrary.FamilyFor(pieceId);
+            if (family == OutpostZero.Graphics.SurfaceFamily.None) family = OutpostZero.Graphics.MaterialLibrary.FromSurface(kind);
+            return family != OutpostZero.Graphics.SurfaceFamily.None ? family : OutpostZero.Graphics.SurfaceFamily.ConcreteCracked;
         }
 
         private static void Paint(Renderer renderer, Color color)

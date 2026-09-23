@@ -1,0 +1,51 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c75b64f8091a2b3c4d5e6f708192a492, type: 3}
+  m_Name: MaterialLibrary
+  m_EditorClassIdentifier: OutpostZero::OutpostZero.Graphics.MaterialLibrary
+  entries:
+  - family: 1
+    lit: {fileID: 2100000, guid: dab407d16770c748e888ed8b484d8a0c, type: 2}
+    triplanar: {fileID: 2100000, guid: 5c0898ae2eecf335d62930ed23fd97bd, type: 2}
+  - family: 2
+    lit: {fileID: 2100000, guid: e9cc721d4239450d54890cc0d4d65194, type: 2}
+    triplanar: {fileID: 2100000, guid: 5f6dbe4918691b0ea276868ba7ceab3e, type: 2}
+  - family: 3
+    lit: {fileID: 2100000, guid: a3cbefbef666239ef904a02e5cc42e70, type: 2}
+    triplanar: {fileID: 2100000, guid: 95500f0af8018318441dac6aed1bc5d6, type: 2}
+  - family: 4
+    lit: {fileID: 2100000, guid: be92b93abe5a1e27e2e8f1bf303d0f1e, type: 2}
+    triplanar: {fileID: 2100000, guid: 9e2974899efdea78f996b3ca673022f8, type: 2}
+  - family: 5
+    lit: {fileID: 2100000, guid: 699ae6111a25dfe2276f7a2b55640036, type: 2}
+    triplanar: {fileID: 2100000, guid: d7bdc78e07def95ac23fd07361e261c2, type: 2}
+  - family: 6
+    lit: {fileID: 2100000, guid: da503c8f3499f5d7b91d3c957b49ebd3, type: 2}
+    triplanar: {fileID: 2100000, guid: b0f015ab6cb06b10dc17b655bb5cdadc, type: 2}
+  - family: 7
+    lit: {fileID: 2100000, guid: eaeb5d584430e5bac41d69819fbe9120, type: 2}
+    triplanar: {fileID: 2100000, guid: 00b22fe687d5a8040cfce131730f3405, type: 2}
+  - family: 8
+    lit: {fileID: 2100000, guid: 15cbf6875ad4fb243e970e15fb267a69, type: 2}
+    triplanar: {fileID: 2100000, guid: 4e6e83f5d3dbc551fa7a2764e6398b3d, type: 2}
+  - family: 9
+    lit: {fileID: 2100000, guid: 9a6d1184f8d1fbc4ccb38b85dc928335, type: 2}
+    triplanar: {fileID: 0}
+  - family: 10
+    lit: {fileID: 2100000, guid: 83e7c3d12a00c234893193135a4070f9, type: 2}
+    triplanar: {fileID: 2100000, guid: 0a3d4f9a2beea05768c363e1efc2e7f8, type: 2}
+  - family: 11
+    lit: {fileID: 2100000, guid: bba86ee51d3dcac349190884fe127b32, type: 2}
+    triplanar: {fileID: 2100000, guid: 50ddeb5506a97f504fa2685938c8429d, type: 2}
+  - family: 12
+    lit: {fileID: 2100000, guid: cfd6c181b74b207348da5d07a09b1e06, type: 2}
+    triplanar: {fileID: 2100000, guid: 6678dc663d920887095fc14bb90ed440, type: 2}

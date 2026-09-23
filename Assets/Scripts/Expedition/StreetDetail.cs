@@ -66,7 +66,7 @@ namespace OutpostZero.Expedition
                 }
                 var renderer = body.GetComponent<Renderer>();
                 if (mark.Role == "glass" && PaneGlass.Coat(renderer)) { }
-                else Paint(renderer, ColorFor(mark.Role));
+                else Paint(renderer, mark.Role, ColorFor(mark.Role));
                 if (mark.Role == "bulb")
                 {
                     var lamp = body.AddComponent<Light>();
@@ -153,6 +153,40 @@ namespace OutpostZero.Expedition
                 case "bulb": return new Color(1f, 0.86f, 0.55f);
                 default: return new Color(0.34f, 0.3f, 0.26f);
             }
+        }
+
+        /// <summary>Library surface for a dressing role; paper, lane paint and bulbs keep flat colour.</summary>
+        public static SurfaceFamily FamilyFor(string role)
+        {
+            switch (role)
+            {
+                case "bottle": return SurfaceFamily.Glass;
+                case "tyre": return SurfaceFamily.Rubber;
+                case "brick": return SurfaceFamily.BrickRed;
+                case "patch": return SurfaceFamily.Asphalt;
+                case "manhole":
+                case "grate": return SurfaceFamily.MetalRusted;
+                case "skyline": return SurfaceFamily.BrickGrey;
+                case "tower":
+                case "overpass": return SurfaceFamily.ConcreteCracked;
+                case "pole": return SurfaceFamily.MetalPainted;
+                case "tent":
+                case "tarp":
+                case "sandbag": return SurfaceFamily.TarpFabric;
+                case "cable": return SurfaceFamily.Rubber;
+                case "paper":
+                case "stripe":
+                case "bulb":
+                case "glass": return SurfaceFamily.None;
+                default: return SurfaceFamily.ConcreteCracked;
+            }
+        }
+
+        private static void Paint(Renderer renderer, string role, Color color)
+        {
+            var family = FamilyFor(role);
+            if (family != SurfaceFamily.None && MaterialLibrary.Dress(renderer, family, MaterialLibrary.TintFor(color))) return;
+            Paint(renderer, color);
         }
 
         private static void Paint(Renderer renderer, Color color)

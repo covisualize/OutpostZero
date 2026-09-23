@@ -849,6 +849,7 @@ namespace OutpostZero.Colony
             corpse.name = "Corpse_Leader";
             corpse.transform.position = position + Vector3.up * 0.2f;
             corpse.transform.localScale = new Vector3(0.6f, 0.35f, 0.6f);
+            MaterialLibrary.Dress(corpse.GetComponent<Renderer>(), SurfaceFamily.Cloth);
             corpse.layer = GameLayers.Interactable;
             corpse.AddComponent<FallenGear>().Configure(index, gear);
         }

@@ -51,6 +51,9 @@ namespace OutpostZero.Graphics
 
         public const float OutlinePower = 1.1f;
         public static readonly Rgb RimWarm = new Rgb { R = 0.85f, G = 0.55f, B = 0.28f };
+        /// <summary>Faction rims with the colour-vision palette off: survivors cyan, zombies sickly green.</summary>
+        public static readonly Rgb RimSurvivor = new Rgb { R = 0.3f, G = 0.85f, B = 1f };
+        public static readonly Rgb RimZombie = new Rgb { R = 0.55f, G = 0.85f, B = 0.25f };
 
         /// <summary>
         /// Enemy eyes and rim in a colour-blind mode: amber for blue-yellow (1), white for mono (2),
@@ -73,13 +76,13 @@ namespace OutpostZero.Graphics
         {
             if (!Glows(role))
             {
-                color = RimWarm;
+                color = RimSurvivor;
                 alpha = 0.35f;
                 power = 3.2f;
                 return;
             }
-            color = vision > 0 ? Enemy(vision) : RimWarm;
-            alpha = outline ? 1f : 0.85f;
+            color = vision > 0 ? Enemy(vision) : RimZombie;
+            alpha = outline ? 1f : 0.6f;
             power = outline ? OutlinePower : 1.6f;
         }
 

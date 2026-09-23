@@ -23,7 +23,6 @@ namespace OutpostZero.EditorTools
         private const string ScenePath = "Assets/Scenes/PrototypeArena.unity";
         private const string BootPath = "Assets/Scenes/Boot.unity";
         private const string SettingsDir = "Assets/Settings";
-        private const string MaterialsDir = "Assets/Materials";
         private static int missingModels;
 
         [MenuItem("Tools/Outpost Zero/Build Prototype Test Arena", false, 1)]
@@ -167,50 +166,12 @@ namespace OutpostZero.EditorTools
             return urpAsset;
         }
 
-        private static Material GetOrCreateMaterial(string matName, Color color)
+        private static Material LibraryMaterial(SurfaceFamily family)
         {
-            if (!Directory.Exists(MaterialsDir))
-            {
-                Directory.CreateDirectory(MaterialsDir);
-            }
-
-            string path = $"{MaterialsDir}/{matName}.mat";
-            Material mat = AssetDatabase.LoadAssetAtPath<Material>(path);
-
-            Shader urpLitShader = Shader.Find("Universal Render Pipeline/Lit") 
-                               ?? Shader.Find("Universal Render Pipeline/Simple Lit")
-                               ?? Shader.Find("Standard");
-
-            if (mat == null)
-            {
-                mat = new Material(urpLitShader);
-                mat.name = matName;
-                ApplyMaterialColor(mat, color);
-                AssetDatabase.CreateAsset(mat, path);
-            }
-            else
-            {
-                if (mat.shader != urpLitShader && urpLitShader != null)
-                {
-                    mat.shader = urpLitShader;
-                }
-                ApplyMaterialColor(mat, color);
-                EditorUtility.SetDirty(mat);
-            }
-
-            return mat;
-        }
-
-        private static void ApplyMaterialColor(Material mat, Color color)
-        {
-            if (mat.HasProperty("_BaseColor"))
-            {
-                mat.SetColor("_BaseColor", color);
-            }
-            if (mat.HasProperty("_Color"))
-            {
-                mat.SetColor("_Color", color);
-            }
+            var material = AssetDatabase.LoadAssetAtPath<Material>(MaterialLibrary.TriplanarPath(family))
+                ?? AssetDatabase.LoadAssetAtPath<Material>(MaterialLibrary.LitPath(family));
+            if (material == null) Debug.LogWarning("Material library is missing " + family + "; run BlenderScripts/material_library.py.");
+            return material;
         }
 
         private static GameObject InstantiateModel(string assetId, string name, Vector3 pos, Quaternion rot, Vector3 scale, Transform parent = null, bool isStatic = true, bool addBoxCollider = false, int layer = GameLayers.Environment)
@@ -350,7 +311,7 @@ namespace OutpostZero.EditorTools
             baseGround.transform.localScale = new Vector3(7.0f, 1.0f, 7.0f);
 
             var renderer = baseGround.GetComponent<MeshRenderer>();
-            renderer.sharedMaterial = GetOrCreateMaterial("Mat_Ground_Asphalt", new Color(0.18f, 0.19f, 0.21f));
+            renderer.sharedMaterial = LibraryMaterial(SurfaceFamily.Asphalt);
             baseGround.isStatic = true;
             GameLayers.ApplyRecursively(groundRoot, GameLayers.Environment);
 

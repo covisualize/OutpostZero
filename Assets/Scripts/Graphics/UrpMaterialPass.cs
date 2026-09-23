@@ -1,37 +1,42 @@
 using UnityEngine;
+using OutpostZero.Core;
 
 namespace OutpostZero.Graphics
 {
     /// <summary>
-    /// Pushes URP Lit smoothness and metalness from object names so the placeholder
-    /// and generated meshes read as materials before a Shader Graph bake exists.
+    /// Safety net after the scene loads: any renderer still on Unity's grey default material is moved
+    /// onto its library family, picked from its SurfaceTag and then its name. Authored materials are
+    /// never touched, so imported models keep what the FBX postprocessor gave them.
     /// </summary>
     public class UrpMaterialPass : MonoBehaviour
     {
+        public int Dressed { get; private set; }
+
         private void Start()
         {
-            var triplanar = Resources.Load<Material>("OutpostTriplanar");
-            var renderers = FindObjectsByType<Renderer>(FindObjectsSortMode.None);
+            Dressed = Sweep(FindObjectsByType<Renderer>(FindObjectsSortMode.None));
+        }
+
+        public static int Sweep(Renderer[] renderers)
+        {
+            int dressed = 0;
+            if (renderers == null) return 0;
             foreach (var renderer in renderers)
             {
-                if (renderer == null) continue;
-                string name = renderer.gameObject.name;
-                bool mapped = renderer.sharedMaterial != null
-                    && renderer.sharedMaterial.HasProperty("_HasMaps")
-                    && renderer.sharedMaterial.GetFloat("_HasMaps") > 0.5f;
-                if (!mapped && triplanar != null && (name.Contains("Zombie") || name.Contains("Ground") || name.Contains("Barrel") || name.Contains("Road")))
-                {
-                    renderer.sharedMaterial = triplanar;
-                }
-                var block = new MaterialPropertyBlock();
-                renderer.GetPropertyBlock(block);
-                float metal = name.Contains("Barrel") || name.Contains("Vehicle") || name.Contains("Dumpster") ? 0.65f : 0.05f;
-                block.SetFloat("_Metallic", metal);
-                block.SetColor("_BaseColor", name.Contains("Zombie") ? new Color(0.22f, 0.24f, 0.2f) : new Color(0.36f, 0.33f, 0.29f));
-                block.SetColor("_RimColor", name.Contains("Zombie") ? new Color(0.75f, 0.12f, 0.08f, 1f) : new Color(0.2f, 0.18f, 0.14f, 0.4f));
-                block.SetFloat("_RimPower", name.Contains("Zombie") ? 1.5f : 4f);
-                renderer.SetPropertyBlock(block);
+                if (renderer == null || renderer is ParticleSystemRenderer || renderer is LineRenderer || renderer is TrailRenderer) continue;
+                if (!MaterialLibrary.IsDefault(renderer.sharedMaterial)) continue;
+                var tag = renderer.GetComponentInParent<SurfaceTag>();
+                var family = Pick(tag != null ? tag.Kind : SurfaceKind.Default, renderer.gameObject.name);
+                if (MaterialLibrary.Dress(renderer, family)) dressed++;
             }
+            return dressed;
+        }
+
+        /// <summary>The surface tag wins when it names a family; otherwise the object name decides.</summary>
+        public static SurfaceFamily Pick(SurfaceKind tag, string objectName)
+        {
+            var family = MaterialLibrary.FromSurface(tag);
+            return family != SurfaceFamily.None ? family : MaterialLibrary.Guess(objectName);
         }
     }
 }
