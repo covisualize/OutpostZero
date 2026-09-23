@@ -164,7 +164,8 @@ namespace OutpostZero.Core
                 GameplayFeedback.Toast(GateLine.District(null));
                 return;
             }
-            if (currentState == GameState.CampManagement) WorldMapService.Instance?.SpendTravel();
+            bool fromCamp = currentState == GameState.CampManagement;
+            if (fromCamp) WorldMapService.Instance?.SpendTravel();
             var needs = PlayerRegistry.Current != null ? PlayerRegistry.Current.GetComponent<SurvivalNeeds>() : null;
             if (needs != null && SurvivorRoster.Instance != null && SurvivorRoster.Instance.ReadLeaderNeeds(out float hunger, out float thirst))
             {
@@ -186,6 +187,7 @@ namespace OutpostZero.Core
             WorldMapService.Instance?.ApplyOpening();
             Expedition = OpenContext();
             BalanceTelemetry.ExpeditionStarted();
+            if (fromCamp) CodexDirector.Hear("launch");
             SetState(GameState.ExpeditionActive);
         }
 

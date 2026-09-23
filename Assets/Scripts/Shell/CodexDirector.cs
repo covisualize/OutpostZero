@@ -55,6 +55,7 @@ namespace OutpostZero.Shell
         public void Restore(string value)
         {
             packed = value ?? "";
+            TutorialDirector.Instance?.RestoreCamp(CodexBook.Has(packed, TutorialTrack.CampDone));
         }
     }
 }

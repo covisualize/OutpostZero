@@ -201,6 +201,7 @@ namespace OutpostZero.Colony
             placed.Add(record);
             SpawnView(record);
             GameplayFeedback.Toast(YardSay.Marked(kind.ToString(), null));
+            if (kind == ModuleKind.Barricade) CodexDirector.Hear("barricade");
             return true;
         }
 

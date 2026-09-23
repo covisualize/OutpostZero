@@ -5,8 +5,8 @@ using OutpostZero.Player;
 namespace OutpostZero.Shell
 {
     /// <summary>
-    /// String-table text names keys as {key:Action}. Filling reads the live bindings,
-    /// so a rebound key shows up in every hint, lesson and prompt.
+    /// String-table text names keys as {key:Action}. Filling reads the live bindings and the last
+    /// device used, so a rebound key or a picked-up pad shows up in every hint, lesson and prompt.
     /// </summary>
     public static class KeyPrompt
     {
@@ -28,7 +28,7 @@ namespace OutpostZero.Shell
                 builder.Append(text, at, start - at);
                 string name = text.Substring(start + Open.Length, end - start - Open.Length);
                 if (name.Length > 0 && char.IsLetter(name[0]) && Enum.TryParse(name, false, out ControlBindings.Action action))
-                    builder.Append(ControlBindings.Label(action));
+                    builder.Append(InputGlyphs.Label(action));
                 else
                     builder.Append(text, start, end - start + 1);
                 at = end + 1;
@@ -39,7 +39,7 @@ namespace OutpostZero.Shell
 
         public static string Interact(string prompt)
         {
-            return "[" + ControlBindings.Label(ControlBindings.Action.Interact) + "] " + prompt;
+            return "[" + InputGlyphs.Label(ControlBindings.Action.Interact) + "] " + prompt;
         }
     }
 

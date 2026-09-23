@@ -63,6 +63,7 @@ namespace OutpostZero.UI
 
         private void Update()
         {
+            InputGlyphs.Poll();
             if (ExpeditionInput.WatchPressed) AiWatch.Toggle();
             if (listening < 0 && padListen < 0 && ExpeditionInput.PausePressed) Back();
 
@@ -477,7 +478,7 @@ namespace OutpostZero.UI
             string language = SettingsService.Instance != null ? SettingsService.Instance.Language : "en";
             string discrete = SettingsService.Instance != null ? SettingsService.Instance.DiscreteKey : "";
             string tradeKey = FactionTrade.Instance != null ? FactionTrade.Instance.Signature : "";
-            string nextMenu = state + "|" + settings + "|" + trade + "|" + language + "|" + discrete + "|" + ControlBindings.Signature() + "|" + PadBindings.Signature() + "|" + listening + "|" + padListen + "|" + screens.Signature() + "|" + NewGameSignature() + "|" + codexId + "|" + tradeKey + "|" + askKeep + "|" + bindNote;
+            string nextMenu = state + "|" + settings + "|" + trade + "|" + language + "|" + discrete + "|" + ControlBindings.Signature() + "|" + PadBindings.Signature() + "|" + listening + "|" + padListen + "|" + screens.Signature() + "|" + NewGameSignature() + "|" + codexId + "|" + tradeKey + "|" + askKeep + "|" + bindNote + "|" + InputGlyphs.UsingPad;
             if (nextMenu != menuKey)
             {
                 menuKey = nextMenu;
@@ -953,6 +954,15 @@ namespace OutpostZero.UI
             camp.style.display = open ? DisplayStyle.Flex : DisplayStyle.None;
             if (!open) return;
             camp.Add(Title(Loc.T("camp.title")));
+            var guide = TutorialDirector.Instance;
+            if (guide != null && !guide.CampFinished && guide.CampCurrent.Length > 0)
+            {
+                camp.Add(Body(Loc.T("tut.day1") + " " + (guide.CampIndex + 1) + "/" + TutorialTrack.Camp.Length + ": " + guide.CampCurrent));
+                var row = new VisualElement { style = { flexDirection = FlexDirection.Row } };
+                if (guide.CampAwaitsRead) row.Add(Button(Loc.T("tut.next"), () => guide.Note(TutorialTrack.Read)));
+                row.Add(Button(Loc.T("menu.skip"), guide.Dismiss));
+                camp.Add(row);
+            }
             var storage = ColonyStorage.Instance;
             var services = CampServices.Instance;
             if (storage != null)
@@ -1450,6 +1460,7 @@ namespace OutpostZero.UI
         {
             var builder = new StringBuilder();
             builder.Append(SettingsService.Instance != null ? SettingsService.Instance.Language : "en").Append('|');
+            if (TutorialDirector.Instance != null) builder.Append(TutorialDirector.Instance.CampIndex).Append(InputGlyphs.UsingPad ? 'p' : 'k').Append('|');
             if (WorldClock.Instance != null) builder.Append(WorldClock.Instance.Day);
             if (ColonyStorage.Instance != null)
             {

@@ -93,6 +93,7 @@ namespace OutpostZero.Colony
                 GameplayFeedback.Toast(Loc.T("stall.short"));
                 return false;
             }
+            if (recipe.Id == "bandage") CodexDirector.Hear("craft_bandage");
 
             if (recipe.Id == "repair_kit")
             {

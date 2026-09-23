@@ -454,6 +454,7 @@ namespace OutpostZero.Colony
             }
             survivor.task = task;
             OnRosterChanged?.Invoke();
+            CodexDirector.Hear("assign");
         }
 
         public bool OfferMeal(string toId)
