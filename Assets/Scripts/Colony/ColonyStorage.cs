@@ -20,6 +20,7 @@ namespace OutpostZero.Colony
         [SerializeField] private int rounds;
         [SerializeField] private int shots;
         [SerializeField] private int cells;
+        [SerializeField] private int meds;
         [SerializeField] private string prints = "";
 
         public int Scrap => scrap;
@@ -34,6 +35,7 @@ namespace OutpostZero.Colony
         public int Rounds => rounds;
         public int Shots => shots;
         public int Cells => cells;
+        public int Meds => meds;
         public string Prints => prints ?? "";
         public int Used => CampRoom.Bulk(scrap, food, water, cloth, chemicals, tape, raw);
         public int Room => CampRoom.Room(GridBuilder.Instance != null ? GridBuilder.Instance.CountKind("Crate") : 0);
@@ -85,6 +87,28 @@ namespace OutpostZero.Colony
         public void SetCells(int next)
         {
             cells = Mathf.Max(0, next);
+            OnStorageChanged?.Invoke();
+        }
+
+        public void AddMeds(int amount)
+        {
+            if (amount <= 0) return;
+            meds += amount;
+            OnStorageChanged?.Invoke();
+        }
+
+        public int TakeMeds(int amount)
+        {
+            if (amount <= 0 || meds <= 0) return 0;
+            int taken = amount < meds ? amount : meds;
+            meds -= taken;
+            OnStorageChanged?.Invoke();
+            return taken;
+        }
+
+        public void SetMeds(int next)
+        {
+            meds = Mathf.Max(0, next);
             OnStorageChanged?.Invoke();
         }
 

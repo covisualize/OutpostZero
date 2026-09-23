@@ -759,6 +759,16 @@ namespace OutpostZero.UI
                         ColonyStorage.Instance.TakeCell();
                     }));
                 }
+                if (storage.Meds > 0)
+                {
+                    camp.Add(Button(Loc.T("camp.meds") + " " + storage.Meds, () =>
+                    {
+                        var pack = PlayerRegistry.Current != null ? PlayerRegistry.Current.GetComponent<PlayerInventory>() : null;
+                        if (pack == null || ColonyStorage.Instance == null || ColonyStorage.Instance.Meds <= 0) return;
+                        pack.AddMedicalKits(1);
+                        ColonyStorage.Instance.TakeMeds(1);
+                    }));
+                }
             }
             var roster = SurvivorRoster.Instance;
             if (roster != null)
@@ -1135,6 +1145,11 @@ namespace OutpostZero.UI
                         GameplayFeedback.Toast(WoundEase.Note(FieldHand.Dose(inventory.LastDoseSkill, null), inventory.LastEase, null));
                 }));
                 medRow.Add(Button(Loc.T("camp.info"), () => Inspect("medkit")));
+                if (GameManager.Instance != null && GameManager.Instance.CurrentState == GameState.CampManagement && ColonyStorage.Instance != null)
+                    medRow.Add(Button(Loc.T("pack.stock"), () =>
+                    {
+                        if (inventory.TrySpendMedical(1)) ColonyStorage.Instance?.AddMeds(1);
+                    }));
                 string medMark = inventory.BeltMark("medkit");
                 medRow.Add(Button(string.IsNullOrEmpty(medMark) ? Loc.T("camp.belt") : Loc.T("camp.belt") + " " + medMark, () => inventory.ToggleBelt("medkit")));
                 pack.Add(medRow);
@@ -1369,6 +1384,9 @@ namespace OutpostZero.UI
                 key.Add(storage.Chemicals);
                 key.Add(storage.Tape);
                 key.Add(storage.Raw);
+                key.Add(storage.Rounds);
+                key.Add(storage.Cells);
+                key.Add(storage.Meds);
             }
             var roster = SurvivorRoster.Instance;
             if (roster != null)

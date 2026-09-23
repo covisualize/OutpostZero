@@ -239,6 +239,7 @@ namespace OutpostZero.Shell
                 data.bodies = ColonyStorage.Instance.Bodies;
                 data.rounds = ColonyStorage.Instance.Rounds;
                 data.cells = ColonyStorage.Instance.Cells;
+                data.meds = ColonyStorage.Instance.Meds;
                 data.shots = ColonyStorage.Instance.Shots;
                 data.prints = ColonyStorage.Instance.Prints;
                 data.craftOrders = CraftingBench.Instance != null ? CraftingBench.Instance.PackedOrders : "";
@@ -388,6 +389,7 @@ namespace OutpostZero.Shell
             ColonyStorage.Instance?.SetBodies(data.bodies);
             ColonyStorage.Instance?.SetRounds(data.rounds);
             ColonyStorage.Instance?.SetCells(data.cells);
+            ColonyStorage.Instance?.SetMeds(data.meds);
             ColonyStorage.Instance?.SetShots(data.shots);
             CampServices.Instance?.SetFuel(FuelTank.Unpack(data.fuel, data.fuelSet));
             ColonyStorage.Instance?.SetPrints(data.prints);

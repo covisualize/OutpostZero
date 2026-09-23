@@ -692,11 +692,21 @@ namespace OutpostZero.Colony
                         Practice.Train(ref survivor.medicine, ref survivor.medicineXp);
                         survivor.morale = Mathf.Min(100f, survivor.morale + 2f);
                         var leader = PlayerRegistry.Current;
-                        leader?.GetComponent<Combat.HealthSystem>()?.Heal(12f + Practice.Bonus(survivor.medicine) * 6f + MedDepth.Mend(survivor.medicine));
+                        var leaderHealth = leader?.GetComponent<Combat.HealthSystem>();
+                        leaderHealth?.Heal(12f + Practice.Bonus(survivor.medicine) * 6f + MedDepth.Mend(survivor.medicine));
                         leader?.GetComponent<StatusEffectController>()?.ClearInjury();
+                        var hurt = new int[survivors.Count];
                         for (int i = 0; i < survivors.Count; i++)
                         {
                             if (survivors[i].alive && survivors[i].injury > 0) survivors[i].injury--;
+                            hurt[i] = survivors[i].alive ? survivors[i].injury : 0;
+                        }
+                        int worst = MedStock.Worst(hurt);
+                        float missing = leaderHealth != null && !leaderHealth.IsDead ? leaderHealth.MaxHealth - leaderHealth.CurrentHealth : 0f;
+                        if (storage != null && MedStock.Open(storage.Meds, worst >= 0 ? hurt[worst] : 0, missing) && storage.TakeMeds(1) > 0)
+                        {
+                            if (worst >= 0) survivors[worst].injury--;
+                            if (missing > 0.5f) leaderHealth.Heal(MedStock.Heal);
                         }
                         break;
                     case "Build":

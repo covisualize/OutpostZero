@@ -179,6 +179,7 @@ Play this in a player build, not the editor. Use Survivor difficulty and a fixed
   - Debug: F4 (editor and development builds) shows the roster sheet (`RosterSheet`), with each survivor's traits, skills with experience toward the next level (`Guard 5 1/3`), needs, wounds, task and opinion.
   - Automated: `RosterSheetTests`, `TraitBookTests` (assets equal the table, the old trait numbers hold, a loaded book retunes traits and sets the draw) and the `SurvivorDraw`, `Practice` and `Heir` tests in `GameSystemsTests`.
 - [ ] PRO-56 **Play**: run 5 days in a row, each with tasks, an expedition and a return, and see events fire.
+- [ ] PRO-56 **Play** (camp med stock): in camp, press Stock on the pack's medkit row and the camp board shows Camp meds 1. Hurt a colonist and post a Medic: the next shift spends the med and the worst hurt mends one extra level. With nobody hurt the med stays. Press Camp meds to take it back into the pack. Save and load, and the count holds.
   - From Day 2, about half the dawns bring one random camp event, shown as a toast and on the camp board under "At dawn:". The eight are `CampEventDefinition` assets in `Assets/Data/CampEvents`, listed in `Resources/CampEventBook` (Tools > Outpost Zero > Sync Camp Event Book), each with a weight and the conditions it waits on:
     - A stranger asks to join, when the roster has room. The board shows Take them in and Turn them away until the next dawn.
     - An argument between two colonists whose opinion of each other is -10 or lower: both lose 6 morale and 5 opinion of each other.
