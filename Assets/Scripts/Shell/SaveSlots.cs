@@ -19,6 +19,9 @@ namespace OutpostZero.Shell
             public string Leader;
             public bool Occupied;
             public bool Auto;
+            public float Playtime;
+            public string SavedAt;
+            public string Thumbnail;
         }
 
         public static int Manual(int slot)

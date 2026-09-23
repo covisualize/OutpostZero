@@ -1153,7 +1153,8 @@ namespace OutpostZero.UI
                 }
                 int index = i;
                 string label = MenuLine.Slot(i + 1, card.Day, card.Leader, card.Occupied, null);
-                menu.Add(Button(label, () =>
+                if (card.Occupied) label += "\n" + SaveStamp.Line(card.Playtime, card.SavedAt, null);
+                menu.Add(SlotRow(card, Button(label, () =>
                 {
                     screens.Clear();
                     if (card.Occupied)
@@ -1169,7 +1170,7 @@ namespace OutpostZero.UI
                         SaveSystem.Instance?.UseSlot(index);
                         Go(FlowStep.Sanctuary, () => GameManager.Instance.BeginNewOutpost());
                     }
-                }));
+                })));
             }
             SaveSlots.Card auto = default;
             for (int c = 0; c < cards.Length; c++)
@@ -1178,7 +1179,8 @@ namespace OutpostZero.UI
             }
             if (auto.Occupied)
             {
-                menu.Add(Button(MenuLine.Auto(auto.Day, auto.Leader, null), () =>
+                string autoLabel = MenuLine.Auto(auto.Day, auto.Leader, null) + "\n" + SaveStamp.Line(auto.Playtime, auto.SavedAt, null);
+                menu.Add(SlotRow(auto, Button(autoLabel, () =>
                 {
                     screens.Clear();
                     Go(FlowStep.Sanctuary, () =>
@@ -1186,9 +1188,41 @@ namespace OutpostZero.UI
                         if (SaveSystem.Instance == null || !SaveSystem.Instance.LoadSlot(SaveSlots.AutoSlot))
                             GameManager.Instance.SetState(GameState.MainMenu);
                     });
-                }));
+                })));
             }
             menu.Add(Button(Loc.T("menu.back"), Close));
+        }
+
+        private readonly Dictionary<int, KeyValuePair<string, Texture2D>> slotThumbs = new Dictionary<int, KeyValuePair<string, Texture2D>>();
+
+        /// <summary>A slot button with its save's picture on the left, or an empty frame of the same size.</summary>
+        private VisualElement SlotRow(SaveSlots.Card card, Button button)
+        {
+            var row = new VisualElement();
+            row.style.flexDirection = FlexDirection.Row;
+            row.style.alignItems = Align.Center;
+            var picture = Picture(SlotThumb(card), SlotThumbSide);
+            picture.style.backgroundColor = new Color(0.08f, 0.08f, 0.09f, 0.8f);
+            row.Add(picture);
+            button.style.whiteSpace = WhiteSpace.PreWrap;
+            button.style.flexGrow = 1;
+            row.Add(button);
+            return row;
+        }
+
+        private const float SlotThumbSide = 64f;
+
+        private Texture2D SlotThumb(SaveSlots.Card card)
+        {
+            string key = card.Occupied ? card.Thumbnail ?? "" : "";
+            if (slotThumbs.TryGetValue(card.Slot, out var held))
+            {
+                if (held.Key == key) return held.Value;
+                if (held.Value != null) Destroy(held.Value);
+            }
+            var texture = SaveThumb.Read(key);
+            slotThumbs[card.Slot] = new KeyValuePair<string, Texture2D>(key, texture);
+            return texture;
         }
 
         private static string StormNote(CampServices services)

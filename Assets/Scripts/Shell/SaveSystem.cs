@@ -13,8 +13,19 @@ namespace OutpostZero.Shell
         public static SaveSystem Instance { get; private set; }
 
         private int slot;
+        private float playtime;
 
         public int Slot => slot;
+        public float Playtime => playtime;
+
+        /// <summary>A new run starts its clock at zero.</summary>
+        public void ResetPlaytime() => playtime = 0f;
+
+        private void Update()
+        {
+            if (Instance != this || GameManager.Instance == null) return;
+            playtime = SaveStamp.Tick(playtime, Time.unscaledDeltaTime, GameManager.Instance.CurrentState);
+        }
         public string PathToSave => PathFor(slot);
 
         public void UseSlot(int index)
@@ -63,6 +74,8 @@ namespace OutpostZero.Shell
         public bool Save(bool announce)
         {
             var data = Capture();
+            data.savedAt = SaveStamp.Now(System.DateTime.UtcNow);
+            data.thumbnail = SaveThumb.Take();
             int target = announce ? slot : SaveSlots.AutoSlot;
             if (!Write(PathFor(target), data))
             {
@@ -126,6 +139,9 @@ namespace OutpostZero.Shell
             card.Day = data.day;
             card.Hour = data.hour;
             card.Leader = LeaderName(data);
+            card.Playtime = data.playtime;
+            card.SavedAt = data.savedAt ?? "";
+            card.Thumbnail = data.thumbnail ?? "";
             return card;
         }
 
@@ -183,6 +199,7 @@ namespace OutpostZero.Shell
         {
             var data = new SaveGameData();
             data.slot = slot;
+            data.playtime = playtime;
             if (WorldClock.Instance != null)
             {
                 data.day = WorldClock.Instance.Day;
@@ -338,6 +355,7 @@ namespace OutpostZero.Shell
         public void Apply(SaveGameData data)
         {
             if (data == null) return;
+            playtime = data.playtime > 0f ? data.playtime : 0f;
             WorldClock.Instance?.Set(data.day, data.hour);
             GameManager.Instance?.SetLifetimeKills(data.lifetimeKills);
             ColonyStorage.Instance?.Set(data.colonyScrap, data.food, data.water);

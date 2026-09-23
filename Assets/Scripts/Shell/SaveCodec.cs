@@ -97,6 +97,9 @@ namespace OutpostZero.Shell
         public int frameCap;
         public int resolution;
         public int slot;
+        public float playtime;
+        public string savedAt = "";
+        public string thumbnail = "";
         public string seal = "";
         public float sfxVolume = 1f;
         public float musicVolume = 0.7f;

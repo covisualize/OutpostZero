@@ -335,6 +335,7 @@ namespace OutpostZero.Core
         public void BeginNewOutpost(string seedText, bool skipTutorial)
         {
             ObjectiveTracker.Instance?.ResetProgress();
+            SaveSystem.Instance?.ResetPlaytime();
             int next = SettingsService.Instance != null ? SettingsService.Instance.NextDifficulty : 2;
             WorldMapService.Instance?.ResetMap(next);
             int camp = System.Environment.TickCount;
