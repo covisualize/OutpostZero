@@ -171,7 +171,18 @@ Play this in a player build, not the editor. Use Survivor difficulty and a fixed
   - Already in place: the Dying camera, `MarkLeaderDead` with the cause, the carried pack left on a corpse in that district (saved, raised again on re-entry, recovered once), the memorial list on the camp board, game over when nobody is left, and Merciful mode (the leader is dragged home wounded for 18 scrap and a camp morale hit).
   - Deviation: there is no PlayMode test. The EditMode `SuccessionFlowTests` and the older succession tests in `GameSystemsTests` cover the ledger, the corpse packing and the grief numbers.
 - [ ] PRO-61 **Play**: a day 3 raid against a weak wall can be lost, while walls, guards and lights make day 10 survivable.
+  - A raid is called for the night when it is due, or from day 2 when the day was loud (gunshots near camp, or a running generator on Survivor and Nightmare) and there are too few walls (`RaidCall`). Watchtowers, guards and the Watchful and Light Sleeper traits buy warning seconds before the `RaidActive` state opens, with the raid grade on the lighting (vignette, red filter, grain).
+  - Waves come from one side on day 1, two from day 2, and three from day 8 or on Nightmare (`RaidPlan.Fronts`). Zombies stop to chew barricades, strikes wear walls on the approach side, and a brute phase can breach an open side.
+  - Guards spend stored rounds from their posts, and a hurt guard shoots shorter. Powered turrets fire from the generator (tier 2 hits harder), spikes chip and wear, oil pits ignite, and lamps on the approach count toward holding.
+  - Outcomes: held gives +6 morale and a task tick. Lost costs scrap, and a breach also spoils food. Injuries land on guards first and can kill, dead zombies are left as bodies to clear, and the morning line asks for repairs when modules are damaged. Nobody left alive is game over.
+  - Automated: `RaidOutcome.Holds` in `GameSystemsTests` pins day 3 with one wall lost, two walls or one guard held, and day 10 needing two walls and a guard, or one wall and three lamps.
 - [ ] PRO-62 **Play**: scrap buys from the merchant, caravan visits can be planned around, and reputation changes prices and unlocks stock.
+  - At standing 30 or higher, each faction adds one item to its table, marked "(trusted)": the Caravan sells flares, the Iron Militia pipe bombs, the Clinic antibiotics and the Free Farmers raw food. Below 30 the stall says where more stock opens.
+  - Every carried item with a barter value gets a Sell row. The offer is half the base price, up to 10% more at full standing, and can never beat what the same item costs to buy. Crafted gear is priced from its recipe bill (`CraftBill.Value`).
+  - The leader haggles 1% off per point of Leadership, capped at 10%.
+  - Already in place: four factions with standing from −100 to 100 (prices move ±30%, slow decay, a gift on each visit, saved), a visit every 3, 4 or 5 days in rotation, a permanent Caravan stall once a Trading Post stands, the Militia refusing below −20 and flagging an ambush below −40, three quests (deliver 4 medkits to the Clinic for a blueprint, clear a district for the Farmers, get back on a Caravan day), and a caravan stall with guards in districts on visit days.
+  - Deviation: factions are a code table (`CaravanBook`), not `FactionDefinition` ScriptableObjects, and the trade screen is one list rather than two panes.
+  - Automated: `FactionTradeTests`.
 
 ### M5: Shell and release
 
