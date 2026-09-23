@@ -152,6 +152,12 @@ Play this in a player build, not the editor. Use Survivor difficulty and a fixed
   - Already in place: mood bands (Inspired above 70 gives +10% output, Depressed below 30 gives 70%, Breakdown below 10), idle rest without a cot costs 5 morale, grief is −25 (−40 for a friend), a won expedition is +10, pair opinions drift, and the camp board row serves as the inspection panel.
   - Automated: `CampArcTests`.
 - [ ] PRO-58 **Play**: B places walls, a generator with lights, a farm and a purifier. Each changes the daily numbers and raid behaviour.
+  - Build mode shows a ghost box on the snapped 2 m cell. It is green when the cell takes the module and red when it is taken, past the fence, or short of scrap (`BuildGhost`), and placement refuses the same cases.
+  - The build row has Defence, Living and Works tabs. Each button shows its scrap cost, is dimmed when you can't afford it, and is highlighted when selected (`BuildMenu`).
+  - Finished modules wear the baked base-kit prefabs (`Resources/ModuleLooks.asset`): the wood-and-wire barricade, cot, water collector (also used for the purifier), watchtower, diesel generator, workbench, campfire cooker, crates, street lamp, oil barrel and spikes. Build sites keep the plywood scaffold box. The farm and the turret keep box stand-ins. A battered module sits lower and darker.
+  - Already in place: 15 module kinds, R rotates, demolish refunds half, carving NavMesh obstacles, and the farm, water, rain catch, generator and floodlight, cot, bench, tower, turret and trap behaviours. Wall cover feeds raid odds and strikes, and placements are saved.
+  - Deviation: modules are an enum with cost and behaviour in code, not `BuildingModuleDefinition` ScriptableObjects, and costs are scrap only.
+  - Automated: `BuildGhostTests`.
 - [ ] PRO-59 **Play**: crafting solves ammo scarcity at a real material cost, and T2 recipes need base investment.
 - [ ] PRO-60 **Play**: see the leader death in section 2.
 - [ ] PRO-61 **Play**: a day 3 raid against a weak wall can be lost, while walls, guards and lights make day 10 survivable.
