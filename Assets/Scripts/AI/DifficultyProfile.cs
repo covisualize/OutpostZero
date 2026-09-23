@@ -1,3 +1,5 @@
+using System;
+
 namespace OutpostZero.AI
 {
     /// <summary>
@@ -42,28 +44,43 @@ namespace OutpostZero.AI
 
         public static Curve For(int tier, int day, int difficulty)
         {
-            int level = Resolve(difficulty);
+            var row = DifficultyTable.Of(difficulty);
             if (tier < 1) tier = 1;
             if (day < 1) day = 1;
-            float perTier = level == 1 ? 2f : level == 3 ? 8f : 4f;
-            float tension = (tier - 1) * perTier;
-            if (level == 3) tension += day * 0.5f;
-            float interval = level == 1 ? 1.15f : level == 3 ? 0.75f : 1f;
-            int extra = level == 1 ? 0 : level == 3 ? tier + 1 : tier - 1;
+            float tension = (tier - 1) * row.TensionPerTier + day * row.TensionPerDay;
+            int extra = row.ExtraKillBase + row.ExtraKillPerTier * tier;
             if (extra < 0) extra = 0;
             string prefer = "";
-            if (level >= 2 && tier >= 3) prefer = "Brute";
-            else if (level >= 2 && tier >= 2) prefer = "Runner";
-            return new Curve { Tension = tension, Interval = interval, ExtraKills = extra, Prefer = prefer };
+            if (row.BruteTier > 0 && tier >= row.BruteTier) prefer = "Brute";
+            else if (row.RunnerTier > 0 && tier >= row.RunnerTier) prefer = "Runner";
+            return new Curve { Tension = tension, Interval = row.IntervalScale, ExtraKills = extra, Prefer = prefer };
         }
 
         public static int Batch(int state, int difficulty)
         {
-            int level = Resolve(difficulty);
-            if (state == 2) return level == 3 ? 6 : level == 1 ? 3 : 4;
-            if (state == 1) return level == 3 ? 3 : level == 1 ? 1 : 2;
-            if (state == 3) return 1;
+            var row = DifficultyTable.Of(difficulty);
+            if (state == 2) return row.PeakBatch;
+            if (state == 1) return row.BuildUpBatch;
+            if (state == 3) return row.RelaxBatch;
             return 0;
+        }
+
+        /// <summary>The difficulty of the run in play, set when an expedition opens and when a save loads.</summary>
+        public static int Active { get; set; } = 2;
+
+        /// <summary>The quality tier's crowd scaled by the difficulty's alive share, never under 4.</summary>
+        public static int AliveCap(int quality, int difficulty)
+        {
+            int cap = AliveCap(quality);
+            float scaled = cap * DifficultyTable.Of(difficulty).AliveScale;
+            int result = (int)Math.Round(scaled, MidpointRounding.AwayFromZero);
+            return result < 4 ? 4 : result > cap ? cap : result;
+        }
+
+        public static float Cooldown(float seconds, int difficulty)
+        {
+            float scale = DifficultyTable.Of(difficulty).CooldownScale;
+            return seconds * (scale <= 0f ? 1f : scale);
         }
     }
 }

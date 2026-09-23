@@ -141,6 +141,7 @@ namespace OutpostZero.EditorTools
             foreach (var problem in ItemDatabaseSync.Sync()) Debug.LogWarning("[DefaultDataGenerator] " + problem);
             RecipeBookSync.Sync();
             ModuleBookSync.Sync();
+            DifficultyBookSync.Sync();
             FactionBookSync.Sync();
             TraitBookSync.Sync();
             TutorialBookSync.Sync();

@@ -145,7 +145,7 @@ namespace OutpostZero.Tests.EditMode
             string settings = Read("Assets", "Scripts", "Core", "SettingsService.cs");
             StringAssert.Contains("QualitySettings.SetQualityLevel(quality, true)", settings);
             StringAssert.Contains("QualitySettings.lodBias = tier.LodBias", settings);
-            StringAssert.Contains("DifficultyProfile.AliveCap(quality)", settings);
+            StringAssert.Contains("DifficultyProfile.AliveCap(quality, ", settings);
             Assert.AreEqual(DifficultyProfile.LowTierAlive, DifficultyProfile.AliveCap(0));
             Assert.AreEqual(DifficultyProfile.LowTierAlive, QualityProfile.For(0).Zombies);
             Assert.AreEqual(32, DifficultyProfile.AliveCap(1));

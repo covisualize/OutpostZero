@@ -1,4 +1,5 @@
 using UnityEngine;
+using OutpostZero.AI;
 using OutpostZero.Colony;
 using OutpostZero.Core;
 using OutpostZero.Player;
@@ -144,6 +145,9 @@ namespace OutpostZero.Items
         {
             rolled = true;
             var grants = LootTables.Roll(tableId, GetInstanceID());
+            float scarcity = DifficultyTable.Of(DifficultyProfile.Active).LootScale;
+            for (int i = 0; i < grants.Length; i++)
+                grants[i].Count = DifficultyTable.Scarce(grants[i].Count, scarcity, GetInstanceID() * 31 + i);
             int count = 0;
             for (int i = 0; i < grants.Length; i++)
             {

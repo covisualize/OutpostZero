@@ -438,7 +438,7 @@ namespace OutpostZero.Core
                 pipeline.msaaSampleCount = tier.Msaa;
             }
             var spawners = FindObjectsByType<ZombieSpawner>(FindObjectsSortMode.None);
-            for (int i = 0; i < spawners.Length; i++) spawners[i].ApplyCap(OutpostZero.AI.DifficultyProfile.AliveCap(quality));
+            for (int i = 0; i < spawners.Length; i++) spawners[i].ApplyCap(OutpostZero.AI.DifficultyProfile.AliveCap(quality, OutpostZero.AI.DifficultyProfile.Active));
             WeatherController.Instance?.ApplyBudget(tier.Particles);
             ApplyResolution();
         }

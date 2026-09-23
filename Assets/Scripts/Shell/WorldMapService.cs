@@ -167,6 +167,8 @@ namespace OutpostZero.Shell
             var rules = DistrictRules.For(districtId);
             DistrictRules.SetActiveTable(rules.LootTable);
             int day = WorldClock.Instance != null ? WorldClock.Instance.Day : 1;
+            DifficultyBook.Ensure();
+            DifficultyProfile.Active = difficulty;
             var curve = DifficultyProfile.For(CampaignBoard.Tier(districtId), day, difficulty);
             int kills = rules.KillGoal + curve.ExtraKills;
             bool lessonsDone = TutorialDirector.Instance == null || TutorialDirector.Instance.Finished;
@@ -231,6 +233,7 @@ namespace OutpostZero.Shell
         {
             parts = radio ?? "";
             difficulty = DifficultyProfile.Resolve(storedDifficulty);
+            DifficultyProfile.Active = difficulty;
             broadcastWon = broadcast != 0;
             worldSeed = DistrictGenerator.Resolve(seed);
             endless = endlessFlag != 0 && broadcastWon;
@@ -254,6 +257,7 @@ namespace OutpostZero.Shell
         {
             Seed();
             difficulty = DifficultyProfile.Resolve(storedDifficulty);
+            DifficultyProfile.Active = difficulty;
             worldSeed = DistrictGenerator.DefaultSeed;
             DistrictRules.SetActiveTable("");
         }

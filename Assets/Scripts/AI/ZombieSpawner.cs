@@ -28,6 +28,7 @@ namespace OutpostZero.AI
         private Transform playerTransform;
         private ZombiePool pool;
         private string preferredName = "";
+        private string[] variantNames;
 
         public void Prefer(string nameFragment)
         {
@@ -116,6 +117,7 @@ namespace OutpostZero.AI
         {
             zombiePrefab = prefab;
             zombiePrefabVariants = variants;
+            variantNames = null;
             initialCount = initial;
             maxAliveZombies = maxAlive;
         }
@@ -294,8 +296,19 @@ namespace OutpostZero.AI
                 if (pick != null) return pick;
             }
 
-            var chosen = zombiePrefabVariants[Random.Range(0, zombiePrefabVariants.Length)];
+            int index = DifficultyTable.Pick(VariantNames(), DifficultyTable.Of(DifficultyProfile.Active), Random.value);
+            if (index < 0) index = Random.Range(0, zombiePrefabVariants.Length);
+            var chosen = zombiePrefabVariants[index];
             return chosen != null ? chosen : fallback;
+        }
+
+        private string[] VariantNames()
+        {
+            if (variantNames != null && variantNames.Length == zombiePrefabVariants.Length) return variantNames;
+            variantNames = new string[zombiePrefabVariants.Length];
+            for (int i = 0; i < zombiePrefabVariants.Length; i++)
+                variantNames[i] = zombiePrefabVariants[i] != null ? zombiePrefabVariants[i].name : "";
+            return variantNames;
         }
 
         private void HandleLoudNoiseAlert(Vector3 origin, float radius, NoiseType type)

@@ -57,7 +57,7 @@ namespace OutpostZero.AI
             z = aimZ / len;
         }
 
-        public static Clock Advance(Clock clock, bool inReach, float now, float dt, bool charge = false)
+        public static Clock Advance(Clock clock, bool inReach, float now, float dt, bool charge = false, float cooldown = Cooldown)
         {
             if (dt < 0f) dt = 0f;
             if (clock.Phase == 2)
@@ -67,7 +67,7 @@ namespace OutpostZero.AI
                 {
                     clock.Phase = 0;
                     clock.Left = 0f;
-                    clock.Ready = now + Cooldown;
+                    clock.Ready = now + cooldown;
                 }
                 return clock;
             }

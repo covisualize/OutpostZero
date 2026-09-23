@@ -145,6 +145,10 @@ namespace OutpostZero.AI
         public void ApplyOpening(float openingTension, float interval, string preferredVariant, int difficulty = 2, int threat = 1)
         {
             runDifficulty = DifficultyProfile.Resolve(difficulty);
+            DifficultyBook.Ensure();
+            DifficultyProfile.Active = runDifficulty;
+            int quality = OutpostZero.Core.SettingsService.Instance != null ? OutpostZero.Core.SettingsService.Instance.Quality : 2;
+            spawner?.ApplyCap(DifficultyProfile.AliveCap(quality, runDifficulty));
             tier = threat < 1 ? 1 : threat;
             elapsed = 0f;
             eventCursor = 0f;

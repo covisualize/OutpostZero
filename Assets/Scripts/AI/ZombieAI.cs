@@ -823,7 +823,7 @@ namespace OutpostZero.AI
             int phaseBefore = abilityClock.Phase;
             if (charging || lunging)
             {
-                abilityClock = SpecialBeat.Advance(abilityClock, SpecialBeat.InReach(distToTarget, charging), Time.time, Time.deltaTime, charging);
+                abilityClock = SpecialBeat.Advance(abilityClock, SpecialBeat.InReach(distToTarget, charging), Time.time, Time.deltaTime, charging, AbilityCooldown);
                 if (phaseBefore != 2 && abilityClock.Phase == 2)
                 {
                     SpecialBeat.Commit(aim.x, aim.z, out dashX, out dashZ);
@@ -859,7 +859,7 @@ namespace OutpostZero.AI
                     abilityClock.Struck = true;
                     abilityClock.Phase = 0;
                     abilityClock.Left = 0f;
-                    abilityClock.Ready = Time.time + SpecialBeat.Cooldown;
+                    abilityClock.Ready = Time.time + AbilityCooldown;
                     ConnectDash(charging);
                 }
             }
@@ -898,6 +898,8 @@ namespace OutpostZero.AI
             nextPane = Time.time + BarClaw.Gap;
             door.Rake(gameObject);
         }
+
+        private static float AbilityCooldown => DifficultyProfile.Cooldown(SpecialBeat.Cooldown, DifficultyProfile.Active);
 
         private void ConnectDash(bool charge)
         {
@@ -987,7 +989,7 @@ namespace OutpostZero.AI
             }
             abilityClock.Phase = 0;
             abilityClock.Left = 0f;
-            abilityClock.Ready = Time.time + SpecialBeat.Cooldown;
+            abilityClock.Ready = Time.time + AbilityCooldown;
             ApplyImpulse(-dash, 0.4f, SpecialBeat.WallStun);
         }
 
@@ -1001,7 +1003,7 @@ namespace OutpostZero.AI
             if (!door.Barred) return true;
             abilityClock.Phase = 0;
             abilityClock.Left = 0f;
-            abilityClock.Ready = Time.time + SpecialBeat.Cooldown;
+            abilityClock.Ready = Time.time + AbilityCooldown;
             ApplyImpulse(-dash, 0.4f, SpecialBeat.WallStun);
             return true;
         }
