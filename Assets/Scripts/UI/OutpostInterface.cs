@@ -645,6 +645,7 @@ namespace OutpostZero.UI
             parent.Add(Button(Loc.T("set.render") + " " + PlayOptions.ScaleName(settings.RenderScaleStep, null), settings.CycleRenderScale));
             parent.Add(Button(settings.AimAssist == 0 ? Loc.T("set.aim_off") : settings.AimAssist == 2 ? Loc.T("set.aim_strong") : Loc.T("set.aim_light"), settings.CycleAim));
             parent.Add(Button(settings.InvertLook ? Loc.T("set.invert") : Loc.T("set.look"), settings.ToggleInvert));
+            parent.Add(SliderRow(Loc.T("set.sensitivity"), settings.Sensitivity, PlayOptions.SensitivityMin, PlayOptions.SensitivityMax, settings.SetSensitivity));
             parent.Add(Button(settings.CrouchMode == 1 ? Loc.T("set.crouch_toggle") : Loc.T("set.crouch_hold"), settings.ToggleCrouchMode));
             parent.Add(Button(settings.SprintMode == 1 ? Loc.T("set.sprint_toggle") : Loc.T("set.sprint_hold"), settings.ToggleSprintMode));
             parent.Add(Button(settings.AimMode == 1 ? Loc.T("set.aim_toggle") : Loc.T("set.aim_hold"), settings.ToggleAimMode));

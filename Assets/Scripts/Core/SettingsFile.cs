@@ -25,6 +25,7 @@ namespace OutpostZero.Core
             public float fov;
             public float opacity;
             public float brightness;
+            public float sensitivity;
             public int colorblind;
             public int outline;
             public int quality;
@@ -66,6 +67,7 @@ namespace OutpostZero.Core
                 fov = 55f,
                 opacity = 1f,
                 brightness = 1f,
+                sensitivity = 1f,
                 colorblind = 0,
                 outline = 0,
                 quality = 1,
@@ -108,6 +110,7 @@ namespace OutpostZero.Core
             Num(builder, "fov", snap.fov, false);
             Num(builder, "opacity", snap.opacity, false);
             Num(builder, "brightness", snap.brightness, false);
+            Num(builder, "sensitivity", snap.sensitivity, false);
             Int(builder, "colorblind", snap.colorblind);
             Int(builder, "outline", snap.outline);
             Int(builder, "quality", snap.quality);
@@ -151,6 +154,7 @@ namespace OutpostZero.Core
             snap.fov = Num(json, "fov", snap.fov);
             snap.opacity = Num(json, "opacity", snap.opacity);
             snap.brightness = Num(json, "brightness", snap.brightness);
+            snap.sensitivity = Num(json, "sensitivity", snap.sensitivity);
             snap.colorblind = (int)Num(json, "colorblind", snap.colorblind);
             snap.outline = (int)Num(json, "outline", snap.outline);
             snap.quality = (int)Num(json, "quality", snap.quality);

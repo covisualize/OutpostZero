@@ -37,6 +37,7 @@ namespace OutpostZero.Core
         [SerializeField] private int damageNumbers = 1;
         [SerializeField] private float hudOpacity = 1f;
         [SerializeField] private float brightness = 1f;
+        [SerializeField] private float sensitivity = 1f;
         [SerializeField] private int motionBlur;
         [SerializeField] private int windowMode;
         [SerializeField] private int aimAssist;
@@ -75,6 +76,7 @@ namespace OutpostZero.Core
         public int WindowMode => windowMode;
         public int AimAssist => aimAssist <= 0 ? 0 : aimAssist >= 2 ? 2 : 1;
         public bool InvertLook => invertLook == 1;
+        public float Sensitivity => PlayOptions.Sensitivity(sensitivity);
         public int CrouchMode => crouchMode == 1 ? 1 : 0;
         public int SprintMode => sprintMode == 1 ? 1 : 0;
         public int AimMode => aimMode == 1 ? 1 : 0;
@@ -218,6 +220,12 @@ namespace OutpostZero.Core
         public void SetUi(float value)
         {
             uiVolume = Mathf.Clamp01(value);
+            Raise();
+        }
+
+        public void SetSensitivity(float value)
+        {
+            sensitivity = PlayOptions.Sensitivity(value);
             Raise();
         }
 
@@ -524,6 +532,7 @@ namespace OutpostZero.Core
                 fov = fieldOfView,
                 opacity = hudOpacity,
                 brightness = brightness,
+                sensitivity = Sensitivity,
                 colorblind = colorblindMode,
                 outline = enemyOutline ? 1 : 0,
                 quality = quality,
@@ -564,6 +573,7 @@ namespace OutpostZero.Core
             fieldOfView = Mathf.Clamp(snap.fov < 40f ? 55f : snap.fov, 40f, 75f);
             hudOpacity = Presentation.Opacity(snap.opacity);
             brightness = Presentation.Brightness(snap.brightness);
+            sensitivity = PlayOptions.Sensitivity(snap.sensitivity);
             colorblindMode = HudPalette.Clamp(snap.colorblind);
             enemyOutline = snap.outline == 1;
             quality = Mathf.Clamp(snap.quality, 0, 3);

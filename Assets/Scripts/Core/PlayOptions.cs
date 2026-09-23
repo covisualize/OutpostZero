@@ -74,6 +74,23 @@ namespace OutpostZero.Core
             return stored < UiScaleMin ? UiScaleMin : stored > UiScaleMax ? UiScaleMax : stored;
         }
 
+        public const float SensitivityMin = 0.5f;
+        public const float SensitivityMax = 2f;
+
+        public static float Sensitivity(float stored)
+        {
+            if (float.IsNaN(stored) || stored <= 0f) return 1f;
+            return stored < SensitivityMin ? SensitivityMin : stored > SensitivityMax ? SensitivityMax : stored;
+        }
+
+        /// <summary>Camp overview pan per second, before the camera's own edge speed.</summary>
+        public static void Pan(float x, float z, float sensitivity, bool invert, out float px, out float pz)
+        {
+            float scale = Sensitivity(sensitivity);
+            px = x * scale;
+            pz = StickY(z, invert) * scale;
+        }
+
         public static float RenderScale(int stored, float tierScale)
         {
             int step = ScaleStep(stored);

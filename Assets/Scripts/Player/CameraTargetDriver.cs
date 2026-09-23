@@ -129,6 +129,8 @@ namespace OutpostZero.Player
                 sx = stick.x;
                 sz = stick.y;
             }
+            var settings = SettingsService.Instance;
+            PlayOptions.Pan(sx, sz, settings != null ? settings.Sensitivity : 1f, settings != null && settings.InvertLook, out sx, out sz);
             Vector3 next = overview.position + new Vector3(sx, 0f, sz) * tuning.edgeSpeed * Time.unscaledDeltaTime;
             Vector3 away = next - home;
             away.y = 0f;

@@ -764,7 +764,8 @@ namespace OutpostZero.Player
             {
                 Vector3 stickDir = new Vector3(aimStick.x, 0f, aimStick.y);
                 AimPoint = transform.position + stickDir.normalized * 6f;
-                transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(stickDir), AimBlend());
+                float sense = SettingsService.Instance != null ? SettingsService.Instance.Sensitivity : 1f;
+                transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(stickDir), Mathf.Clamp01(AimBlend() * sense));
                 NudgeAim();
                 return;
             }
