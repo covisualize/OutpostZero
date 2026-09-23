@@ -123,7 +123,7 @@ Play this in a player build, not the editor. Use Survivor difficulty and a fixed
 - [ ] PRO-64 **Automated** (round trip, `.bak` recovery, v1 fixture migration) and **Play**: quit at each camp phase and Continue restores it.
 - [ ] PRO-65 **Automated** (`SettingsFlowTests`: render scale round-trips, closing with changes asks keep/revert, focus loss mutes, fixed and taken keys are refused with a reason, and `{key:Action}` tokens in hints, lessons and the interact prompt follow a rebind) and **Play**: every setting survives a restart and applies at once. Rebinding a key updates the HUD prompts.
 - [ ] PRO-66 **Automated** (audio buses and clip validation; `AudioCoverageTests` checks every played, computed and mixer-named id has a clip, and that `SfxLibrary` ids are real) and **Play**: playing blind, you can tell the weapon, surface, zombie type, distance and tension.
-- [ ] PRO-67 **Play**: 3 fresh testers finish Day 1 and the first expedition with no README.
+- [ ] PRO-67 **Automated** (`TutorialFlowTests`: the Day 1 camp track (assign a task, read the stores, place a barricade, craft a bandage, launch) and the expedition track advance in order; every gate is emitted somewhere; the camp track is remembered in the codex; prompts show pad buttons while a pad is in use) and **Play**: 3 fresh testers finish Day 1 and the first expedition with no README.
 - [ ] PRO-68 **Automated** (same seed gives the same street, blocks stay walkable) and **Play**: a campaign win takes about 6 to 8 hours.
 - [ ] PRO-69 **Play**: the game is playable in each colour-blind mode (off, blue-yellow, mono) and with sound off using captions. Switching EN/ES re-renders every screen.
 - [ ] PRO-70 **Automated** (balance CSV rows) and this checklist is complete.
