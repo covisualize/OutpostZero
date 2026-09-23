@@ -632,6 +632,28 @@
       ]
     },
     {
+      "id": "Base_HydroponicFarm",
+      "category": "BaseBuilding",
+      "generator": "generate_base_building.build_hydroponic_farm",
+      "output": "BaseBuilding/Base_HydroponicFarm.fbx",
+      "tags": [
+        "camp",
+        "module",
+        "codex"
+      ]
+    },
+    {
+      "id": "Base_AutoTurret",
+      "category": "BaseBuilding",
+      "generator": "generate_base_building.build_auto_turret",
+      "output": "BaseBuilding/Base_AutoTurret.fbx",
+      "tags": [
+        "camp",
+        "module",
+        "codex"
+      ]
+    },
+    {
       "id": "Kit_wall_plain",
       "category": "Kit",
       "generator": "generate_kit.build_piece",

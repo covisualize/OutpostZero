@@ -35,3 +35,7 @@ MonoBehaviour:
     icon: {fileID: 2800000, guid: 91f05e27894a3f78aef26f9ca2d48e9c, type: 3}
   - id: Base_WaterCollector
     icon: {fileID: 2800000, guid: 83aeab087ed9e00e3e1a9d5c7d330f35, type: 3}
+  - id: Base_HydroponicFarm
+    icon: {fileID: 2800000, guid: 32edc1eb2e2749b15467dc9fdc0e06ca, type: 3}
+  - id: Base_AutoTurret
+    icon: {fileID: 2800000, guid: cfe111e386dfcd602b7340179a800478, type: 3}

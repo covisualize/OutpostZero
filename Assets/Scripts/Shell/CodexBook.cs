@@ -39,6 +39,8 @@ namespace OutpostZero.Shell
             new Entry { Id = "module.campfire", Model = "Base_Campfire_Cooker", Title = "Campfire", Body = "Cooks raw food into meals and boils water clean.", LockedUntilSeen = false },
             new Entry { Id = "module.watchtower", Model = "Base_Watchtower", Title = "Watchtower", Body = "A guard up here sees the raid coming sooner.", LockedUntilSeen = false },
             new Entry { Id = "module.water", Model = "Base_WaterCollector", Title = "Water collector", Body = "Fills the stores a little every day, more in the rain.", LockedUntilSeen = false },
+            new Entry { Id = "module.farm", Model = "Base_HydroponicFarm", Title = "Hydroponic farm", Body = "Three days to take root, then two food every morning.", LockedUntilSeen = false },
+            new Entry { Id = "module.turret", Model = "Base_AutoTurret", Title = "Auto-turret", Body = "Shoots the nearest raider in range. It needs the generator, stored rounds and a tier 2 bench.", LockedUntilSeen = false },
             new Entry { Id = "faction.militia", Model = "NPC_Merchant", Title = "Iron Militia", Body = "Rifle rounds and shells, at a price. Trusted camps get pipe bombs.", LockedUntilSeen = false },
             new Entry { Id = "faction.clinic", Model = "NPC_Merchant", Title = "The Clinic", Body = "Medkits and bandages. Earn their trust and they part with antibiotics.", LockedUntilSeen = false },
             new Entry { Id = "faction.farmers", Model = "NPC_Merchant", Title = "Free Farmers", Body = "Food and water, cheaper than anyone. Friends get raw food by the sack.", LockedUntilSeen = false },

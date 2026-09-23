@@ -1,0 +1,39 @@
+{
+  "id": "Base_AutoTurret",
+  "category": "BaseBuilding",
+  "generator": "generate_base_building.build_auto_turret",
+  "generatorHash": "0cf829096a2dd903d01b9592a9e81894964cbb53f402b26f9f079c9d8083815a",
+  "gitSha": "1e3800a0e92398c0d165da5f893517389a528567",
+  "blender": "4.2.11",
+  "tags": [
+    "camp",
+    "module",
+    "codex"
+  ],
+  "pivot": "bottom",
+  "collider": "box",
+  "rig": "",
+  "lods": [
+    1.0
+  ],
+  "tris": 624,
+  "lodTris": [
+    624
+  ],
+  "size": {
+    "width": 1.0215,
+    "depth": 1.21,
+    "height": 1.38
+  },
+  "floor": 0.0,
+  "center": {
+    "x": 0.0,
+    "y": 0.225
+  },
+  "materials": [
+    "Mat_Turret_AmmoOlive",
+    "Mat_Turret_Barrel",
+    "Mat_Turret_Sensor",
+    "Mat_Turret_Steel"
+  ]
+}

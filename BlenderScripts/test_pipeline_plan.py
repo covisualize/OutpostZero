@@ -47,7 +47,7 @@ class ManifestSchemaTests(unittest.TestCase):
     def test_entries_list_the_same_models_as_the_folders(self):
         paths = plan.asset_paths(self.manifest)
         self.assertEqual(len(paths), len(set(paths)))
-        self.assertEqual(len(paths), 110)
+        self.assertEqual(len(paths), 112)
         self.assertIn("Assets/Models/Props/Prop_Dumpster.fbx", paths)
 
     def test_every_generator_is_a_build_function_taking_ctx(self):
@@ -172,7 +172,7 @@ class ChangeDetectionTests(unittest.TestCase):
     def test_editing_shared_code_rebuilds_everything(self):
         with open(os.path.join(self.root, "BlenderScripts", "blender_utils.py"), "a", encoding="utf-8") as handle:
             handle.write("\n# tweak\n")
-        self.assertEqual(len(self.stale()), 110)
+        self.assertEqual(len(self.stale()), 112)
 
     def test_editing_one_entry_only_rebuilds_that_entry(self):
         self.manifest["entries"][0]["collider"] = "mesh"
@@ -205,7 +205,7 @@ class ChangeDetectionTests(unittest.TestCase):
     def test_a_corrupt_cache_rebuilds_everything(self):
         with open(os.path.join(self.root, plan.CACHE), "w", encoding="utf-8") as handle:
             handle.write("{not json")
-        self.assertEqual(len(self.stale()), 110)
+        self.assertEqual(len(self.stale()), 112)
 
 
 class SidecarTests(unittest.TestCase):
