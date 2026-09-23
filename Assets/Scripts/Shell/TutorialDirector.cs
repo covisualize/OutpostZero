@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using OutpostZero.Core;
 
@@ -44,14 +45,17 @@ namespace OutpostZero.Shell
 
     /// <summary>
     /// Ordered gates for Day 1 in the sanctuary and for the first expedition.
-    /// A signal only advances the step it matches.
+    /// A signal only advances the step it matches. <see cref="TutorialBook.Ensure"/> fills both tracks from
+    /// Resources/TutorialBook; until then, and when the book leaves a track empty, the built-in steps answer.
     /// </summary>
     public static class TutorialTrack
     {
         public const string Read = "next";
         public const string CampDone = "tut.day1";
+        public const string CampTrack = "camp";
+        public const string StreetTrack = "street";
 
-        public static readonly TutorialStep[] Camp =
+        public static readonly TutorialStep[] CodeCamp =
         {
             new TutorialStep("day1.0", "Pick a survivor and give them a task.", "assign", TutorialMark.Task),
             new TutorialStep("day1.1", "The stores line shows scrap, food and water. When they run dry, the sanctuary starves.", Read, TutorialMark.Stores),
@@ -60,32 +64,56 @@ namespace OutpostZero.Shell
             new TutorialStep("day1.4", "Send the first expedition out through the gate.", "launch", TutorialMark.Leave),
         };
 
-        public static readonly string[] Steps =
+        public static readonly TutorialStep[] CodeStreet =
         {
-            "WASD move, mouse aim, left click fire. {key:Crouch} crouch, {key:Sprint} sprint.",
-            "Fire the weapon in your hands. {key:Reload} reloads. 1-4 swaps.",
-            "Crouch to cut your exposure. Noise still draws the horde.",
-            "Kill and scavenge, then extract at the sanctuary gate.",
-            "{key:Inventory} opens the pack. If you fall, the next survivor takes the gate."
+            new TutorialStep("lesson.0", "WASD move, mouse aim, left click fire. {key:Crouch} crouch, {key:Sprint} sprint.", "move"),
+            new TutorialStep("lesson.1", "Fire the weapon in your hands. {key:Reload} reloads. 1-4 swaps.", "fire"),
+            new TutorialStep("lesson.2", "Crouch to cut your exposure. Noise still draws the horde.", "crouch"),
+            new TutorialStep("lesson.3", "Kill and scavenge, then extract at the sanctuary gate.", "loot"),
+            new TutorialStep("lesson.4", "{key:Inventory} opens the pack. If you fall, the next survivor takes the gate.", "pack")
         };
 
-        public static readonly string[] Gates = { "move", "fire", "crouch", "loot", "pack" };
+        private static TutorialStep[] bookCamp;
+        private static TutorialStep[] bookStreet;
+
+        public static TutorialStep[] Camp => bookCamp ?? CodeCamp;
+        public static TutorialStep[] Street => bookStreet ?? CodeStreet;
+        public static bool FromAsset => bookCamp != null || bookStreet != null;
+
+        public static string[] Steps => Pluck(Street, false);
+        public static string[] Gates => Pluck(Street, true);
+
+        public static void Use(IList<TutorialStep> camp, IList<TutorialStep> street)
+        {
+            bookCamp = Valid(camp);
+            bookStreet = Valid(street);
+        }
+
+        public static void Clear()
+        {
+            bookCamp = null;
+            bookStreet = null;
+        }
+
+        private static TutorialStep[] Valid(IList<TutorialStep> steps)
+        {
+            if (steps == null) return null;
+            var kept = new List<TutorialStep>();
+            foreach (var step in steps)
+                if (!string.IsNullOrEmpty(step.Key) && !string.IsNullOrEmpty(step.Gate)) kept.Add(step);
+            return kept.Count > 0 ? kept.ToArray() : null;
+        }
+
+        private static string[] Pluck(TutorialStep[] steps, bool gates)
+        {
+            var values = new string[steps.Length];
+            for (int i = 0; i < steps.Length; i++) values[i] = gates ? steps[i].Gate : steps[i].Fallback;
+            return values;
+        }
 
         public static int Advance(int index, string signal, out bool finished)
         {
-            if (index >= Gates.Length)
-            {
-                finished = true;
-                return index;
-            }
-            if (signal != Gates[index])
-            {
-                finished = false;
-                return index;
-            }
-            int next = index + 1;
-            finished = next >= Gates.Length;
-            return next;
+            return Advance(Street, index, signal, out finished);
         }
 
         public static int Advance(TutorialStep[] steps, int index, string signal, out bool finished)
@@ -129,7 +157,8 @@ namespace OutpostZero.Shell
             {
                 var state = GameManager.Instance != null ? GameManager.Instance.CurrentState : GameState.ExpeditionActive;
                 if (TutorialTrack.InCamp(state)) return CampCurrent;
-                return finished || index >= TutorialTrack.Steps.Length ? string.Empty : Loc.Lesson(index, TutorialTrack.Steps[index]);
+                var street = TutorialTrack.Street;
+                return finished || index >= street.Length ? string.Empty : Loc.Hint(street[index].Key, street[index].Fallback);
             }
         }
 
@@ -155,6 +184,7 @@ namespace OutpostZero.Shell
                 return;
             }
             Instance = this;
+            TutorialBook.Ensure();
         }
 
         public void Note(string signal)
@@ -178,7 +208,7 @@ namespace OutpostZero.Shell
         public void SetFinished(bool value)
         {
             finished = value;
-            if (value) index = TutorialTrack.Steps.Length;
+            if (value) index = TutorialTrack.Street.Length;
             else index = 0;
         }
 

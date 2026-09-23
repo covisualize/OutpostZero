@@ -143,6 +143,7 @@ namespace OutpostZero.EditorTools
             ModuleBookSync.Sync();
             FactionBookSync.Sync();
             TraitBookSync.Sync();
+            TutorialBookSync.Sync();
             SyncWeaponSet();
         }
 

@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c75bbef8091a2b3c4d5e6f708192a4ec, type: 3}
+  m_Name: TutorialBook
+  m_EditorClassIdentifier: OutpostZero::OutpostZero.Shell.TutorialBook
+  camp:
+  - {fileID: 11400000, guid: ee4b6b5d48fc4775aafe3f433d5c3d7c, type: 2}
+  - {fileID: 11400000, guid: 2c44bf155e414ec2b62ab5abb7a7aa61, type: 2}
+  - {fileID: 11400000, guid: 5cb0629003c4470fb501a07d285df298, type: 2}
+  - {fileID: 11400000, guid: a84d2d55c5ac4ca5813aa89502d210ad, type: 2}
+  - {fileID: 11400000, guid: 3058d71aadfe433dbaf2b0ee47bdbc02, type: 2}
+  street:
+  - {fileID: 11400000, guid: 53cf757c668d4a3ebe0f1490420f3573, type: 2}
+  - {fileID: 11400000, guid: f04a9d5c42e44c34bcfd282d5a7e5ecb, type: 2}
+  - {fileID: 11400000, guid: 7e7dd44e725f4209ba7c99f736647907, type: 2}
+  - {fileID: 11400000, guid: 1e4b940ac0a643c882da225943bd2cd5, type: 2}
+  - {fileID: 11400000, guid: 728fdc63ef88447bafb05a8945fe45d4, type: 2}
