@@ -111,7 +111,8 @@ namespace OutpostZero.Colony
             AudioManager.Instance?.Sting("raid");
             int difficulty = WorldMapService.Instance != null ? WorldMapService.Instance.Difficulty : 2;
             fronts = RaidPlan.Fronts(day, difficulty);
-            int spawn = RaidPlan.SpawnCount(day, towers) + (tower ? 4 : 0);
+            int perimeter = GridBuilder.Instance != null ? GridBuilder.Instance.PerimeterScore : 0;
+            int spawn = Perimeter.Crowd(RaidPlan.SpawnCount(day, towers) + (tower ? 4 : 0), perimeter);
             if (HordeDirector.Instance != null)
             {
                 for (int i = 0; i < fronts; i++)
@@ -125,6 +126,7 @@ namespace OutpostZero.Colony
             openLine += "  " + Loc.T("camp.dark");
             if (GridBuilder.Instance != null && GridBuilder.Instance.BarricadeCount() > 0)
                 openLine += "  " + Loc.T("camp.chew");
+            openLine += "  " + Loc.T("camp.perimeter") + " " + perimeter + "%";
             if (GuardsOnTheLine() > 0) openLine += "  " + Loc.T("camp.line");
             GameplayFeedback.Toast(openLine);
         }
@@ -549,6 +551,7 @@ namespace OutpostZero.Colony
             bool generator = GridBuilder.Instance != null && GridBuilder.Instance.HasKind("Generator");
             int walls = GridBuilder.Instance != null ? GridBuilder.Instance.BarricadeCount() : 0;
             pressure = CampYield.RaidPressure(wave.Pressure + (broadcast ? 4 : 0), generator, walls);
+            if (GridBuilder.Instance != null) pressure = Perimeter.Pressure(pressure, Perimeter.Side(approach, GridBuilder.Instance.Walls()));
             strikeInterval = broadcast && index == 0 ? 1.2f : wave.Interval;
             int lamps = LampsOn(approach);
             pressure = FloodBeam.ApproachPressure(pressure, lamps);

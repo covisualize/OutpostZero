@@ -870,6 +870,19 @@ namespace OutpostZero.Colony
             return count;
         }
 
+        public List<Perimeter.Wall> Walls()
+        {
+            var walls = new List<Perimeter.Wall>();
+            foreach (var module in placed)
+            {
+                if (module.kind != "Barricade") continue;
+                walls.Add(new Perimeter.Wall { X = module.x, Z = module.z, Integrity = module.integrity, Ready = BuildSite.Ready(module.site, module.integrity) });
+            }
+            return walls;
+        }
+
+        public int PerimeterScore => Perimeter.Score(Walls());
+
         private void RefreshViews()
         {
             var copy = placed.ToArray();
