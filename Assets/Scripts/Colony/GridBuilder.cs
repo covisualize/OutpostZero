@@ -128,7 +128,7 @@ namespace OutpostZero.Colony
             Vector3 point = ray.GetPoint(enter);
             float x = BuildGhost.Snap(point.x, cell);
             float z = BuildGhost.Snap(point.z, cell);
-            var verdict = BuildGhost.Check(placed, x, z, Bill(selected), ColonyStorage.Instance);
+            var verdict = BuildGhost.Check(placed, selected, facing, x, z, Bill(selected), ColonyStorage.Instance);
             if (ghost == null)
             {
                 ghost = GameObject.CreatePrimitive(PrimitiveType.Cube);
@@ -165,12 +165,7 @@ namespace OutpostZero.Colony
         {
             float x = Mathf.Round(worldX / cell) * cell;
             float z = Mathf.Round(worldZ / cell) * cell;
-            PlacedModule target = null;
-            for (int i = 0; i < placed.Count; i++)
-            {
-                var module = placed[i];
-                if (Mathf.Abs(module.x - x) < 0.01f && Mathf.Abs(module.z - z) < 0.01f) target = module;
-            }
+            PlacedModule target = Under(placed, x, z, worldX, worldZ);
             if (target == null) return false;
             var refund = new ModuleBill();
             if (System.Enum.TryParse(target.kind, out ModuleKind kind)) refund = Bill(kind).Half();
@@ -247,14 +242,15 @@ namespace OutpostZero.Colony
         {
             float x = BuildGhost.Snap(world.x, cell);
             float z = BuildGhost.Snap(world.z, cell);
-            if (Occupied(placed, x, z))
-            {
-                GameplayFeedback.Toast(YardSay.Taken(null));
-                return false;
-            }
-            if (!MapRim.Inside(x, z))
+            var area = ModuleFootprint.Of(kind.ToString(), facing, x, z);
+            if (!ModuleFootprint.Inside(area))
             {
                 GameplayFeedback.Toast(YardSay.Outside(null));
+                return false;
+            }
+            if (ModuleFootprint.Clashes(placed, area))
+            {
+                GameplayFeedback.Toast(YardSay.Taken(null));
                 return false;
             }
 
@@ -879,16 +875,24 @@ namespace OutpostZero.Colony
             return false;
         }
 
-        public static bool Occupied(IReadOnlyList<PlacedModule> modules, float x, float z)
+        /// <summary>The module anchored on the snapped cell, else the one whose footprint holds the clicked point.</summary>
+        public static PlacedModule Under(IReadOnlyList<PlacedModule> modules, float x, float z, float pointX, float pointZ)
         {
-            if (modules == null) return false;
+            if (modules == null) return null;
+            PlacedModule covering = null;
             for (int i = 0; i < modules.Count; i++)
             {
                 var module = modules[i];
                 if (module == null) continue;
-                if (Mathf.Abs(module.x - x) < 0.01f && Mathf.Abs(module.z - z) < 0.01f) return true;
+                if (Mathf.Abs(module.x - x) < 0.01f && Mathf.Abs(module.z - z) < 0.01f) return module;
+                if (covering == null && ModuleFootprint.Holds(ModuleFootprint.Of(module.kind, module.rotation, module.x, module.z), pointX, pointZ)) covering = module;
             }
-            return false;
+            return covering;
+        }
+
+        public static bool Occupied(IReadOnlyList<PlacedModule> modules, float x, float z)
+        {
+            return ModuleFootprint.Clashes(modules, ModuleFootprint.Box(x, z, ModuleFootprint.Unit, ModuleFootprint.Unit));
         }
 
         public int BarricadeCount()
