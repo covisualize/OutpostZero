@@ -94,15 +94,9 @@ namespace OutpostZero.EditorTools
 
         public const string ReloadSpeed = "ReloadSpeed";
 
-        /// <summary>The base layer runs the look-at pass for aim, and the reload plays at the gun's reload speed.</summary>
+        /// <summary>The reload plays at the gun's reload speed.</summary>
         private static void EnsureRig(AnimatorController controller)
         {
-            var layers = controller.layers;
-            if (layers.Length > 0 && !layers[0].iKPass)
-            {
-                layers[0].iKPass = true;
-                controller.layers = layers;
-            }
             foreach (var child in controller.layers[0].stateMachine.states)
             {
                 if (child.state.name != "Reload") continue;

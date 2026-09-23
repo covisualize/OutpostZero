@@ -29,6 +29,10 @@ namespace OutpostZero.Player
         private Transform socket;
         private Vector3 socketRest;
         private Transform hand;
+        private Transform spine;
+        private Transform head;
+        private readonly BoneTurn spineTurn = new BoneTurn();
+        private readonly BoneTurn headTurn = new BoneTurn();
         private Vector3 handRest;
         private bool handSettled;
         private float reloadClip;
@@ -106,18 +110,11 @@ namespace OutpostZero.Player
             if (gun != null) gun.FinishFromAnimation();
         }
 
-        /// <summary>The humanoid look-at pass: chest and head turn toward the aim point inside the twist limit.</summary>
-        public void ApplyAim(Animator rig)
+        private float AimTarget()
         {
-            if (rig == null || controller == null) return;
             bool alive = health == null || !health.IsDead;
             var gun = controller.ActiveWeapon as FirearmWeapon;
-            float target = AimRig.Weight(alive, controller.IsSprinting, gun != null && gun.IsReloading, controller.IsAimingDownSights);
-            aimWeight = AimRig.Blend(aimWeight, target, Time.deltaTime);
-            Vector3 chest = transform.position + Vector3.up * 1.4f;
-            Vector3 aim = controller.AimPoint.sqrMagnitude > 0f ? controller.AimPoint : transform.position + transform.forward * 6f;
-            rig.SetLookAtWeight(aimWeight, AimRig.BodyWeight, AimRig.HeadWeight, 0f, AimRig.Clamp);
-            rig.SetLookAtPosition(AimRig.Target(chest, transform.forward, aim));
+            return AimRig.Weight(alive, controller.IsSprinting, gun != null && gun.IsReloading, controller.IsAimingDownSights);
         }
         private void Start()
         {
@@ -129,7 +126,12 @@ namespace OutpostZero.Player
             }
             socket = transform.Find("Weapon_Socket");
             if (socket != null) socketRest = socket.localPosition;
-            if (animator != null && animator.isHuman) hand = animator.GetBoneTransform(HumanBodyBones.RightHand);
+            if (animator != null)
+            {
+                hand = animator.isHuman ? animator.GetBoneTransform(HumanBodyBones.RightHand) : Bone(animator.transform, AimRig.HandBone);
+                spine = animator.isHuman ? animator.GetBoneTransform(HumanBodyBones.Spine) : Bone(animator.transform, AimRig.SpineBone);
+                head = animator.isHuman ? animator.GetBoneTransform(HumanBodyBones.Head) : Bone(animator.transform, AimRig.HeadBone);
+            }
             guns = GetComponentsInChildren<FirearmWeapon>(true);
             for (int i = 0; i < guns.Length; i++)
             {
@@ -234,8 +236,20 @@ namespace OutpostZero.Player
             animationPlayer.CrossFade(pose.ToString(), 0.12f);
         }
 
+        private static Transform Bone(Transform root, string name)
+        {
+            if (root.name == name) return root;
+            foreach (Transform child in root)
+            {
+                var found = Bone(child, name);
+                if (found != null) return found;
+            }
+            return null;
+        }
+
         private void LateUpdate()
         {
+            Turn();
             if (socket == null || hand == null) return;
             Vector3 local = transform.InverseTransformPoint(hand.position);
             var state = animator.GetCurrentAnimatorStateInfo(0);
@@ -246,6 +260,39 @@ namespace OutpostZero.Player
             }
             if (!handSettled) return;
             socket.localPosition = AimRig.Socket(socketRest, handRest, local, AimRig.HandFollow);
+        }
+
+        /// <summary>Turns the posed spine and head toward the aim point, after the animator has written the pose.</summary>
+        private void Turn()
+        {
+            if (controller == null || spine == null) return;
+            aimWeight = AimRig.Blend(aimWeight, AimTarget(), Time.deltaTime);
+            Vector3 chest = transform.position + Vector3.up * 1.4f;
+            Vector3 aim = controller.AimPoint.sqrMagnitude > 0f ? controller.AimPoint : transform.position + transform.forward * 6f;
+            float yaw = AimRig.Yaw(transform.forward, chest, aim, aimWeight);
+            spineTurn.Apply(spine, yaw * AimRig.SpineShare);
+            if (head != null) headTurn.Apply(head, yaw * (1f - AimRig.SpineShare));
+        }
+    }
+
+    /// <summary>
+    /// Adds a turn about world up to a bone each frame without letting it build up when the animator
+    /// leaves that bone alone: an untouched bone is put back to its pose before the new turn.
+    /// </summary>
+    public class BoneTurn
+    {
+        private Quaternion posed;
+        private Quaternion written;
+        private bool has;
+
+        public void Apply(Transform bone, float degrees)
+        {
+            if (bone == null) return;
+            if (has && Quaternion.Angle(bone.localRotation, written) < 0.01f) bone.localRotation = posed;
+            posed = bone.localRotation;
+            bone.rotation = Quaternion.AngleAxis(degrees, Vector3.up) * bone.rotation;
+            written = bone.localRotation;
+            has = true;
         }
     }
 
@@ -266,12 +313,5 @@ namespace OutpostZero.Player
             if (body != null) body.OnReloadAnimComplete();
         }
 
-        private void OnAnimatorIK(int layerIndex)
-        {
-            if (layerIndex != 0) return;
-            var rig = GetComponent<Animator>();
-            var body = GetComponentInParent<SurvivorLocomotion>();
-            if (body != null) body.ApplyAim(rig);
-        }
     }
 }

@@ -44,6 +44,18 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void TheYawTurnsTowardTheAimAndIsScaledByWeight()
+        {
+            var chest = new Vector3(0f, 1.4f, 0f);
+            float right = AimRig.Yaw(Vector3.forward, chest, new Vector3(3f, 0f, 3f), 1f);
+            Assert.AreEqual(45f, right, 0.01f);
+            Assert.AreEqual(-45f, AimRig.Yaw(Vector3.forward, chest, new Vector3(-3f, 0f, 3f), 1f), 0.01f);
+            Assert.AreEqual(22.5f, AimRig.Yaw(Vector3.forward, chest, new Vector3(3f, 0f, 3f), 0.5f), 0.01f);
+            Assert.AreEqual(AimRig.MaxTwist, AimRig.Yaw(Vector3.forward, chest, new Vector3(5f, 0f, -5f), 1f), 0.01f);
+            Assert.AreEqual(0f, AimRig.Yaw(Vector3.forward, chest, new Vector3(3f, 0f, 3f), 0f));
+        }
+
+        [Test]
         public void TheSocketFollowsTheHandSwingButNeverFar()
         {
             var rest = new Vector3(0.28f, 1.05f, 0.45f);
@@ -74,10 +86,9 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
-        public void TheCommittedControllerRunsTheLookAtPassAndTimesTheReload()
+        public void TheCommittedControllerTimesTheReload()
         {
             string text = File.ReadAllText(Path.Combine(Directory.GetCurrentDirectory(), "Assets", "Resources", "SurvivorLocomotion.controller"));
-            StringAssert.Contains("m_IKPass: 1", text);
             StringAssert.Contains("- m_Name: ReloadSpeed\n    m_Type: 1\n    m_DefaultFloat: 1", text.Replace("\r\n", "\n"));
             int reload = text.IndexOf("  m_Name: Reload\n", System.StringComparison.Ordinal);
             Assert.GreaterOrEqual(reload, 0);

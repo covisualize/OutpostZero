@@ -3,17 +3,20 @@ using UnityEngine;
 namespace OutpostZero.Player
 {
     /// <summary>
-    /// Rules for the humanoid rig on top of the locomotion controller: how hard the spine and head turn
-    /// toward the aim point, how far the weapon socket may follow the right hand, how fast the reload clip
-    /// plays so it ends with the reload timer, and which clip events the body listens for.
+    /// Rules for the rig on top of the locomotion controller: how hard the spine and head turn toward the
+    /// aim point, how far the weapon socket may follow the right hand, how fast the reload clip plays so it
+    /// ends with the reload timer, and which clip events the body listens for. The characters import as
+    /// Generic rigs, so the turn is applied to the named Spine and Head bones after the animator poses them.
     /// </summary>
     public static class AimRig
     {
         /// <summary>The widest the chest turns from the hips before the whole body has to follow.</summary>
         public const float MaxTwist = 70f;
-        public const float BodyWeight = 0.4f;
-        public const float HeadWeight = 0.9f;
-        public const float Clamp = 0.5f;
+        /// <summary>Share of the turn the spine takes; the head takes the rest.</summary>
+        public const float SpineShare = 0.6f;
+        public const string SpineBone = "Spine";
+        public const string HeadBone = "Head";
+        public const string HandBone = "RightHand";
         /// <summary>The socket keeps within this many metres of its rest point, so a death pose cannot fling the gun.</summary>
         public const float MaxDrift = 0.3f;
         /// <summary>A reload clip event before this share of the timer is ignored.</summary>
@@ -69,6 +72,20 @@ namespace OutpostZero.Player
         /// The socket's local position: its rest point moved by how far the right hand has swung from its own
         /// rest pose (both in the body's local space), scaled by <paramref name="follow"/> and capped at <see cref="MaxDrift"/>.
         /// </summary>
+        /// <summary>
+        /// The rotation about world up, in degrees, that turns the body's facing toward the aim point,
+        /// clamped to <see cref="MaxTwist"/> and scaled by the aim weight.
+        /// </summary>
+        public static float Yaw(Vector3 forward, Vector3 from, Vector3 aim, float weight)
+        {
+            var target = Target(from, forward, aim);
+            Vector3 f = new Vector3(forward.x, 0f, forward.z);
+            Vector3 d = new Vector3(target.x - from.x, 0f, target.z - from.z);
+            if (f.sqrMagnitude < 1e-6f || d.sqrMagnitude < 1e-6f) return 0f;
+            float yaw = Vector3.SignedAngle(f, d, Vector3.up);
+            return Mathf.Clamp(yaw, -MaxTwist, MaxTwist) * Mathf.Clamp01(weight);
+        }
+
         public static Vector3 Socket(Vector3 rest, Vector3 handRest, Vector3 hand, float follow)
         {
             Vector3 drift = (hand - handRest) * Mathf.Clamp01(follow);
