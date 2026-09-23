@@ -136,6 +136,103 @@ namespace OutpostZero.Expedition
             if (districtId == "old_hospital" || districtId == "police_station") return "plaster";
             return "brick";
         }
+
+        /// <summary>
+        /// generate_kit.py lays catalog (x, y, z) at Blender (x, z, y); the FBX import flips x and z,
+        /// so the mesh lines up with the catalog boxes after a half turn.
+        /// </summary>
+        public const float MeshYaw = 180f;
+
+        public static string PrefabName(string id) => "Kit_" + id;
+
+        /// <summary>
+        /// Pieces with a breakable pane keep their box build so the glass can shatter on its own.
+        /// </summary>
+        public static bool UsesMesh(KitPiece piece)
+        {
+            if (piece == null || piece.colliders == null || piece.colliders.Length == 0) return false;
+            for (int i = 0; i < piece.colliders.Length; i++)
+            {
+                var box = piece.colliders[i];
+                if (PaneGlass.Opening(piece.id, box.y, box.h, box.w, piece.w)) return false;
+            }
+            return true;
+        }
+
+        public static Color Tint(KitPiece piece, string variant)
+        {
+            if (piece.id.StartsWith("wall") || piece.id == "corner" || piece.id == "parapet")
+            {
+                if (variant == "plaster") return new Color(0.62f, 0.58f, 0.5f);
+                if (variant == "concrete") return new Color(0.48f, 0.46f, 0.42f);
+                return new Color(0.45f, 0.28f, 0.22f);
+            }
+            if (piece.surface == "metal") return new Color(0.32f, 0.34f, 0.36f);
+            if (piece.surface == "wood") return new Color(0.4f, 0.26f, 0.14f);
+            if (piece.surface == "glass") return new Color(0.45f, 0.6f, 0.66f);
+            return new Color(0.42f, 0.4f, 0.37f);
+        }
+
+        /// <summary>
+        /// The colour generate_kit.py bakes into each surface's albedo.
+        /// </summary>
+        public static Color Albedo(string surface)
+        {
+            if (surface == "metal") return new Color(0.32f, 0.34f, 0.36f);
+            if (surface == "wood") return new Color(0.4f, 0.26f, 0.14f);
+            if (surface == "glass") return new Color(0.55f, 0.7f, 0.75f);
+            return new Color(0.45f, 0.43f, 0.4f);
+        }
+
+        /// <summary>
+        /// Multiplier over the baked albedo that lands a meshed piece on its district tint.
+        /// </summary>
+        public static Color Shade(KitPiece piece, string variant)
+        {
+            var want = Tint(piece, variant);
+            var baked = Albedo(piece.surface);
+            return new Color(Ratio(want.r, baked.r), Ratio(want.g, baked.g), Ratio(want.b, baked.b), 1f);
+        }
+
+        private static float Ratio(float want, float baked)
+        {
+            if (baked <= 0.001f) return 1f;
+            float ratio = want / baked;
+            return ratio < 0f ? 0f : ratio > 2f ? 2f : ratio;
+        }
+
+        public static SurfaceKind Surface(string surface)
+        {
+            if (surface == "metal") return SurfaceKind.Metal;
+            if (surface == "wood") return SurfaceKind.Wood;
+            if (surface == "glass") return SurfaceKind.Glass;
+            return SurfaceKind.Concrete;
+        }
+
+        public static float Snap(float value, float grid)
+        {
+            if (grid <= 0f) return value;
+            return Mathf.Round(value / grid) * grid;
+        }
+
+        public static int SnapYaw(float yaw)
+        {
+            int quarter = Mathf.RoundToInt(yaw / 90f) % 4;
+            if (quarter < 0) quarter += 4;
+            return quarter * 90;
+        }
+
+        public static KitPlacement Place(string id, Vector3 local, float yaw, float grid, float storey)
+        {
+            return new KitPlacement
+            {
+                id = id,
+                x = Snap(local.x, grid),
+                y = Snap(local.y, storey),
+                z = Snap(local.z, grid),
+                yaw = SnapYaw(yaw)
+            };
+        }
     }
 
     /// <summary>
@@ -176,10 +273,23 @@ namespace OutpostZero.Expedition
                 host.transform.rotation = Quaternion.Euler(0f, placement.yaw, 0f);
                 bool cap = piece.id == "roof" || piece.id == "ceiling" || (piece.id == "floor" && placement.y > 0.5f);
                 if (cap) host.AddComponent<KitCap>().slabY = origin.y;
-                var tint = Tint(piece, variant);
+                var tint = KitPlan.Tint(piece, variant);
+                var kind = KitPlan.Surface(piece.surface);
+                var mesh = Meshes != null && KitPlan.UsesMesh(piece) ? Meshes.Find(piece.id) : null;
+                if (mesh != null) Dress(mesh, host.transform, KitPlan.Shade(piece, variant));
                 for (int c = 0; c < piece.colliders.Length; c++)
                 {
                     var box = piece.colliders[c];
+                    if (mesh != null)
+                    {
+                        var solid = new GameObject("KitSolid");
+                        solid.transform.SetParent(host.transform, false);
+                        solid.transform.localPosition = new Vector3(box.x + box.w * 0.5f, box.y + box.h * 0.5f, box.z + box.d * 0.5f);
+                        solid.layer = GameLayers.Environment;
+                        solid.AddComponent<BoxCollider>().size = new Vector3(Mathf.Max(0.02f, box.w), Mathf.Max(0.02f, box.h), Mathf.Max(0.02f, box.d));
+                        solid.AddComponent<SurfaceTag>().Set(kind);
+                        continue;
+                    }
                     var block = GameObject.CreatePrimitive(PrimitiveType.Cube);
                     block.name = "KitBlock";
                     block.transform.SetParent(host.transform, false);
@@ -194,7 +304,11 @@ namespace OutpostZero.Expedition
                         block.AddComponent<GlassPane>();
                         if (!PaneGlass.Coat(renderer)) Paint(renderer, PaneGlass.Tint);
                     }
-                    else Paint(renderer, tint);
+                    else
+                    {
+                        Paint(renderer, tint);
+                        block.AddComponent<SurfaceTag>().Set(kind);
+                    }
                 }
                 if (piece.id == "ceiling_light")
                 {
@@ -221,18 +335,41 @@ namespace OutpostZero.Expedition
             return bounds;
         }
 
-        private static Color Tint(KitPiece piece, string variant)
+        private static KitPrefabSet meshes;
+        private static bool meshesLoaded;
+
+        private static KitPrefabSet Meshes
         {
-            if (piece.id.StartsWith("wall") || piece.id == "corner" || piece.id == "parapet")
+            get
             {
-                if (variant == "plaster") return new Color(0.62f, 0.58f, 0.5f);
-                if (variant == "concrete") return new Color(0.48f, 0.46f, 0.42f);
-                return new Color(0.45f, 0.28f, 0.22f);
+                if (!meshesLoaded)
+                {
+                    meshesLoaded = true;
+                    meshes = Resources.Load<KitPrefabSet>(KitPrefabSet.ResourcePath);
+                }
+                return meshes;
             }
-            if (piece.surface == "metal") return new Color(0.32f, 0.34f, 0.36f);
-            if (piece.surface == "wood") return new Color(0.4f, 0.26f, 0.14f);
-            if (piece.surface == "glass") return new Color(0.45f, 0.6f, 0.66f);
-            return new Color(0.42f, 0.4f, 0.37f);
+        }
+
+        private static void Dress(GameObject prefab, Transform host, Color shade)
+        {
+            var visual = Instantiate(prefab, host, false);
+            visual.name = "KitMesh";
+            visual.transform.localPosition = Vector3.zero;
+            visual.transform.localRotation = Quaternion.Euler(0f, KitPlan.MeshYaw, 0f);
+            foreach (var collider in visual.GetComponentsInChildren<Collider>(true))
+            {
+                collider.enabled = false;
+                Destroy(collider);
+            }
+            foreach (var renderer in visual.GetComponentsInChildren<Renderer>(true))
+            {
+                renderer.gameObject.layer = GameLayers.Environment;
+                var block = new MaterialPropertyBlock();
+                renderer.GetPropertyBlock(block);
+                block.SetColor("_Tint", shade);
+                renderer.SetPropertyBlock(block);
+            }
         }
 
         private static void Paint(Renderer renderer, Color color)

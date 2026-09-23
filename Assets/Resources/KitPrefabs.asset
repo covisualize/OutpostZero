@@ -1,0 +1,123 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c75b3bf8091a2b3c4d5e6f708192a469, type: 3}
+  m_Name: KitPrefabs
+  m_EditorClassIdentifier: OutpostZero::OutpostZero.Expedition.KitPrefabSet
+  entries:
+  - id: wall_plain
+    prefab: {fileID: 1939694868344843263, guid: 415fcb8f2bbbd6c469f5c057cc4c99a0, type: 3}
+  - id: wall_window
+    prefab: {fileID: 1066206782574747533, guid: 13f9fe8a56b94974894c6e0793be854a, type: 3}
+  - id: wall_window_broken
+    prefab: {fileID: 3168229550231536477, guid: bc7a483dd3f81754f83b7a83800b9c80, type: 3}
+  - id: wall_door
+    prefab: {fileID: 8397952586616450146, guid: 915ac296480ff9d4a986f47a5c1f5c3c, type: 3}
+  - id: wall_double_door
+    prefab: {fileID: 8123469662109804579, guid: d03380896df87654aab346d8acdf844e, type: 3}
+  - id: wall_garage
+    prefab: {fileID: 4923905891013116291, guid: ca226c7d20a1bb94d9df57804184276c, type: 3}
+  - id: corner
+    prefab: {fileID: 7531246487456449736, guid: e2a6699d4a82b564a92a46a43d30e67b, type: 3}
+  - id: wall_half
+    prefab: {fileID: 2566479937431071600, guid: 2c666c8e7150e324cabb5d8087234050, type: 3}
+  - id: floor
+    prefab: {fileID: 1777934791548982261, guid: 7f939106a5d636a4288d21d8ebbca464, type: 3}
+  - id: ceiling
+    prefab: {fileID: 3851015491030068031, guid: 39b2bf58ee9461e41b9635573f201b51, type: 3}
+  - id: roof
+    prefab: {fileID: 209418192748779544, guid: e690d72fb16c6d242b038d3ee7694318, type: 3}
+  - id: parapet
+    prefab: {fileID: 3028919628834260180, guid: 0af2584753a6fb946aabe43495a01f43, type: 3}
+  - id: stairs
+    prefab: {fileID: 38771157413694352, guid: d977002775db8a04a8af203b728c3151, type: 3}
+  - id: balcony
+    prefab: {fileID: 46577090044738350, guid: cb3dadf1890ab9240b7c6b85b86f1abc, type: 3}
+  - id: fire_escape
+    prefab: {fileID: 4789760304842658603, guid: 075c9eada116cb04ea71d60668737c7a, type: 3}
+  - id: wall_boarded
+    prefab: {fileID: 6073423727963872220, guid: 4f1e9965d6ac2fd4d9e89f8d925b96e0, type: 3}
+  - id: road_straight
+    prefab: {fileID: 2680725109771591386, guid: a65ff46756f5c5b4f82cb0e2997d5368, type: 3}
+  - id: road_curve
+    prefab: {fileID: 1544037017870520219, guid: ec7632cc1dc56ba41a11a21ac3bfe75b, type: 3}
+  - id: road_t
+    prefab: {fileID: 544823333889179138, guid: 2b6ebd3e98b746e49923b3c21d2d645f, type: 3}
+  - id: road_cross
+    prefab: {fileID: 6617333380546410762, guid: e5ac27bf6aabdf24a98e50b2b9eb8f02, type: 3}
+  - id: road_deadend
+    prefab: {fileID: 4496615622203936502, guid: bf4ffe37b87229e428a81ced34f55e62, type: 3}
+  - id: sidewalk_straight
+    prefab: {fileID: 3657968075551025213, guid: 300d6448d8c394a41a6f60c06eaeed1b, type: 3}
+  - id: sidewalk_corner
+    prefab: {fileID: 7185642302140806635, guid: 9ed75a88fffa9da4ab52d80ed3b7c346, type: 3}
+  - id: curb_ramp
+    prefab: {fileID: 2091718104997904146, guid: b62d0f984adb6eb4c9773061ced015ed, type: 3}
+  - id: crosswalk
+    prefab: {fileID: 7414436646558503085, guid: 2e34db2f09c636e488e7797b3ba93c91, type: 3}
+  - id: parking
+    prefab: {fileID: 4939712795248327305, guid: 743ca2c60b5876e49924937f4f81ed48, type: 3}
+  - id: alley
+    prefab: {fileID: 7033915502469175850, guid: 7606fcc1c87801f44b69c9cea9fd102a, type: 3}
+  - id: manhole
+    prefab: {fileID: 944941361192230675, guid: e90ba0f5ba092ce4ab279496dd8182e2, type: 3}
+  - id: drain
+    prefab: {fileID: 9143857216728239456, guid: 2f76dbf28394e914fbec547aa4f23b01, type: 3}
+  - id: shelf
+    prefab: {fileID: 658704217024419942, guid: b90cb73aefb039a4d92d262ab5361b31, type: 3}
+  - id: counter
+    prefab: {fileID: 7007879919161196158, guid: 94bdde93ed3b4564e86280f5ac19afeb, type: 3}
+  - id: fridge
+    prefab: {fileID: 721825555287519916, guid: 9c2b592c27d30cf41adb432fd2b538fa, type: 3}
+  - id: pallet
+    prefab: {fileID: 7443122385573724240, guid: 809f7e23773805d49b3aedbaf53c28eb, type: 3}
+  - id: desk
+    prefab: {fileID: 5758571265739962676, guid: bdc9b98c57fefdc4595211d2fb2fa36b, type: 3}
+  - id: chair
+    prefab: {fileID: 9116511177226457727, guid: 7d96845e9b1254b4f89e70b568d47315, type: 3}
+  - id: filing
+    prefab: {fileID: 7373927288874426325, guid: ee010e66b4c5efa4083d89d4b9ab2d47, type: 3}
+  - id: vending
+    prefab: {fileID: 367088164922523964, guid: 700aabca3dcbebf4eb25df5041c9cab6, type: 3}
+  - id: hospital_bed
+    prefab: {fileID: 532958478762952822, guid: 37122780f57d00144a6dbc49a1f78dd2, type: 3}
+  - id: lockers
+    prefab: {fileID: 5815226192390746912, guid: c044b37e15b5bac4f8fa680e490e6bd4, type: 3}
+  - id: toilet
+    prefab: {fileID: 6169546226923065181, guid: 7331fefda621b7844a771bb4a88c7a87, type: 3}
+  - id: workbench
+    prefab: {fileID: 3243490373593027363, guid: 80a1d8e63cea52d419afa4de183777fb, type: 3}
+  - id: generator
+    prefab: {fileID: 5896494013362795965, guid: fcc7230fcb2215d4080efb3751d8dc1f, type: 3}
+  - id: pipes
+    prefab: {fileID: 6337484397662796073, guid: 642a5ba2842a04e49b929f32baed714c, type: 3}
+  - id: ceiling_light
+    prefab: {fileID: 2550184890467241826, guid: 28d70ca7035d1434a9109756238598c2, type: 3}
+  - id: sandbag_straight
+    prefab: {fileID: 7863183954816505520, guid: c4fc1013092323044bad41fb80776433, type: 3}
+  - id: sandbag_corner
+    prefab: {fileID: 4081095159025171729, guid: 24531eb432cbe14489e0f6dadb3a5ad5, type: 3}
+  - id: wood_barricade
+    prefab: {fileID: 4717104285425869447, guid: f70403a72eae7384db7892cdfbd6a918, type: 3}
+  - id: wire
+    prefab: {fileID: 7386694475332815285, guid: c7a89e3027eb74a468791963a1581603, type: 3}
+  - id: jersey
+    prefab: {fileID: 3010306981099522696, guid: 693b7d954a86e4443aff1b936681c1c6, type: 3}
+  - id: fence
+    prefab: {fileID: 3439081286970051263, guid: 6e50c3525df2a154d917f66b60530415, type: 3}
+  - id: fence_gate
+    prefab: {fileID: 2769198832261194098, guid: 2d5d99106b523e4459b24a788834b66f, type: 3}
+  - id: tower_segment
+    prefab: {fileID: 1400053852755308925, guid: c70b42ace9b2382448030fc9e8c2e36d, type: 3}
+  - id: spike
+    prefab: {fileID: 4256683995616890599, guid: ab510082accfcd94b96a5b0548d92563, type: 3}
+  - id: plywood_door
+    prefab: {fileID: 8008425338964735465, guid: fcd0f32b30d90b44590de8e5e5f84b9d, type: 3}
