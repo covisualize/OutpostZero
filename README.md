@@ -90,6 +90,7 @@ The plan lives in the Linear project [Outpost Zero — Full Playable Game](https
 - [docs/ASSET_PIPELINE.md](docs/ASSET_PIPELINE.md) — manifest, generators, naming, units, adding an asset
 - [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md) — setup, building, tests, CI, conventions
 - [docs/QA_CHECKLIST.md](docs/QA_CHECKLIST.md) — playtest checklist
+- [docs/TUNING.md](docs/TUNING.md) — horde pacing target and difficulty rows
 - [docs/AUDIO_ATTRIBUTION.md](docs/AUDIO_ATTRIBUTION.md) — sound credits
 - [docs/ACCESSIBILITY.md](docs/ACCESSIBILITY.md) — accessibility review
 

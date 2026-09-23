@@ -54,5 +54,16 @@ namespace OutpostZero.Tests.EditMode
             Assert.GreaterOrEqual(report.Peak, 2, "each firefight reaches a peak");
             Assert.GreaterOrEqual(report.Calm, 1);
         }
+
+        [Test]
+        public void ASurvivorStreetFeedsAboutOneKillEveryTenSeconds()
+        {
+            int scavenger = PressureClock.Run(1, 20f, 8f * DifficultyTable.Of(1).IntervalScale, 2).Spawns;
+            int survivor = PressureClock.Run(2, 20f, 8f * DifficultyTable.Of(2).IntervalScale, 2).Spawns;
+            int nightmare = PressureClock.Run(3, 20f, 8f * DifficultyTable.Of(3).IntervalScale, 2).Spawns;
+            Assert.That(survivor, Is.InRange(27, 33), "300 s at one kill per 10 s is 30 bodies");
+            Assert.Less(scavenger, survivor);
+            Assert.Greater(nightmare, survivor * 3 / 2, "Nightmare is measurably harder");
+        }
     }
 }
