@@ -236,6 +236,18 @@ namespace OutpostZero.Colony
             int kills = GameManager.Instance != null ? GameManager.Instance.ZombiesKilled : 0;
             var carried = PlayerRegistry.Current != null ? PlayerRegistry.Current.GetComponent<PlayerInventory>() : null;
             string gear = carried != null ? carried.TakeGear() : "";
+            var hands = PlayerRegistry.Current != null ? PlayerRegistry.Current.GetComponent<PlayerController>() : null;
+            if (hands != null)
+            {
+                var arms = hands.PackArms();
+                int personal = SuccessionLedger.Personal(arms, hands.ActiveSlot);
+                if (personal >= 0)
+                {
+                    gear = SuccessionLedger.WithArm(gear, arms[personal]);
+                    arms.RemoveAt(personal);
+                    hands.RestoreArms(arms, 0);
+                }
+            }
             memorials.Add(new SuccessionLedger.Memorial
             {
                 name = fallen,

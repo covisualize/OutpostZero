@@ -40,6 +40,54 @@ namespace OutpostZero.Colony
             public bool recovered;
         }
 
+        public const char ArmMark = '@';
+
+        /// <summary>
+        /// The fallen leader's personal weapon (the one in hand) stays on the body, unless it is the only one
+        /// they carried: the heir still walks out armed.
+        /// </summary>
+        public static int Personal(IList<LeaderKit.Arm> arms, int active)
+        {
+            if (arms == null || arms.Count < 2) return -1;
+            return Mathf.Clamp(active, 0, arms.Count - 1);
+        }
+
+        /// <summary>Adds the weapon to the body's packed gear as <c>@id:magazine:reserve</c>, which the pack's reader skips.</summary>
+        public static string WithArm(string gear, LeaderKit.Arm arm)
+        {
+            string id = (arm.Id ?? "").Replace("+", "").Replace(":", "").Replace("^", "").Replace(";", "").Replace(ArmMark.ToString(), "");
+            if (id.Length == 0) return gear ?? "";
+            string token = ArmMark + id + ":" + Mathf.Max(0, arm.Magazine).ToString(CultureInfo.InvariantCulture) + ":" + Mathf.Max(0, arm.Reserve).ToString(CultureInfo.InvariantCulture);
+            return string.IsNullOrEmpty(gear) ? token : gear + "+" + token;
+        }
+
+        public static bool SplitArm(string gear, out string pack, out LeaderKit.Arm arm)
+        {
+            pack = gear ?? "";
+            arm = new LeaderKit.Arm { Id = "" };
+            if (string.IsNullOrEmpty(gear)) return false;
+            var kept = new List<string>();
+            bool found = false;
+            foreach (string part in gear.Split('+'))
+            {
+                if (part.Length > 1 && part[0] == ArmMark && !found)
+                {
+                    string[] bits = part.Substring(1).Split(':');
+                    if (bits.Length == 3 && bits[0].Length > 0
+                        && int.TryParse(bits[1], NumberStyles.Integer, CultureInfo.InvariantCulture, out int magazine)
+                        && int.TryParse(bits[2], NumberStyles.Integer, CultureInfo.InvariantCulture, out int reserve))
+                    {
+                        arm = new LeaderKit.Arm { Id = bits[0], Magazine = Mathf.Max(0, magazine), Reserve = Mathf.Max(0, reserve) };
+                        found = true;
+                        continue;
+                    }
+                }
+                if (part.Length > 0) kept.Add(part);
+            }
+            pack = string.Join("+", kept);
+            return found;
+        }
+
         public static void Grieve(IList<ColonistDay> people, string fallenName) => Grieve(people, fallenName, false);
 
         /// <summary>A finished memorial wall gives the camp somewhere to put a name, so each loss cuts less deep.</summary>
@@ -203,10 +251,29 @@ namespace OutpostZero.Colony
         {
             if (!CanInteract(inventory)) return;
             taken = true;
-            inventory.RestoreGear(gear);
+            bool armed = SuccessionLedger.SplitArm(gear, out string pack, out var arm);
+            inventory.RestoreGear(pack);
+            if (armed) HandBack(inventory, arm);
             SurvivorRoster.Instance?.Recover(index);
             GameplayFeedback.Toast(StreetAsk.Kept(!string.IsNullOrEmpty(gear), null));
             Destroy(gameObject);
+        }
+
+        /// <summary>The fallen leader's gun goes into the hand; one of the same type already carried is left on the ground in its place.</summary>
+        private void HandBack(PlayerInventory inventory, LeaderKit.Arm arm)
+        {
+            var player = inventory.GetComponent<PlayerController>();
+            if (player != null && player.TakeFromGround(arm.Id, arm.Magazine, arm.Reserve, out string leftId, out int leftMag, out int leftReserve))
+            {
+                if (string.IsNullOrEmpty(leftId)) return;
+                arm = new LeaderKit.Arm { Id = leftId, Magazine = leftMag, Reserve = leftReserve };
+            }
+            var dropped = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            dropped.name = "GroundWeapon_Fallen";
+            dropped.transform.position = transform.position + new Vector3(0.6f, 0.05f, 0f);
+            dropped.transform.localScale = new Vector3(0.6f, 0.1f, 0.16f);
+            dropped.layer = GameLayers.Interactable;
+            dropped.AddComponent<GroundWeapon>().Configure(arm.Id, arm.Magazine, arm.Reserve);
         }
     }
 }
