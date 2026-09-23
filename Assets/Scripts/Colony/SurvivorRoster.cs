@@ -415,6 +415,76 @@ namespace OutpostZero.Colony
             if (CampEnd.Wiped(LivingCount())) EndCamp();
         }
 
+        public bool HasRoom => survivors.Count < RescueBook.RosterCap;
+
+        public int BestEngineering()
+        {
+            int best = 0;
+            foreach (var survivor in survivors)
+                if (survivor.alive && survivor.engineering > best) best = survivor.engineering;
+            return best;
+        }
+
+        public bool HasFeud() => FeudPair(0, out _, out _);
+
+        /// <summary>A living pair where either side's opinion of the other is at or below the feud line.</summary>
+        public bool FeudPair(int salt, out Survivor first, out Survivor second)
+        {
+            first = null;
+            second = null;
+            var pairs = new List<KeyValuePair<Survivor, Survivor>>();
+            for (int i = 0; i < survivors.Count; i++)
+                for (int j = i + 1; j < survivors.Count; j++)
+                {
+                    var a = survivors[i];
+                    var b = survivors[j];
+                    if (!a.alive || !b.alive || a.task == "Fallen" || b.task == "Fallen") continue;
+                    if (KinBoard.Read(a.kin, b.id) <= CampEventTable.FeudAt || KinBoard.Read(b.kin, a.id) <= CampEventTable.FeudAt)
+                        pairs.Add(new KeyValuePair<Survivor, Survivor>(a, b));
+                }
+            if (pairs.Count == 0) return false;
+            var pick = pairs[(salt & 0x7fffffff) % pairs.Count];
+            first = pick.Key;
+            second = pick.Value;
+            return true;
+        }
+
+        public bool FlareFeud(int salt, out string firstName, out string secondName)
+        {
+            firstName = "";
+            secondName = "";
+            if (!FeudPair(salt, out var a, out var b)) return false;
+            a.morale = Mathf.Max(0f, a.morale - CampEventTable.ArgumentMood);
+            b.morale = Mathf.Max(0f, b.morale - CampEventTable.ArgumentMood);
+            a.kin = KinBoard.Shift(a.kin, b.id, -CampEventTable.ArgumentKin);
+            b.kin = KinBoard.Shift(b.kin, a.id, -CampEventTable.ArgumentKin);
+            firstName = a.displayName;
+            secondName = b.displayName;
+            OnRosterChanged?.Invoke();
+            return true;
+        }
+
+        public bool HasHealthy() => Healthy().Count > 0;
+
+        private List<Survivor> Healthy()
+        {
+            var list = new List<Survivor>();
+            foreach (var survivor in survivors)
+                if (survivor.alive && !survivor.leader && survivor.injury <= 0 && survivor.task != "Fallen" && survivor.task != "Left") list.Add(survivor);
+            return list;
+        }
+
+        /// <summary>Stage 1 of the fever for one healthy colonist, never the leader. Returns their name.</summary>
+        public string Sicken(int salt)
+        {
+            var list = Healthy();
+            if (list.Count == 0) return "";
+            var person = list[(salt & 0x7fffffff) % list.Count];
+            person.injury = 1;
+            OnRosterChanged?.Invoke();
+            return person.displayName;
+        }
+
         public bool Release(string id)
         {
             var person = Find(id);
@@ -676,6 +746,7 @@ namespace OutpostZero.Colony
             var held = Leader;
             if (held != null) Practice.Train(ref held.leadership, ref held.leadershipXp);
             FactionTrade.Instance?.OnMorning(WorldClock.Instance != null ? WorldClock.Instance.Day : 1);
+            CampEventDirector.Instance?.Dawn(WorldClock.Instance != null ? WorldClock.Instance.Day : 1);
             AudioManager.Instance?.Sting("dawn");
         }
 

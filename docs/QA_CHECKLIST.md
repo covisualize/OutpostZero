@@ -157,6 +157,16 @@ Play this in a player build, not the editor. Use Survivor difficulty and a fixed
   - Debug: F4 (editor and development builds) shows the roster sheet (`RosterSheet`), with each survivor's traits, skills with experience toward the next level (`Guard 5 1/3`), needs, wounds, task and opinion.
   - Automated: `RosterSheetTests`, `TraitBookTests` (assets equal the table, the old trait numbers hold, a loaded book retunes traits and sets the draw) and the `SurvivorDraw`, `Practice` and `Heir` tests in `GameSystemsTests`.
 - [ ] PRO-56 **Play**: run 5 days in a row, each with tasks, an expedition and a return, and see events fire.
+  - From Day 2, about half the dawns bring one random camp event, shown as a toast and on the camp board under "At dawn:". The eight are `CampEventDefinition` assets in `Assets/Data/CampEvents`, listed in `Resources/CampEventBook` (Tools > Outpost Zero > Sync Camp Event Book), each with a weight and the conditions it waits on:
+    - A stranger asks to join, when the roster has room. The board shows Take them in and Turn them away until the next dawn.
+    - An argument between two colonists whose opinion of each other is -10 or lower: both lose 6 morale and 5 opinion of each other.
+    - The generator breaks, if it is running: the lamps go dark and raids get likelier until someone with Engineering 3 repairs it for 3 scrap and 1 tape.
+    - Sickness gives a healthy colonist (never the leader) stage 1 of the fever.
+    - Rain fills a working water collector (+3 water).
+    - A caravan arrives unannounced and trades at the gate for the day.
+    - A pack is sighted (from Day 4) and the raid comes that night.
+    - A stash turns up by the fence (+3 scrap, +1 cloth).
+  - Save in camp with a stranger waiting or the generator broken, then load: both are still there (the director is an `ISaveable` under `camp_events`). A new game clears them. Automated: `CampEventTests`.
   - Clock: `WorldClock` runs Morning (05:00), Day (10:00), Evening (17:00) and Night (20:00, the raid window). The HUD clock shows the phase. A phase turn raises `PhaseTurned`, and in camp it autosaves. A street or raid saves when it ends, so a mid-fight save can't undo a death.
   - Board: Guard, Cook, Medic, Build, Scavenge, Clear and Rest, with skill and traits setting the output (`SurvivorRoster.TickTasks`). **Their call** lets `TaskPick` choose each morning from the survivor's skills, traits and needs and from the camp's shortages. `CampRoutine` still pulls the hungry, hurt and worn off their post.
   - End of day: `ColonyDay.Simulate` eats 1 food and 1 water per head, and shortages cut morale. It also heals wounds, drifts opinion, and fires events: grief, friendship, recovery, breakdown, argument, celebration, and rain soaking the yard. Fever, rain catch, caravans, rescues and raid warnings come from their own services.

@@ -145,6 +145,7 @@ namespace OutpostZero.EditorTools
             TraitBookSync.Sync();
             TutorialBookSync.Sync();
             ExpeditionBookSync.Sync();
+            CampEventBookSync.Sync();
             SyncWeaponSet();
         }
 

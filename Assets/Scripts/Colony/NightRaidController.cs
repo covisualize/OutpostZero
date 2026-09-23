@@ -30,6 +30,7 @@ namespace OutpostZero.Colony
         private bool breached;
         private bool bittenTold;
         private int fronts = 1;
+        private int sightedDay = -1;
 
         public string Approach => approach;
         public int Fronts => fronts;
@@ -159,9 +160,16 @@ namespace OutpostZero.Colony
 
         public bool RaidLikely => LikelyNow();
 
+        /// <summary>A pack seen near the fence comes that night, whatever the odds said.</summary>
+        public void Sight(int day)
+        {
+            sightedDay = day;
+        }
+
         private bool LikelyNow()
         {
             int day = WorldClock.Instance != null ? WorldClock.Instance.Day : 1;
+            if (sightedDay == day) return true;
             int security = ColonyStorage.Instance != null ? ColonyStorage.Instance.Security : 0;
             int shots = ColonyStorage.Instance != null ? ColonyStorage.Instance.Shots : 0;
             bool endless = WorldMapService.Instance != null && WorldMapService.Instance.Endless;

@@ -22,8 +22,11 @@ namespace OutpostZero.Colony
         private bool towerPresent;
         private bool lightsOn;
         private float scanIn;
+        private bool generatorBroken;
 
-        public bool GeneratorOnline => FuelTank.Lit(generatorPresent, fuelHours);
+        public bool GeneratorOnline => !generatorBroken && FuelTank.Lit(generatorPresent, fuelHours);
+        public bool GeneratorBuilt => generatorPresent;
+        public bool GeneratorBroken => generatorBroken;
         public bool WaterOnline => waterPresent;
         public bool CotOnline => cotPresent;
         public bool WatchtowerOnline => towerPresent;
@@ -39,6 +42,11 @@ namespace OutpostZero.Colony
                 return;
             }
             Instance = this;
+        }
+
+        public void SetGeneratorBroken(bool broken)
+        {
+            generatorBroken = broken;
         }
 
         public void Refuel(float hours)

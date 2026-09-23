@@ -820,6 +820,24 @@ namespace OutpostZero.UI
                     camp.Add(Lit(row, TutorialMark.Task));
                 }
             }
+            var events = CampEventDirector.Instance;
+            if (events != null)
+            {
+                if (events.Latest.Length > 0) camp.Add(Body(Loc.T("event.dawn") + " " + events.Latest));
+                if (events.StrangerWaiting)
+                {
+                    var answer = new VisualElement();
+                    answer.style.flexDirection = FlexDirection.Row;
+                    answer.Add(Button(Loc.T("event.take"), () => events.TakeStranger()));
+                    answer.Add(Button(Loc.T("event.turn"), () => events.TurnAway()));
+                    camp.Add(answer);
+                }
+                if (events.GeneratorBroken)
+                {
+                    camp.Add(Body(CampEventDirector.RepairNeed(null)));
+                    camp.Add(Button(Loc.T("event.repair"), () => events.Repair()));
+                }
+            }
             if (FactionTrade.Instance != null)
             {
                 var merchants = FactionTrade.Instance;
@@ -1372,6 +1390,7 @@ namespace OutpostZero.UI
                 key.Add(map.Street);
             }
             if (FactionTrade.Instance != null) key.Add(FactionTrade.Instance.Key);
+            if (CampEventDirector.Instance != null) key.Add(CampEventDirector.Instance.Log.Pack());
             if (CraftingBench.Instance != null) key.Add(CraftingBench.Instance.PackedOrders);
             return key.Value;
         }

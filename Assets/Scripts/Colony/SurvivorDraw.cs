@@ -86,6 +86,28 @@ namespace OutpostZero.Colony
             return drafts;
         }
 
+        /// <summary>A stranger at the gate, the same one for the same seed and day.</summary>
+        public static Draft Stranger(int seed, int day)
+        {
+            if (seed == 0) seed = 1701;
+            string[] traits = TraitTable.Ids();
+            string first = First[Mix(seed, day * 13 + 401) % First.Length];
+            string last = Last[Mix(seed, day * 17 + 409) % Last.Length];
+            string trait = traits.Length > 0 ? traits[Mix(seed, day * 19 + 419) % traits.Length] : "";
+            return new Draft
+            {
+                Id = "stranger_" + day + "_" + (Mix(seed, day + 431) % 90 + 10),
+                Name = first + " " + last,
+                Trait = trait,
+                Bond = "",
+                Combat = Skill(trait, "combat"),
+                Medicine = Skill(trait, "medicine"),
+                Engineering = Skill(trait, "engineering"),
+                Cooking = Skill(trait, "cooking"),
+                Scavenge = Skill(trait, "scavenge")
+            };
+        }
+
         public static bool Clashes(string a, string b)
         {
             return TraitTable.Clashes(a, b);

@@ -369,6 +369,7 @@ namespace OutpostZero.Core
             GridBuilder.Instance?.ClearAll();
             TutorialDirector.Instance?.SetFinished(false);
             CodexDirector.Instance?.Restore("");
+            CampEventDirector.Instance?.ResetRun();
             if (skipTutorial) TutorialDirector.Instance?.Dismiss();
             PlayerRegistry.Current?.RestoreMods("");
             zombiesKilled = 0;

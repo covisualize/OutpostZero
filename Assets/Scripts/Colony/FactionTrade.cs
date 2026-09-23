@@ -13,12 +13,14 @@ namespace OutpostZero.Colony
         private readonly int[] standing = { 10, 0, 0, 0 };
         private string quests = "";
         private bool open;
+        private int summonedDay = -1;
 
         public int Standing => standing[0];
         public string Faction => CaravanBook.Display(ActiveId);
         public bool Open => open;
         public string Quests => quests;
-        public string ActiveId => CaravanBook.Counterparty(Day, PostBuilt);
+        public string ActiveId => CaravanBook.Counterparty(Day, PostBuilt || summonedDay == Day);
+        public bool Away => string.IsNullOrEmpty(ActiveId);
         public string Signature => open + "|" + CaravanBook.Pack(standing) + "|" + quests + "|" + Day + "|" + PostBuilt;
 
         /// <summary>The same inputs as <see cref="Signature"/>, hashed without building a string.</summary>
@@ -32,6 +34,7 @@ namespace OutpostZero.Colony
                 key.Add(quests);
                 key.Add(Day);
                 key.Add(PostBuilt);
+                key.Add(summonedDay);
                 return key.Value;
             }
         }
@@ -50,6 +53,12 @@ namespace OutpostZero.Colony
             }
             Instance = this;
             FactionBook.Ensure();
+        }
+
+        /// <summary>A caravan that turns up unannounced trades at the gate for the rest of that day.</summary>
+        public void Summon(int day)
+        {
+            summonedDay = day;
         }
 
         public void Toggle()

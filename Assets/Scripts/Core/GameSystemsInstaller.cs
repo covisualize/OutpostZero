@@ -50,6 +50,7 @@ namespace OutpostZero.Core
             Add<OutpostZero.UI.SceneFlow>(host.gameObject);
             Add<DevPanel>(host.gameObject);
             Add<CampServices>(host.gameObject);
+            Add<CampEventDirector>(host.gameObject);
             Add<CampPopulation>(host.gameObject);
             Add<DistrictDressing>(host.gameObject);
             StreetDetail.RaiseHome();
