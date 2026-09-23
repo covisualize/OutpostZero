@@ -228,6 +228,7 @@ namespace OutpostZero.Colony
             for (int i = 0; i < placed.Count; i++)
             {
                 int next = StormWear.After(placed[i].integrity, placed[i].site, placed[i].kind, sky);
+                if (next < placed[i].integrity) next = ModuleHealth.Hit(placed[i].integrity, placed[i].integrity - next, HpOf(placed[i]));
                 if (next < placed[i].integrity) worn++;
                 placed[i].integrity = next;
             }
@@ -419,6 +420,8 @@ namespace OutpostZero.Colony
             view.transform.rotation = Quaternion.Euler(0f, module.rotation, 0f);
             if (look != null) Wear(view, look, y, module.integrity);
             else view.transform.localScale = Scale(module.kind, module.integrity);
+            if (module.tier >= ModuleHealth.Reinforced && ModuleHealth.Upgrades(module.kind))
+                view.transform.localScale = Vector3.Scale(view.transform.localScale, ReinforcedLook);
             if (look == null && module.site != 0)
             {
                 float bulk = BuildSite.Bulk(module.hours);
@@ -565,7 +568,7 @@ namespace OutpostZero.Colony
                 target = module;
             }
             if (target == null) return false;
-            target.integrity = Mathf.Max(0, target.integrity - Mathf.Max(1, Mathf.RoundToInt(amount)));
+            target.integrity = ModuleHealth.Hit(target.integrity, Mathf.Max(1, Mathf.RoundToInt(amount)), HpOf(target));
             if (target.integrity > 0)
             {
                 RefreshViews();
@@ -593,7 +596,7 @@ namespace OutpostZero.Colony
                 target = module;
             }
             if (target == null) return false;
-            target.integrity = Mathf.Max(0, target.integrity - Mathf.Max(1, amount));
+            target.integrity = ModuleHealth.Hit(target.integrity, Mathf.Max(1, amount), HpOf(target));
             if (target.integrity > 0)
             {
                 RefreshViews();
@@ -665,7 +668,7 @@ namespace OutpostZero.Colony
         public bool Chip(PlacedModule module, int amount)
         {
             if (module == null || !placed.Contains(module)) return false;
-            module.integrity = TrapHit.WearDown(module.integrity, amount);
+            module.integrity = ModuleHealth.Hit(module.integrity, amount, HpOf(module));
             if (module.integrity > 0)
             {
                 RefreshViews();
@@ -841,10 +844,37 @@ namespace OutpostZero.Colony
                 else scores[i] = module.integrity;
             }
             int mark = CraftGate.PickWorn(scores);
-            if (mark < 0) return false;
+            if (mark < 0) return generator ? false : Reinforce();
             placed[mark].integrity = generator ? CraftGate.MendGenerator(placed[mark].integrity) : CraftGate.BraceWall(placed[mark].integrity);
             RefreshViews();
             return true;
+        }
+
+        private static readonly Vector3 ReinforcedLook = new Vector3(1f, 1.25f, 1.3f);
+
+        private static int HpOf(PlacedModule module) => ModuleHealth.Of(module.kind, module.tier);
+
+        /// <summary>With no worn wall to brace, the kit raises a finished wall to the reinforced tier.</summary>
+        private bool Reinforce()
+        {
+            for (int i = 0; i < placed.Count; i++)
+            {
+                var module = placed[i];
+                if (!ModuleHealth.CanReinforce(module.kind, module.site, module.integrity, module.tier)) continue;
+                module.tier = ModuleHealth.Reinforced;
+                module.integrity = 100;
+                RefreshViews();
+                return true;
+            }
+            return false;
+        }
+
+        public int Reinforced()
+        {
+            int count = 0;
+            for (int i = 0; i < placed.Count; i++)
+                if (placed[i].kind == "Barricade" && placed[i].tier >= ModuleHealth.Reinforced && BuildSite.Ready(placed[i].site, placed[i].integrity)) count++;
+            return count;
         }
 
         public bool HasKind(string kind)

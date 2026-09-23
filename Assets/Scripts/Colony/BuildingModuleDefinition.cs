@@ -33,6 +33,10 @@ namespace OutpostZero.Colony
         [Tooltip("Power made (positive, a fuelled generator) or drawn (negative, lamps and turrets). Drawing modules are fed in placement order.")]
         public int power;
 
+        [Header("Health")]
+        [Tooltip("Hit points: a blow takes (damage x 100 / hp) percent of integrity. 100 takes the blow as dealt; a reinforced wall stands half as much again.")]
+        [Min(1)] public int hp = ModuleHealth.Base;
+
         public ModuleTable.Row ToRow()
         {
             return new ModuleTable.Row
@@ -47,7 +51,8 @@ namespace OutpostZero.Colony
                 Wears = wears,
                 Family = surface,
                 Tint = tint,
-                Power = power
+                Power = power,
+                Hp = hp
             };
         }
 
@@ -64,6 +69,7 @@ namespace OutpostZero.Colony
             surface = row.Family;
             tint = row.Tint;
             power = row.Power;
+            hp = row.Hp;
         }
     }
 }

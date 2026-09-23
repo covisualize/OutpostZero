@@ -863,7 +863,8 @@ namespace OutpostZero.UI
             int difficulty = WorldMapService.Instance != null ? WorldMapService.Instance.Difficulty : 2;
             bool raidLikely = RaidCall.Likely(raidDay, raidSecurity, endlessNights, raidShots, generatorRunning, walls, difficulty);
             int perimeter = GridBuilder.Instance != null ? GridBuilder.Instance.PerimeterScore : 0;
-            camp.Add(Body((raidLikely ? Loc.T("camp.raid_yes") : Loc.T("camp.raid_no")) + "  " + Loc.T("camp.shots") + " " + raidShots + "  " + Loc.T("camp.perimeter") + " " + perimeter + "%"));
+            int reinforced = GridBuilder.Instance != null ? GridBuilder.Instance.Reinforced() : 0;
+            camp.Add(Body((raidLikely ? Loc.T("camp.raid_yes") : Loc.T("camp.raid_no")) + "  " + Loc.T("camp.shots") + " " + raidShots + "  " + Loc.T("camp.perimeter") + " " + perimeter + "%" + (reinforced > 0 ? "  " + Loc.T("camp.reinforced") + " " + reinforced : "")));
             camp.Add(Button(Loc.T("camp.endure"), () => NightRaidController.Instance?.Begin()));
             if (NightRaidController.Instance != null && NightRaidController.Instance.Warning)
                 camp.Add(Body(Loc.T("camp.warn") + " " + Mathf.CeilToInt(NightRaidController.Instance.WarningLeft)));
@@ -1333,6 +1334,7 @@ namespace OutpostZero.UI
                     key.Add((int)GridBuilder.Instance.Selected);
                     key.Add(GridBuilder.Instance.PerimeterScore);
                     key.Add(GridBuilder.Instance.PowerUsed);
+                    key.Add(GridBuilder.Instance.Reinforced());
                 }
                 key.Add(storage.Food);
                 key.Add(storage.Water);

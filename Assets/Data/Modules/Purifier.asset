@@ -23,3 +23,4 @@ MonoBehaviour:
   surface: 6
   tint: {r: 0.35, g: 0.7, b: 0.78, a: 1}
   power: 0
+  hp: 100
