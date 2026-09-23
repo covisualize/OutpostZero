@@ -14,6 +14,17 @@ namespace OutpostZero.AI
             public string Prefer;
         }
 
+        /// <summary>Most zombies alive at once on the Low quality tier, whatever the difficulty.</summary>
+        public const int LowTierAlive = 16;
+
+        /// <summary>The spawner cap: the quality tier's crowd, held at <see cref="LowTierAlive"/> on Low so Nightmare cannot outgrow an integrated GPU.</summary>
+        public static int AliveCap(int quality)
+        {
+            int tier = OutpostZero.Graphics.QualityProfile.For(quality).Zombies;
+            if (quality <= 0) return tier < LowTierAlive ? tier : LowTierAlive;
+            return tier;
+        }
+
         public static int Resolve(int stored)
         {
             if (stored <= 0) return 2;

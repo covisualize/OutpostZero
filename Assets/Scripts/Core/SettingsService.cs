@@ -415,6 +415,9 @@ namespace OutpostZero.Core
         private void ApplyDisplay()
         {
             var tier = QualityProfile.For(quality);
+            if (QualitySettings.count == QualityProfile.Count && QualitySettings.GetQualityLevel() != quality)
+                QualitySettings.SetQualityLevel(quality, true);
+            QualitySettings.lodBias = tier.LodBias;
             QualitySettings.vSyncCount = vsync;
             Application.targetFrameRate = PlayOptions.FrameTarget(FrameCap, vsync != 0);
             QualitySettings.shadowDistance = tier.ShadowDistance;
@@ -426,7 +429,7 @@ namespace OutpostZero.Core
                 pipeline.msaaSampleCount = tier.Msaa;
             }
             var spawners = FindObjectsByType<ZombieSpawner>(FindObjectsSortMode.None);
-            for (int i = 0; i < spawners.Length; i++) spawners[i].ApplyCap(tier.Zombies);
+            for (int i = 0; i < spawners.Length; i++) spawners[i].ApplyCap(OutpostZero.AI.DifficultyProfile.AliveCap(quality));
             WeatherController.Instance?.ApplyBudget(tier.Particles);
             ApplyResolution();
         }

@@ -34,7 +34,7 @@ namespace OutpostZero.EditorTools
 
             // 0. Ensure URP Pipeline Asset & Settings
             EnsureURPPipelineConfigured();
-            RendererFeatureSetup.EnsureDecals();
+            RendererFeatureSetup.EnsureFeatures();
             missingModels = 0;
             PrefabCatalog.Refresh();
             DefaultDataGenerator.Generate();
@@ -58,9 +58,7 @@ namespace OutpostZero.EditorTools
             // 5. Camera Follow
             SetupCamera(player.transform);
 
-            // 6. UI HUD
-
-            // 7. Zombie Prototype Variants & Spawner
+            // 6. Zombie Prototype Variants & Spawner
             SetupZombies(player.transform);
 
             Undo.CollapseUndoOperations(undoGroup);
@@ -74,7 +72,7 @@ namespace OutpostZero.EditorTools
             Debug.Log("[Outpost Zero] Starting headless batch scene build...");
 
             EnsureURPPipelineConfigured();
-            RendererFeatureSetup.EnsureDecals();
+            RendererFeatureSetup.EnsureFeatures();
             missingModels = 0;
             DefaultDataGenerator.Generate();
             SurvivorAnimatorBuilder.Build();
@@ -111,6 +109,11 @@ namespace OutpostZero.EditorTools
             }
 
             EditorSceneManager.SaveScene(scene, ScenePath);
+            if (OcclusionBake.Run() < 0 && Application.isBatchMode)
+            {
+                throw new System.InvalidOperationException("[Outpost Zero] Occlusion bake failed.");
+            }
+            EditorSceneManager.SaveScene(scene, ScenePath);
 
             EditorBuildSettings.scenes = new EditorBuildSettingsScene[]
             {
@@ -134,34 +137,66 @@ namespace OutpostZero.EditorTools
                 Directory.CreateDirectory(SettingsDir);
             }
 
-            string urpAssetPath = $"{SettingsDir}/OutpostZero_URP.asset";
-            string rendererPath = $"{SettingsDir}/OutpostZero_URP_Renderer.asset";
-
-            var rendererData = AssetDatabase.LoadAssetAtPath<UniversalRendererData>(rendererPath);
-            if (rendererData == null)
+            UniversalRenderPipelineAsset medium = null;
+            for (int i = 0; i < QualityProfile.Count; i++)
             {
-                rendererData = ScriptableObject.CreateInstance<UniversalRendererData>();
-                AssetDatabase.CreateAsset(rendererData, rendererPath);
+                var tier = QualityProfile.For(i);
+                var rendererData = EnsureRenderer(QualityProfile.RendererPath(i));
+                var asset = AssetDatabase.LoadAssetAtPath<UniversalRenderPipelineAsset>(QualityProfile.AssetPath(i));
+                if (asset == null)
+                {
+                    asset = UniversalRenderPipelineAsset.Create(rendererData);
+                    AssetDatabase.CreateAsset(asset, QualityProfile.AssetPath(i));
+                }
+                ApplyTier(asset, rendererData, tier);
+                if (i == 1) medium = asset;
+                if (i < QualitySettings.count)
+                {
+                    QualitySettings.SetQualityLevel(i, false);
+                    QualitySettings.renderPipeline = asset;
+                    QualitySettings.lodBias = tier.LodBias;
+                    QualitySettings.shadowDistance = tier.ShadowDistance;
+                    QualitySettings.antiAliasing = tier.Msaa > 1 ? tier.Msaa : 0;
+                    QualitySettings.streamingMipmapsActive = true;
+                }
             }
+            if (QualitySettings.count != QualityProfile.Count)
+                Debug.LogWarning($"[Outpost Zero] ProjectSettings has {QualitySettings.count} quality levels; the game expects {QualityProfile.Count} (Low, Medium, High, Ultra).");
 
-            var urpAsset = AssetDatabase.LoadAssetAtPath<UniversalRenderPipelineAsset>(urpAssetPath);
-            if (urpAsset == null)
-            {
-                urpAsset = UniversalRenderPipelineAsset.Create(rendererData);
-                AssetDatabase.CreateAsset(urpAsset, urpAssetPath);
-            }
-
-            GraphicsSettings.defaultRenderPipeline = urpAsset;
-            QualitySettings.renderPipeline = urpAsset;
-
-            for (int i = 0; i < QualitySettings.count; i++)
-            {
-                QualitySettings.SetQualityLevel(i, false);
-                QualitySettings.renderPipeline = urpAsset;
-            }
-
+            GraphicsSettings.defaultRenderPipeline = medium;
+            QualitySettings.SetQualityLevel(1, false);
             AssetDatabase.SaveAssets();
-            return urpAsset;
+            return medium;
+        }
+
+        private static UniversalRendererData EnsureRenderer(string path)
+        {
+            var data = AssetDatabase.LoadAssetAtPath<UniversalRendererData>(path);
+            if (data != null) return data;
+            data = ScriptableObject.CreateInstance<UniversalRendererData>();
+            AssetDatabase.CreateAsset(data, path);
+            return data;
+        }
+
+        private static void ApplyTier(UniversalRenderPipelineAsset asset, UniversalRendererData renderer, QualityProfile.Tier tier)
+        {
+            asset.shadowDistance = tier.ShadowDistance;
+            asset.mainLightShadowmapResolution = tier.ShadowResolution;
+            asset.shadowCascadeCount = tier.Cascades;
+            asset.msaaSampleCount = tier.Msaa;
+            asset.renderScale = tier.RenderScale;
+            asset.supportsHDR = tier.Hdr;
+            asset.supportsCameraDepthTexture = true;
+            asset.useSRPBatcher = true;
+            var serialized = new SerializedObject(asset);
+            var list = serialized.FindProperty("m_RendererDataList");
+            if (list != null)
+            {
+                list.arraySize = 1;
+                list.GetArrayElementAtIndex(0).objectReferenceValue = renderer;
+                serialized.ApplyModifiedPropertiesWithoutUndo();
+            }
+            EditorUtility.SetDirty(asset);
         }
 
         private static Material LibraryMaterial(SurfaceFamily family)

@@ -3,6 +3,7 @@ namespace OutpostZero.Graphics
     /// <summary>
     /// Low through Ultra budgets for zombies, decals, shadows, and sight checks.
     /// Low targets a 30 fps integrated GPU. Medium and above target 60 fps.
+    /// Each tier owns a URP asset (Assets/Settings/OutpostZero_URP_&lt;Name&gt;.asset) and one Unity quality level at the same index.
     /// </summary>
     public static class QualityProfile
     {
@@ -13,18 +14,26 @@ namespace OutpostZero.Graphics
             public int Decals;
             public int Particles;
             public float ShadowDistance;
+            public int ShadowResolution;
+            public int Cascades;
             public float RenderScale;
             public int Msaa;
+            public bool Hdr;
             public bool Ssao;
             public bool DepthOfField;
             public bool Grain;
             public float Bloom;
+            public float LodBias;
             public float FrameMs;
         }
 
+        public const int Count = 4;
         public const int SightPerFrame = 8;
         public const float LodSwitch = 28f;
         public const float LodCull = 60f;
+        public const string SettingsFolder = "Assets/Settings";
+        public const string RendererFull = "OutpostZero_URP_Renderer";
+        public const string RendererLite = "OutpostZero_URP_Renderer_Lite";
 
         private static int nextToken;
 
@@ -34,9 +43,9 @@ namespace OutpostZero.Graphics
             {
                 return new Tier
                 {
-                    Name = "Low", Zombies = 16, Decals = 40, Particles = 80,
-                    ShadowDistance = 18f, RenderScale = 0.75f, Msaa = 1,
-                    Ssao = false, DepthOfField = false, Grain = false, Bloom = 0.12f, FrameMs = 33.3f
+                    Name = "Low", Zombies = OutpostZero.AI.DifficultyProfile.LowTierAlive, Decals = 40, Particles = 80,
+                    ShadowDistance = 18f, ShadowResolution = 1024, Cascades = 1, RenderScale = 0.75f, Msaa = 1, Hdr = false,
+                    Ssao = false, DepthOfField = false, Grain = false, Bloom = 0.12f, LodBias = 0.8f, FrameMs = 33.3f
                 };
             }
             if (index == 2)
@@ -44,8 +53,8 @@ namespace OutpostZero.Graphics
                 return new Tier
                 {
                     Name = "High", Zombies = 32, Decals = 240, Particles = 400,
-                    ShadowDistance = 60f, RenderScale = 1f, Msaa = 2,
-                    Ssao = true, DepthOfField = true, Grain = true, Bloom = 0.55f, FrameMs = 16.6f
+                    ShadowDistance = 60f, ShadowResolution = 2048, Cascades = 2, RenderScale = 1f, Msaa = 2, Hdr = true,
+                    Ssao = true, DepthOfField = true, Grain = true, Bloom = 0.55f, LodBias = 1.25f, FrameMs = 16.6f
                 };
             }
             if (index >= 3)
@@ -53,17 +62,28 @@ namespace OutpostZero.Graphics
                 return new Tier
                 {
                     Name = "Ultra", Zombies = 40, Decals = 400, Particles = 600,
-                    ShadowDistance = 80f, RenderScale = 1f, Msaa = 4,
-                    Ssao = true, DepthOfField = true, Grain = true, Bloom = 0.7f, FrameMs = 16.6f
+                    ShadowDistance = 80f, ShadowResolution = 4096, Cascades = 4, RenderScale = 1f, Msaa = 4, Hdr = true,
+                    Ssao = true, DepthOfField = true, Grain = true, Bloom = 0.7f, LodBias = 1.5f, FrameMs = 16.6f
                 };
             }
             return new Tier
             {
                 Name = "Medium", Zombies = 32, Decals = 120, Particles = 220,
-                ShadowDistance = 40f, RenderScale = 1f, Msaa = 2,
-                Ssao = true, DepthOfField = false, Grain = false, Bloom = 0.35f, FrameMs = 16.6f
+                ShadowDistance = 40f, ShadowResolution = 2048, Cascades = 2, RenderScale = 1f, Msaa = 2, Hdr = true,
+                Ssao = true, DepthOfField = false, Grain = false, Bloom = 0.35f, LodBias = 1f, FrameMs = 16.6f
             };
         }
+
+        public static int Clamp(int index) => index < 0 ? 0 : index >= Count ? Count - 1 : index;
+
+        public static string AssetName(int index) => "OutpostZero_URP_" + For(Clamp(index)).Name;
+
+        public static string AssetPath(int index) => SettingsFolder + "/" + AssetName(index) + ".asset";
+
+        /// <summary>Low draws without SSAO, so its asset points at the renderer that lacks the feature.</summary>
+        public static string RendererName(int index) => For(Clamp(index)).Ssao ? RendererFull : RendererLite;
+
+        public static string RendererPath(int index) => SettingsFolder + "/" + RendererName(index) + ".asset";
 
         public static int Lod(float distance)
         {
@@ -88,9 +108,18 @@ namespace OutpostZero.Graphics
             return nextToken;
         }
 
-        public static bool SightDue(int token, int frame)
+        /// <summary>How many frames a full sight sweep takes so that about <see cref="SightPerFrame"/> zombies look each frame.</summary>
+        public static int SightGroups(int alive)
         {
-            int groups = 4;
+            if (alive <= SightPerFrame) return 1;
+            return (alive + SightPerFrame - 1) / SightPerFrame;
+        }
+
+        public static bool SightDue(int token, int frame) => SightDue(token, frame, 4);
+
+        public static bool SightDue(int token, int frame, int groups)
+        {
+            if (groups <= 1) return true;
             int slot = token % groups;
             if (slot < 0) slot += groups;
             int turn = frame % groups;
