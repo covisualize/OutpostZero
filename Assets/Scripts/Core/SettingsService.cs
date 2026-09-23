@@ -95,11 +95,22 @@ namespace OutpostZero.Core
                 return;
             }
             Instance = this;
+            LoadLanguagePacks();
             LoadFile();
             ApplyVolume();
             ApplyDisplay();
             ApplyWindow();
             Application.focusChanged += OnFocus;
+        }
+
+        private static void LoadLanguagePacks()
+        {
+            var problems = new System.Collections.Generic.List<string>();
+            Loc.ClearPacks();
+            int added = LocPacks.Load(Path.Combine(Application.streamingAssetsPath, LocPacks.Folder), problems);
+            if (added > 0) Debug.Log("[Loc] Loaded " + added + " translated language(s): " + string.Join(", ", Loc.Packs));
+            for (int i = 0; i < problems.Count && i < 20; i++) Debug.LogWarning("[Loc] " + problems[i]);
+            if (problems.Count > 20) Debug.LogWarning("[Loc] " + (problems.Count - 20) + " more translation problems.");
         }
 
         private void OnDestroy()

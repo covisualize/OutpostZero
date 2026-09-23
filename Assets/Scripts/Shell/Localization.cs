@@ -1661,9 +1661,46 @@ namespace OutpostZero.Shell
 
         public static IEnumerable<string> Keys => english.Keys;
 
+        private static readonly Dictionary<string, Dictionary<string, string>> packs = new Dictionary<string, Dictionary<string, string>>();
+        private static readonly Dictionary<string, string> packNames = new Dictionary<string, string>();
+        private static readonly List<string> packOrder = new List<string>();
+
+        /// <summary>Languages loaded from translator CSVs, in the order they were added.</summary>
+        public static IReadOnlyList<string> Packs => packOrder;
+
+        /// <summary>Adds or replaces a translated language. Keys it lacks read in English.</summary>
+        public static void AddPack(string code, string name, Dictionary<string, string> table)
+        {
+            if (string.IsNullOrEmpty(code) || table == null) return;
+            if (!packs.ContainsKey(code)) packOrder.Add(code);
+            packs[code] = table;
+            packNames[code] = string.IsNullOrEmpty(name) ? code.ToUpperInvariant() : name;
+        }
+
+        public static void ClearPacks()
+        {
+            packs.Clear();
+            packNames.Clear();
+            packOrder.Clear();
+        }
+
+        public static bool IsPack(string language) => language != null && packs.ContainsKey(language);
+
+        public static string PackName(string language)
+        {
+            return language != null && packNames.TryGetValue(language, out var name) ? name : (language ?? "").ToUpperInvariant();
+        }
+
+        private static Dictionary<string, string> Table(string language)
+        {
+            if (language == "es") return spanish;
+            if (language != null && packs.TryGetValue(language, out var pack)) return pack;
+            return english;
+        }
+
         public static List<string> MissingIn(string language)
         {
-            var table = language == "es" ? spanish : english;
+            var table = Table(language);
             var missing = new List<string>();
             foreach (var key in english.Keys)
             {
@@ -1674,8 +1711,7 @@ namespace OutpostZero.Shell
 
         public static bool Has(string key, string language)
         {
-            var table = language == "es" ? spanish : english;
-            return key != null && table.ContainsKey(key);
+            return key != null && Table(language).ContainsKey(key);
         }
 
         public static string T(string key, string language)
@@ -1688,8 +1724,11 @@ namespace OutpostZero.Shell
         /// </summary>
         public static string Raw(string key, string language)
         {
-            var table = language == "es" ? spanish : english;
-            if (!table.TryGetValue(key, out var value)) return key;
+            if (key == null) return "";
+            if (!Table(language).TryGetValue(key, out var value))
+            {
+                if (!IsPack(language) || !english.TryGetValue(key, out value)) return key;
+            }
             return language == PseudoLoc.Code ? PseudoLoc.Wrap(value) : value;
         }
 

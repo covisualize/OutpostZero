@@ -147,6 +147,14 @@ A PR is ready when Typecheck and Blender assets pass and nothing new shows up in
 - New scripts need a `.cs.meta` file with a unique 32-character hex GUID.
 - Add an EditMode test for every new rule.
 
+**Translations.** English and Spanish are built into `Shell/Localization.cs`. Other languages ship as CSV files, with no rebuild:
+
+1. Run **Tools > Outpost Zero > Export Strings CSV** to write `Localization/strings.csv` (`key,en,es`).
+2. The translator adds a column headed with the language code (`ru`, `ja`, `pt-br`, `zh-hans`). They can also add a row starting with `@name` that names each column in its own language (`Русский`).
+3. Save the sheet as UTF-8 into `Assets/StreamingAssets/Localization/<code>.csv`. On a player, the folder is `<Game>_Data/StreamingAssets/Localization`.
+
+At startup, `LocPacks` loads every CSV in that folder in name order. A later file replaces a language code an earlier file defined. The language button then offers the new language after English and Spanish. Blank cells read in English. The loader drops and logs (`[Loc] ...`) any unknown key, any line whose `{0}` or `{key:Action}` tokens differ from English, and any unusable column code. Cyrillic and CJK languages get an installed OS font automatically (`FontChain`). Export again to hand translators a sheet with the loaded columns filled in.
+
 **Assets.** Follow the naming and pivot rules in [ASSET_PIPELINE.md](ASSET_PIPELINE.md), and commit generated textures and `.meta` files together with the FBX.
 
 ## Planning

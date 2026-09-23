@@ -51,7 +51,14 @@ namespace OutpostZero.Shell
             return !string.IsNullOrEmpty(text) && text[0] == Open && text[text.Length - 1] == Close;
         }
 
-        public static string[] Languages(bool dev) => dev ? new[] { "en", "es", Code } : new[] { "en", "es" };
+        /// <summary>The languages the settings button cycles: built-in, then translator packs, then the dev test language.</summary>
+        public static string[] Languages(bool dev)
+        {
+            var codes = new System.Collections.Generic.List<string> { "en", "es" };
+            codes.AddRange(Loc.Packs);
+            if (dev) codes.Add(Code);
+            return codes.ToArray();
+        }
 
         public static string Next(string current, bool dev)
         {
@@ -73,6 +80,7 @@ namespace OutpostZero.Shell
         {
             if (code == "es") return "Idioma: ES";
             if (code == Code) return Wrap("Language: pseudo");
+            if (Loc.IsPack(code)) return "Language: " + Loc.PackName(code);
             return "Language: EN";
         }
     }
