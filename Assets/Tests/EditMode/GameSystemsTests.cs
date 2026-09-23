@@ -766,6 +766,27 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void TheCurtainFadesToBlackAndBackUnlessMotionIsReduced()
+        {
+            Assert.AreEqual(0f, Curtain.Rise(0f, Curtain.Down));
+            Assert.AreEqual(1f, Curtain.Rise(Curtain.Down, Curtain.Down));
+            Assert.AreEqual(0.5f, Curtain.Rise(Curtain.Down / 2f, Curtain.Down), 1e-5f);
+            float last = 0f;
+            for (int i = 1; i <= 10; i++)
+            {
+                float alpha = Curtain.Rise(Curtain.Down * i / 10f, Curtain.Down);
+                Assert.GreaterOrEqual(alpha, last);
+                last = alpha;
+            }
+            Assert.AreEqual(1f, Curtain.Fall(0f, Curtain.Up));
+            Assert.AreEqual(0f, Curtain.Fall(Curtain.Up, Curtain.Up));
+            Assert.AreEqual(1f, Curtain.Rise(0f, 0f), "no fade means already dark");
+            Assert.AreEqual(0f, Curtain.Length(Curtain.Down, true));
+            Assert.AreEqual(Curtain.Down, Curtain.Length(Curtain.Down, false));
+            Assert.Less(Curtain.Down + Curtain.Up, 1f, "the fade must not dominate a travel");
+        }
+
+        [Test]
         public void SceneRouteNamesEveryStepAndEndsOnAFullBar()
         {
             var titles = new System.Collections.Generic.HashSet<string>();

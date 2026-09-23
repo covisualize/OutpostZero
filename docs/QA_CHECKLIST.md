@@ -119,7 +119,7 @@ Play this in a player build, not the editor. Use Survivor difficulty and a fixed
 
 ### M5: Shell and release
 
-- [ ] PRO-63 **Play**: see the full loop in section 2. Esc backs out of every menu one level at a time.
+- [ ] PRO-63 **Play**: see the full loop in section 2. Esc backs out of every menu one level at a time. Every travel fades to black before the loading card and lifts after arrival. With screen shake at 0 it cuts with no fade.
 - [ ] PRO-64 **Automated** (round trip, `.bak` recovery, v1 fixture migration) and **Play**: quit at each camp phase and Continue restores it.
 - [ ] PRO-65 **Automated** (`SettingsFlowTests`: render scale round-trips, closing with changes asks keep/revert, focus loss mutes, fixed and taken keys are refused with a reason, and `{key:Action}` tokens in hints, lessons and the interact prompt follow a rebind) and **Play**: every setting survives a restart and applies at once. Rebinding a key updates the HUD prompts.
 - [ ] PRO-66 **Automated** (audio buses and clip validation; `AudioCoverageTests` checks every played, computed and mixer-named id has a clip, and that `SfxLibrary` ids are real) and **Play**: playing blind, you can tell the weapon, surface, zombie type, distance and tension.

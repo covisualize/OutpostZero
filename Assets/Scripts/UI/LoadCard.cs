@@ -96,9 +96,16 @@ namespace OutpostZero.UI
             fill.style.width = Length.Percent(Mathf.Clamp01(progress) * 100f);
         }
 
+        public void Fade(float alpha)
+        {
+            veil.style.display = DisplayStyle.Flex;
+            veil.style.opacity = Mathf.Clamp01(alpha);
+        }
+
         public void Hide()
         {
             veil.style.display = DisplayStyle.None;
+            veil.style.opacity = 1f;
         }
     }
 }

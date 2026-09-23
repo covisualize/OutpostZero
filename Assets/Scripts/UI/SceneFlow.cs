@@ -52,7 +52,9 @@ namespace OutpostZero.UI
         {
             Busy = true;
             Time.timeScale = 0f;
+            bool reduced = SettingsService.ShakeScale <= 0.01f;
             Present(step, 0f);
+            yield return Veil(true, Curtain.Length(Curtain.Down, reduced));
             float[] beats = SceneRoute.Beats(step);
             for (int i = 0; i < beats.Length; i++)
             {
@@ -70,8 +72,20 @@ namespace OutpostZero.UI
             Current = step;
             SceneEntries.Dispatch(new FlowContext(from, step, arrived != null), Debug.LogException);
             yield return new WaitForSecondsRealtime(0.12f);
+            yield return Veil(false, Curtain.Length(Curtain.Up, reduced));
             card?.Hide();
             Busy = false;
+        }
+
+        private IEnumerator Veil(bool down, float duration)
+        {
+            if (card == null) yield break;
+            for (float t = 0f; t < duration; t += Time.unscaledDeltaTime)
+            {
+                card.Fade(down ? Curtain.Rise(t, duration) : Curtain.Fall(t, duration));
+                yield return null;
+            }
+            card.Fade(down ? 1f : 0f);
         }
 
         private void Present(FlowStep step, float progress)
