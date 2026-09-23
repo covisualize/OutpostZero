@@ -330,15 +330,16 @@ namespace OutpostZero.UI
             }
             else
             {
-                string[] stock = faction.Stock;
-                for (int i = 0; i < stock.Length; i++)
-                {
-                    string itemId = stock[i];
-                    string label = Loc.Item(itemId);
-                    if (itemId == CaravanBook.Premium(id)) label += "  " + Loc.T("stall.trusted");
-                    parent.Add(Button(StallVoice.Buy(label, faction.Price(itemId), null), () => faction.Buy(itemId)));
-                }
-                if (standing < CaravanBook.Trusted) parent.Add(Body(Loc.T("stall.trust_at") + " " + CaravanBook.Trusted));
+                var panes = new VisualElement { style = { flexDirection = FlexDirection.Row, alignItems = Align.FlexStart } };
+                var ours = new VisualElement { style = { flexGrow = 1, flexBasis = 0, marginRight = 12 } };
+                var theirs = new VisualElement { style = { flexGrow = 1, flexBasis = 0 } };
+                panes.Add(ours);
+                panes.Add(theirs);
+                parent.Add(panes);
+
+                int scrap = ColonyStorage.Instance != null ? ColonyStorage.Instance.Scrap : 0;
+                ours.Add(Title(Loc.T("stall.yours") + "  " + scrap + " " + Loc.T("bill.scrap")));
+                int sellable = 0;
                 var pack = PlayerRegistry.Current != null ? PlayerRegistry.Current.GetComponent<PlayerInventory>() : null;
                 if (pack != null)
                 {
@@ -346,9 +347,24 @@ namespace OutpostZero.UI
                     {
                         if (carried == null || carried.Quantity <= 0 || !CaravanBook.Sellable(carried.ItemId)) continue;
                         string sold = carried.ItemId;
-                        parent.Add(Button(Loc.T("stall.sell_item") + " " + Loc.Item(sold) + " x" + carried.Quantity + "  +" + faction.Offer(sold), () => faction.Sell(sold)));
+                        ours.Add(Button(Loc.T("stall.sell_item") + " " + Loc.Item(sold) + " x" + carried.Quantity + "  +" + faction.Offer(sold), () => faction.Sell(sold)));
+                        sellable++;
                     }
                 }
+                if (sellable == 0) ours.Add(Body(Loc.T("stall.nothing")));
+
+                theirs.Add(Title(Loc.T("stall.theirs")));
+                string[] stock = faction.Stock;
+                for (int i = 0; i < stock.Length; i++)
+                {
+                    string itemId = stock[i];
+                    string label = Loc.Item(itemId);
+                    if (itemId == CaravanBook.Premium(id)) label += "  " + Loc.T("stall.trusted");
+                    var buy = Button(StallVoice.Buy(label, faction.Price(itemId), null), () => faction.Buy(itemId));
+                    if (scrap < faction.Price(itemId)) buy.style.color = new Color(0.55f, 0.5f, 0.48f);
+                    theirs.Add(buy);
+                }
+                if (standing < CaravanBook.Trusted) theirs.Add(Body(Loc.T("stall.trust_at") + " " + CaravanBook.Trusted));
             }
             string questId = id == "clinic" || id == "farmers" ? id : "caravan";
             parent.Add(Body(StallVoice.Quest(id, CaravanBook.QuestDone(faction.Quests, questId), null)));

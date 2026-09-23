@@ -199,7 +199,8 @@ Play this in a player build, not the editor. Use Survivor difficulty and a fixed
   - The leader haggles 1% off per point of Leadership, capped at 10%.
   - Already in place: four factions with standing from −100 to 100 (prices move ±30%, slow decay, a gift on each visit, saved), a visit every 3, 4 or 5 days in rotation, a permanent Caravan stall once a Trading Post stands, the Militia refusing below −20 and flagging an ambush below −40, three quests (deliver 4 medkits to the Clinic for a blueprint, clear a district for the Farmers, get back on a Caravan day), and a caravan stall with guards in districts on visit days.
   - Factions are `FactionDefinition` assets in `Assets/Data/Factions` (4), listed in `Resources/FactionBook.asset`. Each holds its name, stock, the item trust adds, and the standing below which it refuses trade. The stall loads the book on start, and `CaravanBook` answers only for factions the book lacks. **Tools > Outpost Zero > Sync Faction Book** (also run by Generate Default Data) creates missing assets. `FactionBookTests` holds every asset equal to the built-in table and checks the overrides.
-  - Deviation: the four faction ids stay fixed in code, because saves keep standing in that order; prices are per item rather than per faction; and the trade screen is one list rather than two panes.
+  - The stall is two panes: your camp on the left (camp scrap and every carried item it will buy back, with the offer) and the faction's table on the right (its stock at the standing price, dimmed when the camp can't pay, and the trusted item). Open the stall with a full pack and check selling stays on the left and buying on the right.
+  - Deviation: the four faction ids stay fixed in code, because saves keep standing in that order; prices are per item rather than per faction.
   - Automated: `FactionTradeTests`.
 
 ### M5: Shell and release

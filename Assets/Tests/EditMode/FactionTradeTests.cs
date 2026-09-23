@@ -8,6 +8,24 @@ namespace OutpostZero.Tests.EditMode
     public class FactionTradeTests
     {
         [Test]
+        public void TheStallIsTwoPanesYourCampBesideTheirTable()
+        {
+            string ui = System.IO.File.ReadAllText(System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), "Assets/Scripts/UI/OutpostInterface.cs"));
+            int start = ui.IndexOf("private static void DrawTrade(");
+            Assert.Greater(start, 0);
+            string trade = ui.Substring(start, ui.IndexOf("private static string Marks(", start) - start);
+            StringAssert.Contains("ours.Add(Title(Loc.T(\"stall.yours\")", trade);
+            StringAssert.Contains("theirs.Add(Title(Loc.T(\"stall.theirs\")", trade);
+            StringAssert.Contains("faction.Sell(sold)", trade.Substring(trade.IndexOf("stall.yours"), trade.IndexOf("stall.theirs") - trade.IndexOf("stall.yours")), "selling sits in the camp pane");
+            StringAssert.Contains("faction.Buy(itemId)", trade.Substring(trade.IndexOf("stall.theirs")), "buying sits in the faction pane");
+            foreach (string key in new[] { "stall.yours", "stall.theirs", "stall.nothing" })
+            {
+                Assert.AreNotEqual(key, Loc.T(key, "en"), key);
+                Assert.AreNotEqual(key, Loc.T(key, "es"), key);
+            }
+        }
+
+        [Test]
         public void TrustOpensEachFactionsPremiumStock()
         {
             foreach (var id in CaravanBook.Ids)
