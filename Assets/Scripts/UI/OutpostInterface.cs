@@ -366,11 +366,12 @@ namespace OutpostZero.UI
                 }
                 if (standing < CaravanBook.Trusted) theirs.Add(Body(Loc.T("stall.trust_at") + " " + CaravanBook.Trusted));
             }
-            string questId = id == "clinic" || id == "farmers" ? id : "caravan";
-            parent.Add(Body(StallVoice.Quest(id, CaravanBook.QuestDone(faction.Quests, questId), null)));
-            if (id == "clinic" && !CaravanBook.QuestDone(faction.Quests, "clinic"))
+            parent.Add(Body(StallVoice.Quest(id, CaravanBook.QuestDone(faction.Quests, id), null)));
+            if (id == "clinic" && faction.MedsWanted > 0 && !CaravanBook.QuestDone(faction.Quests, "clinic"))
             {
-                parent.Add(Button(Loc.T("stall.deliver"), () => faction.DeliverMedkits()));
+                var bag = PlayerRegistry.Current != null ? PlayerRegistry.Current.GetComponent<PlayerInventory>() : null;
+                int carried = bag != null ? bag.CarriedMeds : 0;
+                parent.Add(Button(Loc.T("stall.deliver") + "  " + carried + "/" + faction.MedsWanted, () => faction.DeliverMeds()));
             }
             parent.Add(Button(Loc.T("stall.leave"), faction.Toggle));
         }

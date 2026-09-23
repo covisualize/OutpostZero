@@ -1195,8 +1195,8 @@ namespace OutpostZero.Tests.EditMode
             Assert.AreEqual("Hace falta un banco", StallVoice.Block("Need a workbench", "es"));
             Assert.AreEqual("Need a medic on duty", StallVoice.Block("Need a medic on duty", "en"));
             Assert.AreEqual("Hace falta un médico de turno", StallVoice.Block("Need a medic on duty", "es"));
-            Assert.AreEqual("The Clinic wants 4 medkits", StallVoice.Quest("clinic", false, "en"));
-            Assert.AreEqual("La Clínica pide 4 botiquines", StallVoice.Quest("clinic", false, "es"));
+            Assert.AreEqual("The Clinic wants 10 meds", StallVoice.Quest("clinic", false, "en"));
+            Assert.AreEqual("La Clínica pide 10 medicinas", StallVoice.Quest("clinic", false, "es"));
             Assert.AreEqual("Field dressings learned", StallVoice.Quest("clinic", true, "en"));
             Assert.AreEqual("Escort complete", StallVoice.Quest("caravan", true, "en"));
             Assert.AreEqual("Escolta cumplida", StallVoice.Quest("caravan", true, "es"));
@@ -4882,8 +4882,8 @@ namespace OutpostZero.Tests.EditMode
             Assert.AreEqual("Bartered a bandage for 3 scrap", StallVoice.Bartered(3, "en"));
             Assert.AreEqual("Bartered a bandage for 0 scrap", StallVoice.Bartered(-1, "en"));
             Assert.AreEqual("Cambiaste un vendaje por 3 chatarra", StallVoice.Bartered(3, "es"));
-            Assert.AreEqual("The Clinic wants 4 medkits", StallVoice.Quest("clinic", false, "en"));
-            Assert.AreEqual("La Clínica pide 4 botiquines", StallVoice.Quest("clinic", false, "es"));
+            Assert.AreEqual("The Clinic wants 10 meds", StallVoice.Quest("clinic", false, "en"));
+            Assert.AreEqual("La Clínica pide 10 medicinas", StallVoice.Quest("clinic", false, "es"));
             Assert.AreEqual("Clinic blueprint: field dressings", StallVoice.Blueprint("en"));
             Assert.AreEqual("Plano de la Clínica: vendajes de campaña", StallVoice.Blueprint("es"));
             Assert.AreEqual("Free Farmers remember the cleared nest", StallVoice.Nest("en"));

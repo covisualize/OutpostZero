@@ -135,7 +135,10 @@ namespace OutpostZero.Expedition
         public void Brief(string districtId)
         {
             ExpeditionBook.Ensure();
-            board = new ObjectiveBoard(ObjectivePlan.For(districtId));
+            var specs = new List<ObjectiveSpec>(ObjectivePlan.For(districtId));
+            var trade = OutpostZero.Colony.FactionTrade.Instance;
+            if (!string.IsNullOrEmpty(districtId) && trade != null) specs.AddRange(trade.FieldQuests());
+            board = new ObjectiveBoard(specs);
             spots.Clear();
             OnObjectivesChanged?.Invoke();
         }

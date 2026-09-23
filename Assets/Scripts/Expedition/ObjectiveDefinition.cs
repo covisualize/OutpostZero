@@ -11,7 +11,7 @@ namespace OutpostZero.Expedition
 
         public ObjectiveKind kind = ObjectiveKind.Collect;
 
-        [Tooltip("Collect: an item category such as Medical. Retrieve: a key item id or \"poi\". Reach: a spot name. Rescue: a survivor id. ClearNest: \"nest\". Empty matches any.")]
+        [Tooltip("Collect: an item category such as Medical. Retrieve: a key item id or \"poi\". Reach: a spot name. Rescue: a survivor id. ClearNest: \"nest\". Escort: \"caravan\". Empty matches any.")]
         public string target = "";
 
         [Min(1)] public int count = 1;

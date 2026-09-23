@@ -21,3 +21,4 @@ MonoBehaviour:
   premium: pipe_bomb
   refuseBelow: -20
   markup: 120
+  quest: {fileID: 0}

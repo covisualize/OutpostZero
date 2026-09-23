@@ -20,3 +20,4 @@ MonoBehaviour:
   premium: antibiotics
   refuseBelow: -101
   markup: 110
+  quest: {fileID: 11400000, guid: fb46c41537274b1485dd70a325991745, type: 2}

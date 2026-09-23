@@ -305,7 +305,7 @@ namespace OutpostZero.Core
             if (LastOutcome.bonusScrap > 0) ColonyStorage.Instance?.AddScrap(LastOutcome.bonusScrap);
             SurvivorRoster.Instance?.RewardReturn();
             BringHomeBite();
-            FactionTrade.Instance?.NoteExtracted();
+            FactionTrade.Instance?.NoteExtracted(ObjectiveTracker.Instance != null ? ObjectiveTracker.Instance.Board : null);
             SetState(won ? GameState.Victory : GameState.ExpeditionResults);
             SaveSystem.Instance?.Save(false);
             AudioManager.Instance?.Sting("extract");

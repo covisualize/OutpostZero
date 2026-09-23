@@ -21,3 +21,4 @@ MonoBehaviour:
   premium: flare
   refuseBelow: -101
   markup: 100
+  quest: {fileID: 11400000, guid: 60cbbd0b9d544124a8a14fe801b0aed2, type: 2}

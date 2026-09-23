@@ -25,6 +25,10 @@ namespace OutpostZero.Colony
         [Tooltip("Percent of the base price this faction asks before standing and haggling (90 to 150).")]
         [Range(CaravanBook.MarkupFloor, CaravanBook.MarkupCeiling)] public int markup = 100;
 
+        [Header("Quest")]
+        [Tooltip("The objective the faction asks for, or none. Collect is handed in at the stall; ClearNest and Escort join the expedition board.")]
+        public OutpostZero.Expedition.ObjectiveDefinition quest;
+
         public FactionTable.Row ToRow()
         {
             return new FactionTable.Row
@@ -34,7 +38,8 @@ namespace OutpostZero.Colony
                 Stock = stock != null ? (string[])stock.Clone() : new string[0],
                 Premium = premium ?? "",
                 RefuseBelow = refuseBelow,
-                Markup = markup
+                Markup = markup,
+                Quest = quest != null ? quest.ToSpec() : default
             };
         }
 

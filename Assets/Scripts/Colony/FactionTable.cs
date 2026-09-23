@@ -36,6 +36,7 @@ namespace OutpostZero.Colony
             public string Premium = "";
             public int RefuseBelow = CaravanBook.Never;
             public int Markup = 100;
+            public OutpostZero.Expedition.ObjectiveSpec Quest;
         }
 
         private static readonly Dictionary<string, Row> rows = new Dictionary<string, Row>();
@@ -86,7 +87,8 @@ namespace OutpostZero.Colony
                     Stock = CaravanBook.CodeStock(id),
                     Premium = CaravanBook.CodePremium(id),
                     RefuseBelow = CaravanBook.CodeRefuseBelow(id),
-                    Markup = CaravanBook.CodeMarkup(id)
+                    Markup = CaravanBook.CodeMarkup(id),
+                    Quest = FactionQuest.Code(id)
                 });
             }
             return list;

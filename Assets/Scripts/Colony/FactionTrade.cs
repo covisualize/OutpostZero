@@ -1,5 +1,7 @@
+using System.Collections.Generic;
 using UnityEngine;
 using OutpostZero.Core;
+using OutpostZero.Expedition;
 using OutpostZero.Items;
 using OutpostZero.Player;
 using OutpostZero.Shell;
@@ -168,39 +170,55 @@ namespace OutpostZero.Colony
             return true;
         }
 
-        public bool DeliverMedkits()
+        public int MedsWanted
         {
-            if (CaravanBook.QuestDone(quests, "clinic")) return false;
+            get
+            {
+                var quest = FactionQuest.For("clinic");
+                return FactionQuest.Has(quest) && quest.Kind == ObjectiveKind.Collect ? quest.Count : 0;
+            }
+        }
+
+        public bool DeliverMeds()
+        {
+            int wanted = MedsWanted;
+            if (wanted <= 0 || CaravanBook.QuestDone(quests, "clinic")) return false;
             var inventory = PlayerRegistry.Current != null ? PlayerRegistry.Current.GetComponent<PlayerInventory>() : null;
-            if (inventory == null || !inventory.TrySpendMedical(4))
+            if (inventory == null || !inventory.TrySpendMeds(wanted))
             {
                 GameplayFeedback.Toast(StallVoice.Quest("clinic", false, null));
                 return false;
             }
-            quests = CaravanBook.MarkQuest(quests, "clinic");
-            Fit();
-            CaravanBook.Shift(standing, "clinic", 15);
-            ColonyStorage.Instance?.LearnPrint("dressing");
-            GameplayFeedback.Toast(StallVoice.Blueprint(null));
+            Complete("clinic");
             return true;
         }
 
-        public void NoteDistrictCleared()
+        /// <summary>The caravan stands in the districts today, so its porter can be walked out.</summary>
+        public bool CaravanOut => !string.IsNullOrEmpty(CaravanBook.Counterparty(Day, PostBuilt));
+
+        /// <summary>The unfinished field quests the next run carries on its board.</summary>
+        public List<ObjectiveSpec> FieldQuests() => FactionQuest.Open(quests, CaravanOut);
+
+        /// <summary>Pays every faction quest the leader brought home done on the board.</summary>
+        public void NoteExtracted(ObjectiveBoard board)
         {
-            if (CaravanBook.QuestDone(quests, "farmers")) return;
-            quests = CaravanBook.MarkQuest(quests, "farmers");
-            Fit();
-            CaravanBook.Shift(standing, "farmers", 10);
-            GameplayFeedback.Toast(StallVoice.Nest(null));
+            foreach (string faction in FactionQuest.Earned(board, quests)) Complete(faction);
         }
 
-        public void NoteExtracted()
+        private void Complete(string faction)
         {
-            if (!CaravanBook.Visits(Day) || CaravanBook.QuestDone(quests, "caravan")) return;
-            quests = CaravanBook.MarkQuest(quests, "caravan");
+            if (CaravanBook.QuestDone(quests, faction)) return;
+            quests = CaravanBook.MarkQuest(quests, faction);
             Fit();
-            CaravanBook.Shift(standing, "caravan", 10);
-            GameplayFeedback.Toast(StallVoice.Through(null));
+            CaravanBook.Shift(standing, faction, FactionQuest.CodeStanding(faction));
+            string print = FactionQuest.CodePrint(faction);
+            if (print.Length > 0)
+            {
+                ColonyStorage.Instance?.LearnPrint(print);
+                GameplayFeedback.Toast(StallVoice.Blueprint(null));
+            }
+            if (faction == "farmers") GameplayFeedback.Toast(StallVoice.Nest(null));
+            else if (faction == "caravan") GameplayFeedback.Toast(StallVoice.Through(null));
         }
 
         public void OnMorning(int day)

@@ -10,13 +10,14 @@ namespace OutpostZero.Expedition
         Reach,
         Retrieve,
         Rescue,
-        ClearNest
+        ClearNest,
+        Escort
     }
 
     /// <summary>
     /// One expedition objective. Collect counts pickups of an item category, Reach a named spot, Retrieve a key
-    /// item id or "poi" for the marked room, Rescue a survivor id brought home, ClearNest kills near a nest.
-    /// An empty target matches any key of the kind.
+    /// item id or "poi" for the marked room, Rescue a survivor id brought home, ClearNest kills near a nest,
+    /// Escort a caravan porter walked to the gate. An empty target matches any key of the kind.
     /// </summary>
     public readonly struct ObjectiveSpec
     {

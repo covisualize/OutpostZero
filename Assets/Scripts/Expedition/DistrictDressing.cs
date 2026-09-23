@@ -437,6 +437,20 @@ namespace OutpostZero.Expedition
             stall.AddComponent<CampStation>().Configure(StationKind.Merchant);
             RaiseGuard(new Vector3(6.6f, 0.95f, 3.2f));
             RaiseGuard(new Vector3(9.4f, 0.95f, 3.2f));
+            var board = ObjectiveTracker.Instance != null ? ObjectiveTracker.Instance.Board : null;
+            if (board != null && board.Wants(ObjectiveKind.Escort)) RaisePorter(new Vector3(8f, 0.95f, 2.6f));
+        }
+
+        private void RaisePorter(Vector3 position)
+        {
+            var porter = GameObject.CreatePrimitive(PrimitiveType.Capsule);
+            porter.name = "CaravanPorter";
+            porter.transform.SetParent(root, false);
+            porter.transform.position = position;
+            porter.transform.localScale = new Vector3(0.5f, 0.9f, 0.5f);
+            porter.layer = GameLayers.Interactable;
+            Paint(porter.GetComponent<Renderer>(), new Color(0.6f, 0.48f, 0.3f));
+            porter.AddComponent<CaravanPorter>();
         }
 
         private void RaiseGuard(Vector3 position)

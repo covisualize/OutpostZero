@@ -477,6 +477,35 @@ namespace OutpostZero.Player
             return true;
         }
 
+        public int CarriedMeds => FactionQuest.Meds(medicalKits, MedicalItems());
+
+        /// <summary>Hands in meds for a quest: loose Medical items first, then medkits; nothing goes if the pack is short.</summary>
+        public bool TrySpendMeds(int count)
+        {
+            var taken = new List<KeyValuePair<string, int>>();
+            if (!FactionQuest.Split(count, medicalKits, MedicalItems(), taken, out int kits)) return false;
+            foreach (var take in taken)
+            {
+                var item = items.Find(entry => entry.ItemId == take.Key && entry.Category == ItemCategory.Medical);
+                if (item == null) continue;
+                item.Quantity -= take.Value;
+                if (item.Quantity <= 0) items.Remove(item);
+            }
+            medicalKits -= kits;
+            RecalculateWeight();
+            OnInventoryChanged?.Invoke();
+            return true;
+        }
+
+        private List<KeyValuePair<string, int>> MedicalItems()
+        {
+            var list = new List<KeyValuePair<string, int>>();
+            foreach (var item in items)
+                if (item != null && item.Category == ItemCategory.Medical && item.Quantity > 0)
+                    list.Add(new KeyValuePair<string, int>(item.ItemId, item.Quantity));
+            return list;
+        }
+
         public int LastDoseSkill { get; private set; }
 
         public bool LastEase { get; private set; }

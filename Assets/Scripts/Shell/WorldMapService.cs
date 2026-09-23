@@ -219,7 +219,6 @@ namespace OutpostZero.Shell
                 if (ColonyStorage.Instance.Prints != known) GameplayFeedback.Toast(Loc.T("camp.print") + ": " + Loc.T("print." + print));
             }
             if (!CurrentOpen()) SelectFirstOpen();
-            FactionTrade.Instance?.NoteDistrictCleared();
         }
 
         public void NoteBroadcast()
