@@ -140,6 +140,7 @@ namespace OutpostZero.EditorTools
             AssetDatabase.Refresh();
             foreach (var problem in ItemDatabaseSync.Sync()) Debug.LogWarning("[DefaultDataGenerator] " + problem);
             RecipeBookSync.Sync();
+            ModuleBookSync.Sync();
             SyncWeaponSet();
         }
 

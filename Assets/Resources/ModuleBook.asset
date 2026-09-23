@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c75ba9f8091a2b3c4d5e6f708192a4d7, type: 3}
+  m_Name: ModuleBook
+  m_EditorClassIdentifier: OutpostZero::OutpostZero.Colony.ModuleBook
+  modules:
+  - {fileID: 11400000, guid: 2e65bd6cc0d74053a2d4871830d60d92, type: 2}
+  - {fileID: 11400000, guid: 6a0a9b94aa714e71b5626b73d3c0b272, type: 2}
+  - {fileID: 11400000, guid: 44cf850045bb4d18a27c83045040e652, type: 2}
+  - {fileID: 11400000, guid: da4f78b70d744af4a91c874b9b5db16a, type: 2}
+  - {fileID: 11400000, guid: f26bedfce97e4811a343fa5dc5feb013, type: 2}
+  - {fileID: 11400000, guid: 3a9ee687855449dda4444b992251db51, type: 2}
+  - {fileID: 11400000, guid: 4ae00b7d3db6483a89ef60eb9e704961, type: 2}
+  - {fileID: 11400000, guid: ec9d8180dd234419a24e28129f380134, type: 2}
+  - {fileID: 11400000, guid: bfddaaf3df0347cdb6d603fb47acf97f, type: 2}
+  - {fileID: 11400000, guid: a7cd7dbb824341f29af419e368b519ca, type: 2}
+  - {fileID: 11400000, guid: 98ecf1e182ed4789964a209c1f82164a, type: 2}
+  - {fileID: 11400000, guid: c1e78a6e02c44289a10aa3b5f24be514, type: 2}
+  - {fileID: 11400000, guid: df03854c46504a848800cc0dc17289fd, type: 2}
+  - {fileID: 11400000, guid: 636b866df04342e3b5217415fe4e65c2, type: 2}
+  - {fileID: 11400000, guid: 0c7a6a500aa945cdadfed32ed7fa01d3, type: 2}
+  - {fileID: 11400000, guid: 83bf01c20511493b83a8549b1311837a, type: 2}

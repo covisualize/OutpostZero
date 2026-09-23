@@ -74,6 +74,7 @@ namespace OutpostZero.Colony
                 return;
             }
             Instance = this;
+            ModuleBook.Ensure();
         }
 
         private void Update()
@@ -871,6 +872,11 @@ namespace OutpostZero.Colony
 
         public static int Cost(ModuleKind kind)
         {
+            return ModuleTable.TryRow(kind.ToString(), out var row) ? row.Scrap : CodeCost(kind);
+        }
+
+        public static int CodeCost(ModuleKind kind)
+        {
             switch (kind)
             {
                 case ModuleKind.Barricade: return 6;
@@ -893,9 +899,33 @@ namespace OutpostZero.Colony
             }
         }
 
-        private static Vector3 Scale(string kind, int integrity)
+        public static Vector3 Scale(string kind, int integrity)
         {
+            Vector3 size;
+            bool wears;
+            if (ModuleTable.TryRow(kind, out var row))
+            {
+                size = row.Size;
+                wears = row.Wears;
+            }
+            else
+            {
+                size = CodeSize(kind);
+                wears = CodeWears(kind);
+            }
+            if (!wears) return size;
             float health = Mathf.Clamp01((integrity <= 0 ? 100 : integrity) / 100f);
+            return new Vector3(size.x * health, size.y * Mathf.Lerp(0.35f, 1f, health), size.z);
+        }
+
+        /// <summary>Kinds with no entry of their own are walls: they shrink as they wear.</summary>
+        public static bool CodeWears(string kind)
+        {
+            return !System.Enum.TryParse(kind, out ModuleKind parsed) || parsed == ModuleKind.Barricade;
+        }
+
+        public static Vector3 CodeSize(string kind)
+        {
             switch (kind)
             {
                 case "Cot": return new Vector3(1.4f, 0.4f, 0.7f);
@@ -913,12 +943,17 @@ namespace OutpostZero.Colony
                 case "Lamp": return new Vector3(0.35f, 2.2f, 0.35f);
                 case "Campfire": return new Vector3(1.2f, 0.2f, 1.2f);
                 case "Memorial": return new Vector3(1.8f, 1.4f, 0.3f);
-                default: return new Vector3(1.8f * health, 1.1f * Mathf.Lerp(0.35f, 1f, health), 0.4f);
+                default: return new Vector3(1.8f, 1.1f, 0.4f);
             }
         }
 
         /// <summary>Library surface for a module stand-in; lamps and fires keep flat colour.</summary>
         public static SurfaceFamily FamilyFor(string kind)
+        {
+            return ModuleTable.TryRow(kind, out var row) ? row.Family : CodeFamily(kind);
+        }
+
+        public static SurfaceFamily CodeFamily(string kind)
         {
             switch (kind)
             {
@@ -941,7 +976,12 @@ namespace OutpostZero.Colony
             }
         }
 
-        private static Color ColorFor(string kind)
+        public static Color ColorFor(string kind)
+        {
+            return ModuleTable.TryRow(kind, out var row) ? row.Tint : CodeColor(kind);
+        }
+
+        public static Color CodeColor(string kind)
         {
             switch (kind)
             {
