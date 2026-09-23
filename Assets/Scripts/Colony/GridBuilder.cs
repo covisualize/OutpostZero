@@ -56,6 +56,9 @@ namespace OutpostZero.Colony
         private bool buildMode;
         private int facing;
         private float nextOil;
+        private GameObject ghost;
+        private MaterialPropertyBlock ghostBlock;
+        private string ghostKind = "";
 
         public bool BuildMode => buildMode;
         public ModuleKind Selected => selected;
@@ -77,13 +80,22 @@ namespace OutpostZero.Colony
             TickOil(Time.time);
             TickLamps();
             TickFires();
-            if (GameManager.Instance == null || GameManager.Instance.CurrentState != GameState.CampManagement) return;
+            if (GameManager.Instance == null || GameManager.Instance.CurrentState != GameState.CampManagement)
+            {
+                HideGhost();
+                return;
+            }
             if (Player.ExpeditionInput.BuildPressed)
             {
                 buildMode = !buildMode;
                 GameplayFeedback.Toast(YardSay.Mode(buildMode, null));
             }
-            if (!buildMode) return;
+            if (!buildMode)
+            {
+                HideGhost();
+                return;
+            }
+            ShowGhost();
             var keyboard = UnityEngine.InputSystem.Keyboard.current;
             if (keyboard != null && keyboard.rKey.wasPressedThisFrame)
             {
@@ -106,6 +118,54 @@ namespace OutpostZero.Colony
         }
 
         public void Select(ModuleKind kind) => selected = kind;
+
+        private void ShowGhost()
+        {
+            var cam = Camera.main;
+            if (cam == null) return;
+            Ray ray = cam.ScreenPointToRay(Player.ExpeditionInput.Pointer);
+            var plane = new Plane(Vector3.up, Vector3.zero);
+            if (!plane.Raycast(ray, out float enter))
+            {
+                HideGhost();
+                return;
+            }
+            Vector3 point = ray.GetPoint(enter);
+            float x = BuildGhost.Snap(point.x, cell);
+            float z = BuildGhost.Snap(point.z, cell);
+            int scrap = ColonyStorage.Instance != null ? ColonyStorage.Instance.Scrap : 0;
+            var verdict = BuildGhost.Check(placed, x, z, Cost(selected), scrap);
+            if (ghost == null)
+            {
+                ghost = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                ghost.name = "BuildGhost";
+                Destroy(ghost.GetComponent<Collider>());
+                var renderer = ghost.GetComponent<Renderer>();
+                renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                ghostBlock = new MaterialPropertyBlock();
+                ghostKind = "";
+            }
+            string kind = selected.ToString();
+            if (kind != ghostKind)
+            {
+                ghostKind = kind;
+                ghost.transform.localScale = Scale(kind, 100);
+            }
+            float y = ghost.transform.localScale.y * 0.5f;
+            ghost.transform.SetPositionAndRotation(new Vector3(x, y, z), Quaternion.Euler(0f, facing, 0f));
+            var paint = ghost.GetComponent<Renderer>();
+            paint.GetPropertyBlock(ghostBlock);
+            Color tint = BuildGhost.Tint(verdict);
+            ghostBlock.SetColor("_BaseColor", tint);
+            ghostBlock.SetColor("_Color", tint);
+            paint.SetPropertyBlock(ghostBlock);
+            if (!ghost.activeSelf) ghost.SetActive(true);
+        }
+
+        private void HideGhost()
+        {
+            if (ghost != null && ghost.activeSelf) ghost.SetActive(false);
+        }
 
         public bool TryDemolish(float worldX, float worldZ)
         {
@@ -183,11 +243,16 @@ namespace OutpostZero.Colony
 
         public bool TryPlace(ModuleKind kind, Vector3 world)
         {
-            float x = Mathf.Round(world.x / cell) * cell;
-            float z = Mathf.Round(world.z / cell) * cell;
+            float x = BuildGhost.Snap(world.x, cell);
+            float z = BuildGhost.Snap(world.z, cell);
             if (Occupied(placed, x, z))
             {
                 GameplayFeedback.Toast(YardSay.Taken(null));
+                return false;
+            }
+            if (!MapRim.Inside(x, z))
+            {
+                GameplayFeedback.Toast(YardSay.Outside(null));
                 return false;
             }
 
@@ -322,14 +387,23 @@ namespace OutpostZero.Colony
 
         private void SpawnView(PlacedModule module)
         {
-            var view = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            view.name = "Module_" + module.kind;
+            var look = module.site == 0 ? ModuleLooks.For(module.kind) : null;
             bool flat = module.kind == "Spikes" || module.kind == "Oil" || module.kind == "Campfire";
             float y = flat ? 0.04f : module.kind == "Lamp" ? 1.2f : 0.6f;
+            GameObject view;
+            if (look != null)
+            {
+                view = new GameObject();
+                var box = view.AddComponent<BoxCollider>();
+                box.size = Scale(module.kind, module.integrity);
+            }
+            else view = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            view.name = "Module_" + module.kind;
             view.transform.position = new Vector3(module.x, y, module.z);
             view.transform.rotation = Quaternion.Euler(0f, module.rotation, 0f);
-            view.transform.localScale = Scale(module.kind, module.integrity);
-            if (module.site != 0)
+            if (look != null) Wear(view, look, y, module.integrity);
+            else view.transform.localScale = Scale(module.kind, module.integrity);
+            if (look == null && module.site != 0)
             {
                 float bulk = BuildSite.Bulk(module.hours);
                 view.transform.localScale = new Vector3(
@@ -337,7 +411,7 @@ namespace OutpostZero.Colony
                     view.transform.localScale.y * bulk,
                     view.transform.localScale.z * bulk);
             }
-            var renderer = view.GetComponent<Renderer>();
+            var renderer = look == null ? view.GetComponent<Renderer>() : null;
             if (renderer != null)
             {
                 var color = module.site != 0
@@ -358,6 +432,7 @@ namespace OutpostZero.Colony
                 var obstacle = view.AddComponent<NavMeshObstacle>();
                 obstacle.carving = true;
                 obstacle.shape = NavMeshObstacleShape.Box;
+                obstacle.size = look != null ? Scale(module.kind, module.integrity) : Vector3.one;
             }
             if (module.kind == "Barricade")
             {
@@ -387,6 +462,29 @@ namespace OutpostZero.Colony
                 ember.enabled = false;
             }
             views.Add(view);
+        }
+
+        /// <summary>
+        /// Hangs the baked model under the collider root, feet on the ground. A battered module sits lower
+        /// and darker, the way the box stand-in shrank.
+        /// </summary>
+        private static void Wear(GameObject root, GameObject look, float y, int integrity)
+        {
+            var model = Instantiate(look, root.transform);
+            model.name = look.name;
+            float health = Mathf.Clamp01((integrity <= 0 ? 100 : integrity) / 100f);
+            model.transform.localPosition = new Vector3(0f, -y - (1f - health) * 0.15f, 0f);
+            model.transform.localRotation = Quaternion.identity;
+            foreach (var collider in model.GetComponentsInChildren<Collider>()) Destroy(collider);
+            if (health >= 0.99f) return;
+            var block = new MaterialPropertyBlock();
+            var shade = Color.Lerp(new Color(0.45f, 0.4f, 0.36f), Color.white, health);
+            foreach (var renderer in model.GetComponentsInChildren<Renderer>())
+            {
+                renderer.GetPropertyBlock(block);
+                block.SetColor("_Tint", shade);
+                renderer.SetPropertyBlock(block);
+            }
         }
 
         private void ClearViews()

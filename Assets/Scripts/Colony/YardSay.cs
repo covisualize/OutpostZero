@@ -27,6 +27,11 @@ namespace OutpostZero.Colony
             return Word("yard.taken", language);
         }
 
+        public static string Outside(string language)
+        {
+            return Word("yard.outside", language);
+        }
+
         public static string Need(int cost, string language)
         {
             if (cost < 0) cost = 0;
