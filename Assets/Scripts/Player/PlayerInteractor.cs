@@ -18,6 +18,7 @@ namespace OutpostZero.Player
         private IInteractable current;
         private ZombieAI marked;
         private float windup = -1f;
+        private float sweep = -1f;
 
         public string Prompt => current != null ? current.Prompt : string.Empty;
         public IInteractable Current => current;
@@ -48,7 +49,18 @@ namespace OutpostZero.Player
             if (ExpeditionInput.InteractPressed && current != null)
             {
                 current.Interact(inventory);
+                sweep = 0f;
             }
+            else if (sweep >= 0f && ExpeditionInput.InteractHeld)
+            {
+                sweep += Time.deltaTime;
+                if (PackOps.Swept(sweep))
+                {
+                    sweep = -1f;
+                    TakeEverything();
+                }
+            }
+            else sweep = -1f;
 
             if (TakingDown) AdvanceTakedown();
             else if (ExpeditionInput.TakedownPressed) TryTakedown();
@@ -86,6 +98,18 @@ namespace OutpostZero.Player
                 }
             }
             return best;
+        }
+
+        private void TakeEverything()
+        {
+            var open = LootContainer.Open;
+            if (open != null && Vector3.Distance(transform.position, open.transform.position) <= reach + 1f) open.TakeAll(inventory);
+            Collider[] hits = Physics.OverlapSphere(transform.position + Vector3.up, reach);
+            foreach (var hit in hits)
+            {
+                var item = hit.GetComponentInParent<WorldItem>();
+                if (item != null && item.CanInteract(inventory)) item.Interact(inventory);
+            }
         }
 
         private void TryTakedown()

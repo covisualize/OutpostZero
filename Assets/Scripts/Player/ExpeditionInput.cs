@@ -89,6 +89,7 @@ namespace OutpostZero.Player
         public static bool PausePressed => Pressed(ControlBindings.Action.Pause) || PadDown(PadBindings.Action.Pause);
         public static bool ReloadPressed => Pressed(ControlBindings.Action.Reload) || PadDown(PadBindings.Action.Reload);
         public static bool InteractPressed => Pressed(ControlBindings.Action.Interact) || PadDown(PadBindings.Action.Interact);
+        public static bool InteractHeld => Held(ControlBindings.Action.Interact) || PadHeld(PadBindings.Action.Interact);
         public static bool MedkitPressed => Pressed(ControlBindings.Action.Medkit) || PadDown(PadBindings.Action.Medkit);
         public static bool FlashlightPressed => Pressed(ControlBindings.Action.Flashlight) || PadDown(PadBindings.Action.Flashlight);
         public static bool CrouchHeld => Held(ControlBindings.Action.Crouch) || Held(Key.LeftCtrl) || PadHeld(PadBindings.Action.Crouch);

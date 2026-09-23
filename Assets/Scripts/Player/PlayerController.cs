@@ -654,7 +654,8 @@ namespace OutpostZero.Player
             sprintLatch = PlayOptions.Stance(ExpeditionInput.SprintHeld, ExpeditionInput.SprintPressed, sprintLatch, sprintMode);
             if (IsCrouching) CodexDirector.Hear("crouch");
             if (IsSprinting) CodexDirector.Hear("sprint");
-            bool wantsToSprint = AimPace.AllowsSprint(IsAimingDownSights) && StreetLimp.AllowsSprint(LeaderWound()) && sprintLatch && !IsCrouching && currentStamina > 5f;
+            bool wantsToSprint = AimPace.AllowsSprint(IsAimingDownSights) && StreetLimp.AllowsSprint(LeaderWound()) && sprintLatch && !IsCrouching && currentStamina > 5f
+                && (inventory == null || OutpostZero.Items.PackOps.AllowsSprint(inventory.CurrentWeight, inventory.MaxWeightCapacity));
 
             IsSprinting = isMoving && wantsToSprint;
             if (IsSprinting && ActiveWeapon is FirearmWeapon sprintGun) sprintGun.TryAbortReload(true, false);

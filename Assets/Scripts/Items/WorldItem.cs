@@ -11,7 +11,16 @@ namespace OutpostZero.Items
         [SerializeField] private int count = 1;
         private bool taken;
 
-        public string Prompt => taken ? string.Empty : Loc.T("camp.take") + " " + Loc.Item(itemId);
+        public string Prompt
+        {
+            get
+            {
+                if (taken) return string.Empty;
+                var record = ItemCatalog.Find(itemId);
+                float each = record == null || record.Use == ItemUse.Ammo ? 0f : record.Weight;
+                return ItemBrief.Offer(Loc.T("camp.take"), Loc.Item(itemId), count, each);
+            }
+        }
 
         public void Configure(string id, int amount)
         {

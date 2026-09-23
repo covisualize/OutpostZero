@@ -67,7 +67,7 @@ Play this in a player build, not the editor. Use Survivor difficulty and a fixed
 
 ### M1: Gameplay mechanics
 
-- [ ] PRO-23 **Play**: E opens containers, weight limits pickup, and dropping an item puts it on the ground.
+- [ ] PRO-23 **Play**: E opens containers, weight limits pickup, and dropping an item puts it on the ground. A loose item's prompt names the count and weight ("Take 12× 9mm (0.60 kg)"). Holding E for half a second empties the open container and picks up every loose item in reach. Past 90% of the pack limit the leader cannot sprint.
   - Zombies drop from their archetype's loot table (`walker`, `runner`, `brute` in `Assets/Data/Loot`): walkers sometimes leave 3 scrap or a cloth, runners 2 scrap or a bandage, and brutes always leave 3 to 6 scrap with a chance of 9mm rounds or chemicals. Scrap lands as a walk-over pickup; the rest lands as items to take with E. Rounds picked up from the ground go into the matching gun, as they do from crates, and stay in the pack only when no gun takes them.
   - Automated: `ZombieLootTests` (every archetype names a table, drops are repeatable and never empty rolls, brutes always pay, walkers stay near the old scrap rate) and the PlayMode `PickupTests` (ground rounds raise the pistol's reserve; a full pack leaves a heavy pickup on the ground).
 - [ ] PRO-24 **Play**: the rifle fires full-auto with growing spread. Suppressed pistol shots don't raise a loud-noise alert. Swapping to a gun on the ground works.

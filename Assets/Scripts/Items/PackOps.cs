@@ -14,6 +14,7 @@ namespace OutpostZero.Items
         public const int RaiseScrap = 12;
         public const int RaiseCloth = 3;
         public const int RaiseTape = 1;
+        public const float SweepHold = 0.5f;
 
         public static int Tier(int stored)
         {
@@ -45,6 +46,16 @@ namespace OutpostZero.Items
         {
             if (max <= 0.01f) return current > 0f;
             return current / max > HeavyLine;
+        }
+
+        public static bool AllowsSprint(float current, float max)
+        {
+            return !Heavy(current, max);
+        }
+
+        public static bool Swept(float heldFor)
+        {
+            return heldFor >= SweepHold;
         }
 
         public static bool Fits(float current, float max, float added)
