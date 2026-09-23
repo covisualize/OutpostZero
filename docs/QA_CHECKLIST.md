@@ -141,6 +141,11 @@ Play this in a player build, not the editor. Use Survivor difficulty and a fixed
   - Deviation: traits are string ids with hooks in `TraitHook`, not ScriptableObjects, and skills grow by practice up to 8 (`Practice.Cap`) instead of running 0 to 10 with XP.
   - Automated: `RosterSheetTests` and the `SurvivorDraw` and `Heir` tests in `GameSystemsTests`.
 - [ ] PRO-56 **Play**: run 5 days in a row, each with tasks, an expedition and a return, and see events fire.
+  - Clock: `WorldClock` runs Morning (05:00), Day (10:00), Evening (17:00) and Night (20:00, the raid window). The HUD clock shows the phase. A phase turn raises `PhaseTurned`, and in camp it autosaves. A street or raid saves when it ends, so a mid-fight save can't undo a death.
+  - Board: Guard, Cook, Medic, Build, Scavenge, Clear and Rest, with skill and traits setting the output (`SurvivorRoster.TickTasks`). **Their call** lets `TaskPick` choose each morning from the survivor's skills, traits and needs and from the camp's shortages. `CampRoutine` still pulls the hungry, hurt and worn off their post.
+  - End of day: `ColonyDay.Simulate` eats 1 food and 1 water per head, and shortages cut morale. It also heals wounds, drifts opinion, and fires events: grief, friendship, recovery, breakdown, argument, celebration, and rain soaking the yard. Fever, rain catch, caravans, rescues and raid warnings come from their own services.
+  - Left open: menu, camp and street still share one scene (the PRO-63 editor blocker).
+  - Automated: `ClockPhaseTests`, `TaskPickTests`, and the `ColonyDay` tests in `GameSystemsTests`.
 - [ ] PRO-57 **Play**: survivors walk between modules. A starving, grieving camp collapses in about 3 days and a well-run one thrives.
 - [ ] PRO-58 **Play**: B places walls, a generator with lights, a farm and a purifier. Each changes the daily numbers and raid behaviour.
 - [ ] PRO-59 **Play**: crafting solves ammo scarcity at a real material cost, and T2 recipes need base investment.

@@ -5,14 +5,18 @@ using OutpostZero.Core;
 namespace OutpostZero.Colony
 {
     /// <summary>
-    /// Gives every living colonist who is not holding the controller a body in the yard.
-    /// They walk toward the station that matches the task on the board.
+    /// Gives every living colonist who is not holding the controller a body in the yard: the colonist model
+    /// from <see cref="CampCast"/>, or a capsule without it. They walk toward the station that matches
+    /// the task on the board, round the modules when the yard has a NavMesh (<see cref="CampMateBody"/>).
     /// </summary>
     public class CampPopulation : MonoBehaviour
     {
         public static CampPopulation Instance { get; private set; }
 
+        private static readonly Vector3 Gate = new Vector3(-12f, 0f, -14f);
+
         private readonly Dictionary<string, Transform> bodies = new Dictionary<string, Transform>();
+        private readonly HashSet<string> capsules = new HashSet<string>();
 
         private void Awake()
         {
@@ -79,7 +83,8 @@ namespace OutpostZero.Colony
                     continue;
                 }
                 var body = Ensure(survivor.id, survivor.displayName);
-                Tint(body, survivor.morale, survivor.trait, survivor.aside, survivor.mark);
+                bool model = !capsules.Contains(survivor.id);
+                if (!model) Tint(body, survivor.morale, survivor.trait, survivor.aside, survivor.mark);
                 string action = actions[index];
                 index++;
                 Vector3 goal;
@@ -103,30 +108,43 @@ namespace OutpostZero.Colony
                     }
                 }
                 float pace = ShiftWear.Stride(survivor.fatigue, raid);
-                body.position = Vector3.MoveTowards(body.position, goal, pace * Time.deltaTime);
-                Vector3 face = goal - body.position;
-                face.y = 0f;
+                var walker = body.GetComponent<CampMateBody>();
+                Vector3 face = walker.Drive(goal, pace);
                 var beat = body.GetComponent<YardBeat>();
                 if (beat == null) beat = body.gameObject.AddComponent<YardBeat>();
                 float lean = YardPose.Lean(action, beat.Age);
                 float yaw = face.sqrMagnitude > 0.01f ? Quaternion.LookRotation(face).eulerAngles.y : body.eulerAngles.y;
                 body.rotation = Quaternion.Euler(lean, yaw, 0f);
                 float squat = YardPose.Scale(action);
-                body.localScale = new Vector3(0.45f, 0.9f * squat, 0.45f);
+                body.localScale = model ? new Vector3(1f, squat, 1f) : new Vector3(0.45f, 0.9f * squat, 0.45f);
             }
         }
 
         private Transform Ensure(string id, string displayName)
         {
             if (bodies.TryGetValue(id, out var existing) && existing != null) return existing;
-            var body = GameObject.CreatePrimitive(PrimitiveType.Capsule);
+            var prefab = CampCast.Mate;
+            GameObject body;
+            if (prefab != null)
+            {
+                body = Instantiate(prefab, Gate, Quaternion.identity);
+                foreach (var collider in body.GetComponentsInChildren<Collider>()) collider.enabled = false;
+                OutpostZero.Graphics.CharacterVariety.Ensure(body).Bind("colonist", false);
+                capsules.Remove(id);
+            }
+            else
+            {
+                body = GameObject.CreatePrimitive(PrimitiveType.Capsule);
+                Destroy(body.GetComponent<Collider>());
+                body.transform.position = Gate + Vector3.up;
+                body.transform.localScale = new Vector3(0.45f, 0.9f, 0.45f);
+                var renderer = body.GetComponent<Renderer>();
+                if (renderer != null && !OutpostZero.Graphics.MaterialLibrary.Dress(renderer, OutpostZero.Graphics.SurfaceFamily.Cloth, OutpostZero.Graphics.MaterialLibrary.TintFor(new Color(0.55f, 0.48f, 0.36f))))
+                    renderer.material.color = new Color(0.55f, 0.48f, 0.36f);
+                capsules.Add(id);
+            }
             body.name = "CampMate_" + displayName;
-            Destroy(body.GetComponent<Collider>());
-            body.transform.position = new Vector3(-12f, 1f, -14f);
-            body.transform.localScale = new Vector3(0.45f, 0.9f, 0.45f);
-            var renderer = body.GetComponent<Renderer>();
-            if (renderer != null && !OutpostZero.Graphics.MaterialLibrary.Dress(renderer, OutpostZero.Graphics.SurfaceFamily.Cloth, OutpostZero.Graphics.MaterialLibrary.TintFor(new Color(0.55f, 0.48f, 0.36f))))
-                renderer.material.color = new Color(0.55f, 0.48f, 0.36f);
+            body.AddComponent<CampMateBody>().Dress(prefab != null);
             bodies[id] = body.transform;
             return body.transform;
         }
@@ -204,6 +222,7 @@ namespace OutpostZero.Colony
         {
             if (!bodies.TryGetValue(id, out var body)) return;
             bodies.Remove(id);
+            capsules.Remove(id);
             if (body != null) Destroy(body.gameObject);
         }
 
@@ -214,6 +233,7 @@ namespace OutpostZero.Colony
                 if (pair.Value != null) Destroy(pair.Value.gameObject);
             }
             bodies.Clear();
+            capsules.Clear();
         }
     }
 }
