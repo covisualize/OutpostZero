@@ -69,6 +69,12 @@ jobs:
           name: playmode-results
           path: ${{ steps.tests.outputs.artifactsPath }}
       - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: perf-report
+          path: Artifacts/Perf
+          if-no-files-found: warn
+      - uses: actions/upload-artifact@v4
         id: shots
         if: always()
         with:

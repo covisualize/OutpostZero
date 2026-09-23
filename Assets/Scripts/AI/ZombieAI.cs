@@ -129,6 +129,40 @@ namespace OutpostZero.AI
         public string WatchTarget => currentTarget != null ? currentTarget.name : "";
         public bool Posted => posted;
 
+        private static int sightFrame = -1;
+        private static int sightGroups = 1;
+
+        private static int SightGroupsThisFrame()
+        {
+            int frame = Time.frameCount;
+            if (frame != sightFrame)
+            {
+                sightFrame = frame;
+                sightGroups = QualityProfile.SightGroups(AliveCount());
+            }
+            return sightGroups;
+        }
+
+        /// <summary>The closest live zombie to a point, or null. Allocation-free.</summary>
+        public static ZombieAI NearestAlive(Vector3 from)
+        {
+            ZombieAI best = null;
+            float bestSqr = float.MaxValue;
+            for (int i = 0; i < aliveCrowd.Count; i++)
+            {
+                var zombie = aliveCrowd[i];
+                if (zombie == null || zombie.currentState == ZombieState.Dead) continue;
+                if (zombie.healthSystem != null && zombie.healthSystem.IsDead) continue;
+                float sqr = (zombie.transform.position - from).sqrMagnitude;
+                if (sqr < bestSqr)
+                {
+                    bestSqr = sqr;
+                    best = zombie;
+                }
+            }
+            return best;
+        }
+
         /// <summary>Enabled zombies that are not dead. Allocation-free, safe to read every frame.</summary>
         public static int AliveCount()
         {
@@ -510,7 +544,7 @@ namespace OutpostZero.AI
                 else
                     return;
             }
-            if (currentState != ZombieState.Chase && currentState != ZombieState.Attack && QualityProfile.SightDue(sightToken, Time.frameCount))
+            if (currentState != ZombieState.Chase && currentState != ZombieState.Attack && QualityProfile.SightDue(sightToken, Time.frameCount, SightGroupsThisFrame()))
             {
                 CheckSight();
             }
