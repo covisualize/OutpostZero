@@ -234,5 +234,37 @@ namespace OutpostZero.Tests.EditMode
         {
             return Regex.Match(File.ReadAllText(meta), "guid: (\\w+)").Groups[1].Value;
         }
-    }
+
+        [Test]
+        public void SwingsAndReloadsPlayAboveTheWaistWhileTheLegsKeepTheirGait()
+        {
+            var parents = new Dictionary<string, string>();
+            foreach (Match bone in Regex.Matches(Read("BlenderScripts", "character_rig.py"), "\\(\"(\\w+)\", (?:\"(\\w+)\"|None), \\("))
+            {
+                parents[bone.Groups[1].Value] = bone.Groups[2].Success ? bone.Groups[2].Value : null;
+            }
+            Assert.GreaterOrEqual(parents.Count, 15, "the rig's bone table parsed");
+            foreach (var bone in parents.Keys)
+            {
+                string path = bone;
+                for (string up = parents[bone]; up != null; up = parents[up]) path = up + "/" + path;
+                path = "Armature/" + path;
+                bool torso = bone == "Spine" || bone == "Head" || bone.Contains("Arm") || bone.EndsWith("Hand");
+                Assert.AreEqual(torso, CharacterRig.UpperBody(path), path);
+            }
+            Assert.IsFalse(CharacterRig.UpperBody(""), "the model root stays with the legs");
+            Assert.IsFalse(CharacterRig.UpperBody("Survivor_Leader_Mesh"));
+            Assert.IsFalse(CharacterRig.UpperBody("Armature/Hips/SpineGuard"), "whole bone names only");
+
+            CollectionAssert.AreEquivalent(new[] { "Attack", "Reload" }, CharacterRig.UpperStates);
+            CollectionAssert.Contains(CharacterRig.UpperClears, "Death");
+            CollectionAssert.DoesNotContain(CharacterRig.UpperStates, "Death");
+            string builder = Read("Assets", "Scripts", "Editor", "SurvivorAnimatorBuilder.cs");
+            StringAssert.Contains("EnsureUpperLayer(controller);", builder);
+            StringAssert.DoesNotMatch("FindOrAdd\\(machine, \"(Attack|Reload)\"", builder, "swings no longer stop the legs on the base layer");
+            StringAssert.Contains("AssignMotions(path, clips, null)", builder);
+            StringAssert.Contains("LoadAssetAtPath<GameObject>(path)", Read("Assets", "Scripts", "Editor", "FbxPrefabPostprocessor.cs"), "the mask is cut from the imported model's own bone paths");
+        }
+
+}
 }

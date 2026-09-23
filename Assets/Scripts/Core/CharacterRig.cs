@@ -43,5 +43,33 @@ namespace OutpostZero.Core
             string resource = ResourcePath(modelId);
             return string.IsNullOrEmpty(resource) ? "" : "Assets/Resources/" + resource + ".controller";
         }
+
+        /// <summary>Second animator layer: swings and reloads play above the waist while the legs keep their gait.</summary>
+        public const string UpperLayer = "UpperBody";
+        /// <summary>The upper layer's resting state; it has no motion, so the base layer shows through.</summary>
+        public const string UpperRest = "Empty";
+        /// <summary>The rig bone whose subtree (torso, head, arms) the upper layer owns.</summary>
+        public const string UpperRoot = "Spine";
+        /// <summary>Base-layer states that move to the upper layer.</summary>
+        public static readonly string[] UpperStates = { "Attack", "Reload" };
+        /// <summary>Full-body triggers that clear the upper layer so the whole body shows the pose.</summary>
+        public static readonly string[] UpperClears = { "Death", "Hit" };
+
+        public static bool IsUpperState(string state)
+        {
+            for (int i = 0; i < UpperStates.Length; i++)
+                if (UpperStates[i] == state) return true;
+            return false;
+        }
+
+        /// <summary>True when a transform path (relative to the model root) lies in the Spine subtree.</summary>
+        public static bool UpperBody(string transformPath)
+        {
+            if (string.IsNullOrEmpty(transformPath)) return false;
+            var parts = transformPath.Split('/');
+            for (int i = 0; i < parts.Length; i++)
+                if (parts[i] == UpperRoot) return true;
+            return false;
+        }
     }
 }

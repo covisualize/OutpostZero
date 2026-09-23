@@ -36,6 +36,7 @@ namespace OutpostZero.EditorTools
             }
             EnsureParameters(controller);
             EnsureGraph(controller);
+            EnsureUpperLayer(controller);
             EnsureRig(controller);
             EditorUtility.SetDirty(controller);
             AssetDatabase.SaveAssets();
@@ -49,8 +50,15 @@ namespace OutpostZero.EditorTools
 
         public static void AssignMotions(string path, IReadOnlyList<AnimationClip> clips)
         {
+            AssignMotions(path, clips, null);
+        }
+
+        /// <summary>Fills the graph with the model's clips; <paramref name="model"/> supplies the bone paths for the upper-body mask.</summary>
+        public static void AssignMotions(string path, IReadOnlyList<AnimationClip> clips, GameObject model)
+        {
             if (clips == null || clips.Count == 0) return;
             var controller = Build(path);
+            if (model != null) EnsureUpperMask(controller, model);
             var byName = new Dictionary<string, AnimationClip>();
             for (int i = 0; i < clips.Count; i++)
             {
@@ -64,19 +72,23 @@ namespace OutpostZero.EditorTools
             }
 
             var machine = controller.layers[0].stateMachine;
-            foreach (var child in machine.states)
+            var upper = UpperMachine(controller);
+            foreach (var layer in controller.layers)
             {
-                string state = child.state.name;
-                if (child.state.motion is BlendTree) continue;
-                if (byName.TryGetValue(state, out var clip)) child.state.motion = clip;
+                foreach (var child in layer.stateMachine.states)
+                {
+                    string state = child.state.name;
+                    if (child.state.motion is BlendTree) continue;
+                    if (byName.TryGetValue(state, out var clip)) child.state.motion = clip;
+                }
             }
             MotionOr(machine, "Crouch", byName, "CrouchIdle", "Idle");
             MotionOr(machine, "CrouchWalk", byName, "CrouchWalk", "Walk");
             MotionOr(machine, "Sprint", byName, "Sprint", "Walk");
-            MotionOr(machine, "Attack", byName, "Attack", "Melee", "Fire");
+            MotionOr(upper, "Attack", byName, "Attack", "Melee", "Fire");
             MotionOr(machine, "Hit", byName, "Hit", "Stagger");
             MotionOr(machine, "Death", byName, "Death", "DeathB");
-            MotionOr(machine, "Reload", byName, "Reload");
+            MotionOr(upper, "Reload", byName, "Reload");
             MotionOr(machine, CharacterRig.Windup, byName, "Roar", "Scream");
             MotionOr(machine, CharacterRig.Dash, byName, "Charge", "Lunge", "Sprint");
             Variants(controller, machine, "Idle", CharacterRig.IdleVariant, byName, "Idle", "IdleB");
@@ -129,13 +141,101 @@ namespace OutpostZero.EditorTools
         /// <summary>The reload plays at the gun's reload speed; gaits play at the body's stride rate.</summary>
         private static void EnsureRig(AnimatorController controller)
         {
-            foreach (var child in controller.layers[0].stateMachine.states)
+            foreach (var layer in controller.layers)
             {
-                string rate = SpeedParameter(child.state.name);
-                if (rate == null) continue;
-                child.state.speedParameterActive = true;
-                child.state.speedParameter = rate;
+                foreach (var child in layer.stateMachine.states)
+                {
+                    string rate = SpeedParameter(child.state.name);
+                    if (rate == null) continue;
+                    child.state.speedParameterActive = true;
+                    child.state.speedParameter = rate;
+                }
             }
+        }
+
+        public const string UpperMaskName = "UpperBodyMask";
+
+        private static AnimatorStateMachine UpperMachine(AnimatorController controller)
+        {
+            foreach (var layer in controller.layers)
+                if (layer.name == CharacterRig.UpperLayer) return layer.stateMachine;
+            return null;
+        }
+
+        /// <summary>
+        /// Swings and reloads live on an override layer masked to the Spine subtree, so a survivor can
+        /// fire while walking and a zombie can bite mid-shamble. Death and flinches clear it.
+        /// </summary>
+        private static void EnsureUpperLayer(AnimatorController controller)
+        {
+            var baseMachine = controller.layers[0].stateMachine;
+            foreach (var child in baseMachine.states)
+            {
+                foreach (var transition in child.state.transitions)
+                {
+                    var to = transition.destinationState;
+                    if (to != null && CharacterRig.IsUpperState(to.name)) child.state.RemoveTransition(transition);
+                }
+            }
+            foreach (var child in baseMachine.states)
+            {
+                if (CharacterRig.IsUpperState(child.state.name)) baseMachine.RemoveState(child.state);
+            }
+
+            if (UpperMachine(controller) == null) controller.AddLayer(CharacterRig.UpperLayer);
+            var layers = controller.layers;
+            for (int i = 0; i < layers.Length; i++)
+            {
+                if (layers[i].name != CharacterRig.UpperLayer) continue;
+                layers[i].defaultWeight = 1f;
+                layers[i].blendingMode = AnimatorLayerBlendingMode.Override;
+            }
+            controller.layers = layers;
+
+            var machine = UpperMachine(controller);
+            var rest = FindOrAdd(machine, CharacterRig.UpperRest, new Vector3(280, 0, 0));
+            machine.defaultState = rest;
+            for (int i = 0; i < CharacterRig.UpperStates.Length; i++)
+            {
+                string name = CharacterRig.UpperStates[i];
+                var state = FindOrAdd(machine, name, new Vector3(520, 80 * i, 0));
+                TriggerFrom(rest, state, name);
+                ExitTo(state, rest);
+            }
+            for (int i = 0; i < CharacterRig.UpperClears.Length; i++)
+            {
+                AnyTrigger(machine, rest, CharacterRig.UpperClears[i]);
+            }
+            foreach (var transition in machine.anyStateTransitions) transition.canTransitionToSelf = false;
+        }
+
+        private static void EnsureUpperMask(AnimatorController controller, GameObject model)
+        {
+            AvatarMask mask = null;
+            foreach (var asset in AssetDatabase.LoadAllAssetsAtPath(AssetDatabase.GetAssetPath(controller)))
+            {
+                if (asset is AvatarMask found && found.name == UpperMaskName) mask = found;
+            }
+            if (mask == null)
+            {
+                mask = new AvatarMask { name = UpperMaskName };
+                AssetDatabase.AddObjectToAsset(mask, controller);
+            }
+            var bones = model.GetComponentsInChildren<Transform>(true);
+            mask.transformCount = bones.Length;
+            for (int i = 0; i < bones.Length; i++)
+            {
+                string path = AnimationUtility.CalculateTransformPath(bones[i], model.transform);
+                mask.SetTransformPath(i, path);
+                mask.SetTransformActive(i, CharacterRig.UpperBody(path));
+            }
+            EditorUtility.SetDirty(mask);
+            var layers = controller.layers;
+            for (int i = 0; i < layers.Length; i++)
+            {
+                if (layers[i].name == CharacterRig.UpperLayer) layers[i].avatarMask = mask;
+            }
+            controller.layers = layers;
         }
 
         public static string SpeedParameter(string state)
@@ -202,9 +302,7 @@ namespace OutpostZero.EditorTools
             var crouch = FindOrAdd(machine, "Crouch", new Vector3(520, 0, 0));
             var crouchWalk = FindOrAdd(machine, "CrouchWalk", new Vector3(760, 0, 0));
             var sprint = FindOrAdd(machine, "Sprint", new Vector3(520, 80, 0));
-            var attack = FindOrAdd(machine, "Attack", new Vector3(280, 180, 0));
             var hit = FindOrAdd(machine, "Hit", new Vector3(520, 180, 0));
-            var reload = FindOrAdd(machine, "Reload", new Vector3(760, 180, 0));
             var death = FindOrAdd(machine, "Death", new Vector3(280, 280, 0));
             var windup = FindOrAdd(machine, CharacterRig.Windup, new Vector3(520, 280, 0));
             var dash = FindOrAdd(machine, CharacterRig.Dash, new Vector3(760, 280, 0));
@@ -228,16 +326,9 @@ namespace OutpostZero.EditorTools
             }
             if (TryLink(sprint, walk, false, out var fromSprint)) fromSprint.AddCondition(AnimatorConditionMode.IfNot, 0f, "Sprint");
 
-            TriggerFrom(idle, attack, "Attack");
-            TriggerFrom(walk, attack, "Attack");
-            TriggerFrom(sprint, attack, "Attack");
-            ExitTo(attack, idle);
             TriggerFrom(idle, hit, "Hit");
             TriggerFrom(walk, hit, "Hit");
             ExitTo(hit, idle);
-            TriggerFrom(idle, reload, "Reload");
-            TriggerFrom(walk, reload, "Reload");
-            ExitTo(reload, idle);
             TriggerFrom(idle, windup, CharacterRig.Windup);
             TriggerFrom(walk, windup, CharacterRig.Windup);
             TriggerFrom(sprint, windup, CharacterRig.Windup);
