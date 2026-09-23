@@ -99,6 +99,7 @@ namespace OutpostZero.Player
         public static bool TakedownPressed => Pressed(ControlBindings.Action.Takedown) || PadDown(PadBindings.Action.Takedown);
         public static bool WatchPressed => Pressed(Key.F3);
         public static bool DevPressed => Pressed(Key.F9);
+        public static bool RosterPressed => Pressed(Key.F4);
         public static bool BuildPressed => Pressed(ControlBindings.Action.Build) || PadDown(PadBindings.Action.Build);
         public static bool DodgePressed => Pressed(Key.Space) || PadDown(PadBindings.Action.Dodge);
 

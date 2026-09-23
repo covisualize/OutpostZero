@@ -52,7 +52,7 @@ namespace OutpostZero.Player
         /// </summary>
         public static readonly Key[] Reserved =
         {
-            Key.W, Key.A, Key.S, Key.D, Key.Space, Key.I, Key.Z, Key.F3, Key.F9,
+            Key.W, Key.A, Key.S, Key.D, Key.Space, Key.I, Key.Z, Key.F3, Key.F4, Key.F9,
             Key.Digit1, Key.Digit2, Key.Digit3, Key.Digit4, Key.Digit5, Key.Digit6, Key.Digit7, Key.Digit8
         };
 

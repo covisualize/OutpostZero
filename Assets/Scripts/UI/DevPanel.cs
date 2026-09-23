@@ -11,13 +11,17 @@ namespace OutpostZero.UI
 {
     /// <summary>
     /// F9 dev menu for the editor and development builds: jump between flow steps,
-    /// toggle god mode, spawn zombies, hand out a kit, and skip the clock.
+    /// toggle god mode, spawn zombies, hand out a kit, and skip the clock. F4 shows the roster sheet.
     /// </summary>
     public class DevPanel : MonoBehaviour
     {
         private VisualElement panel;
         private Label godLabel;
         private bool open;
+        private VisualElement roster;
+        private VisualElement rosterRows;
+        private bool rosterOpen;
+        private SurvivorRoster watched;
 
         private void Start()
         {
@@ -31,10 +35,66 @@ namespace OutpostZero.UI
 
         private void Update()
         {
+            if (ExpeditionInput.RosterPressed)
+            {
+                rosterOpen = DevCheats.Toggle(true, rosterOpen);
+                if (roster != null) roster.style.display = rosterOpen ? DisplayStyle.Flex : DisplayStyle.None;
+                RefreshRoster();
+            }
             if (!ExpeditionInput.DevPressed) return;
             open = DevCheats.Toggle(true, open);
             if (panel != null) panel.style.display = open ? DisplayStyle.Flex : DisplayStyle.None;
             Refresh();
+        }
+
+        private void OnDestroy()
+        {
+            if (watched != null) watched.OnRosterChanged -= RefreshRoster;
+        }
+
+        private void BuildRoster(VisualElement root)
+        {
+            roster = new VisualElement();
+            roster.style.position = Position.Absolute;
+            roster.style.left = 16;
+            roster.style.top = 16;
+            roster.style.maxWidth = 900;
+            roster.style.paddingLeft = 10;
+            roster.style.paddingRight = 10;
+            roster.style.paddingTop = 8;
+            roster.style.paddingBottom = 8;
+            roster.style.backgroundColor = new Color(0.08f, 0.09f, 0.1f, 0.92f);
+            roster.style.display = DisplayStyle.None;
+            var title = new Label(Loc.T("dev.roster"));
+            title.style.color = new Color(0.95f, 0.75f, 0.3f);
+            title.style.unityFontStyleAndWeight = FontStyle.Bold;
+            title.style.marginBottom = 6;
+            roster.Add(title);
+            rosterRows = new VisualElement();
+            roster.Add(rosterRows);
+            root.Add(roster);
+        }
+
+        private void RefreshRoster()
+        {
+            if (rosterRows == null || !rosterOpen) return;
+            var service = SurvivorRoster.Instance;
+            if (service != watched)
+            {
+                if (watched != null) watched.OnRosterChanged -= RefreshRoster;
+                watched = service;
+                if (watched != null) watched.OnRosterChanged += RefreshRoster;
+            }
+            rosterRows.Clear();
+            if (service == null) return;
+            foreach (var line in RosterSheet.Lines(service.Survivors, null))
+            {
+                var row = new Label(line);
+                row.style.color = Color.white;
+                row.style.whiteSpace = WhiteSpace.Normal;
+                row.style.marginBottom = 2;
+                rosterRows.Add(row);
+            }
         }
 
         private void Build()
@@ -80,6 +140,7 @@ namespace OutpostZero.UI
             panel.Add(Button(Loc.T("dev.street"), () => Jump(FlowStep.Expedition)));
             panel.Add(Button(Loc.T("dev.boot"), () => GameManager.Instance?.ReturnToBoot()));
             root.Add(panel);
+            BuildRoster(root);
             Refresh();
         }
 

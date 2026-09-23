@@ -48,6 +48,7 @@ Keyboard actions can be rebound in **Settings**. Gamepad buttons can be rebound 
 | **Middle mouse / hold Z** | Weapon wheel |
 | **Escape** | Pause menu |
 | **F3** | AI watch overlay (zombie state and targets) |
+| **F4** | Roster sheet (editor and development builds only): every survivor's traits, skills, needs, wounds, task and opinion |
 | **F9** | Dev menu (editor and development builds only): scene jump, god mode, spawn zombies, supply kit, skip 6 hours, reboot through Boot |
 
 | Gamepad | Action |
