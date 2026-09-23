@@ -104,6 +104,14 @@ python3 BlenderScripts/texture_set.py
 - If `<Name>_Albedo.png` exists, a `OutpostZero/TriplanarRim` material is created or updated with albedo, normal, occlusion and mask maps. On later imports every source material the sidecar lists is remapped onto that baked material, so each LOD renders with it.
 - A prefab is created the first time the model is imported, with the collider the sidecar names (`box`, `mesh`, `convex`, or `none`). A `box` takes the sidecar's bind-pose `size`, `floor` and `center`, because a skinned renderer's bounds cover every animation pose. Existing prefabs are never overwritten, so hand edits survive re-imports.
 
+## Kit pieces at runtime
+
+`Resources/KitPrefabs.asset` maps each `KitCatalog.json` id to its `Assets/Prefabs/Kit/Kit_<id>.prefab`. Rebuild it with `python3 BlenderScripts/kit_prefab_set.py --fix`, or with *Tools > Outpost Zero > Sync Kit Prefabs* in the editor. `test_kit_prefab_set.py` and `KitMeshTests` fail when a catalog piece has no prefab or the asset is stale.
+
+`KitStructure` places the baked mesh under each placement with a 180° yaw, because `generate_kit.py` lays catalog (x, y, z) at Blender (x, z, y) and the FBX import flips x and z. The prefab's single box collider is removed. Each catalog box becomes its own `BoxCollider` with a `SurfaceTag`, so doorways stay open. District tints are written to the shader's `_Tint` as a ratio over the baked albedo. Pieces with a breakable pane (`wall_window`) keep the primitive box build, so the glass can shatter on its own.
+
+*Tools > Outpost Zero > Kit Assembler* lays kit prefabs on a snap grid (2 m by default, 3 m storeys). Shift+click in the Scene view to place the chosen piece, or load a catalog recipe (storefront, warehouse, hospital, apartment, edge). Export writes the assembly to `Assets/Data/Kit/<name>.json` as `KitPlacement` rows, the same shape as the catalog recipes. A new block needs no Blender code.
+
 ## Levels of detail and colliders
 
 - An entry with `lods: [1.0, 0.5]` exports the mesh as `<Name>_LOD0` plus a decimated `<Name>_LOD1`; Unity's model importer turns those names into a LODGroup. The two buildings and two vehicles carry a half-resolution LOD. Characters keep one LOD because they are skinned.
