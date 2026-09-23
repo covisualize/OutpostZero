@@ -146,7 +146,11 @@ Play this in a player build, not the editor. Use Survivor difficulty and a fixed
   - End of day: `ColonyDay.Simulate` eats 1 food and 1 water per head, and shortages cut morale. It also heals wounds, drifts opinion, and fires events: grief, friendship, recovery, breakdown, argument, celebration, and rain soaking the yard. Fever, rain catch, caravans, rescues and raid warnings come from their own services.
   - Left open: menu, camp and street still share one scene (the PRO-63 editor blocker).
   - Automated: `ClockPhaseTests`, `TaskPickTests`, and the `ColonyDay` tests in `GameSystemsTests`.
-- [ ] PRO-57 **Play**: survivors walk between modules. A starving, grieving camp collapses in about 3 days and a well-run one thrives.
+- [ ] PRO-57 **Automated** (collapse and thrive arcs) and **Play**: survivors walk between modules. A starving, grieving camp collapses in about 3 days and a well-run one thrives.
+  - Yard bodies are now the `Colonist_Survivor` model (from `Resources/CampCast.asset`), with the colonist clothing, rim and blob shadow. On the NavMesh they steer with a `NavMeshAgent` round modules (`CampMateBody`), and the model's controller plays the walk at the matching stride. With no prefab they fall back to capsules, and with no NavMesh they walk straight.
+  - Check in play: colonists leave the gate, walk round the campfire and cots to their stations, visit friends, and stand on the wall during a raid.
+  - Already in place: mood bands (Inspired above 70 gives +10% output, Depressed below 30 gives 70%, Breakdown below 10), idle rest without a cot costs 5 morale, grief is −25 (−40 for a friend), a won expedition is +10, pair opinions drift, and the camp board row serves as the inspection panel.
+  - Automated: `CampArcTests`.
 - [ ] PRO-58 **Play**: B places walls, a generator with lights, a farm and a purifier. Each changes the daily numbers and raid behaviour.
 - [ ] PRO-59 **Play**: crafting solves ammo scarcity at a real material cost, and T2 recipes need base investment.
 - [ ] PRO-60 **Play**: see the leader death in section 2.

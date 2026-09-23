@@ -46,6 +46,7 @@ namespace OutpostZero.UI
         private bool skipTutorial;
         private string inspected = "";
         private int packFilter = PackFilter.All;
+        private BuildMenu.Tab buildTab = BuildMenu.Tab.Defence;
 
         private void Update()
         {
@@ -793,22 +794,27 @@ namespace OutpostZero.UI
             if (NightRaidController.Instance != null && NightRaidController.Instance.Warning)
                 camp.Add(Body(Loc.T("camp.warn") + " " + Mathf.CeilToInt(NightRaidController.Instance.WarningLeft)));
             camp.Add(Body(Loc.T("camp.build") + " " + (GridBuilder.Instance != null ? GridBuilder.Instance.Selected + "  " + GridBuilder.Instance.Facing : "")));
-            var build = new VisualElement { style = { flexDirection = FlexDirection.Row } };
-            build.Add(Lit(Button(Loc.T("camp.barricade"), () => GridBuilder.Instance?.Select(ModuleKind.Barricade)), TutorialMark.Barricade));
-            build.Add(Button(Loc.T("camp.cot"), () => GridBuilder.Instance?.Select(ModuleKind.Cot)));
-            build.Add(Button(Loc.T("camp.water"), () => GridBuilder.Instance?.Select(ModuleKind.Water)));
-            build.Add(Button(Loc.T("camp.tower"), () => GridBuilder.Instance?.Select(ModuleKind.Watchtower)));
-            build.Add(Button(Loc.T("camp.generator"), () => GridBuilder.Instance?.Select(ModuleKind.Generator)));
-            build.Add(Button(Loc.T("camp.bench"), () => GridBuilder.Instance?.Select(ModuleKind.Workbench)));
-            build.Add(Button(Loc.T("camp.post"), () => GridBuilder.Instance?.Select(ModuleKind.TradingPost)));
-            build.Add(Button(Loc.T("camp.farm"), () => GridBuilder.Instance?.Select(ModuleKind.Farm)));
-            build.Add(Button(Loc.T("camp.purifier"), () => GridBuilder.Instance?.Select(ModuleKind.Purifier)));
-            build.Add(Button(Loc.T("camp.turret"), () => GridBuilder.Instance?.Select(ModuleKind.Turret)));
-            build.Add(Button(Loc.T("camp.spikes"), () => GridBuilder.Instance?.Select(ModuleKind.Spikes)));
-            build.Add(Button(Loc.T("camp.oil"), () => GridBuilder.Instance?.Select(ModuleKind.Oil)));
-            build.Add(Button(Loc.T("camp.crate"), () => GridBuilder.Instance?.Select(ModuleKind.Crate)));
-            build.Add(Button(Loc.T("camp.lamp"), () => GridBuilder.Instance?.Select(ModuleKind.Lamp)));
-            build.Add(Button(Loc.T("camp.fire"), () => GridBuilder.Instance?.Select(ModuleKind.Campfire)));
+            if (TutorialDirector.Instance != null && TutorialDirector.Instance.CampMark == TutorialMark.Barricade) buildTab = BuildMenu.Tab.Defence;
+            var tabs = new VisualElement { style = { flexDirection = FlexDirection.Row } };
+            for (int t = 0; t < BuildMenu.TabCount; t++)
+            {
+                var tab = (BuildMenu.Tab)t;
+                var tabButton = Button(Loc.T(BuildMenu.TabKey(tab)), () => buildTab = tab);
+                if (tab == buildTab) tabButton.style.backgroundColor = new Color(0.32f, 0.3f, 0.22f);
+                tabs.Add(tabButton);
+            }
+            camp.Add(tabs);
+            int scrapHeld = ColonyStorage.Instance != null ? ColonyStorage.Instance.Scrap : 0;
+            var build = new VisualElement { style = { flexDirection = FlexDirection.Row, flexWrap = Wrap.Wrap } };
+            foreach (var kind in BuildMenu.Kinds(buildTab))
+            {
+                var pick = kind;
+                int cost = GridBuilder.Cost(kind);
+                var moduleButton = Button(Loc.T(BuildMenu.LabelKey(kind)) + " " + cost, () => GridBuilder.Instance?.Select(pick));
+                if (!BuildMenu.Affordable(cost, scrapHeld)) moduleButton.style.color = new Color(0.55f, 0.5f, 0.48f);
+                if (GridBuilder.Instance != null && GridBuilder.Instance.Selected == kind) moduleButton.style.backgroundColor = new Color(0.25f, 0.32f, 0.22f);
+                build.Add(kind == ModuleKind.Barricade ? Lit(moduleButton, TutorialMark.Barricade) : moduleButton);
+            }
             if (GridBuilder.Instance != null)
             {
                 int sprout = -1;
@@ -1178,7 +1184,7 @@ namespace OutpostZero.UI
 
         private const int Closed = int.MinValue;
 
-        private static int CampKey()
+        private int CampKey()
         {
             var key = new UiKey();
             key.Add(SettingsService.Instance != null ? SettingsService.Instance.Language : "en");
@@ -1192,6 +1198,8 @@ namespace OutpostZero.UI
             if (storage != null)
             {
                 key.Add(storage.Scrap);
+                key.Add((int)buildTab);
+                if (GridBuilder.Instance != null) key.Add((int)GridBuilder.Instance.Selected);
                 key.Add(storage.Food);
                 key.Add(storage.Water);
                 key.Add(storage.Security);
