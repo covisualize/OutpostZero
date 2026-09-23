@@ -20,6 +20,7 @@ namespace OutpostZero.Graphics
             public int Msaa;
             public bool Hdr;
             public bool Ssao;
+            public bool SoftShadows;
             public bool DepthOfField;
             public bool Grain;
             public float Bloom;
@@ -53,7 +54,7 @@ namespace OutpostZero.Graphics
                 return new Tier
                 {
                     Name = "High", Zombies = 32, Decals = 240, Particles = 400,
-                    ShadowDistance = 60f, ShadowResolution = 2048, Cascades = 2, RenderScale = 1f, Msaa = 2, Hdr = true,
+                    ShadowDistance = 60f, ShadowResolution = 2048, Cascades = 2, RenderScale = 1f, Msaa = 2, Hdr = true, SoftShadows = true,
                     Ssao = true, DepthOfField = true, Grain = true, Bloom = 0.55f, LodBias = 1.25f, FrameMs = 16.6f
                 };
             }
@@ -62,14 +63,14 @@ namespace OutpostZero.Graphics
                 return new Tier
                 {
                     Name = "Ultra", Zombies = 40, Decals = 400, Particles = 600,
-                    ShadowDistance = 80f, ShadowResolution = 4096, Cascades = 4, RenderScale = 1f, Msaa = 4, Hdr = true,
+                    ShadowDistance = 80f, ShadowResolution = 4096, Cascades = 4, RenderScale = 1f, Msaa = 4, Hdr = true, SoftShadows = true,
                     Ssao = true, DepthOfField = true, Grain = true, Bloom = 0.7f, LodBias = 1.5f, FrameMs = 16.6f
                 };
             }
             return new Tier
             {
                 Name = "Medium", Zombies = 32, Decals = 120, Particles = 220,
-                ShadowDistance = 40f, ShadowResolution = 2048, Cascades = 2, RenderScale = 1f, Msaa = 2, Hdr = true,
+                ShadowDistance = 45f, ShadowResolution = 2048, Cascades = 2, RenderScale = 1f, Msaa = 2, Hdr = true, SoftShadows = true,
                 Ssao = true, DepthOfField = false, Grain = false, Bloom = 0.35f, LodBias = 1f, FrameMs = 16.6f
             };
         }

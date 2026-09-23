@@ -52,6 +52,18 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void TheDefaultTierCastsTheIssuesShadows()
+        {
+            var medium = QualityProfile.For(1);
+            Assert.AreEqual(45f, medium.ShadowDistance, "PRO-36: 45 m is enough for the top-down view");
+            Assert.AreEqual(ShadowRig.Cascades, medium.Cascades);
+            Assert.IsTrue(medium.SoftShadows);
+            Assert.IsFalse(QualityProfile.For(0).SoftShadows, "Low keeps hard shadows");
+            string cycle = Read("Assets", "Scripts", "Graphics", "DayNightCycle.cs");
+            StringAssert.Contains("ShadowRig.Sun(sun)", cycle, "the sun gets the soft shadows and tuned near plane");
+        }
+
+        [Test]
         public void EachUrpAssetCarriesItsTierSettings()
         {
             var c = System.Globalization.CultureInfo.InvariantCulture;
@@ -69,6 +81,7 @@ namespace OutpostZero.Tests.EditMode
                 Assert.AreEqual("1", Field(asset, "m_UseSRPBatcher"), tier.Name);
                 Assert.AreEqual("1", Field(asset, "m_RequireDepthTexture"), tier.Name + " feeds decals, SSAO, and DoF");
                 Assert.AreEqual(tier.Ssao ? "1" : "0", Field(asset, "m_PrefilteringModeScreenSpaceOcclusion"), tier.Name);
+                Assert.AreEqual(tier.SoftShadows ? "1" : "0", Field(asset, "m_SoftShadowsSupported"), tier.Name + " soft shadows, or the lights' Soft setting falls back to hard");
                 StringAssert.Contains("guid: " + GuidOf(QualityProfile.RendererPath(i)), Regex.Match(asset, @"m_RendererDataList:\n  - (.*)").Groups[1].Value, tier.Name);
             }
         }

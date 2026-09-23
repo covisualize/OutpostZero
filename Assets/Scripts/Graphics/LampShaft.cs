@@ -103,6 +103,19 @@ namespace OutpostZero.Graphics
     {
         public const int Cascades = 2;
         public const float Near = 0.2f;
+        public const float NormalBias = 0.6f;
+
+        /// <summary>
+        /// Soft sun shadows with a tighter normal bias than the pipeline's 1, so a 2 m body's
+        /// shadow meets its feet instead of floating off them.
+        /// </summary>
+        public static void Sun(Light sun)
+        {
+            if (sun == null) return;
+            sun.shadows = LightShadows.Soft;
+            sun.shadowNearPlane = Near;
+            sun.shadowNormalBias = NormalBias;
+        }
     }
 
     /// <summary>A building wall casts and receives shadows so a lamp does not shine through it.</summary>

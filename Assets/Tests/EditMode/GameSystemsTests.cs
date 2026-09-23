@@ -5133,7 +5133,7 @@ namespace OutpostZero.Tests.EditMode
             Assert.IsFalse(WallSeal.Casts("StreetLamp_NW"));
             Assert.IsFalse(WallSeal.Casts(""));
             Assert.AreEqual(18f, QualityProfile.For(0).ShadowDistance, 0.001f);
-            Assert.AreEqual(40f, QualityProfile.For(1).ShadowDistance, 0.001f);
+            Assert.AreEqual(45f, QualityProfile.For(1).ShadowDistance, 0.001f);
         }
 
         [Test]

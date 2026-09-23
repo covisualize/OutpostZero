@@ -45,8 +45,8 @@ namespace OutpostZero.Graphics
                     var go = new GameObject("Sun");
                     sun = go.AddComponent<Light>();
                     sun.type = LightType.Directional;
-                    sun.shadows = LightShadows.Soft;
                 }
+                ShadowRig.Sun(sun);
             }
 
             float hour = WorldClock.Instance != null ? WorldClock.Instance.Hour : 18f;
