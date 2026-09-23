@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using OutpostZero.Core;
 using OutpostZero.Player;
@@ -225,33 +226,172 @@ namespace OutpostZero.Expedition
         public const float LotTile = 2f;
         public const float Storey = 3f;
 
-        private static readonly string[] LotFronts = { "wall_door", "wall_boarded", "wall_window_broken", "wall_door" };
+        /// <summary>Kit tiles a block of road-graph lots holds along one side: 1 for a single cell, 3 for two cells.</summary>
+        public static int Tiles(int cells) => cells >= 2 ? 3 : 1;
+
+        /// <summary>How a footprint's buildings are dressed: height, the front door, the wall fill and what stands inside.</summary>
+        public sealed class Template
+        {
+            public string Name;
+            public int Storeys;
+            public int TallStoreys;
+            public string Door;
+            public bool Garage;
+            public string[] Fill;
+            public string[] Props;
+            public bool Parapet;
+        }
+
+        private static readonly Template[] Templates =
+        {
+            new Template { Name = "storefront", Storeys = 0, TallStoreys = 2, Door = "wall_door", Fill = new[] { "wall_window", "wall_window_broken", "wall_boarded" }, Props = new[] { "shelf", "counter", "shelf" } },
+            new Template { Name = "warehouse", Storeys = 1, TallStoreys = 1, Door = "wall_door", Garage = true, Fill = new[] { "wall_plain", "wall_boarded" }, Props = new[] { "pallet", "pallet", "workbench" } },
+            new Template { Name = "apartment", Storeys = 2, TallStoreys = 3, Door = "wall_door", Fill = new[] { "wall_window", "wall_window_broken" }, Props = new[] { "chair", "desk", "fridge" } },
+            new Template { Name = "clinic", Storeys = 0, TallStoreys = 2, Door = "wall_double_door", Fill = new[] { "wall_window", "wall_plain" }, Props = new[] { "hospital_bed", "filing", "hospital_bed" } },
+            new Template { Name = "station", Storeys = 2, TallStoreys = 2, Door = "wall_double_door", Fill = new[] { "wall_window_broken", "wall_boarded" }, Props = new[] { "desk", "filing", "lockers" }, Parapet = true },
+            new Template { Name = "hospital", Storeys = 2, TallStoreys = 2, Door = "wall_double_door", Fill = new[] { "wall_window", "wall_boarded" }, Props = new[] { "lockers", "desk", "chair" }, Parapet = true }
+        };
+
+        public static Template TemplateFor(string footprint)
+        {
+            for (int i = 0; i < Templates.Length; i++)
+            {
+                if (Templates[i].Name == footprint) return Templates[i];
+            }
+            return Templates[0];
+        }
+
+        private struct Slot
+        {
+            public string Face;
+            public int Index;
+            public int Count;
+        }
 
         /// <summary>
-        /// One-tile kit house for a road-graph lot, local to the tile's south-west corner.
-        /// The front (south) face looks onto the spine; walls stay within 0.2 m of the tile.
+        /// A kit building on a block of road-graph lots, local to the south-west cell's tile corner (cell centre
+        /// less one metre each way). The floor spans <see cref="Tiles"/> of cols by rows, the door opens on
+        /// <paramref name="front"/>, and walls stay within 0.2 m of the floor.
         /// </summary>
-        public static KitPlacement[] Lot(int seed, float x, float z, string footprint)
+        public static KitPlacement[] Building(int seed, float x, float z, int cols, int rows, string footprint, string front)
         {
+            var template = TemplateFor(footprint);
             uint hash = LotHash(seed, x, z);
-            int storeys = footprint == "apartment" || footprint == "station" ? 2
-                : footprint == "warehouse" ? 1
-                : 1 + (int)(hash & 1u);
-            var list = new System.Collections.Generic.List<KitPlacement>();
+            int wide = Tiles(cols);
+            int deep = Tiles(rows);
+            bool large = wide * deep > 1;
+            int storeys = large ? template.TallStoreys : template.Storeys > 0 ? template.Storeys : 1 + (int)(hash & 1u);
+            if (string.IsNullOrEmpty(front)) front = "south";
+            var list = new List<KitPlacement>();
             for (int s = 0; s < storeys; s++)
             {
                 float y = s * Storey;
-                list.Add(At("floor", 0f, y, 0f, 0));
-                string front = s == 0 ? LotFronts[(hash >> 1) % (uint)LotFronts.Length] : ((hash >> 3) & 1u) == 0u ? "wall_window" : "wall_window_broken";
-                list.Add(At(front, 0f, y, 0f, 0));
-                list.Add(At("wall_plain", 0f, y, LotTile - 0.2f, 0));
-                list.Add(At(((hash >> (4 + s)) & 1u) == 0u ? "wall_plain" : "wall_window", 0f, y, 0f, 270));
-                list.Add(At(((hash >> (6 + s)) & 1u) == 0u ? "wall_plain" : "wall_boarded", LotTile, y, LotTile, 90));
+                for (int i = 0; i < wide; i++)
+                    for (int j = 0; j < deep; j++) list.Add(At("floor", i * LotTile, y, j * LotTile, 0));
+                foreach (var face in new[] { "south", "north", "west", "east" })
+                {
+                    int length = face == "south" || face == "north" ? wide : deep;
+                    foreach (var slot in Slots(face, length, s == 0 && face == front && template.Garage))
+                    {
+                        string id = WallFor(template, hash, s, face == front, slot, length);
+                        list.Add(Wall(id, face, slot.Index, y, wide, deep));
+                    }
+                }
             }
             float top = storeys * Storey;
-            list.Add(At("roof", 0f, top, 0f, 0));
-            if (((hash >> 8) & 1u) == 1u) list.Add(At("parapet", 0f, top, 0f, 0));
+            for (int i = 0; i < wide; i++)
+                for (int j = 0; j < deep; j++) list.Add(At("roof", i * LotTile, top, j * LotTile, 0));
+            if (template.Parapet || ((hash >> 8) & 1u) == 1u)
+            {
+                int length = front == "south" || front == "north" ? wide : deep;
+                for (int i = 0; i < length; i++) list.Add(Wall("parapet", front, i, top, wide, deep));
+            }
+            if (large) Furnish(list, template, hash, front, wide, deep);
             return list.ToArray();
+        }
+
+        private static List<Slot> Slots(string face, int length, bool garage)
+        {
+            var slots = new List<Slot>();
+            int i = 0;
+            if (garage && length >= 3)
+            {
+                slots.Add(new Slot { Face = face, Index = 0, Count = 2 });
+                i = 2;
+            }
+            for (; i < length; i++) slots.Add(new Slot { Face = face, Index = i, Count = 1 });
+            return slots;
+        }
+
+        private static string WallFor(Template template, uint hash, int storey, bool front, Slot slot, int length)
+        {
+            if (slot.Count == 2) return "wall_garage";
+            uint roll = (hash >> ((slot.Index * 3 + storey * 5 + slot.Face.Length) % 24)) & 7u;
+            if (front && storey == 0)
+            {
+                int door = template.Garage && length >= 3 ? length - 1 : length / 2;
+                if (slot.Index == door) return template.Door;
+                return template.Fill[roll % (uint)template.Fill.Length];
+            }
+            if (front) return (roll & 1u) == 0u ? "wall_window" : "wall_window_broken";
+            if (roll < 4u) return "wall_plain";
+            return roll < 6u ? "wall_window" : "wall_boarded";
+        }
+
+        /// <summary>A wall piece in slot <paramref name="index"/> of a face, placed so it covers that stretch from outside the floor.</summary>
+        private static KitPlacement Wall(string id, string face, int index, float y, int wide, int deep)
+        {
+            float along = index * LotTile;
+            float span = id == "wall_garage" ? 2f * LotTile : LotTile;
+            switch (face)
+            {
+                case "north": return At(id, along, y, deep * LotTile - 0.2f, 0);
+                case "west": return At(id, 0f, y, along, 270);
+                case "east": return At(id, wide * LotTile, y, along + span, 90);
+                default: return At(id, along, y, 0f, 0);
+            }
+        }
+
+        /// <summary>Props stand against the wall across from the door, clear of the walk in.</summary>
+        private static void Furnish(List<KitPlacement> list, Template template, uint hash, string front, int wide, int deep)
+        {
+            string back = front == "south" ? "north" : front == "north" ? "south" : front == "west" ? "east" : "west";
+            bool across = back == "north" || back == "south";
+            int length = across ? wide : deep;
+            float reach = (across ? deep : wide) * LotTile - 1.5f;
+            for (int i = 0; i < length; i++)
+            {
+                if (((hash >> (12 + i)) & 3u) == 0u) continue;
+                string id = template.Props[i % template.Props.Length];
+                PropSize(id, out float w, out float d);
+                if (d > reach || (!across && w > LotTile - 0.4f)) continue;
+                float slot = i * LotTile + (LotTile - w) * 0.5f;
+                switch (back)
+                {
+                    case "north": list.Add(At(id, slot, 0f, deep * LotTile - 0.3f - d, 0)); break;
+                    case "south": list.Add(At(id, slot, 0f, 0.3f, 0)); break;
+                    case "east": list.Add(At(id, wide * LotTile - 0.1f - d, 0f, slot + w, 90)); break;
+                    default: list.Add(At(id, 0.1f, 0f, slot + w, 90)); break;
+                }
+            }
+        }
+
+        public static void PropSize(string id, out float w, out float d)
+        {
+            switch (id)
+            {
+                case "shelf": w = 0.9f; d = 0.4f; return;
+                case "counter": w = 1.6f; d = 0.6f; return;
+                case "fridge": w = 0.7f; d = 0.7f; return;
+                case "pallet": w = 1.2f; d = 1.0f; return;
+                case "desk": w = 1.4f; d = 0.7f; return;
+                case "chair": w = 0.5f; d = 0.5f; return;
+                case "filing": w = 0.5f; d = 0.6f; return;
+                case "hospital_bed": w = 2.0f; d = 0.9f; return;
+                case "lockers": w = 1.5f; d = 0.5f; return;
+                case "workbench": w = 1.6f; d = 0.7f; return;
+                default: w = 1f; d = 1f; return;
+            }
         }
 
         private static KitPlacement At(string id, float x, float y, float z, int yaw)
@@ -308,15 +448,19 @@ namespace OutpostZero.Expedition
             }
         }
 
-        /// <summary>Raises a road-graph lot house; false when the kit catalog is missing so the caller can fall back.</summary>
+        /// <summary>Raises a road-graph lot building with its roof cutaway; false when the kit catalog is missing so the caller can fall back.</summary>
         public static bool RaiseLot(KitPlacement[] placements, Vector3 corner, Transform parent, string variant, string name)
         {
             var kit = Book;
             if (kit == null || kit.pieces == null || parent == null || placements == null) return false;
             var shell = new GameObject(name);
             shell.transform.SetParent(parent, false);
-            Spawn(kit, placements, corner, shell.transform, variant);
-            if (shell.transform.childCount > 0) return true;
+            var floors = Spawn(kit, placements, corner, shell.transform, variant);
+            if (shell.transform.childCount > 0)
+            {
+                shell.AddComponent<KitCutaway>().Configure(floors);
+                return true;
+            }
             Destroy(shell);
             return false;
         }

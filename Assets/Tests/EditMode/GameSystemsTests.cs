@@ -7581,11 +7581,12 @@ namespace OutpostZero.Tests.EditMode
             Assert.AreEqual(RoadGraph.Signature(mall), RoadGraph.Signature(mallAgain));
             Assert.AreEqual("alley", RoadGraph.KindAt(mall, 24f, 4f));
             Assert.AreEqual("lot", RoadGraph.KindAt(mall, 28f, 4f));
-            Assert.AreEqual("hole", RoadGraph.KindAt(mall, 40f, 8f));
+            Assert.AreEqual("lot", RoadGraph.KindAt(mall, 40f, 8f), "a lot off the road backs onto one that fronts it");
+            Assert.AreEqual("hole", RoadGraph.KindAt(mall, 28f, 12f));
             Assert.AreEqual(28f, mall.LootX, 0.001f);
             Assert.AreEqual(4f, mall.LootZ, 0.001f);
-            Assert.AreEqual(40f, mall.NestX, 0.001f);
-            Assert.AreEqual(8f, mall.NestZ, 0.001f);
+            Assert.AreEqual(28f, mall.NestX, 0.001f);
+            Assert.AreEqual(12f, mall.NestZ, 0.001f);
             Assert.AreNotEqual(RoadGraph.Signature(mall), RoadGraph.Signature(RoadGraph.Build(99991, "mall")));
 
             var ids = CampaignBoard.All();

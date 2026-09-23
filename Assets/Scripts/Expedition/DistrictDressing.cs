@@ -108,24 +108,27 @@ namespace OutpostZero.Expedition
             var cells = map.Cells;
             if (cells == null) return;
             var tint = BlockTint(map.Footprint);
+            foreach (var block in RoadGraph.Blocks(map))
+            {
+                var corner = new Vector3(block.X - KitPlan.LotTile * 0.5f, 0f, block.Z - KitPlan.LotTile * 0.5f);
+                var house = KitPlan.Building(seed, block.X, block.Z, block.Cols, block.Rows, map.Footprint, block.Front);
+                if (KitStructure.RaiseLot(house, corner, root, KitPlan.Variant(districtId), "RoadLot")) continue;
+                float wide = KitPlan.Tiles(block.Cols) * KitPlan.LotTile;
+                float deep = KitPlan.Tiles(block.Rows) * KitPlan.LotTile;
+                var shell = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                shell.name = "RoadLot";
+                shell.transform.SetParent(root, false);
+                shell.transform.position = corner + new Vector3(wide * 0.5f, 1.1f, deep * 0.5f);
+                shell.transform.localScale = new Vector3(wide + 0.4f, 2.2f, deep);
+                shell.layer = GameLayers.Environment;
+                Paint(shell.GetComponent<Renderer>(), tint, OutpostZero.Graphics.SurfaceFamily.BrickRed);
+            }
             for (int i = 0; i < cells.Length; i++)
             {
                 var cell = cells[i];
                 if (cell.Kind == "hole") continue;
                 if (cell.Kind == "lot")
                 {
-                    var corner = new Vector3(cell.X - KitPlan.LotTile * 0.5f, 0f, cell.Z - KitPlan.LotTile * 0.5f);
-                    var house = KitPlan.Lot(seed, cell.X, cell.Z, map.Footprint);
-                    if (!KitStructure.RaiseLot(house, corner, root, KitPlan.Variant(districtId), "RoadLot"))
-                    {
-                        var shell = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                        shell.name = "RoadLot";
-                        shell.transform.SetParent(root, false);
-                        shell.transform.position = new Vector3(cell.X, 1.1f, cell.Z);
-                        shell.transform.localScale = new Vector3(2.5f, 2.2f, 2.5f);
-                        shell.layer = GameLayers.Environment;
-                        Paint(shell.GetComponent<Renderer>(), tint, OutpostZero.Graphics.SurfaceFamily.BrickRed);
-                    }
                     if (map.HasLoot && Close(cell.X, map.LootX) && Close(cell.Z, map.LootZ))
                     {
                         var crate = GameObject.CreatePrimitive(PrimitiveType.Cube);
