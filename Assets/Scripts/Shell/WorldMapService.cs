@@ -168,8 +168,11 @@ namespace OutpostZero.Shell
             DistrictRules.SetActiveTable(rules.LootTable);
             int day = WorldClock.Instance != null ? WorldClock.Instance.Day : 1;
             DifficultyBook.Ensure();
-            DifficultyProfile.Active = difficulty;
-            var curve = DifficultyProfile.For(CampaignBoard.Tier(districtId), day, difficulty);
+            ExpeditionBook.Ensure();
+            StreetTerms.Begin(districtId);
+            int streetDifficulty = StreetTerms.Difficulty(districtId, difficulty);
+            DifficultyProfile.Active = streetDifficulty;
+            var curve = DifficultyProfile.For(CampaignBoard.Tier(districtId), day, streetDifficulty);
             int kills = rules.KillGoal + curve.ExtraKills;
             bool lessonsDone = TutorialDirector.Instance == null || TutorialDirector.Instance.Finished;
             bool tutorial = TutorialRun.Applies(lessonsDone, endless);
@@ -185,7 +188,7 @@ namespace OutpostZero.Shell
                 interval = Mathf.Max(3f, interval * EndlessShift.IntervalScale(day));
             }
             string prefer = string.IsNullOrEmpty(rules.PreferredVariant) ? curve.Prefer : rules.PreferredVariant;
-            HordeDirector.Instance?.ApplyOpening(tension, interval, prefer, difficulty, CampaignBoard.Tier(districtId));
+            HordeDirector.Instance?.ApplyOpening(tension, interval, prefer, streetDifficulty, CampaignBoard.Tier(districtId));
             var player = PlayerRegistry.Current;
             if (tutorial && player != null) HordeDirector.Instance?.BeginTutorial(player.transform.position, player.transform.forward);
             if (ambush)

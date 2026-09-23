@@ -75,7 +75,7 @@ namespace OutpostZero.UI
         private bool shownReloading;
         private int shownNeeds = -1, shownBangs = -1, shownQuestions = -1, shownTape = -1, shownRescue = -1;
         private int shownTutorial = int.MinValue, shownTimer = -1, shownWeapons = -1, shownActive = -1, shownHot = -2;
-        private int shownPoison = -1, shownRush = -1;
+        private int shownPoison = -1, shownRush = -1, shownLeft = -1;
         private int shownLamp = -1, shownContacts = -1, shownInfection = -1, shownToasts = -1, shownLow = -1;
         private int vision;
         private string language = "";
@@ -340,6 +340,7 @@ namespace OutpostZero.UI
             Weapon(now);
             Wheel();
             Compass();
+            StreetClock();
             Markers(now);
             Toasts(now);
             Prompt(now);
@@ -670,10 +671,21 @@ namespace OutpostZero.UI
             if (board != null) Show(board, !string.IsNullOrEmpty(board.text));
         }
 
+        private void StreetClock()
+        {
+            bool live = street && GameManager.Instance != null && GameManager.Instance.CurrentState == GameState.ExpeditionActive;
+            float left = live ? StreetTerms.Left(StreetTerms.Active, GameManager.Instance.ExpeditionTime) : -1f;
+            int key = left < 0f ? -1 : StatusTimer.Shown(left);
+            if (key == shownLeft) return;
+            shownLeft = key;
+            HandleClock();
+        }
+
         private void HandleClock()
         {
             if (root == null) return;
             clock.text = worldClock != null ? worldClock.Label : "";
+            if (street && shownLeft >= 0) clock.text += "  " + StreetTerms.Line(shownLeft, true, null);
             Show(clock, clock.text.Length > 0);
         }
 

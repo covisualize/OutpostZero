@@ -17,3 +17,6 @@ MonoBehaviour:
   - {fileID: 11400000, guid: b643b477ac974e0e8bcda97d5f8e7fe0, type: 2}
   - {fileID: 11400000, guid: 6b56b068e95b40a5a98f3ba61d5a6382, type: 2}
   - {fileID: 11400000, guid: ba1f133ff9e445f7adbf4115101ff8f9, type: 2}
+  duration: 600
+  difficulty: 0
+  extractionPoints: []

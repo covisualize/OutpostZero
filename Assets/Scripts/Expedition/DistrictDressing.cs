@@ -43,7 +43,9 @@ namespace OutpostZero.Expedition
             RaiseBlocks(blocks);
             RaiseGraph(districtId, seed);
             ObjectiveTracker.Instance?.ExpectPoi(blocks.PoiRole);
-            ExtractionZone.MoveTo(new Vector3(blocks.ExtractX, 0.5f, blocks.ExtractZ));
+            ExpeditionBook.Ensure();
+            if (StreetTerms.Extraction(districtId, seed, out float gateX, out float gateZ)) ExtractionZone.MoveTo(new Vector3(gateX, 0.5f, gateZ));
+            else ExtractionZone.MoveTo(new Vector3(blocks.ExtractX, 0.5f, blocks.ExtractZ));
             RaiseRescue(districtId, blocks);
             RaiseArmory(districtId);
             RaiseSmg(districtId);

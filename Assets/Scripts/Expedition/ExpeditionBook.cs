@@ -26,13 +26,20 @@ namespace OutpostZero.Expedition
             if (book == null)
             {
                 ObjectivePlan.Clear();
+                StreetTerms.Clear();
                 return;
             }
             var list = new List<KeyValuePair<string, ObjectiveSpec[]>>();
+            var terms = new List<KeyValuePair<string, StreetTerms.Terms>>();
             if (book.expeditions != null)
                 foreach (var expedition in book.expeditions)
-                    if (expedition != null) list.Add(new KeyValuePair<string, ObjectiveSpec[]>(expedition.district, expedition.ToSpecs()));
+                {
+                    if (expedition == null) continue;
+                    list.Add(new KeyValuePair<string, ObjectiveSpec[]>(expedition.district, expedition.ToSpecs()));
+                    terms.Add(new KeyValuePair<string, StreetTerms.Terms>(expedition.district, expedition.ToTerms()));
+                }
             ObjectivePlan.Use(list);
+            StreetTerms.Use(terms);
         }
     }
 }

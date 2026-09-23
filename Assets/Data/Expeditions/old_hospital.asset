@@ -15,3 +15,6 @@ MonoBehaviour:
   district: old_hospital
   objectives:
   - {fileID: 11400000, guid: d3407f3bbb8d45a49f9455d9dab6ca44, type: 2}
+  duration: 480
+  difficulty: 0
+  extractionPoints: []

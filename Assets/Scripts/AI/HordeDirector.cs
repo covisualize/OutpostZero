@@ -2,6 +2,7 @@ using System;
 using UnityEngine;
 using OutpostZero.Colony;
 using OutpostZero.Core;
+using OutpostZero.Expedition;
 using OutpostZero.Shell;
 
 namespace OutpostZero.AI
@@ -36,6 +37,7 @@ namespace OutpostZero.AI
         private float elapsed;
         private float eventCursor;
         private bool runnersOut;
+        private bool overtimeCalled;
         private string openingPrefer = "";
         private bool scripted;
         private bool nearHeard;
@@ -102,6 +104,15 @@ namespace OutpostZero.AI
             if (GameManager.Instance != null && GameManager.Instance.CurrentState == GameState.ExpeditionActive)
             {
                 elapsed += Time.deltaTime;
+                if (StreetTerms.Overtime(StreetTerms.Active, GameManager.Instance.ExpeditionTime))
+                {
+                    tension = 100f;
+                    if (!overtimeCalled)
+                    {
+                        overtimeCalled = true;
+                        GameplayFeedback.Toast(Loc.T("street.overtime_warn"));
+                    }
+                }
                 for (int n = 0; n < 3; n++)
                 {
                     float advanced = HordeSchedule.Advance(elapsed, eventCursor, tier, out string kind);
@@ -165,6 +176,7 @@ namespace OutpostZero.AI
             elapsed = 0f;
             eventCursor = 0f;
             runnersOut = false;
+            overtimeCalled = false;
             openingPrefer = preferredVariant ?? "";
             scripted = false;
             nearHeard = false;
