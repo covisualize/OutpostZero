@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEditor.Animations;
 using UnityEngine;
+using OutpostZero.Core;
 
 namespace OutpostZero.EditorTools
 {
@@ -66,6 +67,7 @@ namespace OutpostZero.EditorTools
             foreach (var child in machine.states)
             {
                 string state = child.state.name;
+                if (child.state.motion is BlendTree) continue;
                 if (byName.TryGetValue(state, out var clip)) child.state.motion = clip;
             }
             MotionOr(machine, "Crouch", byName, "CrouchIdle", "Idle");
@@ -75,6 +77,11 @@ namespace OutpostZero.EditorTools
             MotionOr(machine, "Hit", byName, "Hit", "Stagger");
             MotionOr(machine, "Death", byName, "Death", "DeathB");
             MotionOr(machine, "Reload", byName, "Reload");
+            MotionOr(machine, CharacterRig.Windup, byName, "Roar", "Scream");
+            MotionOr(machine, CharacterRig.Dash, byName, "Charge", "Lunge", "Sprint");
+            Variants(controller, machine, "Idle", CharacterRig.IdleVariant, byName, "Idle", "IdleB");
+            Variants(controller, machine, "Walk", CharacterRig.GaitVariant, byName, "Walk", "Shamble");
+            Variants(controller, machine, "Death", CharacterRig.DeathVariant, byName, "Death", "DeathB", "DeathC");
             EditorUtility.SetDirty(controller);
             AssetDatabase.SaveAssets();
         }
@@ -97,29 +104,85 @@ namespace OutpostZero.EditorTools
             EnsureParameter(controller, "Death", AnimatorControllerParameterType.Trigger);
             EnsureParameter(controller, "Reload", AnimatorControllerParameterType.Trigger);
             EnsureParameter(controller, ReloadSpeed, AnimatorControllerParameterType.Float);
+            EnsureParameter(controller, StrideSheet.MoveRate, AnimatorControllerParameterType.Float);
+            EnsureParameter(controller, CharacterRig.IdleVariant, AnimatorControllerParameterType.Float);
+            EnsureParameter(controller, CharacterRig.GaitVariant, AnimatorControllerParameterType.Float);
+            EnsureParameter(controller, CharacterRig.DeathVariant, AnimatorControllerParameterType.Float);
+            EnsureParameter(controller, CharacterRig.Windup, AnimatorControllerParameterType.Trigger);
+            EnsureParameter(controller, CharacterRig.Dash, AnimatorControllerParameterType.Bool);
             var parameters = controller.parameters;
+            bool changed = false;
             for (int i = 0; i < parameters.Length; i++)
             {
-                if (parameters[i].name == ReloadSpeed && parameters[i].defaultFloat != 1f)
+                bool rate = parameters[i].name == ReloadSpeed || parameters[i].name == StrideSheet.MoveRate;
+                if (rate && parameters[i].defaultFloat != 1f)
                 {
                     parameters[i].defaultFloat = 1f;
-                    controller.parameters = parameters;
-                    break;
+                    changed = true;
                 }
             }
+            if (changed) controller.parameters = parameters;
         }
 
         public const string ReloadSpeed = "ReloadSpeed";
 
-        /// <summary>The reload plays at the gun's reload speed.</summary>
+        /// <summary>The reload plays at the gun's reload speed; gaits play at the body's stride rate.</summary>
         private static void EnsureRig(AnimatorController controller)
         {
             foreach (var child in controller.layers[0].stateMachine.states)
             {
-                if (child.state.name != "Reload") continue;
+                string rate = SpeedParameter(child.state.name);
+                if (rate == null) continue;
                 child.state.speedParameterActive = true;
-                child.state.speedParameter = ReloadSpeed;
+                child.state.speedParameter = rate;
             }
+        }
+
+        public static string SpeedParameter(string state)
+        {
+            switch (state)
+            {
+                case "Reload": return ReloadSpeed;
+                case "Walk":
+                case "Sprint":
+                case "CrouchWalk":
+                case CharacterRig.Dash:
+                    return StrideSheet.MoveRate;
+                default: return null;
+            }
+        }
+
+        /// <summary>
+        /// Crowd variety: a state with alternate takes becomes a 1D blend on its variant parameter, so each
+        /// zombie can hold its own idle or gait. Rebuilt in place on re-import.
+        /// </summary>
+        private static void Variants(AnimatorController controller, AnimatorStateMachine machine, string state, string parameter, Dictionary<string, AnimationClip> clips, params string[] names)
+        {
+            var takes = new List<AnimationClip>();
+            for (int i = 0; i < names.Length; i++)
+                if (clips.TryGetValue(names[i], out var clip)) takes.Add(clip);
+            if (takes.Count < 2) return;
+            AnimatorState target = null;
+            foreach (var child in machine.states)
+                if (child.state.name == state) target = child.state;
+            if (target == null) return;
+            var tree = target.motion as BlendTree;
+            if (tree == null)
+            {
+                tree = new BlendTree { name = state + "Variants", hideFlags = HideFlags.HideInHierarchy };
+                AssetDatabase.AddObjectToAsset(tree, controller);
+                target.motion = tree;
+            }
+            tree.blendType = BlendTreeType.Simple1D;
+            tree.blendParameter = parameter;
+            tree.useAutomaticThresholds = false;
+            var children = new ChildMotion[takes.Count];
+            for (int i = 0; i < takes.Count; i++)
+            {
+                children[i] = new ChildMotion { motion = takes[i], threshold = CrowdVariant.Threshold(i, takes.Count), timeScale = 1f };
+            }
+            tree.children = children;
+            EditorUtility.SetDirty(tree);
         }
 
         private static void EnsureParameter(AnimatorController controller, string name, AnimatorControllerParameterType type)
@@ -143,6 +206,8 @@ namespace OutpostZero.EditorTools
             var hit = FindOrAdd(machine, "Hit", new Vector3(520, 180, 0));
             var reload = FindOrAdd(machine, "Reload", new Vector3(760, 180, 0));
             var death = FindOrAdd(machine, "Death", new Vector3(280, 280, 0));
+            var windup = FindOrAdd(machine, CharacterRig.Windup, new Vector3(520, 280, 0));
+            var dash = FindOrAdd(machine, CharacterRig.Dash, new Vector3(760, 280, 0));
             if (machine.defaultState == null) machine.defaultState = idle;
 
             if (TryLink(idle, walk, false, out var toWalk))
@@ -173,6 +238,15 @@ namespace OutpostZero.EditorTools
             TriggerFrom(idle, reload, "Reload");
             TriggerFrom(walk, reload, "Reload");
             ExitTo(reload, idle);
+            TriggerFrom(idle, windup, CharacterRig.Windup);
+            TriggerFrom(walk, windup, CharacterRig.Windup);
+            TriggerFrom(sprint, windup, CharacterRig.Windup);
+            ExitTo(windup, idle);
+            foreach (var from in new[] { idle, walk, sprint, windup })
+            {
+                if (TryLink(from, dash, false, out var toDash)) toDash.AddCondition(AnimatorConditionMode.If, 0f, CharacterRig.Dash);
+            }
+            if (TryLink(dash, walk, false, out var fromDash)) fromDash.AddCondition(AnimatorConditionMode.IfNot, 0f, CharacterRig.Dash);
             AnyTrigger(machine, death, "Death");
         }
 

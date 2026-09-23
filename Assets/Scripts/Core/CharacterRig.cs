@@ -11,6 +11,15 @@ namespace OutpostZero.Core
         public const string PlayerController = "SurvivorLocomotion";
         public const string Folder = "Animators";
 
+        /// <summary>Blend parameters that pick one body's idle, gait and death takes.</summary>
+        public const string IdleVariant = "IdleVariant";
+        public const string GaitVariant = "GaitVariant";
+        public const string DeathVariant = "DeathVariant";
+        /// <summary>Trigger for the brace before a special: the brute's roar, the walker's scream.</summary>
+        public const string Windup = "Windup";
+        /// <summary>Held while a lunge or charge carries the body.</summary>
+        public const string Dash = "Dash";
+
         /// <summary>The model id is the FBX file stem, e.g. "Zombie_Walker".</summary>
         public static string ModelId(string modelPath)
         {

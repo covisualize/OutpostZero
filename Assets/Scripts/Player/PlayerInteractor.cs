@@ -240,18 +240,26 @@ namespace OutpostZero.Player
                     Sensory.NoiseManager.Instance.EmitNoise(blast, PipeBlast.Noise, 1f, NoiseType.Explosion, gameObject);
                 }
                 Collider[] caught = Physics.OverlapSphere(blast, PipeBlast.Radius);
-                foreach (var hit in caught)
+                BlastKill.Begin(blast, PipeBlast.Throw, PipeBlast.Radius);
+                try
                 {
-                    var damageable = hit.GetComponentInParent<IDamageable>();
-                    if (damageable != null && !damageable.IsDead)
+                    foreach (var hit in caught)
                     {
-                        damageable.TakeDamage(PipeBlast.Damage, hit.bounds.center, (hit.transform.position - blast).normalized, gameObject);
+                        var damageable = hit.GetComponentInParent<IDamageable>();
+                        if (damageable != null && !damageable.IsDead)
+                        {
+                            damageable.TakeDamage(PipeBlast.Damage, hit.bounds.center, (hit.transform.position - blast).normalized, gameObject);
+                        }
+                        var zombie = hit.GetComponentInParent<ZombieAI>();
+                        if (zombie != null)
+                        {
+                            zombie.ApplyImpulse(hit.transform.position - blast, PipeBlast.Shove, PipeBlast.Stun);
+                        }
                     }
-                    var zombie = hit.GetComponentInParent<ZombieAI>();
-                    if (zombie != null)
-                    {
-                        zombie.ApplyImpulse(hit.transform.position - blast, PipeBlast.Shove, PipeBlast.Stun);
-                    }
+                }
+                finally
+                {
+                    BlastKill.End();
                 }
                 CombatVfx.Burst(blast, HazardKind.Explosive);
                 OilPatch.Blast(blast);

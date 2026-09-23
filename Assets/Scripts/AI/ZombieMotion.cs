@@ -15,6 +15,11 @@ namespace OutpostZero.AI
         private Animator animator;
         private bool rigged;
         private int swings;
+        private int variant;
+        private int phase;
+        private float pace;
+        private Vector3 lastPosition;
+        private readonly System.Collections.Generic.HashSet<int> parameters = new System.Collections.Generic.HashSet<int>();
         private ZombieAI.ZombieState driven = (ZombieAI.ZombieState)(-1);
         private float posed;
         private float bob;
@@ -81,15 +86,76 @@ namespace OutpostZero.AI
             if (animator.GetComponent<ZombieClipRelay>() == null)
                 animator.gameObject.AddComponent<ZombieClipRelay>();
             brain.ClipDriven = ClipEvents.Arm(animator.runtimeAnimatorController, AimRig.AttackImpact);
+            parameters.Clear();
+            foreach (var parameter in animator.parameters) parameters.Add(parameter.nameHash);
+            Restart();
+        }
+
+        /// <summary>Fresh pose for a spawn or a pooled body coming back.</summary>
+        public void Restart()
+        {
+            if (brain == null) brain = GetComponent<ZombieAI>();
+            if (brain == null) return;
             swings = brain.Swings;
+            phase = 0;
+            pace = 0f;
+            driven = (ZombieAI.ZombieState)(-1);
+            lastPosition = transform.position;
+            int seed = gameObject.GetInstanceID();
+            variant = CrowdVariant.Pick(seed);
+            if (animator == null || animator.runtimeAnimatorController == null) return;
+            animator.Rebind();
+            SetFloat(CharacterRig.IdleVariant, CrowdVariant.Idle(variant));
+            SetFloat(CharacterRig.GaitVariant, CrowdVariant.Walk(variant));
+            SetFloat(CharacterRig.DeathVariant, CrowdVariant.Death(seed));
+            animator.Play("Idle", 0, CrowdVariant.CycleOffset(seed));
+        }
+
+        private void SetFloat(string name, float value)
+        {
+            if (parameters.Contains(Animator.StringToHash(name))) animator.SetFloat(name, value);
+        }
+
+        private void SetBool(string name, bool value)
+        {
+            if (parameters.Contains(Animator.StringToHash(name))) animator.SetBool(name, value);
+        }
+
+        private void SetTrigger(string name)
+        {
+            if (parameters.Contains(Animator.StringToHash(name))) animator.SetTrigger(name);
         }
 
         private void DriveRig()
         {
             var state = brain.CurrentState;
-            animator.SetFloat("Speed", PoseSheet.Speed(state));
-            animator.SetBool("Sprint", PoseSheet.Sprint(state));
+            float dt = Time.deltaTime;
+            Vector3 moved = transform.position - lastPosition;
+            lastPosition = transform.position;
+            moved.y = 0f;
+            float measured = dt > 0.0001f ? moved.magnitude / dt : 0f;
+            if (measured > 20f) measured = 0f;
+            pace = Mathf.Lerp(pace, measured, 1f - Mathf.Exp(-10f * dt));
+            if (state == ZombieAI.ZombieState.Dead) pace = 0f;
+
+            string model = brain.ModelId;
+            float scale = transform.lossyScale.y;
+            float walkGround = StrideSheet.GroundSpeed(model, CrowdVariant.WalkClip(variant));
+            float runGround = StrideSheet.GroundSpeed(model, "Sprint");
+            bool dashing = brain.AbilityPhase == 2;
+            bool running = state == ZombieAI.ZombieState.Chase && StrideSheet.Sprints(pace, walkGround, runGround, scale);
+            float ground = dashing ? StrideSheet.GroundSpeed(model, "Charge") : running ? runGround : walkGround;
+
+            animator.SetFloat("Speed", StrideSheet.SpeedParam(pace, brain.ChaseSpeed));
+            animator.SetBool("Sprint", running);
             animator.SetBool("Crouch", false);
+            SetFloat(StrideSheet.MoveRate, StrideSheet.Rate(pace, ground, scale));
+
+            int nextPhase = brain.AbilityPhase;
+            if (nextPhase == 1 && phase != 1) SetTrigger(CharacterRig.Windup);
+            SetBool(CharacterRig.Dash, nextPhase == 2);
+            phase = nextPhase;
+
             if (brain.Swings != swings)
             {
                 swings = brain.Swings;

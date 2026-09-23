@@ -208,6 +208,11 @@ namespace OutpostZero.Player
                 animator.SetBool("Sprint", controller.IsSprinting);
                 var gun = controller.ActiveWeapon as FirearmWeapon;
                 animator.SetFloat("ReloadSpeed", gun != null && gun.IsReloading ? AimRig.ReloadSpeed(reloadClip, gun.ReloadSeconds) : 1f);
+                Vector3 planar = body != null ? body.velocity : Vector3.zero;
+                planar.y = 0f;
+                string gait = controller.IsCrouching ? "CrouchWalk" : controller.IsSprinting ? "Sprint" : "Walk";
+                float ground = StrideSheet.GroundSpeed(CharacterRig.PlayerModel, gait);
+                animator.SetFloat(StrideSheet.MoveRate, StrideSheet.Rate(planar.magnitude, ground, transform.lossyScale.y));
             }
             if (next == pose || animationPlayer == null) 
             {

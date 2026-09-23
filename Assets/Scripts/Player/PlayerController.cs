@@ -244,10 +244,12 @@ namespace OutpostZero.Player
                 definition.isMelee = true;
                 var melee = weaponObject.AddComponent<MeleeWeapon>();
                 melee.Configure(definition);
+                HeldModel.Mount(weaponObject.transform, WeaponSet.Find(spec.Id, spec.Type));
                 return melee;
             }
             var gun = weaponObject.AddComponent<FirearmWeapon>();
             gun.LoadCard(spec, magazine, reserve);
+            HeldModel.Mount(weaponObject.transform, WeaponSet.Find(spec.Id, spec.Type));
             return gun;
         }
 
@@ -615,16 +617,22 @@ namespace OutpostZero.Player
             characterController.Move(moveVector * Time.deltaTime);
 
             // Footstep noise generation
-            if (isMoving && characterController.isGrounded && Time.time >= nextFootstepTime)
+            if (isMoving && characterController.isGrounded && Time.time >= nextFootstepTime
+                && StepGate.TimerOwnsNoise(Time.time, lastClipStep, footstepInterval))
             {
                 GenerateFootstepNoise();
             }
         }
 
+        private float lastClipStep = -1f;
+
+        /// <summary>Footfall event from the walk clips; noise lands on the planted foot at the designed pace.</summary>
         public void PlayFootstep()
         {
             if (characterController == null || !characterController.isGrounded) return;
             if (characterController.velocity.magnitude < 0.2f) return;
+            lastClipStep = Time.time;
+            if (!StepGate.EventSpeaks(Time.time, nextFootstepTime)) return;
             GenerateFootstepNoise();
         }
 

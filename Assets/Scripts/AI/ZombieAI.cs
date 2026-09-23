@@ -41,6 +41,11 @@ namespace OutpostZero.AI
         /// <summary>Set by ZombieMotion when an imported attack clip will call <see cref="OnAttackImpact"/>.</summary>
         public bool ClipDriven { get; set; }
 
+        public float ChaseSpeed => chaseSpeed;
+
+        /// <summary>0 idle, 1 bracing for a lunge or charge, 2 dashing.</summary>
+        public int AbilityPhase => abilityClock.Phase;
+
         public static void CountAlerts(float x, float z, out int bangs, out int questions)
         {
             bangs = 0;
@@ -310,6 +315,7 @@ namespace OutpostZero.AI
 
         public void ResetForSpawn()
         {
+            Rise();
             currentTarget = null;
             spawnOrigin = transform.position;
             if (healthSystem != null)
@@ -1152,6 +1158,7 @@ namespace OutpostZero.AI
         {
             Voice("death");
             SetState(ZombieState.Dead);
+            Collapse();
 
             if (GameManager.Instance != null)
             {
@@ -1175,6 +1182,26 @@ namespace OutpostZero.AI
             {
                 Destroy(gameObject, CorpseMelt.Length);
             }
+        }
+
+        /// <summary>
+        /// The body stops blocking shots and walkers. A blast kill throws it as a ragdoll on the
+        /// Corpse layer; anything else plays its death clip where it stands.
+        /// </summary>
+        private void Collapse()
+        {
+            foreach (var solid in GetComponents<Collider>()) solid.enabled = false;
+            if (!BlastKill.Active) return;
+            float scale = transform.lossyScale.y;
+            float mass = RagdollSheet.MassOf(specialAbility == ZombieSpecialAbility.Charge, scale);
+            Ragdoll.Ensure(gameObject).Fall(BlastKill.PushFor(transform.position) * (RagdollSheet.BodyMass / mass), mass);
+        }
+
+        private void Rise()
+        {
+            foreach (var solid in GetComponents<Collider>()) solid.enabled = true;
+            if (TryGetComponent(out Ragdoll limp)) limp.Stand();
+            if (TryGetComponent(out ZombieMotion motion)) motion.Restart();
         }
 
         private void Drip()

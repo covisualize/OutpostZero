@@ -17,6 +17,7 @@ namespace OutpostZero.Combat
         [SerializeField] private HazardKind kind = HazardKind.Explosive;
         [SerializeField] private float health = 30f;
         [SerializeField] private float radius = 4.5f;
+        public const float Throw = 10f;
         [SerializeField] private float damage = 55f;
         private bool detonated;
         private float fuseAt;
@@ -97,16 +98,25 @@ namespace OutpostZero.Combat
             }
 
             Collider[] hits = Physics.OverlapSphere(origin, radius);
-            foreach (var hit in hits)
+            bool blast = kind == HazardKind.Explosive;
+            if (blast) BlastKill.Begin(origin, Throw, radius);
+            try
             {
-                var damageable = hit.GetComponentInParent<IDamageable>();
-                if (damageable == null || damageable.IsDead) continue;
-                damageable.TakeDamage(damage, hit.bounds.center, (hit.transform.position - origin).normalized, gameObject);
-                if (kind == HazardKind.Toxic)
+                foreach (var hit in hits)
                 {
-                    var effects = hit.GetComponentInParent<Player.StatusEffectController>();
-                    if (effects != null) effects.ApplyPoison(6f);
+                    var damageable = hit.GetComponentInParent<IDamageable>();
+                    if (damageable == null || damageable.IsDead) continue;
+                    damageable.TakeDamage(damage, hit.bounds.center, (hit.transform.position - origin).normalized, gameObject);
+                    if (kind == HazardKind.Toxic)
+                    {
+                        var effects = hit.GetComponentInParent<Player.StatusEffectController>();
+                        if (effects != null) effects.ApplyPoison(6f);
+                    }
                 }
+            }
+            finally
+            {
+                if (blast) BlastKill.End();
             }
 
             CombatVfx.Burst(origin, kind);
