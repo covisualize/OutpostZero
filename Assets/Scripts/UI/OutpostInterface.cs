@@ -423,11 +423,15 @@ namespace OutpostZero.UI
                     menu.Add(Body(Loc.T("menu.choose")));
                     if (SurvivorRoster.Instance != null)
                     {
+                        var heir = SurvivorRoster.Instance.SuggestedHeir();
                         foreach (var survivor in SurvivorRoster.Instance.Survivors)
                         {
                             if (!survivor.alive) continue;
                             string id = survivor.id;
-                            menu.Add(Button(survivor.displayName + " — " + Marks(survivor) + "  " + Loc.Mood(ColonyDay.Mood(survivor.morale, survivor.trait, survivor.aside, survivor.mark)), () => GameManager.Instance.AcceptSuccessor(id)));
+                            bool suggested = heir != null && heir.id == id;
+                            var pick = Button((suggested ? "> " : "") + survivor.displayName + " — " + Marks(survivor) + "  " + Loc.Mood(ColonyDay.Mood(survivor.morale, survivor.trait, survivor.aside, survivor.mark)) + (suggested ? "  " + Loc.T("menu.heir") : ""), () => GameManager.Instance.AcceptSuccessor(id));
+                            if (suggested) pick.style.backgroundColor = new Color(0.32f, 0.26f, 0.14f);
+                            menu.Add(pick);
                         }
                     }
                     menu.Add(Button(Loc.T("menu.falls"), () => GameManager.Instance.SetState(GameState.GameOver)));

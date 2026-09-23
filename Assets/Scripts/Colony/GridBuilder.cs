@@ -26,7 +26,8 @@ namespace OutpostZero.Colony
         Oil,
         Crate,
         Lamp,
-        Campfire
+        Campfire,
+        Memorial
     }
 
     [Serializable]
@@ -887,6 +888,7 @@ namespace OutpostZero.Colony
                 case ModuleKind.Crate: return 10;
                 case ModuleKind.Lamp: return 13;
                 case ModuleKind.Campfire: return 7;
+                case ModuleKind.Memorial: return 6;
                 default: return 6;
             }
         }
@@ -910,6 +912,7 @@ namespace OutpostZero.Colony
                 case "Crate": return new Vector3(1.1f, 0.9f, 0.8f);
                 case "Lamp": return new Vector3(0.35f, 2.2f, 0.35f);
                 case "Campfire": return new Vector3(1.2f, 0.2f, 1.2f);
+                case "Memorial": return new Vector3(1.8f, 1.4f, 0.3f);
                 default: return new Vector3(1.8f * health, 1.1f * Mathf.Lerp(0.35f, 1f, health), 0.4f);
             }
         }
@@ -925,6 +928,7 @@ namespace OutpostZero.Colony
                 case "Watchtower":
                 case "Workbench":
                 case "TradingPost":
+                case "Memorial":
                 case "Crate": return SurfaceFamily.Plywood;
                 case "Generator":
                 case "Turret":
@@ -955,6 +959,7 @@ namespace OutpostZero.Colony
                 case "Crate": return new Color(0.42f, 0.3f, 0.18f);
                 case "Lamp": return new Color(0.85f, 0.8f, 0.55f);
                 case "Campfire": return new Color(0.72f, 0.28f, 0.12f);
+                case "Memorial": return new Color(0.5f, 0.45f, 0.38f);
                 default: return new Color(0.48f, 0.42f, 0.32f);
             }
         }

@@ -155,7 +155,7 @@ Play this in a player build, not the editor. Use Survivor difficulty and a fixed
   - Build mode shows a ghost box on the snapped 2 m cell. It is green when the cell takes the module and red when it is taken, past the fence, or short of scrap (`BuildGhost`), and placement refuses the same cases.
   - The build row has Defence, Living and Works tabs. Each button shows its scrap cost, is dimmed when you can't afford it, and is highlighted when selected (`BuildMenu`).
   - Finished modules wear the baked base-kit prefabs (`Resources/ModuleLooks.asset`): the wood-and-wire barricade, cot, water collector (also used for the purifier), watchtower, diesel generator, workbench, campfire cooker, crates, street lamp, oil barrel and spikes. Build sites keep the plywood scaffold box. The farm and the turret keep box stand-ins. A battered module sits lower and darker.
-  - Already in place: 15 module kinds, R rotates, demolish refunds half, carving NavMesh obstacles, and the farm, water, rain catch, generator and floodlight, cot, bench, tower, turret and trap behaviours. Wall cover feeds raid odds and strikes, and placements are saved.
+  - Already in place: 16 module kinds (the memorial wall came with PRO-60), R rotates, demolish refunds half, carving NavMesh obstacles, and the farm, water, rain catch, generator and floodlight, cot, bench, tower, turret and trap behaviours. Wall cover feeds raid odds and strikes, and placements are saved.
   - Deviation: modules are an enum with cost and behaviour in code, not `BuildingModuleDefinition` ScriptableObjects, and costs are scrap only.
   - Automated: `BuildGhostTests`.
 - [ ] PRO-59 **Play**: crafting solves ammo scarcity at a real material cost, and T2 recipes need base investment.
@@ -165,6 +165,11 @@ Play this in a player build, not the editor. Use Survivor difficulty and a fixed
   - Deviation: recipes are a code table (`CraftBill`, `CraftingBench.Recipes`), not `CraftingRecipe` ScriptableObjects. The player crafts instantly at the camp board; there is no survivor craft queue, and survivors add materials through the Scavenge shift instead.
   - Automated: `CraftingRecipeTests` (every recipe has a bill, a real output and EN/ES names; dismantling can't pay back more than the cheapest craft).
 - [ ] PRO-60 **Play**: see the leader death in section 2.
+  - When the leader dies, the death camera closes in and the frame drains to near grey (`DeathVeil`, saturation −85 at the end of the zoom). The colour comes back when the succession screen hands over.
+  - The succession screen shows the fallen leader's memorial card, then every living survivor with their traits and mood. The suggested heir (fewest injuries, then leadership, then morale) is marked "Suggested" and highlighted.
+  - Build a Memorial wall (Living tab, 6 scrap, boarded-wall model). Once it stands, a death costs the camp 15 morale instead of 25, and a friend 30 instead of 40.
+  - Already in place: the Dying camera, `MarkLeaderDead` with the cause, the carried pack left on a corpse in that district (saved, raised again on re-entry, recovered once), the memorial list on the camp board, game over when nobody is left, and Merciful mode (the leader is dragged home wounded for 18 scrap and a camp morale hit).
+  - Deviation: there is no PlayMode test. The EditMode `SuccessionFlowTests` and the older succession tests in `GameSystemsTests` cover the ledger, the corpse packing and the grief numbers.
 - [ ] PRO-61 **Play**: a day 3 raid against a weak wall can be lost, while walls, guards and lights make day 10 survivable.
 - [ ] PRO-62 **Play**: scrap buys from the merchant, caravan visits can be planned around, and reputation changes prices and unlocks stock.
 

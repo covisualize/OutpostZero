@@ -18,6 +18,7 @@ namespace OutpostZero.Colony
         public const float FriendLoss = 40f;
         public const int MercyScrap = 18;
         public const int MercyInjury = 2;
+        public const float MemorialEase = 10f;
 
         public class Memorial
         {
@@ -39,7 +40,16 @@ namespace OutpostZero.Colony
             public bool recovered;
         }
 
-        public static void Grieve(IList<ColonistDay> people, string fallenName)
+        public static void Grieve(IList<ColonistDay> people, string fallenName) => Grieve(people, fallenName, false);
+
+        /// <summary>A finished memorial wall gives the camp somewhere to put a name, so each loss cuts less deep.</summary>
+        public static float Loss(bool friend, bool memorial)
+        {
+            float loss = friend ? FriendLoss : CampLoss;
+            return memorial ? loss - MemorialEase : loss;
+        }
+
+        public static void Grieve(IList<ColonistDay> people, string fallenName, bool memorial)
         {
             if (people == null) return;
             string fallenId = KinBoard.FallenId(people, fallenName);
@@ -48,7 +58,7 @@ namespace OutpostZero.Colony
                 var person = people[i];
                 if (person == null || !person.alive) continue;
                 bool friend = KinBoard.Grieves(person.bond, person.kin, fallenName, fallenId);
-                person.morale = Math.Max(0f, person.morale - (friend ? FriendLoss : CampLoss));
+                person.morale = Math.Max(0f, person.morale - Loss(friend, memorial));
             }
         }
 

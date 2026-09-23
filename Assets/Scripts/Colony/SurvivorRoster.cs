@@ -220,7 +220,7 @@ namespace OutpostZero.Colony
                 leader.task = "Fallen";
             }
             var days = Snapshot();
-            SuccessionLedger.Grieve(days, fallen);
+            SuccessionLedger.Grieve(days, fallen, HasMemorial());
             for (int i = 0; i < days.Count && i < survivors.Count; i++) survivors[i].morale = days[i].morale;
             string district = OutpostZero.Shell.WorldMapService.Instance != null && OutpostZero.Shell.WorldMapService.Instance.Current != null
                 ? OutpostZero.Shell.WorldMapService.Instance.Current.id
@@ -341,6 +341,10 @@ namespace OutpostZero.Colony
 
         public Survivor PromoteNext() => Promote(null);
 
+        public Survivor SuggestedHeir() => ChooseHeir();
+
+        private static bool HasMemorial() => GridBuilder.Instance != null && GridBuilder.Instance.HasKind("Memorial");
+
         public Survivor Promote(string id)
         {
             Survivor next = string.IsNullOrEmpty(id) ? ChooseHeir() : Find(id);
@@ -383,7 +387,7 @@ namespace OutpostZero.Colony
             person.alive = false;
             person.task = "Fallen";
             var days = Snapshot();
-            SuccessionLedger.Grieve(days, person.displayName);
+            SuccessionLedger.Grieve(days, person.displayName, HasMemorial());
             for (int i = 0; i < days.Count && i < survivors.Count; i++) survivors[i].morale = days[i].morale;
             string district = WorldMapService.Instance != null && WorldMapService.Instance.Current != null
                 ? WorldMapService.Instance.Current.id

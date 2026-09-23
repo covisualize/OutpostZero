@@ -111,6 +111,7 @@ namespace OutpostZero.Graphics
                 bool ash = WeatherController.Instance != null && AshFall.Falls(WeatherController.Instance.District);
                 AshVeil.Grit(ash, red, green, blue, out red, out green, out blue);
                 color.colorFilter.Override(new Color(red, green, blue));
+                color.saturation.Override(DeathVeil.Saturation(ExpeditionCameraRig.DeathWeight));
             }
             if (blur != null)
             {

@@ -16,7 +16,7 @@ namespace OutpostZero.Colony
         public const int TabCount = 3;
 
         private static readonly ModuleKind[] Defence = { ModuleKind.Barricade, ModuleKind.Watchtower, ModuleKind.Turret, ModuleKind.Spikes, ModuleKind.Oil, ModuleKind.Lamp };
-        private static readonly ModuleKind[] Living = { ModuleKind.Cot, ModuleKind.Campfire, ModuleKind.Crate, ModuleKind.TradingPost };
+        private static readonly ModuleKind[] Living = { ModuleKind.Cot, ModuleKind.Campfire, ModuleKind.Crate, ModuleKind.TradingPost, ModuleKind.Memorial };
         private static readonly ModuleKind[] Works = { ModuleKind.Generator, ModuleKind.Water, ModuleKind.Purifier, ModuleKind.Farm, ModuleKind.Workbench };
 
         public static ModuleKind[] Kinds(Tab tab)

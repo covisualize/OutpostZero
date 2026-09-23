@@ -26,6 +26,7 @@ namespace OutpostZero.Graphics
 
         /// <summary>0 in the follow shot, 1 fully in the ADS shot; drives the depth-of-field volume.</summary>
         public static float AimWeight { get; private set; }
+        public static float DeathWeight { get; private set; }
 
         private CinemachineBrain brain;
         private CameraTargetDriver driver;
@@ -258,9 +259,10 @@ namespace OutpostZero.Graphics
             SetFov(campCam, tuning.camp.Lens(SettingFov));
             campBody.CameraDistance = driver.CampDistance;
 
+            DeathWeight = dying ? CameraMath.Ease(Time.unscaledTime - deathStarted, tuning.deathZoom) : 0f;
             if (dying)
             {
-                float t = CameraMath.Ease(Time.unscaledTime - deathStarted, tuning.deathZoom);
+                float t = DeathWeight;
                 SetFov(deathCam, Mathf.Lerp(fov, tuning.death.Lens(fov), t));
                 deathBody.CameraDistance = Mathf.Lerp(tuning.follow.distance, tuning.death.distance, t);
                 deathCam.transform.rotation = Quaternion.Euler(Mathf.Lerp(tuning.follow.pitch, tuning.death.pitch, t), 0f, 0f);

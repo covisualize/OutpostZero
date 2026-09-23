@@ -39,3 +39,5 @@ MonoBehaviour:
     prefab: {fileID: 3750190426169025734, guid: 5bb74c6bc8ddfa946be1e4265a5248d3, type: 3}
   - kind: Campfire
     prefab: {fileID: 1384942916315745012, guid: 136058975e374cd44a64d60bf0143a03, type: 3}
+  - kind: Memorial
+    prefab: {fileID: 6073423727963872220, guid: 4f1e9965d6ac2fd4d9e89f8d925b96e0, type: 3}
