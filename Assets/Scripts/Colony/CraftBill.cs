@@ -12,6 +12,7 @@ namespace OutpostZero.Colony
         public const int Any = 0;
         public const int Workbench = 1;
         public const int Cot = 2;
+        public const int Campfire = 3;
 
         public struct Cost
         {
@@ -19,6 +20,7 @@ namespace OutpostZero.Colony
             public int Cloth;
             public int Chemicals;
             public int Tape;
+            public int Raw;
             public int Station;
             public string Skill;
         }
@@ -47,6 +49,9 @@ namespace OutpostZero.Colony
             else if (id == "barricade_kit") cost = Make(8, 0, 0, 2, Workbench, "");
             else if (id == "radio_spare") cost = Make(12, 0, 2, 1, Workbench, "");
             else if (id == "cell") cost = Make(3, 0, 1, 0, Workbench, "");
+            else if (id == "cooked_meal") { cost = Make(1, 0, 0, 0, Campfire, ""); cost.Raw = 2; }
+            else if (id == "purified_water") cost = Make(1, 0, 1, 0, Campfire, "");
+            else if (id == "bottle") cost = Make(1, 0, 0, 0, Any, "");
             else return false;
             return true;
         }
@@ -57,10 +62,13 @@ namespace OutpostZero.Colony
             return scrap <= 1 ? 1 : scrap - 1;
         }
 
-        public static bool StationReady(int station, bool workbench, bool cot)
+        public static bool StationReady(int station, bool workbench, bool cot) => StationReady(station, workbench, cot, false);
+
+        public static bool StationReady(int station, bool workbench, bool cot, bool campfire)
         {
             if (station == Workbench) return workbench;
             if (station == Cot) return cot;
+            if (station == Campfire) return campfire;
             return true;
         }
 
@@ -81,6 +89,7 @@ namespace OutpostZero.Colony
             {
                 if (station == Workbench) return "Need a workbench";
                 if (station == Cot) return "Need a medical cot";
+                if (station == Campfire) return "Need a campfire";
                 return "Need a station";
             }
             if (!skillOk) return "Need a medic on duty";
@@ -101,6 +110,35 @@ namespace OutpostZero.Colony
             if (chemicals > 0) builder.Append("   chem ").Append(chemicals);
             if (tape > 0) builder.Append("   tape ").Append(tape);
             return builder.ToString();
+        }
+
+        /// <summary>
+        /// Dismantling a carried item at the workbench returns half of what its recipe spends,
+        /// rounded down, so no craft-then-dismantle loop can gain material.
+        /// Items with no camp recipe, stores and ammo break down into nothing.
+        /// </summary>
+        public static bool Dismantle(string id, out int scrap, out int cloth, out int chemicals, out int tape)
+        {
+            scrap = cloth = chemicals = tape = 0;
+            if (id == "bottle" || id == "cooked_meal" || id == "purified_water") return false;
+            if (!TryOf(id, out var cost)) return false;
+            if (id.StartsWith("ammo_", StringComparison.Ordinal)) return false;
+            scrap = cost.Scrap / 2;
+            cloth = cost.Cloth / 2;
+            chemicals = cost.Chemicals / 2;
+            tape = cost.Tape / 2;
+            return scrap + cloth + chemicals + tape > 0;
+        }
+
+        public static bool Fits(int used, int room, int scrap, int cloth, int chemicals, int tape)
+        {
+            return used + CampRoom.Bulk(scrap, 0, 0, cloth, chemicals, tape) <= room;
+        }
+
+        public static int Value(string id)
+        {
+            if (!TryOf(id, out var cost)) return 0;
+            return cost.Scrap + cost.Cloth * 2 + cost.Chemicals * 3 + cost.Tape * 3 + cost.Raw;
         }
 
         public static void Salvage(int salt, bool scrounger, out int cloth, out int chemicals, out int tape)

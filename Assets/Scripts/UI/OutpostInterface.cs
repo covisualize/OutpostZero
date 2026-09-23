@@ -899,8 +899,21 @@ namespace OutpostZero.UI
                 if (!CraftGate.Open(id, benchTier, prints)) continue;
                 if (!CraftBill.TryOf(id, out var bill)) continue;
                 int due = CraftingBench.Priced(bill.Scrap, bench, benchTier);
-                var craft = Button(CraftSay.Line(Loc.Recipe(id, recipe.Label), due, bill.Cloth, bill.Chemicals, bill.Tape, null), () => CraftingBench.Instance?.Craft(id));
+                string line = CraftSay.Line(Loc.Recipe(id, recipe.Label), due, bill.Cloth, bill.Chemicals, bill.Tape, null);
+                if (bill.Raw > 0) line += "   " + Loc.T("camp.raw") + " " + bill.Raw;
+                var craft = Button(line, () => CraftingBench.Instance?.Craft(id));
                 camp.Add(id == TutorialMark.Bandage ? Lit(craft, TutorialMark.Bandage) : craft);
+            }
+            if (bench && leaderPack != null)
+            {
+                foreach (var carried in leaderPack.Items)
+                {
+                    if (carried == null || carried.Quantity <= 0) continue;
+                    if (!CraftBill.Dismantle(carried.ItemId, out int bits, out int rags, out int chems, out int tapes)) continue;
+                    string itemId = carried.ItemId;
+                    string yield = CraftSay.Line(Loc.T("camp.dismantle") + " " + Loc.Recipe(itemId, carried.ItemName) + " x" + carried.Quantity, bits, rags, chems, tapes, null);
+                    camp.Add(Button(yield, () => CraftingBench.Instance?.Dismantle(itemId)));
+                }
             }
             var map = WorldMapService.Instance;
             if (map != null)

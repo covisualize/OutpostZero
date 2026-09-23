@@ -21,6 +21,9 @@ namespace OutpostZero.Colony
     {
         public static CraftingBench Instance { get; private set; }
 
+        public const string CampFood = "camp_food";
+        public const string CampWater = "camp_water";
+
         public static readonly Recipe[] Recipes =
         {
             new Recipe { Id = "bandage", Label = "Bandage", ScrapCost = 1, OutputId = "bandage", OutputCount = 1 },
@@ -43,7 +46,10 @@ namespace OutpostZero.Colony
             new Recipe { Id = "repair_kit", Label = "Generator repair", ScrapCost = 6, OutputId = "repair_kit", OutputCount = 1 },
             new Recipe { Id = "barricade_kit", Label = "Reinforced wall", ScrapCost = 8, OutputId = "barricade_kit", OutputCount = 1 },
             new Recipe { Id = "radio_spare", Label = "Radio spare", ScrapCost = 12, OutputId = "radio_spare", OutputCount = 1 },
-            new Recipe { Id = "cell", Label = "Lamp cell", ScrapCost = 3, OutputId = "cell", OutputCount = 1 }
+            new Recipe { Id = "cell", Label = "Lamp cell", ScrapCost = 3, OutputId = "cell", OutputCount = 1 },
+            new Recipe { Id = "cooked_meal", Label = "Cooked meal", ScrapCost = 1, OutputId = CampFood, OutputCount = 3 },
+            new Recipe { Id = "purified_water", Label = "Purified water", ScrapCost = 1, OutputId = CampWater, OutputCount = 3 },
+            new Recipe { Id = "bottle", Label = "Bottle", ScrapCost = 1, OutputId = "street_bottle", OutputCount = 1 }
         };
 
         private void Awake()
@@ -69,6 +75,7 @@ namespace OutpostZero.Colony
 
             bool workbench = GridBuilder.Instance != null && GridBuilder.Instance.HasKind("Workbench");
             bool cot = GridBuilder.Instance != null && GridBuilder.Instance.HasKind("Cot");
+            bool fire = GridBuilder.Instance != null && GridBuilder.Instance.HasKind("Campfire");
             int tier = GridBuilder.Instance != null ? GridBuilder.Instance.BenchTier() : 1;
             string deny = CraftGate.Deny(recipeId, tier, storage.Prints);
             if (deny == "tier")
@@ -82,18 +89,32 @@ namespace OutpostZero.Colony
                 return false;
             }
             int due = Priced(bill.Scrap, workbench, tier);
-            string block = CraftBill.Block(bill.Station, bill.Skill, CraftBill.StationReady(bill.Station, workbench, cot), SkillReady(bill.Skill));
+            string block = CraftBill.Block(bill.Station, bill.Skill, CraftBill.StationReady(bill.Station, workbench, cot, fire), SkillReady(bill.Skill));
             if (!string.IsNullOrEmpty(block))
             {
                 GameplayFeedback.Toast(StallVoice.Block(block, null));
                 return false;
             }
-            if (!storage.TrySpendBill(due, bill.Cloth, bill.Chemicals, bill.Tape))
+            if (storage.Raw < bill.Raw || !storage.TrySpendBill(due, bill.Cloth, bill.Chemicals, bill.Tape))
             {
                 GameplayFeedback.Toast(Loc.T("stall.short"));
                 return false;
             }
             if (recipe.Id == "bandage") CodexDirector.Hear("craft_bandage");
+            if (bill.Raw > 0) storage.TakeRaw(bill.Raw);
+
+            if (recipe.OutputId == CampFood || recipe.OutputId == CampWater)
+            {
+                int kept = recipe.OutputId == CampFood ? storage.AddFood(recipe.OutputCount) : storage.AddWater(recipe.OutputCount);
+                if (kept <= 0)
+                {
+                    Refund(due, bill);
+                    GameplayFeedback.Toast(Loc.T("camp.strip_full"));
+                    return false;
+                }
+                GameplayFeedback.Toast(PackSay.Made(recipe.Id, recipe.Label, null));
+                return true;
+            }
 
             if (recipe.Id == "repair_kit")
             {
@@ -192,6 +213,40 @@ namespace OutpostZero.Colony
             if (bill.Cloth > 0) storage.RestoreCloth(bill.Cloth);
             if (bill.Chemicals > 0) storage.RestoreChemicals(bill.Chemicals);
             if (bill.Tape > 0) storage.RestoreTape(bill.Tape);
+            if (bill.Raw > 0) storage.AddRaw(bill.Raw);
+        }
+
+        public bool Dismantle(string itemId)
+        {
+            var storage = ColonyStorage.Instance;
+            var inventory = PlayerRegistry.Current != null ? PlayerRegistry.Current.GetComponent<PlayerInventory>() : null;
+            if (storage == null || inventory == null) return false;
+            if (GridBuilder.Instance == null || !GridBuilder.Instance.HasKind("Workbench"))
+            {
+                GameplayFeedback.Toast(Loc.T("gate.bench"));
+                return false;
+            }
+            if (!CraftBill.Dismantle(itemId, out int scrap, out int cloth, out int chemicals, out int tape))
+            {
+                GameplayFeedback.Toast(Loc.T("camp.strip_none"));
+                return false;
+            }
+            if (!CraftBill.Fits(storage.Used, storage.Room, scrap, cloth, chemicals, tape))
+            {
+                GameplayFeedback.Toast(Loc.T("camp.strip_full"));
+                return false;
+            }
+            if (!inventory.TryConsume(itemId))
+            {
+                GameplayFeedback.Toast(Loc.T("camp.strip_none"));
+                return false;
+            }
+            if (scrap > 0) storage.AddScrap(scrap);
+            if (cloth > 0) storage.AddCloth(cloth);
+            if (chemicals > 0) storage.AddChemicals(chemicals);
+            if (tape > 0) storage.AddTape(tape);
+            GameplayFeedback.Toast(Loc.T("camp.strip_ok"));
+            return true;
         }
 
         public static int Priced(int scrap, bool workbench) => CraftBill.ScrapDue(scrap, workbench);

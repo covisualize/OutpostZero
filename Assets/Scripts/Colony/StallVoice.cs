@@ -30,6 +30,7 @@ namespace OutpostZero.Colony
         {
             if (english == "Need a workbench") return Word("gate.bench", language);
             if (english == "Need a medical cot") return Word("gate.cot", language);
+            if (english == "Need a campfire") return Word("gate.fire", language);
             if (english == "Need a station") return Word("gate.station", language);
             if (english == "Need a medic on duty") return Word("gate.medic", language);
             return english ?? "";

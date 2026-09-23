@@ -159,6 +159,11 @@ Play this in a player build, not the editor. Use Survivor difficulty and a fixed
   - Deviation: modules are an enum with cost and behaviour in code, not `BuildingModuleDefinition` ScriptableObjects, and costs are scrap only.
   - Automated: `BuildGhostTests`.
 - [ ] PRO-59 **Play**: crafting solves ammo scarcity at a real material cost, and T2 recipes need base investment.
+  - With a campfire built, the camp board offers Cooked meal (2 raw and 1 scrap for 3 food) and Purified water (1 scrap and 1 chemical for 3 water). Without a campfire the button says "Need a campfire". Bottle (1 scrap) makes a throwable street bottle anywhere.
+  - With a workbench built, every carried crafted item gets a Dismantle row that returns half its recipe bill, rounded down. Dismantling is refused when the stores are full. Ammo, food, materials and bottles don't break down.
+  - Already in place: 24 recipes with scrap, cloth, chemical, tape and raw costs; workbench, cot and campfire stations; medic-on-duty gates; the tier-2 bench upgrade (3 build hours); blueprint loot that opens the tier-2 recipes; the backpack T2 raise; weapon mods; and stripping a spare gun for scrap and chemicals.
+  - Deviation: recipes are a code table (`CraftBill`, `CraftingBench.Recipes`), not `CraftingRecipe` ScriptableObjects. The player crafts instantly at the camp board; there is no survivor craft queue, and survivors add materials through the Scavenge shift instead.
+  - Automated: `CraftingRecipeTests` (every recipe has a bill, a real output and EN/ES names; dismantling can't pay back more than the cheapest craft).
 - [ ] PRO-60 **Play**: see the leader death in section 2.
 - [ ] PRO-61 **Play**: a day 3 raid against a weak wall can be lost, while walls, guards and lights make day 10 survivable.
 - [ ] PRO-62 **Play**: scrap buys from the merchant, caravan visits can be planned around, and reputation changes prices and unlocks stock.
