@@ -2,8 +2,8 @@
   "id": "Kit_fridge",
   "category": "Kit",
   "generator": "generate_kit.build_piece",
-  "generatorHash": "7e6785b7f4cceaac26110fc9a26f891c2c5c0300dd5ffedd7a45f0dc963f937c",
-  "gitSha": "30a7decf99109014c8d463f1f5c3458c36fff31c",
+  "generatorHash": "1ffaf8f8a395aede82da27bad8e7b4c776a4a1d3bf451433459f245a649f39fd",
+  "gitSha": "77cf4c6acc9011d70980d184cc43104f1961ab9e",
   "blender": "4.2.11",
   "tags": [
     "kit",

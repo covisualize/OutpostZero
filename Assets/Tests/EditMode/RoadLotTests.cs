@@ -280,6 +280,87 @@ namespace OutpostZero.Tests.EditMode
             Assert.AreEqual(4, fronts.Count);
         }
 
+        [Test]
+        public void EveryUpperStoreyOfASmallBuildingIsReachedByALadder()
+        {
+            var book = KitMeshTests.Book();
+            var rungs = KitPlan.Find(book.pieces, "ladder");
+            Assert.IsNotNull(rungs);
+            Assert.AreEqual(KitPlan.LadderWidth, rungs.w, 0.001f);
+            Assert.AreEqual(KitPlan.LadderDepth, rungs.d, 0.001f);
+            Assert.AreEqual(KitPlan.Storey, rungs.h, 0.001f);
+            Assert.Greater(rungs.colliders.Min(b => b.y + (b.h < 1f ? 0f : 99f)), 0.35f, "the first rung is above the player's step");
+
+            int ladders = 0;
+            var fronts = new HashSet<string>();
+            var shapes = new HashSet<string>();
+            var cases = Buildings().Select(b => (b.map.Id, b.block, b.house)).ToList();
+            foreach (var front in new[] { "south", "north", "west", "east" })
+            {
+                foreach (var (cols, rows) in new[] { (1, 1), (2, 1), (1, 2) })
+                {
+                    var block = new RoadGraph.Block { Cols = cols, Rows = rows, Front = front };
+                    cases.Add(("apartment " + cols + "x" + rows + " " + front, block, KitPlan.Building(7, 0f, 0f, cols, rows, "apartment", front)));
+                }
+            }
+            foreach (var (label, block, house) in cases)
+            {
+                int wide = KitPlan.Tiles(block.Cols), deep = KitPlan.Tiles(block.Rows);
+                float w = wide * KitPlan.LotTile, d = deep * KitPlan.LotTile;
+                int storeys = Storeys(house);
+                var climbs = house.Where(p => p.id == "ladder").ToList();
+                if (storeys < 2 || (wide >= 3 && deep >= 3))
+                {
+                    Assert.IsEmpty(climbs, label);
+                    continue;
+                }
+                Assert.AreEqual(storeys - 1, climbs.Count, label);
+                fronts.Add(block.Front);
+                shapes.Add(wide + "x" + deep);
+                foreach (var ladder in climbs)
+                {
+                    ladders++;
+                    Extent(rungs, ladder, out var x0, out var x1, out var z0, out var z1);
+                    Assert.GreaterOrEqual(x0, -0.001f, label); Assert.LessOrEqual(x1, w + 0.001f, label);
+                    Assert.GreaterOrEqual(z0, 0.2f - 0.001f, label); Assert.LessOrEqual(z1, d - 0.2f + 0.001f, label);
+                    float back = block.Front == "south" ? d - 0.2f - z1 : block.Front == "north" ? z0 - 0.2f : block.Front == "west" ? w - x1 : x0;
+                    Assert.Less(back, 0.07f, label + " the ladder stands off the back wall");
+                    float gap = block.Front == "south" ? z0 - 0.2f : block.Front == "north" ? d - 0.2f - z1 : block.Front == "west" ? x0 : w - x1;
+                    Assert.GreaterOrEqual(gap, 1f, label + " the ladder crowds the door");
+
+                    var foot = KitPlan.PointOf(ladder, KitPlan.LadderFoot);
+                    var top = KitPlan.PointOf(ladder, KitPlan.LadderTop);
+                    Assert.AreEqual(ladder.y, foot.y, 0.001f);
+                    Assert.AreEqual(ladder.y + KitPlan.Storey, top.y, 0.001f);
+                    foreach (var spot in new[] { foot, top })
+                    {
+                        Assert.GreaterOrEqual(spot.x, 0.45f - 0.001f, label); Assert.LessOrEqual(spot.x, w - 0.45f + 0.001f, label);
+                        Assert.GreaterOrEqual(spot.z, 0.65f - 0.001f, label); Assert.LessOrEqual(spot.z, d - 0.65f + 0.001f, label);
+                        bool floored = house.Any(p => p.id == "floor" && Mathf.Approximately(p.y, spot.y)
+                            && spot.x >= p.x && spot.x <= p.x + KitPlan.LotTile && spot.z >= p.z && spot.z <= p.z + KitPlan.LotTile);
+                        Assert.IsTrue(floored, label + " a climb spot has no floor under it");
+                        foreach (var other in climbs)
+                        {
+                            if (!Mathf.Approximately(other.y, spot.y)) continue;
+                            Extent(rungs, other, out var ox0, out var ox1, out var oz0, out var oz1);
+                            float dx = Mathf.Max(ox0 - spot.x, 0f, spot.x - ox1), dz = Mathf.Max(oz0 - spot.z, 0f, spot.z - oz1);
+                            Assert.GreaterOrEqual(Mathf.Sqrt(dx * dx + dz * dz), 0.44f, label + " a climb spot is inside a ladder");
+                        }
+                    }
+
+                    KitPlan.ClimbArea(ladder, out var cx0, out var cx1, out var cz0, out var cz1);
+                    foreach (var prop in house.Where(p => Props.Contains(p.id)))
+                    {
+                        Extent(KitPlan.Find(book.pieces, prop.id), prop, out var px0, out var px1, out var pz0, out var pz1);
+                        Assert.IsFalse(px0 < cx1 && px1 > cx0 && pz0 < cz1 && pz1 > cz0, label + " " + prop.id + " blocks the ladder");
+                    }
+                }
+            }
+            Assert.Greater(ladders, 12);
+            Assert.AreEqual(4, fronts.Count);
+            CollectionAssert.IsSupersetOf(shapes, new[] { "1x1", "3x1", "1x3" });
+        }
+
         static bool IsOpen(string kind) => kind == "spine" || kind == "road" || kind == "alley" || kind == "poi" || kind == "extract";
 
         [Test]

@@ -2,8 +2,8 @@
   "id": "Barricade_Concrete_Jersey",
   "category": "Props",
   "generator": "generate_props.build_jersey_barrier",
-  "generatorHash": "bfec0570f31c740854c4a141fb1d97982b50f3655c2695634bb28ab5c4f65383",
-  "gitSha": "30a7decf99109014c8d463f1f5c3458c36fff31c",
+  "generatorHash": "0e38ff0d27ed81a75722890a2b61c656de4782f6cd5244b2b9e922042d117c6c",
+  "gitSha": "77cf4c6acc9011d70980d184cc43104f1961ab9e",
   "blender": "4.2.11",
   "tags": [
     "barricade",

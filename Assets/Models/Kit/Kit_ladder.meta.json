@@ -1,0 +1,35 @@
+{
+  "id": "Kit_ladder",
+  "category": "Kit",
+  "generator": "generate_kit.build_piece",
+  "generatorHash": "a7151321067eebfa3865ac95a6d8f5c85d890d891d4aeaf48265c279fdf05675",
+  "gitSha": "77cf4c6acc9011d70980d184cc43104f1961ab9e",
+  "blender": "4.2.11",
+  "tags": [
+    "kit",
+    "building"
+  ],
+  "pivot": "authored",
+  "collider": "box",
+  "rig": "",
+  "lods": [
+    1.0
+  ],
+  "tris": 132,
+  "lodTris": [
+    132
+  ],
+  "size": {
+    "width": 0.6,
+    "depth": 0.06,
+    "height": 3.0
+  },
+  "floor": 0.0,
+  "center": {
+    "x": 0.3,
+    "y": 0.07
+  },
+  "materials": [
+    "Mat_metal"
+  ]
+}

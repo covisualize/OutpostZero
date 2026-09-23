@@ -12,6 +12,8 @@ namespace OutpostZero.Shell
         public static string Cache(string language) => Word("ask.cache", language);
         public static string Gear(string language) => Word("ask.gear", language);
         public static string Back(string language) => Word("ask.back", language);
+        public static string ClimbUp(string language) => Word("ask.climb_up", language);
+        public static string ClimbDown(string language) => Word("ask.climb_down", language);
 
         public static string Along(string name, string language)
         {

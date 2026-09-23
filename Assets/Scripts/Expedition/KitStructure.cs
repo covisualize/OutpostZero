@@ -286,6 +286,7 @@ namespace OutpostZero.Expedition
             int wellA = -1, wellB = -1;
             KitPlacement flight = null;
             if (climbs) flight = Flight(front, out wellA, out wellB);
+            else if (storeys > 1) flight = Ladder(front, wide, deep);
             var list = new List<KitPlacement>();
             for (int s = 0; s < storeys; s++)
             {
@@ -346,6 +347,60 @@ namespace OutpostZero.Expedition
             }
         }
 
+        /// <summary>
+        /// The ladder up a building too small for a flight: against the wall across from the door, at the end that
+        /// leaves room beside it (the ladder's local +x) for the spot a climber steps off onto the floor above.
+        /// </summary>
+        private static KitPlacement Ladder(string front, int wide, int deep)
+        {
+            float w = wide * LotTile, d = deep * LotTile;
+            switch (front)
+            {
+                case "north": return At("ladder", w - 0.05f, 0f, 0.2f + LadderDepth, 180);
+                case "west": return At("ladder", w - LadderDepth, 0f, d - 0.25f, 90);
+                case "east": return At("ladder", LadderDepth, 0f, 0.25f, 270);
+                default: return At("ladder", 0.05f, 0f, d - 0.2f - LadderDepth, 0);
+            }
+        }
+
+        public const float LadderWidth = 0.6f;
+        public const float LadderDepth = 0.12f;
+
+        /// <summary>Where a climber stands to go up, in the ladder's own frame (the room is on its -z side).</summary>
+        public static readonly Vector3 LadderFoot = new Vector3(0.45f, 0f, -0.5f);
+
+        /// <summary>
+        /// Where a climber steps off on the floor above, beside the ladder's top, in the ladder's own frame. Both spots
+        /// keep a 0.4 m capsule clear of the walls and the ladder even in a one-cell room.
+        /// </summary>
+        public static readonly Vector3 LadderTop = new Vector3(1.05f, Storey, -0.5f);
+
+        /// <summary>A point in a placed piece's frame, local to the building.</summary>
+        public static Vector3 PointOf(KitPlacement placement, Vector3 local)
+        {
+            float rad = placement.yaw * Mathf.Deg2Rad;
+            float cos = Mathf.Cos(rad), sin = Mathf.Sin(rad);
+            return new Vector3(placement.x + local.x * cos + local.z * sin, placement.y + local.y, placement.z - local.x * sin + local.z * cos);
+        }
+
+        /// <summary>Floor a flight or a ladder keeps clear: the steps, or the ladder with both spots a climber stands on.</summary>
+        public static void ClimbArea(KitPlacement climb, out float minX, out float maxX, out float minZ, out float maxZ)
+        {
+            if (climb.id != "ladder")
+            {
+                FlightArea(climb, out minX, out maxX, out minZ, out maxZ);
+                return;
+            }
+            minX = minZ = float.MaxValue;
+            maxX = maxZ = float.MinValue;
+            foreach (var corner in new[] { Vector3.zero, new Vector3(LadderWidth, 0f, 0f), new Vector3(0f, 0f, LadderDepth), new Vector3(LadderWidth, 0f, LadderDepth), LadderFoot, LadderTop })
+            {
+                var p = PointOf(climb, corner);
+                minX = Mathf.Min(minX, p.x); maxX = Mathf.Max(maxX, p.x);
+                minZ = Mathf.Min(minZ, p.z); maxZ = Mathf.Max(maxZ, p.z);
+            }
+        }
+
         /// <summary>Floor area a flight covers, local to the building: x from minX to maxX, z from minZ to maxZ.</summary>
         public static void FlightArea(KitPlacement flight, out float minX, out float maxX, out float minZ, out float maxZ)
         {
@@ -403,7 +458,7 @@ namespace OutpostZero.Expedition
         private static void Furnish(List<KitPlacement> list, Template template, uint hash, string front, int wide, int deep, KitPlacement flight)
         {
             float fx0 = 0f, fx1 = 0f, fz0 = 0f, fz1 = 0f;
-            if (flight != null) FlightArea(flight, out fx0, out fx1, out fz0, out fz1);
+            if (flight != null) ClimbArea(flight, out fx0, out fx1, out fz0, out fz1);
             string back = front == "south" ? "north" : front == "north" ? "south" : front == "west" ? "east" : "west";
             bool across = back == "north" || back == "south";
             int length = across ? wide : deep;
@@ -599,6 +654,7 @@ namespace OutpostZero.Expedition
                         block.AddComponent<SurfaceTag>().Set(kind);
                     }
                 }
+                if (piece.id == "ladder") host.AddComponent<KitLadder>();
                 if (piece.id == "ceiling_light")
                 {
                     var lamp = new GameObject("KitLamp");

@@ -43,7 +43,7 @@ blender -b -P BlenderScripts/pipeline.py -- --category props
 python3 BlenderScripts/pipeline.py --changed --dry-run
 ```
 
-One asset builds in well under a second after Blender starts, and the full set of 113 in about 16 s. Output bytes are reproducible: two builds of an unchanged entry give identical FBX and PNG files.
+One asset builds in well under a second after Blender starts, and the full set of 114 in about 21 s. Output bytes are reproducible: two builds of an unchanged entry give identical FBX and PNG files.
 
 ## Item icons
 

@@ -2,8 +2,8 @@
   "id": "Prop_Barrel_Red_Explosive",
   "category": "Props",
   "generator": "generate_props.build_barrel_explosive",
-  "generatorHash": "59fa8345714943b1d17560cd364a5208958d83aecb7273ec66ad92fb64c785b0",
-  "gitSha": "30a7decf99109014c8d463f1f5c3458c36fff31c",
+  "generatorHash": "f951427a27d6e295b534a8a4072c35d702df658b984d5854cebcbbcb2d45960c",
+  "gitSha": "77cf4c6acc9011d70980d184cc43104f1961ab9e",
   "blender": "4.2.11",
   "tags": [
     "barrel",

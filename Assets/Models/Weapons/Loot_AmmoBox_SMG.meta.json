@@ -2,8 +2,8 @@
   "id": "Loot_AmmoBox_SMG",
   "category": "Weapons",
   "generator": "generate_items.build_ammo_box_smg",
-  "generatorHash": "bc03909bb9bc9b38d767cd4653fa0fbbe2e1f58ab28d10cc82b8f5b29a5974c1",
-  "gitSha": "095ef7563e3ad5583de1caa905472738cbc2f04f",
+  "generatorHash": "bb9167eb2f9015c56c0905531ef2f85bf3f0e8b9a1cba2239aa5f60a17b1cbc6",
+  "gitSha": "77cf4c6acc9011d70980d184cc43104f1961ab9e",
   "blender": "4.2.11",
   "tags": [
     "loot",

@@ -2,8 +2,8 @@
   "id": "Loot_DuctTape",
   "category": "Weapons",
   "generator": "generate_items.build_duct_tape",
-  "generatorHash": "f3c380796a3cde2a55eb3a18e361576e1553f8d1218b247e5d4d9c9930b983dc",
-  "gitSha": "095ef7563e3ad5583de1caa905472738cbc2f04f",
+  "generatorHash": "81bfa23823cbf3761cff15e2f7923f3f55d8e55c540890f479a76af7a9d01012",
+  "gitSha": "77cf4c6acc9011d70980d184cc43104f1961ab9e",
   "blender": "4.2.11",
   "tags": [
     "loot",

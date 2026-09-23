@@ -2,8 +2,8 @@
   "id": "Prop_Crate_Military",
   "category": "Props",
   "generator": "generate_props.build_crate_military",
-  "generatorHash": "10f72bdf4a776f842ea43711fc5a10b2b6002c36da1da6ea7e6a0966724f7083",
-  "gitSha": "30a7decf99109014c8d463f1f5c3458c36fff31c",
+  "generatorHash": "c87a0aacebf9b1e2e92afc055eb37bee69f6db8fa3d681fade9ef11377e735cf",
+  "gitSha": "77cf4c6acc9011d70980d184cc43104f1961ab9e",
   "blender": "4.2.11",
   "tags": [
     "container"

@@ -2,8 +2,8 @@
   "id": "Weapon_AssaultRifle",
   "category": "Weapons",
   "generator": "generate_weapons.build_assault_rifle",
-  "generatorHash": "a8e885ae5fbc908bc0d5699785627a2a1b8bbc230edba9557a6ec30bfb306a1a",
-  "gitSha": "30a7decf99109014c8d463f1f5c3458c36fff31c",
+  "generatorHash": "937720126051f9bc23f021c6ecff9d24f20926977bf085b463ba57b30cb19ac8",
+  "gitSha": "77cf4c6acc9011d70980d184cc43104f1961ab9e",
   "blender": "4.2.11",
   "tags": [
     "weapon",

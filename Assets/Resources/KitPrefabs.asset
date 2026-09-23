@@ -39,6 +39,8 @@ MonoBehaviour:
     prefab: {fileID: 3028919628834260180, guid: 0af2584753a6fb946aabe43495a01f43, type: 3}
   - id: stairs
     prefab: {fileID: 38771157413694352, guid: d977002775db8a04a8af203b728c3151, type: 3}
+  - id: ladder
+    prefab: {fileID: 945967492201850793, guid: 4448cf9ccd7347c4ba85d758cd3e9daf, type: 3}
   - id: balcony
     prefab: {fileID: 46577090044738350, guid: cb3dadf1890ab9240b7c6b85b86f1abc, type: 3}
   - id: fire_escape

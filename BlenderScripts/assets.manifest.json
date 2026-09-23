@@ -807,6 +807,17 @@
       "pivot": "authored"
     },
     {
+      "id": "Kit_ladder",
+      "category": "Kit",
+      "generator": "generate_kit.build_piece",
+      "output": "Kit/Kit_ladder.fbx",
+      "tags": [
+        "kit",
+        "building"
+      ],
+      "pivot": "authored"
+    },
+    {
       "id": "Kit_balcony",
       "category": "Kit",
       "generator": "generate_kit.build_piece",

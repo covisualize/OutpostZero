@@ -2,8 +2,8 @@
   "id": "Weapon_Machete",
   "category": "Weapons",
   "generator": "generate_weapons.build_machete",
-  "generatorHash": "7caa4479265e7083062d6507e2e5353ea48bc207dea8337d529d583f9f08e250",
-  "gitSha": "30a7decf99109014c8d463f1f5c3458c36fff31c",
+  "generatorHash": "9dfca101664b7ca26852da2af9a7c1c69ded402eb1f822b78bdaaca338f627b2",
+  "gitSha": "77cf4c6acc9011d70980d184cc43104f1961ab9e",
   "blender": "4.2.11",
   "tags": [
     "weapon",

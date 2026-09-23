@@ -78,6 +78,14 @@ def stair_boxes():
     return colliders
 
 
+def ladder_boxes():
+    """Two rails and nine rungs against a wall; the first rung sits above the player's step height."""
+    colliders = [box(0, 0, 0.04, 0.05, 3, 0.06), box(0.55, 0, 0.04, 0.05, 3, 0.06)]
+    for rung in range(9):
+        colliders.append(box(0.05, 0.45 + rung * 0.3, 0.05, 0.5, 0.04, 0.04))
+    return colliders
+
+
 def all_pieces():
     wall = (2.0, 3.0, 0.2)
     pieces = [
@@ -94,6 +102,7 @@ def all_pieces():
         piece("roof", "building", 2, 0.16, 2, "concrete", lod=40),
         piece("parapet", "building", 2, 0.4, 0.2, "concrete"),
         piece("stairs", "building", 2, 3, 4.08, "concrete", stair_boxes(), lod=20),
+        piece("ladder", "building", 0.6, 3, 0.12, "metal", ladder_boxes(), lod=16),
         piece("balcony", "building", 2, 1.1, 1.2, "metal", [
             box(0, 0, 0, 2, 0.1, 1.2),
             box(0, 0.1, 1.05, 2, 1.0, 0.08),

@@ -2,8 +2,8 @@
   "id": "Loot_AmmoBox_9mm",
   "category": "Weapons",
   "generator": "generate_weapons.build_ammo_box_9mm",
-  "generatorHash": "06831a6bfae03f9b41596e1d515753da14b903fe4f2a343abeb26aa976f9fd12",
-  "gitSha": "30a7decf99109014c8d463f1f5c3458c36fff31c",
+  "generatorHash": "1c8bc943a1fa4dcf9c9cc8a3c458b60bb199dc351470f95b76193a745f49ef75",
+  "gitSha": "77cf4c6acc9011d70980d184cc43104f1961ab9e",
   "blender": "4.2.11",
   "tags": [
     "loot",

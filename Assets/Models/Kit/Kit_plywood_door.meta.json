@@ -2,8 +2,8 @@
   "id": "Kit_plywood_door",
   "category": "Kit",
   "generator": "generate_kit.build_piece",
-  "generatorHash": "06ae84878b4059a7724beaeccf45b8240bf9b04f8f98cf509c526ac4d4ef8501",
-  "gitSha": "30a7decf99109014c8d463f1f5c3458c36fff31c",
+  "generatorHash": "883d092c897e3133de8f34ce38a4548037ee93742ddd98e6037dd387e955695e",
+  "gitSha": "77cf4c6acc9011d70980d184cc43104f1961ab9e",
   "blender": "4.2.11",
   "tags": [
     "kit",
