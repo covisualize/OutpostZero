@@ -339,14 +339,22 @@ namespace OutpostZero.Colony
             ClearViews();
         }
 
+        private bool[] fedCache = new bool[0];
+        private float fedAt;
+
         private void TickLamps()
         {
-            bool powered = CampServices.Instance != null && CampServices.Instance.GeneratorOnline;
+            if (Time.time >= fedAt || fedCache.Length != placed.Count)
+            {
+                fedCache = Fed();
+                fedAt = Time.time + 0.5f;
+            }
+            var fed = fedCache;
             int count = placed.Count < views.Count ? placed.Count : views.Count;
             for (int i = 0; i < count; i++)
             {
                 if (placed[i].kind != "Lamp" || views[i] == null) continue;
-                bool on = powered && BuildSite.Ready(placed[i].site, placed[i].integrity);
+                bool on = i < fed.Length && fed[i];
                 var bulb = views[i].GetComponent<Light>();
                 if (bulb != null) bulb.enabled = on;
                 var source = views[i].GetComponent<LightSource>();
@@ -882,6 +890,32 @@ namespace OutpostZero.Colony
         }
 
         public int PerimeterScore => Perimeter.Score(Walls());
+
+        public List<PowerGrid.Plug> Plugs()
+        {
+            var plugs = new List<PowerGrid.Plug>(placed.Count);
+            foreach (var module in placed)
+                plugs.Add(new PowerGrid.Plug { Kind = module.kind, Ready = BuildSite.Ready(module.site, module.integrity) });
+            return plugs;
+        }
+
+        private static bool GeneratorRunning => CampServices.Instance != null && CampServices.Instance.GeneratorOnline;
+
+        /// <summary>One entry per placed module, true when it is finished and has the power it needs.</summary>
+        public bool[] Fed() => PowerGrid.Allot(Plugs(), GeneratorRunning);
+
+        public int PowerMade => PowerGrid.Supply(Plugs(), GeneratorRunning);
+
+        public int PowerUsed => PowerGrid.Used(Plugs(), GeneratorRunning);
+
+        public int FedCount(string kind)
+        {
+            var fed = Fed();
+            int count = 0;
+            for (int i = 0; i < placed.Count && i < fed.Length; i++)
+                if (fed[i] && placed[i].kind == kind) count++;
+            return count;
+        }
 
         private void RefreshViews()
         {

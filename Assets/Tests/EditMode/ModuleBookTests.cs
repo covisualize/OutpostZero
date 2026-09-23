@@ -66,6 +66,7 @@ namespace OutpostZero.Tests.EditMode
                 Assert.AreEqual(row.Hours.ToString(), f["buildHours"], row.Id);
                 Assert.AreEqual(row.Wears ? "1" : "0", f["wears"], row.Id);
                 Assert.AreEqual(((int)row.Family).ToString(), f["surface"], row.Id);
+                Assert.AreEqual(row.Power.ToString(), f["power"], row.Id);
                 Assert.AreEqual(row.Size.x, Part(f["size"], "x"), 0.0001f, row.Id);
                 Assert.AreEqual(row.Size.y, Part(f["size"], "y"), 0.0001f, row.Id);
                 Assert.AreEqual(row.Size.z, Part(f["size"], "z"), 0.0001f, row.Id);

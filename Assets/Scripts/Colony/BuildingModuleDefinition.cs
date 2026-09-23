@@ -29,6 +29,10 @@ namespace OutpostZero.Colony
         public SurfaceFamily surface = SurfaceFamily.None;
         public Color tint = Color.grey;
 
+        [Header("Power")]
+        [Tooltip("Power made (positive, a fuelled generator) or drawn (negative, lamps and turrets). Drawing modules are fed in placement order.")]
+        public int power;
+
         public ModuleTable.Row ToRow()
         {
             return new ModuleTable.Row
@@ -42,7 +46,8 @@ namespace OutpostZero.Colony
                 Size = size,
                 Wears = wears,
                 Family = surface,
-                Tint = tint
+                Tint = tint,
+                Power = power
             };
         }
 
@@ -58,6 +63,7 @@ namespace OutpostZero.Colony
             wears = row.Wears;
             surface = row.Family;
             tint = row.Tint;
+            power = row.Power;
         }
     }
 }

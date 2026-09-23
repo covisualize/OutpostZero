@@ -251,7 +251,7 @@ namespace OutpostZero.Colony
                 return;
             }
             int walls = GridBuilder.Instance != null ? GridBuilder.Instance.BarricadeCount() : 0;
-            int lights = GridBuilder.Instance != null ? GridBuilder.Instance.CountKind("Lamp") : 0;
+            int lights = GridBuilder.Instance != null ? GridBuilder.Instance.FedCount("Lamp") : 0;
             bool held = RaidOutcome.Holds(raidDay, walls, GuardsOnTheLine(), lights, breached);
             int dropped = YardDead.Dropped(pressure, held);
             if (dropped > 0) ColonyStorage.Instance?.AddBodies(dropped);
@@ -304,7 +304,7 @@ namespace OutpostZero.Colony
         private void TickTurret()
         {
             if (Time.time < nextTurret) return;
-            int guns = GridBuilder.Instance != null ? GridBuilder.Instance.CountKind("Turret") : 0;
+            int guns = GridBuilder.Instance != null ? GridBuilder.Instance.FedCount("Turret") : 0;
             bool powered = CampServices.Instance != null && CampServices.Instance.GeneratorOnline;
             int tier = GridBuilder.Instance != null ? GridBuilder.Instance.BenchTier() : 1;
             int stored = ColonyStorage.Instance != null ? ColonyStorage.Instance.Rounds : 0;
@@ -522,19 +522,22 @@ namespace OutpostZero.Colony
         {
             if (GridBuilder.Instance == null) return 0;
             bool powered = CampServices.Instance != null && CampServices.Instance.GeneratorOnline;
+            var fed = GridBuilder.Instance.Fed();
+            var modules = GridBuilder.Instance.Placed;
             int count = 0;
-            foreach (var module in GridBuilder.Instance.Placed)
+            for (int i = 0; i < modules.Count; i++)
             {
-                if (module.kind == "Lamp") count++;
+                if (modules[i].kind == "Lamp" && fed[i]) count++;
             }
             var x = new float[count];
             var z = new float[count];
             var sites = new int[count];
             var integrity = new int[count];
             int cursor = 0;
-            foreach (var module in GridBuilder.Instance.Placed)
+            for (int i = 0; i < modules.Count; i++)
             {
-                if (module.kind != "Lamp") continue;
+                var module = modules[i];
+                if (module.kind != "Lamp" || !fed[i]) continue;
                 x[cursor] = module.x;
                 z[cursor] = module.z;
                 sites[cursor] = module.site;

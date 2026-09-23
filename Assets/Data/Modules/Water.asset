@@ -22,3 +22,4 @@ MonoBehaviour:
   wears: 0
   surface: 6
   tint: {r: 0.25, g: 0.55, b: 0.75, a: 1}
+  power: 0

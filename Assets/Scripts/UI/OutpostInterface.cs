@@ -740,6 +740,8 @@ namespace OutpostZero.UI
                     + "  " + (services != null && services.GeneratorOnline ? Loc.T("camp.gen_on") : Loc.T("camp.gen_off"))
                     + (services != null ? "  " + Loc.T("camp.fuel") + " " + FuelTank.Label(services.FuelHours) + StormNote(services) : "")), TutorialMark.Stores));
                 camp.Add(Body(Loc.T("camp.room") + " " + storage.Used + "/" + storage.Room));
+                if (GridBuilder.Instance != null && services != null && services.GeneratorOnline)
+                    camp.Add(Body(Loc.T("camp.power") + " " + GridBuilder.Instance.PowerUsed + "/" + GridBuilder.Instance.PowerMade));
                 if (storage.Bodies > 0) camp.Add(Body(Loc.T("camp.bodies") + " " + storage.Bodies));
                 if (storage.Cells > 0)
                 {
@@ -1330,6 +1332,7 @@ namespace OutpostZero.UI
                 {
                     key.Add((int)GridBuilder.Instance.Selected);
                     key.Add(GridBuilder.Instance.PerimeterScore);
+                    key.Add(GridBuilder.Instance.PowerUsed);
                 }
                 key.Add(storage.Food);
                 key.Add(storage.Water);

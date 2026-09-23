@@ -23,6 +23,7 @@ namespace OutpostZero.Colony
             public bool Wears;
             public SurfaceFamily Family;
             public Color Tint = Color.grey;
+            public int Power;
         }
 
         private static readonly Dictionary<string, Row> rows = new Dictionary<string, Row>();
@@ -71,7 +72,8 @@ namespace OutpostZero.Colony
                     Size = GridBuilder.CodeSize(id),
                     Wears = GridBuilder.CodeWears(id),
                     Family = GridBuilder.CodeFamily(id),
-                    Tint = GridBuilder.CodeColor(id)
+                    Tint = GridBuilder.CodeColor(id),
+                    Power = PowerGrid.CodePower(id)
                 });
             }
             return list;
