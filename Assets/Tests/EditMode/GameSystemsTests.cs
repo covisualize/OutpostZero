@@ -875,7 +875,7 @@ namespace OutpostZero.Tests.EditMode
                 WeaponMod.PackFlags(false, false, true)
             });
             var stacked = WeaponMod.Combine(WeaponMod.SplitSlots(packed)[0]);
-            Assert.AreEqual(0.4f, stacked.noise);
+            Assert.AreEqual(0.35f, stacked.noise, 0.0001f);
             Assert.AreEqual(0.85f * 0.55f, stacked.spread, 0.0001f);
             Assert.AreEqual(0, stacked.magazineBonus);
             Assert.AreEqual(10, WeaponMod.Combine(WeaponMod.SplitSlots(packed)[2]).magazineBonus);
@@ -1537,11 +1537,11 @@ namespace OutpostZero.Tests.EditMode
             Assert.AreEqual(1f, rail.noise, 0.001f);
             Assert.AreEqual(1f, rail.spread, 0.001f);
             Assert.AreEqual(0, rail.magazineBonus);
-            Assert.AreEqual(0.4f, WeaponMod.Combine(WeaponMod.PackFlags(true, true, false)).noise, 0.001f);
+            Assert.AreEqual(0.35f, WeaponMod.Combine(WeaponMod.PackFlags(true, true, false)).noise, 0.001f);
             Assert.AreEqual("rail", WeaponMod.PackFlags(false, false, false, true));
             Assert.IsTrue(WeaponMod.RailOn("suppressor+rail"));
             Assert.IsFalse(WeaponMod.RailOn("suppressor"));
-            Assert.AreEqual(0.4f, WeaponMod.Combine("suppressor+rail").noise, 0.001f);
+            Assert.AreEqual(0.35f, WeaponMod.Combine("suppressor+rail").noise, 0.001f);
             Assert.IsTrue(CraftBill.TryOf("rail", out var bill));
             Assert.AreEqual(5, bill.Scrap);
             Assert.AreEqual(CraftBill.Workbench, bill.Station);

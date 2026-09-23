@@ -18,6 +18,13 @@ namespace OutpostZero.Combat
 
         public bool HasSuppressor => suppressor;
         public bool HasRail => rail;
+        /// <summary>Whether any fitted mod turns a loud report quiet.</summary>
+        public bool Quiet => Combine(Pack()).quiet;
+
+        private void Awake()
+        {
+            WeaponModBook.Ensure();
+        }
 
         public static NoiseType Report(NoiseType kind, bool suppressed)
         {
@@ -94,24 +101,38 @@ namespace OutpostZero.Combat
             return packed.Split('|');
         }
 
+        /// <summary>Every fitted mod's row folded together: multipliers multiply, magazine bonuses add.</summary>
         public static Profile Combine(string slot)
         {
-            ReadFlags(slot, out bool hasSuppressor, out bool hasOptic, out bool hasExtendedMag);
-            return new Profile(
-                string.IsNullOrEmpty(slot) ? "none" : slot,
-                hasSuppressor ? 0.9f : 1f,
-                hasSuppressor ? 0.4f : 1f,
-                (hasSuppressor ? 0.85f : 1f) * (hasOptic ? 0.55f : 1f),
-                hasExtendedMag ? 10 : 0);
+            var total = new Profile(string.IsNullOrEmpty(slot) ? "none" : slot, 1f, 1f, 1f, 0);
+            if (string.IsNullOrEmpty(slot)) return total;
+            string[] parts = slot.Split('+');
+            for (int i = 0; i < parts.Length; i++)
+            {
+                if (!Known(parts[i])) continue;
+                var row = WeaponModTable.Of(parts[i]);
+                total.damage *= row.Damage;
+                total.noise *= row.Noise;
+                total.spread *= row.Spread;
+                total.magazineBonus += row.MagazineBonus;
+                total.quiet |= row.Quiet;
+            }
+            return total;
+        }
+
+        private static bool Known(string id)
+        {
+            return id == "suppressor" || id == "optic" || id == "extended_mag" || id == "rail";
         }
 
         private void Recalculate()
         {
-            damageMultiplier = suppressor ? 0.9f : 1f;
-            noiseMultiplier = suppressor ? 0.4f : 1f;
-            spreadMultiplier = (suppressor ? 0.85f : 1f) * (optic ? 0.55f : 1f);
-            magazineBonus = extendedMag ? 10 : 0;
             string packed = Pack();
+            var total = Combine(packed);
+            damageMultiplier = total.damage;
+            noiseMultiplier = total.noise;
+            spreadMultiplier = total.spread;
+            magazineBonus = total.magazineBonus;
             modId = string.IsNullOrEmpty(packed) ? "none" : packed;
         }
 
@@ -122,14 +143,8 @@ namespace OutpostZero.Combat
 
         public static Profile ProfileFor(string id)
         {
-            switch (id)
-            {
-                case "suppressor": return new Profile("suppressor", 0.9f, 0.4f, 0.85f, 0);
-                case "optic": return new Profile("optic", 1f, 1f, 0.55f, 0);
-                case "extended_mag": return new Profile("extended_mag", 1f, 1f, 1f, 10);
-                case "rail": return new Profile("rail", 1f, 1f, 1f, 0);
-                default: return new Profile("none", 1f, 1f, 1f, 0);
-            }
+            if (!Known(id)) return new Profile("none", 1f, 1f, 1f, 0);
+            return Combine(id);
         }
 
         public struct Profile
@@ -139,6 +154,7 @@ namespace OutpostZero.Combat
             public float noise;
             public float spread;
             public int magazineBonus;
+            public bool quiet;
 
             public Profile(string id, float damage, float noise, float spread, int magazineBonus)
             {
@@ -147,6 +163,7 @@ namespace OutpostZero.Combat
                 this.noise = noise;
                 this.spread = spread;
                 this.magazineBonus = magazineBonus;
+                quiet = false;
             }
         }
     }

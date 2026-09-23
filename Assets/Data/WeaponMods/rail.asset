@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2ae90ef57fbb47e2a0ff19d2a8a0363d, type: 3}
+  m_Name: rail
+  m_EditorClassIdentifier: OutpostZero::OutpostZero.Combat.WeaponModDefinition
+  id: rail
+  damage: 1
+  noise: 1
+  spread: 1
+  magazineBonus: 0
+  quiet: 0

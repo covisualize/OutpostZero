@@ -100,7 +100,7 @@ namespace OutpostZero.Combat
             if (NoiseManager.Instance == null || radius <= 0f) return;
             Vector3 origin = ownerTransform != null ? ownerTransform.position : transform.position;
             var mod = GetComponent<WeaponMod>();
-            NoiseType kind = WeaponMod.Report(noiseType, mod != null && mod.HasSuppressor);
+            NoiseType kind = WeaponMod.Report(noiseType, mod != null && mod.Quiet);
             NoiseManager.Instance.EmitNoise(origin, radius, noiseIntensity, kind, ownerGameObject);
         }
 
