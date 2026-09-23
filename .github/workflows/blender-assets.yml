@@ -23,6 +23,8 @@ jobs:
         run: python3 -m unittest discover -s BlenderScripts -p "test_*.py" -v
       - name: Committed material library matches its generator
         run: python3 BlenderScripts/material_library.py --check
+      - name: Committed audio mixer matches its generator
+        run: python3 Tools/Audio/make_mixer.py --check
       - name: List assets this change touches
         run: |
           set -euo pipefail

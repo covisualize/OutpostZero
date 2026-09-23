@@ -426,6 +426,12 @@ namespace OutpostZero.Core
 
         private void ApplyVolume()
         {
+            if (MixerRig.Live)
+            {
+                MixerRig.Master(masterVolume);
+                AudioListener.volume = SettingsDraft.Heard(1f, hasFocus);
+                return;
+            }
             AudioListener.volume = SettingsDraft.Heard(masterVolume, hasFocus);
         }
 

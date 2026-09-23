@@ -17,7 +17,7 @@ namespace OutpostZero.Shell
     }
 
     /// <summary>
-    /// Bus gains and snapshot ducks. No mixer asset: the listener applies these numbers.
+    /// Bus gains and snapshot ducks. OutpostMixer.mixer is generated from Duck and LowpassHz; without it the sources apply them.
     /// </summary>
     public static class AudioMix
     {
@@ -50,7 +50,7 @@ namespace OutpostZero.Shell
         public static float Gain(string id, float clip, float master, float music, float sfx, float ambience, float ui, MixSnapshot snapshot)
         {
             float bus = BusLevel(BusOf(id), music, sfx, ambience, ui);
-            float ducked = Unit(clip) * Unit(master) * bus * SnapshotScale(BusOf(id), snapshot);
+            float ducked = Unit(clip) * Unit(master) * bus * Duck(BusOf(id), snapshot);
             if (ducked < 0f) return 0f;
             if (ducked > 1f) return 1f;
             return ducked;
@@ -85,7 +85,7 @@ namespace OutpostZero.Shell
             return Unit(sfx);
         }
 
-        private static float SnapshotScale(MixBus bus, MixSnapshot snapshot)
+        public static float Duck(MixBus bus, MixSnapshot snapshot)
         {
             if (snapshot == MixSnapshot.Paused)
             {

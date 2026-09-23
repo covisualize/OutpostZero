@@ -94,11 +94,13 @@ namespace OutpostZero.Shell
             ambient.spatialBlend = 0f;
             ambient.volume = 0.12f;
             ambient.clip = GetClip("ambient");
+            MixerRig.Route(ambient, MixBus.Music);
             ambient.Play();
             weather = gameObject.AddComponent<AudioSource>();
             weather.loop = true;
             weather.spatialBlend = 0f;
             weather.playOnAwake = false;
+            MixerRig.Route(weather, MixBus.Ambience);
             percussion = AddBed("stem_perc");
             combat = AddBed("stem_combat");
             hum = AddWorld("hum");
@@ -121,6 +123,7 @@ namespace OutpostZero.Shell
             bed.minDistance = 2f;
             bed.maxDistance = Colony.YardBed.Reach;
             bed.rolloffMode = AudioRolloffMode.Linear;
+            MixerRig.Route(bed, AudioMix.BusOf(id));
             return bed;
         }
 
@@ -132,6 +135,7 @@ namespace OutpostZero.Shell
             bed.playOnAwake = false;
             bed.clip = GetClip(id);
             bed.volume = 0f;
+            MixerRig.Route(bed, MixBus.Music);
             bed.Play();
             return bed;
         }
@@ -217,6 +221,7 @@ namespace OutpostZero.Shell
             source.minDistance = 1.5f;
             source.maxDistance = AudioSpace.MaxDistance(id);
             source.rolloffMode = AudioRolloffMode.Linear;
+            MixerRig.Route(source, AudioMix.BusOf(id));
             if (pitch > 0f) source.pitch = pitch;
             else
             {
@@ -354,7 +359,10 @@ namespace OutpostZero.Shell
                 toxic = effects != null && effects.IsPoisoned;
             }
             var state = GameManager.Instance != null ? GameManager.Instance.CurrentState : GameState.ExpeditionActive;
-            return AudioMix.SnapshotFor(state, toxic);
+            var snapshot = AudioMix.SnapshotFor(state, toxic);
+            if (!MixerRig.Live) return snapshot;
+            MixerRig.Snapshot(snapshot);
+            return MixSnapshot.Normal;
         }
 
         private static void Levels(out float music, out float sfx, out float ambience, out float ui)
@@ -364,6 +372,9 @@ namespace OutpostZero.Shell
             sfx = settings != null ? settings.SfxVolume : 1f;
             ambience = settings != null ? settings.AmbienceVolume : 0.8f;
             ui = settings != null ? settings.UiVolume : 1f;
+            if (!MixerRig.Live) return;
+            MixerRig.Levels(music, sfx, ambience, ui);
+            music = sfx = ambience = ui = 1f;
         }
 
         private static void ApplyLowpass(AudioSource source, MixSnapshot snapshot)
