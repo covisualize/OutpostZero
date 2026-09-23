@@ -2,7 +2,7 @@
   "id": "Base_Generator_Diesel",
   "category": "BaseBuilding",
   "generator": "generate_base_building.build_generator",
-  "generatorHash": "b9c2ef77dc9b2b0836435c9c3e5fc1d47d2f8e136d5bae7e3f1657e7d136ad43",
+  "generatorHash": "05d3a49fed80ae4e2c753f1b4be5eea51a7f54452f5d4561c2dd92cf82ec3bf6",
   "gitSha": "21ed7f54ecaf729a3b2fd74b6f3babebc62fce0b",
   "blender": "4.2.11",
   "tags": [

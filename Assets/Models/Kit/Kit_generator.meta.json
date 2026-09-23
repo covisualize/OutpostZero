@@ -2,7 +2,7 @@
   "id": "Kit_generator",
   "category": "Kit",
   "generator": "generate_kit.build_piece",
-  "generatorHash": "39562a9e52e1b262e3ab7aead0cedcee617793f34c681217463c5024ac50c4b4",
+  "generatorHash": "ce46e5a63bb3e5351dcc68e29953845758b3fa03924bc3f5b309397c3f9bcad4",
   "gitSha": "21ed7f54ecaf729a3b2fd74b6f3babebc62fce0b",
   "blender": "4.2.11",
   "tags": [

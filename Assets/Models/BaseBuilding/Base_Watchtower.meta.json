@@ -2,7 +2,7 @@
   "id": "Base_Watchtower",
   "category": "BaseBuilding",
   "generator": "generate_base_building.build_watchtower",
-  "generatorHash": "a892b2ae8ec655d21176ceefea6ca6c9ab48081a0f38d969884d482969875775",
+  "generatorHash": "6a540d58aa58bbc00ebdc56af0f0dd0b6e2780d0f75a3205d6e429bd5b0b77f1",
   "gitSha": "21ed7f54ecaf729a3b2fd74b6f3babebc62fce0b",
   "blender": "4.2.11",
   "tags": [

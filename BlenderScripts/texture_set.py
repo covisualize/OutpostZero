@@ -260,10 +260,54 @@ def guid_for(png_path):
     return hashlib.md5(key.encode("utf-8")).hexdigest()
 
 
+# TextureImporterFormat values, checked against UnityEditor in TextureRulesTests.
+FORMAT_BC5 = 27
+FORMAT_BC7 = 25
+FORMAT_ASTC_4X4 = 48
+FORMAT_ASTC_6X6 = 50
+
+
+def platform_formats(suffix):
+    """Desktop and mobile block formats: BC5/ASTC 4x4 keep two clean normal channels, BC7/ASTC 6x6 for the rest."""
+    if suffix == "Normal":
+        return FORMAT_BC5, FORMAT_ASTC_4X4
+    return FORMAT_BC7, FORMAT_ASTC_6X6
+
+
+def streams(suffix):
+    """Icons draw through UI Toolkit, which never reports a mip, so they stay fully resident."""
+    return suffix != "Icon"
+
+
+def _platform(target, texture_format, overridden):
+    return (
+        "  - serializedVersion: 3\n"
+        "    buildTarget: {0}\n"
+        "    maxTextureSize: 256\n"
+        "    resizeAlgorithm: 0\n"
+        "    textureFormat: {1}\n"
+        "    textureCompression: 1\n"
+        "    compressionQuality: 50\n"
+        "    crunchedCompression: 0\n"
+        "    allowsAlphaSplitting: 0\n"
+        "    overridden: {2}\n"
+        "    ignorePlatformSupport: 0\n"
+        "    androidETC2FallbackOverride: 0\n"
+        "    forceMaximumCompressionQuality_BC6H_BC7: 0\n"
+    ).format(target, texture_format, overridden)
+
+
 def meta_text(png_path, suffix):
     linear = suffix in ("Normal", "AO", "Mask")
     texture_type = 1 if suffix == "Normal" else 0
     srgb = 0 if linear else 1
+    desktop, mobile = platform_formats(suffix)
+    platforms = (
+        _platform("DefaultTexturePlatform", -1, 0)
+        + _platform("Standalone", desktop, 1)
+        + _platform("Android", mobile, 1)
+        + _platform("iPhone", mobile, 1)
+    )
     return (
         "fileFormatVersion: 2\n"
         "guid: {guid}\n"
@@ -289,7 +333,7 @@ def meta_text(png_path, suffix):
         "    normalMapFilter: 0\n"
         "    flipGreenChannel: 0\n"
         "  isReadable: 0\n"
-        "  streamingMipmaps: 0\n"
+        "  streamingMipmaps: {streaming}\n"
         "  streamingMipmapsPriority: 0\n"
         "  vTOnly: 0\n"
         "  ignoreMipmapLimit: 0\n"
@@ -334,19 +378,7 @@ def meta_text(png_path, suffix):
         "  swizzle: 50462976\n"
         "  cookieLightType: 0\n"
         "  platformSettings:\n"
-        "  - serializedVersion: 3\n"
-        "    buildTarget: DefaultTexturePlatform\n"
-        "    maxTextureSize: 256\n"
-        "    resizeAlgorithm: 0\n"
-        "    textureFormat: -1\n"
-        "    textureCompression: 1\n"
-        "    compressionQuality: 50\n"
-        "    crunchedCompression: 0\n"
-        "    allowsAlphaSplitting: 0\n"
-        "    overridden: 0\n"
-        "    ignorePlatformSupport: 0\n"
-        "    androidETC2FallbackOverride: 0\n"
-        "    forceMaximumCompressionQuality_BC6H_BC7: 0\n"
+        "{platforms}"
         "  spriteSheet:\n"
         "    serializedVersion: 2\n"
         "    sprites: []\n"
@@ -366,7 +398,8 @@ def meta_text(png_path, suffix):
         "  userData: \n"
         "  assetBundleName: \n"
         "  assetBundleVariant: \n"
-    ).format(guid=guid_for(png_path), srgb=srgb, texture_type=texture_type)
+    ).format(guid=guid_for(png_path), srgb=srgb, texture_type=texture_type,
+             streaming=1 if streams(suffix) else 0, platforms=platforms)
 
 
 MODEL_META = (

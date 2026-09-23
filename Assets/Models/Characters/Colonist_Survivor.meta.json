@@ -2,7 +2,7 @@
   "id": "Colonist_Survivor",
   "category": "Characters",
   "generator": "generate_characters.build_colonist",
-  "generatorHash": "6d6a03d544ed304a226a568263acccc789034b0697d057595947746ae7ff598b",
+  "generatorHash": "0f5e96830cf3aa7592503164fe83c6b75d625e982332184b2ebf7dff605988da",
   "gitSha": "21ed7f54ecaf729a3b2fd74b6f3babebc62fce0b",
   "blender": "4.2.11",
   "tags": [

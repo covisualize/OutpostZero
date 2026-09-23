@@ -2,7 +2,7 @@
   "id": "Kit_wall_double_door",
   "category": "Kit",
   "generator": "generate_kit.build_piece",
-  "generatorHash": "b3223d3c6b835f66bd05b5ddc6e60b56a6d85c67fde7dfbe2f7b8b74d4191e89",
+  "generatorHash": "5ea71f4e8d8e273aeb7b90be10e8d6bb2f349b9746540d55dacd16e6bc76ca9d",
   "gitSha": "21ed7f54ecaf729a3b2fd74b6f3babebc62fce0b",
   "blender": "4.2.11",
   "tags": [

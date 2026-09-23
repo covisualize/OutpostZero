@@ -126,6 +126,30 @@ class TextureSetTests(unittest.TestCase):
                     missing.append(stem + "_" + suffix + ":size")
         self.assertEqual(missing, [])
 
+    def test_metas_compress_per_platform_and_stream_by_role(self):
+        import re
+        import texture_set
+        path = "Assets/Models/Props/Prop_Dumpster_Normal.png"
+        normal = texture_set.meta_text(path, "Normal")
+        albedo = texture_set.meta_text(path, "Albedo")
+        icon = texture_set.meta_text(path, "Icon")
+
+        def fmt(text, target):
+            match = re.search(r"buildTarget: " + target + r"\n(?:    .*\n)*?    textureFormat: (-?\d+)\n(?:    .*\n)*?    overridden: (\d)", text)
+            self.assertIsNotNone(match, target)
+            return int(match.group(1)), match.group(2)
+
+        self.assertEqual(fmt(normal, "Standalone"), (texture_set.FORMAT_BC5, "1"))
+        self.assertEqual(fmt(albedo, "Standalone"), (texture_set.FORMAT_BC7, "1"))
+        self.assertEqual(fmt(normal, "Android"), (texture_set.FORMAT_ASTC_4X4, "1"))
+        self.assertEqual(fmt(albedo, "iPhone"), (texture_set.FORMAT_ASTC_6X6, "1"))
+        self.assertEqual(fmt(albedo, "DefaultTexturePlatform"), (-1, "0"))
+        self.assertIn("  streamingMipmaps: 1\n", albedo)
+        self.assertIn("  streamingMipmaps: 0\n", icon)
+        self.assertIn("    enableMipMap: 1\n", icon)
+        import decal_atlas
+        self.assertIn("  streamingMipmaps: 0\n", decal_atlas.meta_text())
+
 
 if __name__ == "__main__":
     unittest.main()

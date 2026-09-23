@@ -334,7 +334,8 @@ def guid():
 
 
 def meta_text():
-    """Colour texture with straight alpha, clamped so neighbouring cells never bleed in."""
+    """Colour texture with straight alpha, clamped so neighbouring cells never bleed in.
+    Decal projectors are not renderers, so mip streaming would never raise the atlas past its lowest mip."""
     text = _texture_meta(OUTPUT, "Albedo")
     lines = []
     for line in text.split("\n"):
@@ -346,6 +347,8 @@ def meta_text():
             line = line.replace("256", "1024")
         elif line.strip() in ("wrapU: 0", "wrapV: 0", "wrapW: 0"):
             line = line.replace("0", "1")
+        elif line.strip() == "streamingMipmaps: 1":
+            line = line.replace("1", "0")
         lines.append(line)
     return "\n".join(lines)
 

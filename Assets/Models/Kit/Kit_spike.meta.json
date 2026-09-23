@@ -2,7 +2,7 @@
   "id": "Kit_spike",
   "category": "Kit",
   "generator": "generate_kit.build_piece",
-  "generatorHash": "9803265d3a2052ee8566e2bac5f868f193ac5a3f995b05ce3fbc078d8f5b3037",
+  "generatorHash": "0f60b42e3dedb034ae368c30c3c9d7fc686b8adc1dde198c7f40d10d3a97bc2a",
   "gitSha": "21ed7f54ecaf729a3b2fd74b6f3babebc62fce0b",
   "blender": "4.2.11",
   "tags": [

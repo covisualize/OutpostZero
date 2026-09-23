@@ -2,7 +2,7 @@
   "id": "Base_CraftingWorkbench",
   "category": "BaseBuilding",
   "generator": "generate_base_building.build_workbench",
-  "generatorHash": "8dc20cbca7d69b4e1253b7ba913691cea791538ef59e5d17677a82c644d16bc1",
+  "generatorHash": "7e3009876bf442b573d6020da10e98fd8db80c7ae6fdf4755f987820d1f84526",
   "gitSha": "21ed7f54ecaf729a3b2fd74b6f3babebc62fce0b",
   "blender": "4.2.11",
   "tags": [

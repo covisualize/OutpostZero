@@ -2,7 +2,7 @@
   "id": "Kit_ceiling_light",
   "category": "Kit",
   "generator": "generate_kit.build_piece",
-  "generatorHash": "55fe5eca7f66c9fb94f0a39afb28efd9d990ea81c0c9cff9614490057744b03e",
+  "generatorHash": "a585e2c09d38f5ea0472b1063b13865b8e3686fd30fde36345a4d33975730e0b",
   "gitSha": "21ed7f54ecaf729a3b2fd74b6f3babebc62fce0b",
   "blender": "4.2.11",
   "tags": [

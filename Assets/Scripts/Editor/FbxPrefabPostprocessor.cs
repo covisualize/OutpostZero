@@ -34,6 +34,30 @@ namespace OutpostZero.EditorTools
             RemapToBaked(importer, assetPath, ModelSidecar.Load(assetPath));
         }
 
+        /// <summary>
+        /// The importer builds a LODGroup from the pipeline's _LOD0/_LOD1 meshes with default screen sizes;
+        /// replace them with <see cref="LodBands"/> so LOD1 starts at 28 m and everything culls at 60 m.
+        /// </summary>
+        private void OnPostprocessModel(GameObject root)
+        {
+            if (!assetPath.StartsWith("Assets/Models/")) return;
+            var group = root.GetComponent<LODGroup>();
+            if (group == null) return;
+            FitLods(group);
+        }
+
+        public static void FitLods(LODGroup group)
+        {
+            var lods = group.GetLODs();
+            if (lods.Length == 0) return;
+            group.RecalculateBounds();
+            float[] heights = OutpostZero.Graphics.LodBands.Heights(group.size, lods.Length);
+            for (int i = 0; i < lods.Length; i++) lods[i].screenRelativeTransitionHeight = heights[i];
+            group.SetLODs(lods);
+            group.fadeMode = LODFadeMode.CrossFade;
+            group.animateCrossFading = true;
+        }
+
         private static void RemapToBaked(ModelImporter importer, string fbxPath, ModelSidecar sidecar)
         {
             if (sidecar == null || sidecar.materials == null) return;
@@ -123,6 +147,7 @@ namespace OutpostZero.EditorTools
                 AssetDatabase.CreateAsset(material, materialPath);
             }
             material.shader = shader;
+            material.enableInstancing = true;
             material.SetTexture("_BaseMap", albedo);
             material.SetTexture("_BumpMap", normal);
             material.SetTexture("_OcclusionMap", occlusion);

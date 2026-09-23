@@ -2,7 +2,7 @@
   "id": "Kit_shelf",
   "category": "Kit",
   "generator": "generate_kit.build_piece",
-  "generatorHash": "9138119ebf70f4b62195b428b8fef51e71e81c9c36f98e09151e51a118521b08",
+  "generatorHash": "72ec46a4c9f7dbc42d0d984cf540d4a53e312500759dca8cb79d3d488326cfe1",
   "gitSha": "21ed7f54ecaf729a3b2fd74b6f3babebc62fce0b",
   "blender": "4.2.11",
   "tags": [

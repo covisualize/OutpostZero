@@ -2,7 +2,7 @@
   "id": "Base_WaterCollector",
   "category": "BaseBuilding",
   "generator": "generate_base_building.build_water_collector",
-  "generatorHash": "4631ed3c70d7d715fbf2a90d2007aef1ea2137c9a5bdb0da6d388fc21520927c",
+  "generatorHash": "a199205bb2ff1e99f665ec3ca9a757c915b668381177f5415b58d1909690e401",
   "gitSha": "21ed7f54ecaf729a3b2fd74b6f3babebc62fce0b",
   "blender": "4.2.11",
   "tags": [

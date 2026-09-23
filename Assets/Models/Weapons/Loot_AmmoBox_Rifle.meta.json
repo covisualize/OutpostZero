@@ -2,7 +2,7 @@
   "id": "Loot_AmmoBox_Rifle",
   "category": "Weapons",
   "generator": "generate_items.build_ammo_box_rifle",
-  "generatorHash": "36510b296c5cf5060bcd8dc189341e029e6f37cbebff47aa62f9a8ca128789b8",
+  "generatorHash": "b0ff98a8bcd9241628288fdbffa54866ffb4d45e1cbd2cfaac57bfe9e6106ee0",
   "gitSha": "21ed7f54ecaf729a3b2fd74b6f3babebc62fce0b",
   "blender": "4.2.11",
   "tags": [

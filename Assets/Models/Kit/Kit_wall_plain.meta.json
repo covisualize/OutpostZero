@@ -2,7 +2,7 @@
   "id": "Kit_wall_plain",
   "category": "Kit",
   "generator": "generate_kit.build_piece",
-  "generatorHash": "1f59d356c010f310f8ef5636cde834ab7ecb0ff51e976c199715196a423673b2",
+  "generatorHash": "7b36fb63b827e357ac4804c3a557d1d55ef251ff9ea015c0313ef8b947b6c596",
   "gitSha": "21ed7f54ecaf729a3b2fd74b6f3babebc62fce0b",
   "blender": "4.2.11",
   "tags": [
