@@ -17,6 +17,7 @@ namespace OutpostZero.Colony
 
         private readonly Dictionary<string, Transform> bodies = new Dictionary<string, Transform>();
         private readonly HashSet<string> capsules = new HashSet<string>();
+        private readonly Dictionary<string, YardBark> barks = new Dictionary<string, YardBark>();
 
         private void Awake()
         {
@@ -119,6 +120,13 @@ namespace OutpostZero.Colony
                 body.rotation = Quaternion.Euler(lean, yaw, 0f);
                 float squat = YardPose.Scale(action);
                 body.localScale = model ? new Vector3(1f, squat, 1f) : new Vector3(0.45f, 0.9f * squat, 0.45f);
+                if (!barks.TryGetValue(survivor.id, out var bark) || bark == null)
+                {
+                    bark = YardBark.Raise(body);
+                    barks[survivor.id] = bark;
+                }
+                bool speaks = YardBubble.Up(survivor.id, Time.time, survivor.morale);
+                bark.Say(speaks, speaks ? OutpostZero.Shell.Loc.Bark(action, survivor.morale, survivor.fatigue) : "", model ? YardBubble.Height : YardBubble.Height - 1f);
             }
         }
 
@@ -226,6 +234,8 @@ namespace OutpostZero.Colony
             bodies.Remove(id);
             capsules.Remove(id);
             if (body != null) Destroy(body.gameObject);
+            if (barks.TryGetValue(id, out var bark) && bark != null) Destroy(bark.gameObject);
+            barks.Remove(id);
         }
 
         private void Clear()
@@ -236,6 +246,11 @@ namespace OutpostZero.Colony
             }
             bodies.Clear();
             capsules.Clear();
+            foreach (var pair in barks)
+            {
+                if (pair.Value != null) Destroy(pair.Value.gameObject);
+            }
+            barks.Clear();
         }
     }
 }
