@@ -2,8 +2,8 @@
   "id": "Loot_Bottle",
   "category": "Weapons",
   "generator": "generate_items.build_bottle",
-  "generatorHash": "96428cbed041b1217592e90cf9d7039b0ebc482356e06e3f19e545591d633ac2",
-  "gitSha": "569a4affb2f2343f0bb3cd726e1fb503be9e7de7",
+  "generatorHash": "36c3c70ac05166a05dbedc67be592c37f3c45b5b241c5b09c0d187b72270ff4a",
+  "gitSha": "21ed7f54ecaf729a3b2fd74b6f3babebc62fce0b",
   "blender": "4.2.11",
   "tags": [
     "loot",

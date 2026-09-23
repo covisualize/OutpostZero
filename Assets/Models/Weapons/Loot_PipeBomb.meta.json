@@ -2,8 +2,8 @@
   "id": "Loot_PipeBomb",
   "category": "Weapons",
   "generator": "generate_items.build_pipe_bomb",
-  "generatorHash": "d8bd40c62ce471d7e7af03bc735519e275a3bf7e81792019778a482a8469ebab",
-  "gitSha": "569a4affb2f2343f0bb3cd726e1fb503be9e7de7",
+  "generatorHash": "bbd845b587db3e4c8e2bd9d6978d5d069ea76c8faa2b5c9cbe4f74a31ccfdc6a",
+  "gitSha": "21ed7f54ecaf729a3b2fd74b6f3babebc62fce0b",
   "blender": "4.2.11",
   "tags": [
     "loot",

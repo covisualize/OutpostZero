@@ -2,8 +2,8 @@
   "id": "Kit_fence",
   "category": "Kit",
   "generator": "generate_kit.build_piece",
-  "generatorHash": "fa66d58103d536af4d3b71d4cd40ab23b18c6de11429af09fa427d5f5e24f1d0",
-  "gitSha": "569a4affb2f2343f0bb3cd726e1fb503be9e7de7",
+  "generatorHash": "bf652130026ed61a04e8857db8a191d6803b1db5b09d0758cad74baadeb8a489",
+  "gitSha": "21ed7f54ecaf729a3b2fd74b6f3babebc62fce0b",
   "blender": "4.2.11",
   "tags": [
     "kit",

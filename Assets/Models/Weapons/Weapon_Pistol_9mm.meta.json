@@ -2,8 +2,8 @@
   "id": "Weapon_Pistol_9mm",
   "category": "Weapons",
   "generator": "generate_weapons.build_pistol",
-  "generatorHash": "c0674c8e3a225a696122abf927aa87aef95db380903c15e54739f9e6aad73648",
-  "gitSha": "569a4affb2f2343f0bb3cd726e1fb503be9e7de7",
+  "generatorHash": "49144e738e7ec34cfc372a541de927b88fd347968c40faba634ce5952613ceac",
+  "gitSha": "21ed7f54ecaf729a3b2fd74b6f3babebc62fce0b",
   "blender": "4.2.11",
   "tags": [
     "weapon",

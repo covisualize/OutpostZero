@@ -2,8 +2,8 @@
   "id": "Loot_Bandage",
   "category": "Weapons",
   "generator": "generate_items.build_bandage",
-  "generatorHash": "76cded432fe183942ce70031faa3402a8b0d61963e8d682e1d4a834d07816e19",
-  "gitSha": "569a4affb2f2343f0bb3cd726e1fb503be9e7de7",
+  "generatorHash": "2f41f8a8eb07fefef81fd61101d783bd9650edecbf4e111984312ffe2e6d49d3",
+  "gitSha": "21ed7f54ecaf729a3b2fd74b6f3babebc62fce0b",
   "blender": "4.2.11",
   "tags": [
     "loot",

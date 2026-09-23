@@ -2,8 +2,8 @@
   "id": "Kit_road_straight",
   "category": "Kit",
   "generator": "generate_kit.build_piece",
-  "generatorHash": "37a6651d54da3400f5baec4289552cd2840cc587bc0d1492be1e9c95a3372c76",
-  "gitSha": "569a4affb2f2343f0bb3cd726e1fb503be9e7de7",
+  "generatorHash": "c3c7edf2f55a8f6f375d3e643c44c6f8de29c9d6b36ee28b623f5b08577b51d8",
+  "gitSha": "21ed7f54ecaf729a3b2fd74b6f3babebc62fce0b",
   "blender": "4.2.11",
   "tags": [
     "kit",

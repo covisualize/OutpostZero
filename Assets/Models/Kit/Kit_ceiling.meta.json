@@ -2,8 +2,8 @@
   "id": "Kit_ceiling",
   "category": "Kit",
   "generator": "generate_kit.build_piece",
-  "generatorHash": "640e50f10518a4140d1e74664422d4b1a5135a762da26d92009368fbb20e086f",
-  "gitSha": "569a4affb2f2343f0bb3cd726e1fb503be9e7de7",
+  "generatorHash": "3286228e98e4d66643bb2b9e392f922a092e43f1ea88794759c7f53de1ca332b",
+  "gitSha": "21ed7f54ecaf729a3b2fd74b6f3babebc62fce0b",
   "blender": "4.2.11",
   "tags": [
     "kit",

@@ -2,8 +2,8 @@
   "id": "Loot_Painkillers",
   "category": "Weapons",
   "generator": "generate_items.build_painkillers",
-  "generatorHash": "9cd58ced307410fd1fe11e0155c482e6cd8303f541c0082b273661b5ce868432",
-  "gitSha": "569a4affb2f2343f0bb3cd726e1fb503be9e7de7",
+  "generatorHash": "dbef218dd9ecd4a72b64b5a3e6113b812ab8823b4da19cce9e9954ecfd54b4f9",
+  "gitSha": "21ed7f54ecaf729a3b2fd74b6f3babebc62fce0b",
   "blender": "4.2.11",
   "tags": [
     "loot",

@@ -2,8 +2,8 @@
   "id": "Prop_Barrel_Toxic",
   "category": "Props",
   "generator": "generate_props.build_barrel_toxic",
-  "generatorHash": "6cc058c7a9f2a449db9ed62cf896fdddc4dd640b928c478a03c6778f6070eb5c",
-  "gitSha": "569a4affb2f2343f0bb3cd726e1fb503be9e7de7",
+  "generatorHash": "6dce4335b2dd5a7d901cd22390c0d7720f2ed14a40a9e48239464cd36d3f6212",
+  "gitSha": "21ed7f54ecaf729a3b2fd74b6f3babebc62fce0b",
   "blender": "4.2.11",
   "tags": [
     "barrel"

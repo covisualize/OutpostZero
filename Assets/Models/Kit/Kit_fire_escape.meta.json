@@ -2,8 +2,8 @@
   "id": "Kit_fire_escape",
   "category": "Kit",
   "generator": "generate_kit.build_piece",
-  "generatorHash": "8cc2ebd34d1e056a02443ee8c46adc025088ad4645a918678e39c9d6aa79f4e4",
-  "gitSha": "569a4affb2f2343f0bb3cd726e1fb503be9e7de7",
+  "generatorHash": "688c8f890b7c180b92813a1efc0e3f88fb5197dc08bae6c9a0949054af57b0ee",
+  "gitSha": "21ed7f54ecaf729a3b2fd74b6f3babebc62fce0b",
   "blender": "4.2.11",
   "tags": [
     "kit",
