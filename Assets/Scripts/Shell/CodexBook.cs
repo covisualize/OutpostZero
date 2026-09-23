@@ -93,6 +93,17 @@ namespace OutpostZero.Shell
             return false;
         }
 
+        public const string HintPrefix = "hint.";
+
+        public static string ForgetHints(string packed)
+        {
+            if (string.IsNullOrEmpty(packed)) return "";
+            var kept = new System.Collections.Generic.List<string>();
+            foreach (var id in packed.Split('|'))
+                if (id.Length > 0 && !id.StartsWith(HintPrefix, System.StringComparison.Ordinal)) kept.Add(id);
+            return string.Join("|", kept);
+        }
+
         public static bool Visible(Entry entry, string packed)
         {
             return entry != null && (!entry.LockedUntilSeen || Has(packed, entry.Id));

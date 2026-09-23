@@ -134,6 +134,37 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void HintsCanBeReplayedWithoutForgettingTheCodex()
+        {
+            Assert.IsTrue(CodexBook.TryHint("", "near", out _, out string packed));
+            packed = CodexBook.Remember(packed, "zombie.walker", out _);
+            packed = CodexBook.Remember(packed, TutorialTrack.CampDone, out _);
+            Assert.IsFalse(CodexBook.TryHint(packed, "near", out _, out _));
+            string replay = CodexBook.ForgetHints(packed);
+            Assert.IsFalse(CodexBook.Has(replay, "hint.crouch"));
+            Assert.IsTrue(CodexBook.Has(replay, "zombie.walker"));
+            Assert.IsTrue(CodexBook.Has(replay, TutorialTrack.CampDone));
+            Assert.IsTrue(CodexBook.TryHint(replay, "near", out string again, out _));
+            Assert.IsNotEmpty(again);
+            Assert.AreEqual("", CodexBook.ForgetHints(null));
+            Assert.AreEqual("", CodexBook.ForgetHints("hint.move|hint.fire"));
+        }
+
+        [Test]
+        public void NewGameCarriesTheSkipChoiceIntoTheRun()
+        {
+            string root = Directory.GetCurrentDirectory();
+            string ui = File.ReadAllText(Path.Combine(root, "Assets", "Scripts", "UI", "OutpostInterface.cs"));
+            StringAssert.Contains("BeginNewOutpost(chosen, skip)", ui);
+            string manager = File.ReadAllText(Path.Combine(root, "Assets", "Scripts", "Core", "GameManager.cs"));
+            var reset = manager.IndexOf("TutorialDirector.Instance?.SetFinished(false);", System.StringComparison.Ordinal);
+            var skip = manager.IndexOf("if (skipTutorial) TutorialDirector.Instance?.Dismiss();", System.StringComparison.Ordinal);
+            Assert.Greater(reset, 0);
+            Assert.Greater(skip, reset, "the skip must come after the new-game reset or the reset undoes it");
+            Assert.AreNotEqual(Loc.T("new.tut_on", "en"), Loc.T("new.tut_off", "en"));
+        }
+
+        [Test]
         public void HintsArriveWhenTheyAreNeeded()
         {
             string Signal(string id) => CodexBook.Hints.First(h => h.Id == id).Signal;

@@ -326,6 +326,11 @@ namespace OutpostZero.Core
 
         public void BeginNewOutpost(string seedText)
         {
+            BeginNewOutpost(seedText, false);
+        }
+
+        public void BeginNewOutpost(string seedText, bool skipTutorial)
+        {
             ObjectiveTracker.Instance?.ResetProgress();
             int next = SettingsService.Instance != null ? SettingsService.Instance.NextDifficulty : 2;
             WorldMapService.Instance?.ResetMap(next);
@@ -346,6 +351,7 @@ namespace OutpostZero.Core
             GridBuilder.Instance?.ClearAll();
             TutorialDirector.Instance?.SetFinished(false);
             CodexDirector.Instance?.Restore("");
+            if (skipTutorial) TutorialDirector.Instance?.Dismiss();
             PlayerRegistry.Current?.RestoreMods("");
             zombiesKilled = 0;
             lifetimeKills = 0;

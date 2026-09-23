@@ -61,6 +61,7 @@ namespace OutpostZero.UI
         private GameState screensState = GameState.MainMenu;
         private string seedText = "";
         private string codexId = "";
+        private bool skipTutorial;
         private string inspected = "";
         private int packFilter = PackFilter.All;
 
@@ -606,6 +607,7 @@ namespace OutpostZero.UI
                 line.Add(Button(visible ? Loc.EntryTitle(entry.Id, entry.Title) : Loc.T("camp.unknown"), () => { codexId = id; Open(MenuScreen.CodexEntry); }));
                 parent.Add(line);
             }
+            parent.Add(Button(Loc.T("codex.replay"), () => CodexDirector.Instance?.ReplayHints()));
             parent.Add(Button(Loc.T("set.close"), Close));
         }
 
@@ -794,7 +796,6 @@ namespace OutpostZero.UI
                     menu.Add(Button(Loc.T("menu.new"), () => Open(MenuScreen.NewGame)));
                     menu.Add(Button(Loc.T("menu.settings"), () => SettingsService.Instance?.TogglePanel()));
                     menu.Add(Button(Loc.T("menu.credits"), () => Open(MenuScreen.Credits)));
-                    menu.Add(Button(Loc.T("menu.skip"), () => TutorialDirector.Instance?.Dismiss()));
                     menu.Add(Button(Loc.T("menu.street"), () => Go(FlowStep.Expedition)));
                     menu.Add(Button(Loc.T("menu.quit"), Quit));
                     break;
@@ -802,10 +803,10 @@ namespace OutpostZero.UI
             menu.style.display = menu.childCount > 0 ? DisplayStyle.Flex : DisplayStyle.None;
         }
 
-        private static string NewGameSignature()
+        private string NewGameSignature()
         {
             var settings = SettingsService.Instance;
-            return settings != null ? settings.NextDifficulty + ":" + settings.Merciful : "";
+            return (settings != null ? settings.NextDifficulty + ":" + settings.Merciful : "") + ":" + skipTutorial;
         }
 
         private void DrawNewGame(VisualElement menu)
@@ -814,6 +815,7 @@ namespace OutpostZero.UI
             menu.Add(Title(Loc.T("new.title")));
             menu.Add(Button(Loc.T("set.next") + " " + Loc.Difficulty(settings != null ? settings.NextDifficulty : 2), () => settings?.CycleDifficulty()));
             if (settings != null) menu.Add(Button(settings.Merciful ? Loc.T("set.merciful") : Loc.T("set.perma"), settings.ToggleMerciful));
+            menu.Add(Button(skipTutorial ? Loc.T("new.tut_off") : Loc.T("new.tut_on"), () => skipTutorial = !skipTutorial));
             menu.Add(Body(Loc.T("new.seed")));
             var seed = new TextField { value = seedText, maxLength = NewGamePlan.MaxLength };
             seed.style.width = 260;
@@ -824,7 +826,8 @@ namespace OutpostZero.UI
             {
                 screens.Clear();
                 string chosen = seedText;
-                Go(FlowStep.Sanctuary, () => GameManager.Instance.BeginNewOutpost(chosen));
+                bool skip = skipTutorial;
+                Go(FlowStep.Sanctuary, () => GameManager.Instance.BeginNewOutpost(chosen, skip));
             }));
             menu.Add(Button(Loc.T("menu.back"), Close));
         }

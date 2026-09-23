@@ -52,6 +52,12 @@ namespace OutpostZero.Shell
             }
         }
 
+        public void ReplayHints()
+        {
+            packed = CodexBook.ForgetHints(packed);
+            GameplayFeedback.Toast(Loc.T("codex.replayed"));
+        }
+
         public void Restore(string value)
         {
             packed = value ?? "";
