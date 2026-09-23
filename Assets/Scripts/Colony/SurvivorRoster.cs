@@ -153,6 +153,7 @@ namespace OutpostZero.Colony
                 return;
             }
             Instance = this;
+            TraitBook.Ensure();
             if (survivors.Count == 0) Seed();
         }
 
@@ -522,7 +523,7 @@ namespace OutpostZero.Colony
                 {
                     case "Scavenge":
                         bool scrounge = TraitHook.Holds(survivor.trait, survivor.aside, survivor.mark, "Scrounger");
-                        int scrap = Pay(4 + (scrounge ? 3 : 0), survivor.morale, survivor.trait, survivor.aside, survivor.mark, survivor.fatigue);
+                        int scrap = Pay(4 + TraitHook.Haul(survivor.trait, survivor.aside, survivor.mark), survivor.morale, survivor.trait, survivor.aside, survivor.mark, survivor.fatigue);
                         if (scrap > 0)
                         {
                             Practice.Train(ref survivor.scavenge, ref survivor.scavengeXp);

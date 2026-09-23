@@ -1849,24 +1849,9 @@ namespace OutpostZero.Shell
 
         public static string Trait(string trait)
         {
-            string key = trait == "Steady Hands" ? "trait.steady"
-                : trait == "Light Sleeper" ? "trait.sleeper"
-                : trait == "Field Medic" ? "trait.medic"
-                : trait == "Scrounger" ? "trait.scrounger"
-                : trait == "Watchful" ? "trait.watchful"
-                : trait == "Volatile" ? "trait.volatile"
-                : trait == "Glutton" ? "trait.glutton"
-                : trait == "Engineer" ? "trait.engineer"
-                : trait == "Cook" ? "trait.cook"
-                : trait == "Sharpshooter" ? "trait.sharp"
-                : trait == "Brave" ? "trait.brave"
-                : trait == "Cowardly" ? "trait.coward"
-                : trait == "Insomniac" ? "trait.insomniac"
-                : trait == "Optimist" ? "trait.optimist"
-                : trait == "Loner" ? "trait.loner"
-                : trait == "Night Owl" ? "trait.owl"
-                : "";
-            if (key.Length == 0) return trait ?? "";
+            var row = OutpostZero.Colony.TraitTable.For(trait);
+            string key = row != null ? row.Key : "";
+            if (string.IsNullOrEmpty(key)) return trait ?? "";
             return Pick(key, trait);
         }
 

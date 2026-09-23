@@ -9,6 +9,7 @@ namespace OutpostZero.Colony
     /// An Insomniac rests three less, and never below one. An Optimist works inspired above 60.
     /// A Night Owl stretches a warning that already exists by two seconds. No tower stays quiet.
     /// A second trait counts when it is the one that matters. The first trait still answers alone.
+    /// The numbers come from each trait's <see cref="TraitTable"/> row, so a tuned trait asset changes them.
     /// </summary>
     public static class TraitHook
     {
@@ -16,6 +17,7 @@ namespace OutpostZero.Colony
         public const float Sleeper = 3f;
         public const float PlainHunger = 18f;
         public const float GluttonHunger = 23.4f;
+        public const int PlainWatch = 2;
 
         public static bool Holds(string trait, string aside, string name)
         {
@@ -40,8 +42,10 @@ namespace OutpostZero.Colony
 
         public static int CookPlate(string trait, string aside, string mark, bool cooked)
         {
-            if (!cooked || !Holds(trait, aside, mark, "Cook")) return 0;
-            return 4;
+            if (!cooked) return 0;
+            int plate = 0;
+            foreach (var row in Rows(trait, aside, mark)) if (row.CookPlate > plate) plate = row.CookPlate;
+            return plate;
         }
 
         public static float Aim(string trait)
@@ -56,8 +60,9 @@ namespace OutpostZero.Colony
 
         public static float Aim(string trait, string aside, string mark)
         {
-            if (Holds(trait, aside, mark, "Sharpshooter")) return 0.8f;
-            return 1f;
+            float aim = 1f;
+            foreach (var row in Rows(trait, aside, mark)) if (row.Aim < aim) aim = row.Aim;
+            return aim;
         }
 
         public static int WatchCost(string trait)
@@ -72,9 +77,13 @@ namespace OutpostZero.Colony
 
         public static int WatchCost(string trait, string aside, string mark)
         {
-            if (Holds(trait, aside, mark, "Cowardly")) return 6;
-            if (Holds(trait, aside, mark, "Brave")) return 0;
-            return 2;
+            int worst = PlainWatch, best = PlainWatch;
+            foreach (var row in Rows(trait, aside, mark))
+            {
+                if (row.WatchCost > worst) worst = row.WatchCost;
+                if (row.WatchCost < best) best = row.WatchCost;
+            }
+            return worst > PlainWatch ? worst : best;
         }
 
         public static int WatchPay(string trait, int watch)
@@ -89,7 +98,8 @@ namespace OutpostZero.Colony
 
         public static int WatchPay(string trait, string aside, string mark, int watch)
         {
-            if (watch <= 0 || Holds(trait, aside, mark, "Cowardly")) return 0;
+            if (watch <= 0) return 0;
+            foreach (var row in Rows(trait, aside, mark)) if (!row.WatchPays) return 0;
             return watch;
         }
 
@@ -99,7 +109,7 @@ namespace OutpostZero.Colony
             if (time <= 0f) return 0f;
             if (watchful < 0) watchful = 0;
             if (sleepers < 0) sleepers = 0;
-            time += watchful * Watch + sleepers * Sleeper;
+            time += watchful * Stretch("Watchful", Watch) + sleepers * Stretch("Light Sleeper", Sleeper);
             if (time > RaidWarn.Cap) return RaidWarn.Cap;
             return time;
         }
@@ -116,8 +126,9 @@ namespace OutpostZero.Colony
 
         public static float HungerDrop(string trait, string aside, string mark)
         {
-            if (Holds(trait, aside, mark, "Glutton")) return GluttonHunger;
-            return PlainHunger;
+            float drop = PlainHunger;
+            foreach (var row in Rows(trait, aside, mark)) if (row.Hunger > drop) drop = row.Hunger;
+            return drop;
         }
 
         public static int RestGain(string trait, int rest)
@@ -133,9 +144,11 @@ namespace OutpostZero.Colony
         public static int RestGain(string trait, string aside, string mark, int rest)
         {
             if (rest < 0) rest = 0;
-            if (!Holds(trait, aside, mark, "Insomniac")) return rest;
-            int cut = rest - 3;
-            return cut < 1 ? 1 : cut;
+            int cut = 0;
+            foreach (var row in Rows(trait, aside, mark)) if (row.RestCut > cut) cut = row.RestCut;
+            if (cut <= 0) return rest;
+            int left = rest - cut;
+            return left < 1 ? 1 : left;
         }
 
         public const float Owl = 2f;
@@ -144,9 +157,39 @@ namespace OutpostZero.Colony
         {
             if (warning <= 0f) return 0f;
             if (owls < 0) owls = 0;
-            float time = warning + owls * Owl;
+            float time = warning + owls * Stretch("Night Owl", Owl);
             if (time > RaidWarn.Cap) return RaidWarn.Cap;
             return time;
+        }
+    
+        /// <summary>Extra scrap a scavenging shift brings for its best trait.</summary>
+        public static int Haul(string trait, string aside, string mark)
+        {
+            int haul = 0;
+            foreach (var row in Rows(trait, aside, mark)) if (row.Haul > haul) haul = row.Haul;
+            return haul;
+        }
+
+        private static float Stretch(string trait, float fallback)
+        {
+            var row = TraitTable.For(trait);
+            return row != null ? row.Warn : fallback;
+        }
+
+        private static System.Collections.Generic.IEnumerable<TraitTable.Row> Rows(string trait, string aside, string mark)
+        {
+            var first = TraitTable.For(trait);
+            if (first != null) yield return first;
+            if (aside != trait)
+            {
+                var second = TraitTable.For(aside);
+                if (second != null) yield return second;
+            }
+            if (mark != trait && mark != aside)
+            {
+                var third = TraitTable.For(mark);
+                if (third != null) yield return third;
+            }
         }
     }
 }

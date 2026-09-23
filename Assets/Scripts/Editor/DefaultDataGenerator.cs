@@ -142,6 +142,7 @@ namespace OutpostZero.EditorTools
             RecipeBookSync.Sync();
             ModuleBookSync.Sync();
             FactionBookSync.Sync();
+            TraitBookSync.Sync();
             SyncWeaponSet();
         }
 

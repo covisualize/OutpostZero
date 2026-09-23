@@ -34,27 +34,21 @@ namespace OutpostZero.Colony
             "Hale", "Moss", "Cruz", "Ng", "Bell", "Diaz", "Cho", "Frost"
         };
 
-        private static readonly string[] Traits =
-        {
-            "Steady Hands", "Light Sleeper", "Field Medic", "Scrounger", "Watchful", "Volatile", "Glutton",
-            "Engineer", "Cook", "Sharpshooter", "Brave", "Cowardly",
-            "Insomniac", "Optimist", "Loner", "Night Owl"
-        };
-
         public static Draft[] Open(int seed)
         {
             if (seed == 0) seed = 1701;
+            string[] traits = TraitTable.Ids();
             var drafts = new Draft[4];
             var usedFirst = new bool[First.Length];
-            var usedTrait = new bool[Traits.Length];
+            var usedTrait = new bool[traits.Length];
             for (int i = 0; i < 4; i++)
             {
                 int firstIndex = Pick(seed, i * 3, First.Length, usedFirst);
                 int lastIndex = Mix(seed, i * 5 + 1) % Last.Length;
-                int traitIndex = Pick(seed, i * 7 + 2, Traits.Length, usedTrait);
+                int traitIndex = Pick(seed, i * 7 + 2, traits.Length, usedTrait);
                 string first = First[firstIndex];
                 string last = Last[lastIndex];
-                string trait = Traits[traitIndex];
+                string trait = traits[traitIndex];
                 drafts[i] = new Draft
                 {
                     Id = first.ToLowerInvariant() + "_" + (Mix(seed, i + 11) % 90 + 10),
@@ -75,8 +69,8 @@ namespace OutpostZero.Colony
             Bond(ref drafts[3], drafts[2].Name, seed, 3);
             for (int i = 0; i < 4; i++)
             {
-                int asideIndex = Second(seed, i * 7 + 90, usedTrait, drafts[i].Trait);
-                string aside = asideIndex < 0 ? "" : Traits[asideIndex];
+                int asideIndex = Second(seed, i * 7 + 90, usedTrait, drafts[i].Trait, traits);
+                string aside = asideIndex < 0 ? "" : traits[asideIndex];
                 drafts[i].Aside = aside;
                 drafts[i].Combat = System.Math.Max(drafts[i].Combat, Skill(aside, "combat"));
                 drafts[i].Medicine = System.Math.Max(drafts[i].Medicine, Skill(aside, "medicine"));
@@ -86,19 +80,15 @@ namespace OutpostZero.Colony
             }
             for (int i = 0; i < 4; i++)
             {
-                int markIndex = Third(seed, i * 7 + 140, usedTrait, drafts[i].Trait, drafts[i].Aside);
-                drafts[i].Mark = markIndex < 0 ? "" : Traits[markIndex];
+                int markIndex = Third(seed, i * 7 + 140, usedTrait, drafts[i].Trait, drafts[i].Aside, traits);
+                drafts[i].Mark = markIndex < 0 ? "" : traits[markIndex];
             }
             return drafts;
         }
 
         public static bool Clashes(string a, string b)
         {
-            if (string.IsNullOrEmpty(a) || string.IsNullOrEmpty(b)) return false;
-            if (a == b) return true;
-            return Pair(a, b, "Brave", "Cowardly")
-                || Pair(a, b, "Insomniac", "Light Sleeper")
-                || Pair(a, b, "Optimist", "Volatile");
+            return TraitTable.Clashes(a, b);
         }
 
         public static string Signature(Draft[] drafts)
@@ -130,46 +120,31 @@ namespace OutpostZero.Colony
 
         private static int Skill(string trait, string kind)
         {
-            if (kind == "combat" && trait == "Sharpshooter") return 4;
-            if (kind == "combat" && (trait == "Steady Hands" || trait == "Watchful")) return 3;
-            if (kind == "combat" && trait == "Brave") return 2;
-            if (kind == "medicine" && trait == "Field Medic") return 4;
-            if (kind == "scavenge" && trait == "Scrounger") return 3;
-            if (kind == "scavenge" && trait == "Loner") return 2;
-            if (kind == "engineering" && trait == "Engineer") return 4;
-            if (kind == "engineering" && trait == "Steady Hands") return 2;
-            if (kind == "cooking" && trait == "Cook") return 4;
-            if (kind == "cooking" && trait == "Light Sleeper") return 1;
-            return 0;
+            return TraitTable.Skill(trait, kind);
         }
 
-        private static bool Pair(string a, string b, string left, string right)
+        private static int Second(int seed, int salt, bool[] used, string first, string[] traits)
         {
-            return (a == left && b == right) || (a == right && b == left);
-        }
-
-        private static int Second(int seed, int salt, bool[] used, string first)
-        {
-            int start = Mix(seed, salt) % Traits.Length;
-            for (int i = 0; i < Traits.Length; i++)
+            int start = Mix(seed, salt) % traits.Length;
+            for (int i = 0; i < traits.Length; i++)
             {
-                int index = (start + i) % Traits.Length;
+                int index = (start + i) % traits.Length;
                 if (used[index]) continue;
-                if (Clashes(first, Traits[index])) continue;
+                if (Clashes(first, traits[index])) continue;
                 used[index] = true;
                 return index;
             }
             return -1;
         }
 
-        private static int Third(int seed, int salt, bool[] used, string first, string second)
+        private static int Third(int seed, int salt, bool[] used, string first, string second, string[] traits)
         {
-            int start = Mix(seed, salt) % Traits.Length;
-            for (int i = 0; i < Traits.Length; i++)
+            int start = Mix(seed, salt) % traits.Length;
+            for (int i = 0; i < traits.Length; i++)
             {
-                int index = (start + i) % Traits.Length;
+                int index = (start + i) % traits.Length;
                 if (used[index]) continue;
-                string name = Traits[index];
+                string name = traits[index];
                 if (Clashes(first, name) || Clashes(second, name)) continue;
                 used[index] = true;
                 return index;
