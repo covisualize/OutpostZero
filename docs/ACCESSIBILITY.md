@@ -38,7 +38,7 @@ This checklist tracks Outpost Zero against the [Game Accessibility Guidelines](h
 | Provide an option to make enemies more distinct | Intermediate | Done | Enemy outline option hardens the zombie rim light. |
 | Allow the interface to be resized | Intermediate | Done | Interface size 80 to 150% scales every UI Toolkit panel (`PanelScale`). |
 | Provide an option to adjust brightness | Intermediate | Done | Brightness slider. |
-| Provide a font that covers every supported script | Intermediate | Open | EN and ES render with the default font. A Latin, Cyrillic and CJK fallback chain in `PanelSettings` needs font assets (for example Noto Sans), which are not in the repo yet. |
+| Provide a font that covers every supported script | Intermediate | Done, needs a Unity check | Latin languages (EN, ES) keep the default font. For Cyrillic and CJK languages, `FontFallback` sets every panel's font to an installed OS font that holds the script, checked with sample characters, and chains the other scripts behind it (`FontChain`). No font files ship. A machine with none of the listed families falls back to the default font and logs a warning. |
 
 ## Hearing
 

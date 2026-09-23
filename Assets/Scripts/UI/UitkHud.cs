@@ -31,6 +31,7 @@ namespace OutpostZero.UI
             }
 
             root.pickingMode = PickingMode.Ignore;
+            FontFallback.Dress(root);
             var column = new VisualElement();
             column.style.position = Position.Absolute;
             column.style.left = 16;

@@ -47,5 +47,52 @@ namespace OutpostZero.Tests.EditMode
             for (int i = 2; i < rows.Count; i++)
                 Assert.Less(string.CompareOrdinal(rows[i - 1][0], rows[i][0]), 0, rows[i][0]);
         }
+
+        [Test]
+        public void EachLanguageNamesTheScriptItNeeds()
+        {
+            Assert.AreEqual(TextScript.Latin, FontChain.ScriptOf("en"));
+            Assert.AreEqual(TextScript.Latin, FontChain.ScriptOf("es"));
+            Assert.AreEqual(TextScript.Latin, FontChain.ScriptOf(PseudoLoc.Code));
+            Assert.AreEqual(TextScript.Latin, FontChain.ScriptOf(null));
+            Assert.AreEqual(TextScript.Cyrillic, FontChain.ScriptOf("ru"));
+            Assert.AreEqual(TextScript.Cyrillic, FontChain.ScriptOf("uk-UA"));
+            Assert.AreEqual(TextScript.Cjk, FontChain.ScriptOf("zh-Hans"));
+            Assert.AreEqual(TextScript.Cjk, FontChain.ScriptOf("JA"));
+            Assert.AreEqual(TextScript.Cjk, FontChain.ScriptOf("ko_KR"));
+            foreach (var code in PseudoLoc.Languages(true))
+                Assert.IsFalse(FontChain.Needed(code), code + " should keep the default font");
+            Assert.IsTrue(FontChain.Needed("ru"));
+        }
+
+        [Test]
+        public void TheChainLeadsWithTheLanguageScriptAndCoversLatinCyrillicAndCjk()
+        {
+            foreach (var code in new[] { "en", "ru", "zh", "ja", "ko" })
+            {
+                var chain = FontChain.Scripts(code);
+                Assert.AreEqual(FontChain.ScriptOf(code), chain[0], code);
+                CollectionAssert.AreEquivalent(FontChain.Order, chain, code);
+            }
+            foreach (var script in FontChain.Order)
+            {
+                Assert.IsNotEmpty(FontChain.Families(script, "en"), script.ToString());
+                Assert.IsNotEmpty(FontChain.Probe(script, "en"), script.ToString());
+            }
+            Assert.AreNotEqual(FontChain.Families(TextScript.Cjk, "ja")[0], FontChain.Families(TextScript.Cjk, "zh")[0]);
+            Assert.AreNotEqual(FontChain.Families(TextScript.Cjk, "ko")[0], FontChain.Families(TextScript.Cjk, "zh")[0]);
+            StringAssert.Contains("あ", FontChain.Probe(TextScript.Cjk, "ja"));
+            StringAssert.Contains("한", FontChain.Probe(TextScript.Cjk, "ko"));
+        }
+
+        [Test]
+        public void PickTakesTheFirstPreferredFamilyThatIsInstalled()
+        {
+            var installed = new[] { "arial", "Meiryo", "DejaVu Sans" };
+            Assert.AreEqual("Arial", FontChain.Pick(installed, FontChain.Families(TextScript.Latin, "en")));
+            Assert.AreEqual("Meiryo", FontChain.Pick(installed, FontChain.Families(TextScript.Cjk, "ja")));
+            Assert.AreEqual("", FontChain.Pick(installed, FontChain.Families(TextScript.Cjk, "ko")));
+            Assert.AreEqual("", FontChain.Pick(null, FontChain.Families(TextScript.Latin, "en")));
+        }
     }
 }

@@ -119,6 +119,7 @@ namespace OutpostZero.UI
             PanelScale.Track(panel);
             root = document.rootVisualElement;
             if (root == null) return;
+            FontFallback.Dress(root);
 
             root.style.flexGrow = 1;
             root.pickingMode = PickingMode.Position;
@@ -290,6 +291,7 @@ namespace OutpostZero.UI
             if (root == null) return;
             float scale = SettingsService.Instance != null ? SettingsService.Instance.TextScale : 1f;
             PanelScale.Apply(SettingsService.Instance != null ? SettingsService.Instance.UiScale : 1f);
+            FontFallback.Apply(SettingsService.Instance != null ? SettingsService.Instance.Language : "en");
             root.style.fontSize = Mathf.RoundToInt(14 * scale);
             root.style.opacity = SettingsService.Instance != null ? SettingsService.Instance.HudOpacity : 1f;
             int vision = SettingsService.Instance != null ? SettingsService.Instance.ColorblindMode : 0;

@@ -35,6 +35,7 @@ namespace OutpostZero.UI
             PanelScale.Track(panel);
             var root = document.rootVisualElement;
             if (root == null) return null;
+            FontFallback.Dress(root);
 
             var veil = new VisualElement();
             veil.style.position = Position.Absolute;

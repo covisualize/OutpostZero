@@ -48,6 +48,7 @@ namespace OutpostZero.UI
             PanelScale.Track(settings);
             var root = document.rootVisualElement;
             if (root == null) return;
+            FontFallback.Dress(root);
 
             panel = new VisualElement();
             panel.style.position = Position.Absolute;
