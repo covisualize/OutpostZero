@@ -415,6 +415,30 @@ namespace OutpostZero.Colony
             if (CampEnd.Wiped(LivingCount())) EndCamp();
         }
 
+        public bool Release(string id)
+        {
+            var person = Find(id);
+            if (person == null || !FeverChoice.Offered(person.alive, person.leader, person.injury)) return false;
+            person.alive = false;
+            person.task = "Fallen";
+            var days = Snapshot();
+            FeverChoice.Mourn(days, person.displayName, HasMemorial());
+            for (int i = 0; i < days.Count && i < survivors.Count; i++) survivors[i].morale = days[i].morale;
+            memorials.Add(new SuccessionLedger.Memorial
+            {
+                name = person.displayName,
+                day = WorldClock.Instance != null ? WorldClock.Instance.Day : 1,
+                kills = 0,
+                cause = FeverChoice.Cause,
+                district = "camp"
+            });
+            ColonyStorage.Instance?.AddBodies(1);
+            GameplayFeedback.Toast(person.displayName + " " + Loc.T("camp.released"));
+            OnRosterChanged?.Invoke();
+            if (CampEnd.Wiped(LivingCount())) EndCamp();
+            return true;
+        }
+
         public int LivingCount()
         {
             int count = 0;

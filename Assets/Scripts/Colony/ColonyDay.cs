@@ -214,6 +214,7 @@ namespace OutpostZero.Colony
                         continue;
                     }
                     person.task = "Quarantine";
+                    Once(events, "stage3");
                 }
 
                 person.morale = Clamp(person.morale);

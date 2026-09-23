@@ -815,6 +815,7 @@ namespace OutpostZero.UI
                     row.Add(Button(Loc.Task("Clear"), () => roster.Assign(id, "Clear")));
                     if (!survivor.leader) row.Add(Button(Loc.Task(TaskPick.Auto), () => roster.Assign(id, TaskPick.Auto)));
                     if (survivor.injury > 0) row.Add(Button(Loc.Task("Quarantine"), () => roster.Assign(id, "Quarantine")));
+                    if (FeverChoice.Offered(survivor.alive, survivor.leader, survivor.injury)) row.Add(Button(Loc.T("camp.mercy"), () => roster.Release(id)));
                     if (!survivor.leader) row.Add(Button(Loc.T("camp.gift"), () => roster.OfferMeal(id)));
                     camp.Add(Lit(row, TutorialMark.Task));
                 }
