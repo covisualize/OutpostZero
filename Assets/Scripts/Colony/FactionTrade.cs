@@ -15,6 +15,7 @@ namespace OutpostZero.Colony
         private int[] standing = { 10, 0, 0, 0 };
         private string strays = "";
         private string quests = "";
+        private string sold = "";
         private bool open;
         private int summonedDay = -1;
 
@@ -22,9 +23,10 @@ namespace OutpostZero.Colony
         public string Faction => CaravanBook.Display(ActiveId);
         public bool Open => open;
         public string Quests => quests;
+        public string Sold => sold;
         public string ActiveId => CaravanBook.Counterparty(Day, PostBuilt || summonedDay == Day);
         public bool Away => string.IsNullOrEmpty(ActiveId);
-        public string Signature => open + "|" + Pack() + "|" + quests + "|" + Day + "|" + PostBuilt;
+        public string Signature => open + "|" + Pack() + "|" + quests + "|" + sold + "|" + Day + "|" + PostBuilt;
 
         /// <summary>The same inputs as <see cref="Signature"/>, hashed without building a string.</summary>
         public int Key
@@ -36,6 +38,7 @@ namespace OutpostZero.Colony
                 Fit();
                 for (int i = 0; i < standing.Length; i++) key.Add(standing[i]);
                 key.Add(quests);
+                key.Add(sold);
                 key.Add(Day);
                 key.Add(PostBuilt);
                 key.Add(summonedDay);
@@ -94,6 +97,11 @@ namespace OutpostZero.Colony
         public int Offer(string itemId) => CaravanBook.Offer(itemId, StandingOf(ActiveId));
         public string[] Stock => CaravanBook.Stock(ActiveId, StandingOf(ActiveId));
 
+        /// <summary>Today's shelf at the stall, before what the camp has already bought today.</summary>
+        public List<KeyValuePair<string, int>> Shelf => StallShelf.Roll(ActiveId, Day, StandingOf(ActiveId));
+
+        public int Left(string itemId) => StallShelf.Left(Shelf, sold, Day, ActiveId, itemId);
+
         public bool Buy(string itemId)
         {
             string faction = ActiveId;
@@ -110,6 +118,11 @@ namespace OutpostZero.Colony
             if (System.Array.IndexOf(Stock, itemId) < 0)
             {
                 GameplayFeedback.Toast(StallVoice.Refuse(StallVoice.Name(faction, null), null));
+                return false;
+            }
+            if (Left(itemId) <= 0)
+            {
+                GameplayFeedback.Toast(StallVoice.SoldOut(null));
                 return false;
             }
             int price = Price(itemId);
@@ -138,6 +151,7 @@ namespace OutpostZero.Colony
                 GameplayFeedback.Toast(StallVoice.Full(null));
                 return false;
             }
+            sold = StallShelf.MarkSold(sold, Day, faction, itemId);
             Fit();
             CaravanBook.Shift(standing, faction, 2);
             GameplayFeedback.Toast(StallVoice.Deal(faction, stock, null));
@@ -231,6 +245,11 @@ namespace OutpostZero.Colony
                 CaravanBook.Gift(standing, visitor);
                 GameplayFeedback.Toast(StallVoice.Arrival(visitor, null));
             }
+        }
+
+        public void RestoreSold(string packed)
+        {
+            sold = packed ?? "";
         }
 
         public void SetStanding(int value)

@@ -67,6 +67,7 @@ namespace OutpostZero.Colony
         public static string Through(string language) => Word("stall.through", language);
         public static string Porter(bool along, string language) => Word(along ? "porter.along" : "porter.ask", language);
         public static string PorterFell(string language) => Word("porter.fell", language);
+        public static string SoldOut(string language) => Word("stall.soldout", language);
 
         public static string Bartered(int scrap, string language)
         {

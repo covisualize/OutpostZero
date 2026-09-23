@@ -19,6 +19,7 @@ MonoBehaviour:
   - ammo_shells
   - ammo_smg
   premium: pipe_bomb
+  lootTable: stall_militia
   refuseBelow: -20
   markup: 120
   quest: {fileID: 0}

@@ -193,6 +193,28 @@ namespace OutpostZero.Items
                 LootEntry.Spread("scrap", 3, 4),
                 LootEntry.Chance("ammo_9mm", 0.6f),
                 LootEntry.Chance("chemicals", 0.7f)
+            },
+            ["stall_caravan"] = new[]
+            {
+                LootEntry.Spread("bandage", 1, 2),
+                LootEntry.Spread("ammo_9mm", 1, 2),
+                LootEntry.Chance("medkit", 0.5f)
+            },
+            ["stall_militia"] = new[]
+            {
+                LootEntry.Spread("ammo_rifle", 1, 2),
+                LootEntry.Spread("ammo_shells", 1, 2),
+                LootEntry.Chance("ammo_smg", 0.4f)
+            },
+            ["stall_clinic"] = new[]
+            {
+                LootEntry.Spread("medkit", 1, 2),
+                LootEntry.Spread("bandage", 2, 2)
+            },
+            ["stall_farmers"] = new[]
+            {
+                LootEntry.Spread("canned_food", 2, 2),
+                LootEntry.Spread("water", 2, 2)
             }
         };
 

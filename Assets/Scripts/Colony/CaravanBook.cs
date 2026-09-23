@@ -39,6 +39,13 @@ namespace OutpostZero.Colony
             return FactionTable.TryRow(id, out var row) ? (string[])row.Stock.Clone() : CodeStock(id);
         }
 
+        /// <summary>The loot table the stall rolls its daily shelf from.</summary>
+        public static string Table(string id)
+        {
+            if (FactionTable.TryRow(id, out var row) && !string.IsNullOrEmpty(row.LootTable)) return row.LootTable;
+            return StallShelf.CodeTable(id);
+        }
+
         public static string[] CodeStock(string id)
         {
             switch (id)

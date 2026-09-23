@@ -36,6 +36,7 @@ namespace OutpostZero.Colony
             public string Premium = "";
             public int RefuseBelow = CaravanBook.Never;
             public int Markup = 100;
+            public string LootTable = "";
             public OutpostZero.Expedition.ObjectiveSpec Quest;
         }
 
@@ -54,6 +55,7 @@ namespace OutpostZero.Colony
                 if (row == null || !ValidId(row.Id) || rows.ContainsKey(row.Id)) continue;
                 if (row.Stock == null) row.Stock = Array.Empty<string>();
                 if (row.Premium == null) row.Premium = "";
+                if (row.LootTable == null) row.LootTable = "";
                 if (string.IsNullOrEmpty(row.Label)) row.Label = row.Id;
                 row.Markup = Math.Max(CaravanBook.MarkupFloor, Math.Min(CaravanBook.MarkupCeiling, row.Markup));
                 rows[row.Id] = row;
@@ -88,6 +90,7 @@ namespace OutpostZero.Colony
                     Premium = CaravanBook.CodePremium(id),
                     RefuseBelow = CaravanBook.CodeRefuseBelow(id),
                     Markup = CaravanBook.CodeMarkup(id),
+                    LootTable = StallShelf.CodeTable(id),
                     Quest = FactionQuest.Code(id)
                 });
             }

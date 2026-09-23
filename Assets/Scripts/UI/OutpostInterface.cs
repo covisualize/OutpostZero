@@ -354,14 +354,15 @@ namespace OutpostZero.UI
                 if (sellable == 0) ours.Add(Body(Loc.T("stall.nothing")));
 
                 theirs.Add(Title(Loc.T("stall.theirs")));
-                string[] stock = faction.Stock;
-                for (int i = 0; i < stock.Length; i++)
+                foreach (var row in faction.Shelf)
                 {
-                    string itemId = stock[i];
-                    string label = Loc.Item(itemId);
+                    string itemId = row.Key;
+                    int left = faction.Left(itemId);
+                    string label = Loc.Item(itemId) + " x" + left;
                     if (itemId == CaravanBook.Premium(id)) label += "  " + Loc.T("stall.trusted");
+                    if (left <= 0) label += "  " + StallVoice.SoldOut(null);
                     var buy = Button(StallVoice.Buy(label, faction.Price(itemId), null), () => faction.Buy(itemId));
-                    if (scrap < faction.Price(itemId)) buy.style.color = new Color(0.55f, 0.5f, 0.48f);
+                    if (left <= 0 || scrap < faction.Price(itemId)) buy.style.color = new Color(0.55f, 0.5f, 0.48f);
                     theirs.Add(buy);
                 }
                 if (standing < CaravanBook.Trusted) theirs.Add(Body(Loc.T("stall.trust_at") + " " + CaravanBook.Trusted));

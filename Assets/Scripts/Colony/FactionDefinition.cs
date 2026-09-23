@@ -17,6 +17,9 @@ namespace OutpostZero.Colony
         [Tooltip("Item id added to the table once standing reaches Trusted (30), or empty.")]
         public string premium = "";
 
+        [Tooltip("Loot table id the stall rolls its daily shelf from; only items on the table above are kept. Empty stocks each item once per roll.")]
+        public string lootTable = "";
+
         [Header("Temper")]
         [Tooltip("Standing below which the faction won't trade; -101 means it always trades.")]
         [Range(-101, 100)] public int refuseBelow = CaravanBook.Never;
@@ -37,6 +40,7 @@ namespace OutpostZero.Colony
                 Label = label,
                 Stock = stock != null ? (string[])stock.Clone() : new string[0],
                 Premium = premium ?? "",
+                LootTable = lootTable ?? "",
                 RefuseBelow = refuseBelow,
                 Markup = markup,
                 Quest = quest != null ? quest.ToSpec() : default
@@ -49,6 +53,7 @@ namespace OutpostZero.Colony
             label = row.Label;
             stock = row.Stock != null ? (string[])row.Stock.Clone() : new string[0];
             premium = row.Premium ?? "";
+            lootTable = row.LootTable ?? "";
             refuseBelow = row.RefuseBelow;
             markup = row.Markup;
         }

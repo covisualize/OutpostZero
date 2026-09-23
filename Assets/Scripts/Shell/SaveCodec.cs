@@ -113,6 +113,7 @@ namespace OutpostZero.Shell
         public int factionStanding;
         public string factions = "";
         public string quests = "";
+        public string stallSold = "";
         public bool tutorialDone;
         public string codex = "";
         public string weaponMods = "";

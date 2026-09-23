@@ -269,6 +269,7 @@ namespace OutpostZero.Shell
                 data.factionStanding = FactionTrade.Instance.Standing;
                 data.factions = FactionTrade.Instance.Pack();
                 data.quests = FactionTrade.Instance.Quests;
+                data.stallSold = FactionTrade.Instance.Sold;
             }
             if (TutorialDirector.Instance != null) data.tutorialDone = TutorialDirector.Instance.Finished;
             data.parts = SaveRegistry.Capture();
@@ -392,6 +393,7 @@ namespace OutpostZero.Shell
             ColonyStorage.Instance?.SetPrints(data.prints);
             CraftingBench.Instance?.SetOrders(data.craftOrders);
             FactionTrade.Instance?.Restore(data.factionStanding, data.factions, data.quests);
+            FactionTrade.Instance?.RestoreSold(data.stallSold);
             SettingsService.Instance?.ApplySnapshot(data.shake, data.volume, data.textScale, data.subtitles, data.language);
             SettingsService.Instance?.ApplyPresentation(data.sfxVolume, data.musicVolume, data.quality, data.vsync, data.fieldOfView, data.bindings, data.ambienceVolume, data.uiVolume);
             SettingsService.Instance?.SetMerciful(data.mercy != 0);
