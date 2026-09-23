@@ -1,7 +1,7 @@
 namespace OutpostZero.Player
 {
     /// <summary>
-    /// Which held item leaves the hand. A cell, a medkit, and a meal stay in the pack.
+    /// Which held item leaves the hand, read from the throwable rows. A cell, a medkit, and a meal stay in the pack.
     /// </summary>
     public static class TossKind
     {
@@ -13,11 +13,8 @@ namespace OutpostZero.Player
 
         public static int Of(string id)
         {
-            if (id == "noise_lure" || id == "street_bottle") return Lure;
-            if (id == "molotov") return Fire;
-            if (id == "flare") return Flare;
-            if (id == "pipe_bomb") return Bomb;
-            return None;
+            var row = ThrowableTable.Of(id);
+            return row != null ? row.Kind : None;
         }
 
         public static bool Throws(string id)

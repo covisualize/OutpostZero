@@ -181,6 +181,13 @@ namespace OutpostZero.Player
 
         public bool GrantAmmoPublic(WeaponType weaponType, int amount) => GrantAmmo(weaponType, amount);
 
+        public bool Has(string id)
+        {
+            for (int i = 0; i < items.Count; i++)
+                if (items[i].ItemId == id && items[i].Quantity > 0) return true;
+            return false;
+        }
+
         public bool TryConsume(string id)
         {
             var existing = items.Find(i => i.ItemId == id && i.Quantity > 0);

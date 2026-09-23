@@ -591,7 +591,7 @@ namespace OutpostZero.Combat
             return fade != null ? fade : go.AddComponent<BurstFade>();
         }
 
-        private static Material SpriteMaterial()
+        public static Material SpriteMaterial()
         {
             if (spriteMaterial != null) return spriteMaterial;
             var shader = Shader.Find("Sprites/Default");

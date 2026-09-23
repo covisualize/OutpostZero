@@ -97,6 +97,8 @@ namespace OutpostZero.Player
         public static bool SprintPressed => Pressed(ControlBindings.Action.Sprint) || PadDown(PadBindings.Action.Sprint);
         public static bool InventoryPressed => Pressed(ControlBindings.Action.Inventory) || Pressed(Key.I) || PadDown(PadBindings.Action.Inventory);
         public static bool ThrowPressed => Pressed(ControlBindings.Action.Throw) || PadDown(PadBindings.Action.Throw);
+        public static bool ThrowHeld => Held(ControlBindings.Action.Throw) || PadHeld(PadBindings.Action.Throw);
+        public static bool ThrowReleased => Released(ControlBindings.KeyFor(ControlBindings.Action.Throw)) || PadUp(PadBindings.Action.Throw);
         public static bool TakedownPressed => Pressed(ControlBindings.Action.Takedown) || PadDown(PadBindings.Action.Takedown);
         public static bool WatchPressed => Pressed(Key.F3);
         public static bool DevPressed => Pressed(Key.F9);
@@ -174,7 +176,22 @@ namespace OutpostZero.Player
             return keyboard[key].isPressed;
         }
 
+        private static bool Released(Key key)
+        {
+            var keyboard = Keyboard.current;
+            if (keyboard == null || key == Key.None) return false;
+            return keyboard[key].wasReleasedThisFrame;
+        }
+
         private static bool Down(UnityEngine.InputSystem.Controls.KeyControl key) => key != null && key.isPressed;
+
+        private static bool PadUp(PadBindings.Action action)
+        {
+            var pad = Gamepad.current;
+            if (pad == null) return false;
+            var button = Button(pad, PadBindings.Label(action));
+            return button != null && button.wasReleasedThisFrame;
+        }
 
         private static bool PadDown(PadBindings.Action action) => PadMatch(action, true);
 

@@ -14,6 +14,7 @@ namespace OutpostZero.Player
         private PlayerInventory inventory;
         private PlayerController controller;
         private HoverShell shell;
+        private ThrowPreview arc;
         private IInteractable current;
         private ZombieAI marked;
         private float windup = -1f;
@@ -28,6 +29,8 @@ namespace OutpostZero.Player
             controller = GetComponent<PlayerController>();
             shell = GetComponent<HoverShell>();
             if (shell == null) shell = gameObject.AddComponent<HoverShell>();
+            arc = Attach.Ensure<ThrowPreview>(gameObject);
+            ThrowableBook.Ensure();
         }
 
         private void Update()
@@ -36,6 +39,7 @@ namespace OutpostZero.Player
             {
                 current = null;
                 shell?.Hold(null);
+                arc?.Hide();
                 return;
             }
 
@@ -49,10 +53,13 @@ namespace OutpostZero.Player
             if (TakingDown) AdvanceTakedown();
             else if (ExpeditionInput.TakedownPressed) TryTakedown();
 
-            if (ExpeditionInput.ThrowPressed)
+            if (ExpeditionInput.ThrowReleased)
             {
+                arc?.Hide();
                 ThrowHeldItem();
             }
+            else if (ExpeditionInput.ThrowHeld && NextThrowable() != null) arc?.Show(transform.position, transform.forward);
+            else arc?.Hide();
         }
 
         private bool CanAct()
@@ -132,63 +139,42 @@ namespace OutpostZero.Player
 
         public bool ThrowId(string id)
         {
-            int kind = TossKind.Of(id);
-            if (kind == TossKind.None) return false;
+            var row = ThrowableTable.Of(id);
+            if (row == null || row.Kind == TossKind.None) return false;
             if (inventory == null || !inventory.TryConsume(id)) return false;
-            if (kind == TossKind.Fire) Launch(true);
-            else if (kind == TossKind.Flare) LaunchFlare();
-            else if (kind == TossKind.Bomb) LaunchBomb();
-            else Launch(false);
+            Launch(row);
             return true;
+        }
+
+        /// <summary>The first throwable in the pack, in the book's order: what a release of the throw key sends.</summary>
+        public string NextThrowable()
+        {
+            if (inventory == null) return null;
+            var rows = ThrowableTable.All;
+            for (int i = 0; i < rows.Count; i++)
+                if (inventory.Has(rows[i].Id)) return rows[i].Id;
+            return null;
         }
 
         private void ThrowHeldItem()
         {
-            if (ThrowId("molotov")) return;
-            if (ThrowId("street_bottle")) return;
-            if (ThrowId("noise_lure")) return;
-            if (ThrowId("flare")) return;
-            if (ThrowId("pipe_bomb")) return;
+            string id = NextThrowable();
+            if (id != null && ThrowId(id)) return;
             GameplayFeedback.Toast(Loc.T("toss.none"));
         }
 
-        private void Launch(bool molotov)
+        private void Launch(ThrowableTable.Row row)
         {
             var lure = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-            lure.name = molotov ? "Molotov" : "NoiseLure";
-            lure.transform.position = transform.position + Vector3.up * 1.4f + transform.forward;
-            lure.transform.localScale = Vector3.one * 0.25f;
-            MaterialLibrary.Dress(lure.GetComponent<Renderer>(), molotov ? SurfaceFamily.Glass : SurfaceFamily.MetalRusted);
+            lure.name = row.Id;
+            lure.transform.position = transform.position + Vector3.up * ThrowArc.Height + transform.forward;
+            lure.transform.localScale = Vector3.one * row.Size;
+            if (row.Kind == TossKind.Fire) MaterialLibrary.Dress(lure.GetComponent<Renderer>(), SurfaceFamily.Glass);
+            else if (row.Kind != TossKind.Flare) MaterialLibrary.Dress(lure.GetComponent<Renderer>(), SurfaceFamily.MetalRusted);
             var body = lure.AddComponent<Rigidbody>();
             body.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
             body.AddForce(transform.forward * ThrowArc.Forward + Vector3.up * ThrowArc.Lift, ForceMode.VelocityChange);
-            var thrown = lure.AddComponent<ThrownHazard>();
-            thrown.Configure(molotov);
-        }
-
-        private void LaunchFlare()
-        {
-            var lure = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-            lure.name = "Flare";
-            lure.transform.position = transform.position + Vector3.up * 1.4f + transform.forward;
-            lure.transform.localScale = Vector3.one * 0.18f;
-            var body = lure.AddComponent<Rigidbody>();
-            body.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
-            body.AddForce(transform.forward * ThrowArc.Forward + Vector3.up * ThrowArc.Lift, ForceMode.VelocityChange);
-            lure.AddComponent<ThrownHazard>().ConfigureFlare();
-        }
-
-        private void LaunchBomb()
-        {
-            var lure = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-            lure.name = "PipeBomb";
-            lure.transform.position = transform.position + Vector3.up * 1.4f + transform.forward;
-            lure.transform.localScale = Vector3.one * 0.22f;
-            MaterialLibrary.Dress(lure.GetComponent<Renderer>(), SurfaceFamily.MetalRusted);
-            var body = lure.AddComponent<Rigidbody>();
-            body.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
-            body.AddForce(transform.forward * ThrowArc.Forward + Vector3.up * ThrowArc.Lift, ForceMode.VelocityChange);
-            lure.AddComponent<ThrownHazard>().ConfigureBomb();
+            lure.AddComponent<ThrownHazard>().Configure(row);
         }
     }
 
@@ -197,18 +183,22 @@ namespace OutpostZero.Player
         [SerializeField] private bool molotov;
         [SerializeField] private bool flare;
         [SerializeField] private bool bomb;
+        private ThrowableTable.Row row = ThrowableTable.Of("street_bottle");
         private bool popped;
         private float age = -1f;
 
-        public void Configure(bool fire) => molotov = fire;
-
-        public void ConfigureFlare() => flare = true;
-
-        public void ConfigureBomb() => bomb = true;
+        public void Configure(ThrowableTable.Row thrown)
+        {
+            if (thrown == null) return;
+            row = thrown;
+            molotov = thrown.Kind == TossKind.Fire;
+            flare = thrown.Kind == TossKind.Flare;
+            bomb = thrown.Kind == TossKind.Bomb;
+        }
 
         private void Start()
         {
-            Invoke(nameof(Pop), bomb ? PipeBlast.Fuse : flare ? 0.8f : molotov ? 1.1f : 0.7f);
+            Invoke(nameof(Pop), row.Fuse);
         }
 
         private void Update()
@@ -217,13 +207,13 @@ namespace OutpostZero.Player
             float next = age + Time.deltaTime;
             if (FlareClock.PulseDue(age, next)) EmitCall();
             age = next;
-            if (!FlareClock.Lit(age)) Destroy(gameObject);
+            if (!FlareClock.Lit(age, row.Seconds)) Destroy(gameObject);
         }
 
         private void EmitCall()
         {
             if (Sensory.NoiseManager.Instance == null) return;
-            Sensory.NoiseManager.Instance.EmitNoise(transform.position, FlareClock.Radius, 0.8f, NoiseType.ObjectBroken, gameObject);
+            Sensory.NoiseManager.Instance.EmitNoise(transform.position, row.Noise, 0.8f, NoiseType.ObjectBroken, gameObject);
         }
 
         private void OnCollisionEnter(Collision collision)
@@ -240,11 +230,11 @@ namespace OutpostZero.Player
                 Vector3 blast = transform.position;
                 if (Sensory.NoiseManager.Instance != null)
                 {
-                    Sensory.NoiseManager.Instance.EmitNoise(blast, PipeBlast.Noise, 1f, NoiseType.Explosion, gameObject);
+                    Sensory.NoiseManager.Instance.EmitNoise(blast, row.Noise, 1f, NoiseType.Explosion, gameObject);
                 }
-                Collider[] caught = Physics.OverlapSphere(blast, PipeBlast.Radius);
-                CombatEvents.RaiseBlast(blast, PipeBlast.Radius);
-                BlastKill.Begin(blast, PipeBlast.Throw, PipeBlast.Radius);
+                Collider[] caught = Physics.OverlapSphere(blast, row.Radius);
+                CombatEvents.RaiseBlast(blast, row.Radius);
+                BlastKill.Begin(blast, PipeBlast.Throw, row.Radius);
                 try
                 {
                     foreach (var hit in caught)
@@ -252,7 +242,7 @@ namespace OutpostZero.Player
                         var damageable = hit.GetComponentInParent<IDamageable>();
                         if (damageable != null && !damageable.IsDead)
                         {
-                            damageable.TakeDamage(PipeBlast.Damage, hit.bounds.center, (hit.transform.position - blast).normalized, gameObject);
+                            damageable.TakeDamage(row.Damage, hit.bounds.center, (hit.transform.position - blast).normalized, gameObject);
                         }
                         var zombie = hit.GetComponentInParent<ZombieAI>();
                         if (zombie != null)
@@ -278,7 +268,7 @@ namespace OutpostZero.Player
                 EmitCall();
                 var glow = gameObject.AddComponent<Light>();
                 glow.type = LightType.Point;
-                glow.range = 9f;
+                glow.range = row.Radius;
                 glow.intensity = 2.2f;
                 glow.color = new Color(1f, 0.55f, 0.2f);
                 var body = GetComponent<Rigidbody>();
@@ -291,19 +281,19 @@ namespace OutpostZero.Player
             Vector3 origin = transform.position;
             if (Sensory.NoiseManager.Instance != null)
             {
-                Sensory.NoiseManager.Instance.EmitNoise(origin, ThrowArc.NoiseRadius(molotov), 1f, molotov ? NoiseType.Explosion : NoiseType.ObjectBroken, gameObject);
+                Sensory.NoiseManager.Instance.EmitNoise(origin, row.Noise, 1f, molotov ? NoiseType.Explosion : NoiseType.ObjectBroken, gameObject);
             }
             if (molotov)
             {
                 OutpostZero.Colony.GridBuilder.Instance?.IgniteNear(origin.x, origin.z, Time.time);
                 OilPatch.Blast(origin);
-                Collider[] hits = Physics.OverlapSphere(origin, FirePatch.BurstRadius);
+                Collider[] hits = Physics.OverlapSphere(origin, row.Radius);
                 foreach (var hit in hits)
                 {
                     var damageable = hit.GetComponentInParent<IDamageable>();
                     if (damageable != null && !damageable.IsDead)
                     {
-                        damageable.TakeDamage(FirePatch.Burst, hit.bounds.center, (hit.transform.position - origin).normalized, gameObject);
+                        damageable.TakeDamage(row.Damage, hit.bounds.center, (hit.transform.position - origin).normalized, gameObject);
                     }
                 }
                 var patch = new GameObject("FirePatch");
