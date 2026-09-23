@@ -9,83 +9,50 @@ namespace OutpostZero.Player
     /// </summary>
     public static class ExpeditionInput
     {
+        private static readonly IInputProvider Device = new DeviceInputProvider();
+        private static IInputProvider provider;
+
+        /// <summary>Where input comes from. Null restores the attached devices.</summary>
+        public static IInputProvider Provider
+        {
+            get => provider ?? Device;
+            set => provider = value;
+        }
+
         public static Vector2 Move
         {
             get
             {
-                var pad = Gamepad.current;
-                if (pad != null)
+                var source = Provider;
+                if (source.HasPad)
                 {
-                    Vector2 stick = pad.leftStick.ReadValue();
+                    Vector2 stick = source.LeftStick;
                     if (stick.sqrMagnitude > 0.04f) return Vector2.ClampMagnitude(stick, 1f);
                 }
 
-                var keyboard = Keyboard.current;
-                if (keyboard == null) return Vector2.zero;
-
-                float x = (Down(keyboard.dKey) || Down(keyboard.rightArrowKey) ? 1f : 0f) - (Down(keyboard.aKey) || Down(keyboard.leftArrowKey) ? 1f : 0f);
-                float y = (Down(keyboard.wKey) || Down(keyboard.upArrowKey) ? 1f : 0f) - (Down(keyboard.sKey) || Down(keyboard.downArrowKey) ? 1f : 0f);
+                float x = (Held(Key.D) || Held(Key.RightArrow) ? 1f : 0f) - (Held(Key.A) || Held(Key.LeftArrow) ? 1f : 0f);
+                float y = (Held(Key.W) || Held(Key.UpArrow) ? 1f : 0f) - (Held(Key.S) || Held(Key.DownArrow) ? 1f : 0f);
 
                 var value = new Vector2(x, y);
                 return value.sqrMagnitude > 1f ? value.normalized : value;
             }
         }
 
-        public static Vector2 AimStick
-        {
-            get
-            {
-                var pad = Gamepad.current;
-                if (pad == null) return Vector2.zero;
-                return pad.rightStick.ReadValue();
-            }
-        }
+        public static Vector2 AimStick => Provider.HasPad ? Provider.RightStick : Vector2.zero;
 
-        public static Vector2 Pointer
-        {
-            get
-            {
-                if (Mouse.current != null) return Mouse.current.position.ReadValue();
-                return new Vector2(Screen.width * 0.5f, Screen.height * 0.5f);
-            }
-        }
+        public static Vector2 Pointer => Provider.HasPointer ? Provider.Pointer : new Vector2(Screen.width * 0.5f, Screen.height * 0.5f);
 
-        public static float Scroll
-        {
-            get
-            {
-                if (Mouse.current != null) return Mouse.current.scroll.ReadValue().y;
-                return 0f;
-            }
-        }
+        public static float Scroll => Provider.HasPointer ? Provider.Scroll : 0f;
 
-        public static bool FireHeld
-        {
-            get
-            {
-                if (PadHeld(PadBindings.Action.Fire)) return true;
-                return Mouse.current != null ? Mouse.current.leftButton.isPressed : false;
-            }
-        }
+        public static bool FireHeld => PadHeld(PadBindings.Action.Fire) || Provider.Mouse(0, InputPhase.Held);
 
-        public static bool FirePressed
-        {
-            get
-            {
-                if (PadDown(PadBindings.Action.Fire)) return true;
-                return Mouse.current != null ? Mouse.current.leftButton.wasPressedThisFrame : false;
-            }
-        }
+        public static bool FirePressed => PadDown(PadBindings.Action.Fire) || Provider.Mouse(0, InputPhase.Pressed);
 
-        public static bool AimHeld
-        {
-            get
-            {
-                if (PadHeld(PadBindings.Action.Aim)) return true;
-                return Mouse.current != null ? Mouse.current.rightButton.isPressed : false;
-            }
-        }
-        public static bool AimPressed => PadDown(PadBindings.Action.Aim) || (Mouse.current != null && Mouse.current.rightButton.wasPressedThisFrame);
+        public static bool AimHeld => PadHeld(PadBindings.Action.Aim) || Provider.Mouse(1, InputPhase.Held);
+        public static bool AimPressed => PadDown(PadBindings.Action.Aim) || Provider.Mouse(1, InputPhase.Pressed);
+        public static bool BuildPlacePressed => FirePressed;
+        public static bool BuildRemovePressed => AimPressed;
+        public static bool BuildTurnPressed => Pressed(Key.R) || PadDown(PadBindings.Action.Reload);
         public static bool PausePressed => Pressed(ControlBindings.Action.Pause) || PadDown(PadBindings.Action.Pause);
         public static bool ReloadPressed => Pressed(ControlBindings.Action.Reload) || PadDown(PadBindings.Action.Reload);
         public static bool InteractPressed => Pressed(ControlBindings.Action.Interact) || PadDown(PadBindings.Action.Interact);
@@ -107,15 +74,7 @@ namespace OutpostZero.Player
         public static bool BuildPressed => Pressed(ControlBindings.Action.Build) || PadDown(PadBindings.Action.Build);
         public static bool DodgePressed => Pressed(Key.Space) || PadDown(PadBindings.Action.Dodge);
 
-        public static bool WheelHeld
-        {
-            get
-            {
-                if (PadHeld(PadBindings.Action.Wheel)) return true;
-                if (Mouse.current != null && Mouse.current.middleButton.isPressed) return true;
-                return Held(Key.Z);
-            }
-        }
+        public static bool WheelHeld => PadHeld(PadBindings.Action.Wheel) || Provider.Mouse(2, InputPhase.Held) || Held(Key.Z);
 
         public static int WeaponCycle
         {
@@ -127,13 +86,7 @@ namespace OutpostZero.Player
             }
         }
 
-        public static bool PadButtonPressed(string name)
-        {
-            var pad = Gamepad.current;
-            if (pad == null) return false;
-            var button = Button(pad, name);
-            return button != null && button.wasPressedThisFrame;
-        }
+        public static bool PadButtonPressed(string name) => Provider.Pad(name, InputPhase.Pressed);
 
         public static bool WeaponSlotPressed(int index)
         {
@@ -163,72 +116,16 @@ namespace OutpostZero.Player
 
         private static bool Held(ControlBindings.Action action) => Held(ControlBindings.KeyFor(action));
 
-        private static bool Pressed(Key key)
-        {
-            var keyboard = Keyboard.current;
-            if (keyboard == null || key == Key.None) return false;
-            return keyboard[key].wasPressedThisFrame;
-        }
+        private static bool Pressed(Key key) => Provider.Key(key, InputPhase.Pressed);
 
-        private static bool Held(Key key)
-        {
-            var keyboard = Keyboard.current;
-            if (keyboard == null || key == Key.None) return false;
-            return keyboard[key].isPressed;
-        }
+        private static bool Held(Key key) => Provider.Key(key, InputPhase.Held);
 
-        private static bool Released(Key key)
-        {
-            var keyboard = Keyboard.current;
-            if (keyboard == null || key == Key.None) return false;
-            return keyboard[key].wasReleasedThisFrame;
-        }
+        private static bool Released(Key key) => Provider.Key(key, InputPhase.Released);
 
-        private static bool Down(UnityEngine.InputSystem.Controls.KeyControl key) => key != null && key.isPressed;
+        private static bool PadUp(PadBindings.Action action) => Provider.Pad(PadBindings.Label(action), InputPhase.Released);
 
-        private static bool PadUp(PadBindings.Action action)
-        {
-            var pad = Gamepad.current;
-            if (pad == null) return false;
-            var button = Button(pad, PadBindings.Label(action));
-            return button != null && button.wasReleasedThisFrame;
-        }
+        private static bool PadDown(PadBindings.Action action) => Provider.Pad(PadBindings.Label(action), InputPhase.Pressed);
 
-        private static bool PadDown(PadBindings.Action action) => PadMatch(action, true);
-
-        private static bool PadHeld(PadBindings.Action action) => PadMatch(action, false);
-
-        private static bool PadMatch(PadBindings.Action action, bool down)
-        {
-            var pad = Gamepad.current;
-            if (pad == null) return false;
-            var button = Button(pad, PadBindings.Label(action));
-            if (button == null) return false;
-            return down ? button.wasPressedThisFrame : button.isPressed;
-        }
-
-        private static UnityEngine.InputSystem.Controls.ButtonControl Button(Gamepad pad, string name)
-        {
-            switch (name)
-            {
-                case "South": return pad.buttonSouth;
-                case "East": return pad.buttonEast;
-                case "West": return pad.buttonWest;
-                case "North": return pad.buttonNorth;
-                case "Start": return pad.startButton;
-                case "Select": return pad.selectButton;
-                case "LeftShoulder": return pad.leftShoulder;
-                case "RightShoulder": return pad.rightShoulder;
-                case "LeftTrigger": return pad.leftTrigger;
-                case "RightTrigger": return pad.rightTrigger;
-                case "LeftStick": return pad.leftStickButton;
-                case "RightStick": return pad.rightStickButton;
-                case "DpadUp": return pad.dpad.up;
-                case "DpadDown": return pad.dpad.down;
-                case "DpadLeft": return pad.dpad.left;
-                case "DpadRight": return pad.dpad.right;
-                default: return null;
-            }
-        }
+        private static bool PadHeld(PadBindings.Action action) => Provider.Pad(PadBindings.Label(action), InputPhase.Held);
     }
 }

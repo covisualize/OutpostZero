@@ -137,7 +137,7 @@ namespace OutpostZero.Tests.EditMode
             StringAssert.DoesNotContain("ThrowId(\"molotov\")", hands, "the pick order comes from the book");
             StringAssert.DoesNotContain("PipeBlast.Damage", hands, "blast damage comes from the row");
             string input = Read("Assets/Scripts/Player/ExpeditionInput.cs");
-            StringAssert.Contains("wasReleasedThisFrame", input);
+            StringAssert.Contains("InputPhase.Released", input);
         }
 
         [Test]

@@ -98,8 +98,7 @@ namespace OutpostZero.Colony
                 return;
             }
             ShowGhost();
-            var keyboard = UnityEngine.InputSystem.Keyboard.current;
-            if (keyboard != null && keyboard.rKey.wasPressedThisFrame)
+            if (Player.ExpeditionInput.BuildTurnPressed)
             {
                 facing = ScrapRefund.Turn(facing);
                 GameplayFeedback.Toast(YardSay.Facing(facing, null));
@@ -109,15 +108,9 @@ namespace OutpostZero.Colony
             else if (PointerPressed()) TryPlaceAtPointer();
         }
 
-        private static bool PointerPressed()
-        {
-            return UnityEngine.InputSystem.Mouse.current != null && UnityEngine.InputSystem.Mouse.current.leftButton.wasPressedThisFrame;
-        }
+        private static bool PointerPressed() => Player.ExpeditionInput.BuildPlacePressed;
 
-        private static bool PointerRight()
-        {
-            return UnityEngine.InputSystem.Mouse.current != null && UnityEngine.InputSystem.Mouse.current.rightButton.wasPressedThisFrame;
-        }
+        private static bool PointerRight() => Player.ExpeditionInput.BuildRemovePressed;
 
         public void Select(ModuleKind kind) => selected = kind;
 
