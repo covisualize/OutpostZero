@@ -31,3 +31,10 @@ MonoBehaviour:
   vocals: brute
   deathVfx: 14
   lootTable: brute
+  onHitEffects:
+  - kind: 2
+    chance: 0.2
+    seconds: 8
+  - kind: 5
+    chance: 1
+    seconds: 0.7

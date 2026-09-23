@@ -122,6 +122,7 @@ namespace OutpostZero.AI
         private static readonly float[] crowdZ = new float[48];
         [SerializeField] private ZombieSpecialAbility specialAbility;
         private string archetypeId = "";
+        private HitEffect[] onHit;
         private string vocals = "";
         private string lootTable = "";
         private int sightToken;
@@ -338,6 +339,7 @@ namespace OutpostZero.AI
             archetypeId = archetype.id;
             vocals = archetype.vocals ?? "";
             lootTable = archetype.lootTable ?? "";
+            onHit = HitEffects.For(archetype.onHitEffects, archetype.specialAbility);
             ModelId = CharacterRig.ModelId(archetype.modelPath);
             if (archetype.hitVfx != VfxEvent.None) HitVfx = archetype.hitVfx;
             if (archetype.deathVfx != VfxEvent.None) DeathVfx = archetype.deathVfx;
@@ -1078,10 +1080,11 @@ namespace OutpostZero.AI
                 var effects = currentTarget.GetComponent<StatusEffectController>();
                 if (effects != null)
                 {
-                    bool runner = specialAbility == ZombieSpecialAbility.Lunge;
-                    if (ClawCut.Opens(runner, Random.value)) effects.ApplyBleed(5f);
-                    if (ClawCut.Infects(Random.value)) effects.ApplyInfection(8f);
-                    if (specialAbility == ZombieSpecialAbility.Charge) effects.Knockdown(0.7f);
+                    var landed = onHit ?? HitEffects.Default(specialAbility);
+                    for (int i = 0; i < landed.Length; i++)
+                    {
+                        if (landed[i].Lands(Random.value)) effects.Apply(landed[i].kind, landed[i].seconds);
+                    }
                 }
             }
         }

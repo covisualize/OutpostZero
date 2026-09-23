@@ -31,3 +31,10 @@ MonoBehaviour:
   vocals: runner
   deathVfx: 14
   lootTable: runner
+  onHitEffects:
+  - kind: 1
+    chance: 0.35
+    seconds: 5
+  - kind: 2
+    chance: 0.2
+    seconds: 8

@@ -31,3 +31,7 @@ MonoBehaviour:
   vocals: walker
   deathVfx: 14
   lootTable: walker
+  onHitEffects:
+  - kind: 2
+    chance: 0.2
+    seconds: 8

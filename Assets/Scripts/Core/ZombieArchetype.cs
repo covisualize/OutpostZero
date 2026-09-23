@@ -65,5 +65,8 @@ namespace OutpostZero.Core
         /// <summary>Loot table the body rolls when it dies; empty drops the old scrap chance.</summary>
         [Tooltip("Loot table id rolled on death (walker, runner, brute). Empty keeps the plain scrap drop.")]
         public string lootTable = "";
+        /// <summary>Conditions a landed hit can leave, each rolled on its own. Empty uses the built-in set for the special ability.</summary>
+        [Tooltip("Conditions a landed hit can leave, each rolled on its own. Empty uses the built-in set for the special ability.")]
+        public HitEffect[] onHitEffects = new HitEffect[0];
     }
 }

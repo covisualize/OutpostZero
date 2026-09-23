@@ -281,7 +281,7 @@ namespace OutpostZero.Core
             lifetimeKills++;
             killTape.Note(KillTape.Name(archetypeId));
             KillTapeVersion++;
-            PlayerRegistry.Current?.GetComponent<StatusEffectController>()?.ApplyAdrenaline(Affliction.AdrenalineSeconds);
+            PlayerRegistry.Current?.GetComponent<StatusEffectController>()?.Apply(StatusKind.Adrenaline, 0f);
             OnZombiesKilledChanged?.Invoke(zombiesKilled);
             if (!string.IsNullOrEmpty(archetypeId)) CodexDirector.Instance?.Unlock("zombie." + archetypeId);
         }

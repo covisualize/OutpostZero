@@ -17,6 +17,7 @@ MonoBehaviour:
   category: 5
   weight: 0.8
   use: 11
+  useEffect: 0
   heal: 0
   hunger: 0
   thirst: 0

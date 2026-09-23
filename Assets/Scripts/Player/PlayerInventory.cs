@@ -198,7 +198,7 @@ namespace OutpostZero.Player
             if (record == null) return false;
             if (record.Use == OutpostZero.Items.ItemUse.Ammo) return false;
             if (record.Id == "medkit") return UseMedkit();
-            if (record.Id == "antibiotics")
+            if (UseEffects.Treats(record.Effect, UseEffect.CureInfection))
             {
                 var fever = GetComponent<StatusEffectController>();
                 bool street = fever != null && Affliction.AntibioticsWork(fever.InfectionStage);
@@ -216,7 +216,7 @@ namespace OutpostZero.Player
                 else GameplayFeedback.Toast(WoundEase.Note(FieldHand.Breaks(null), leaderEased, null));
                 return true;
             }
-            if (record.Id == "painkillers")
+            if (UseEffects.Treats(record.Effect, UseEffect.PainRelief))
             {
                 if (!TryConsume(id)) return false;
                 GetComponent<StatusEffectController>()?.ApplyPainkiller();
@@ -248,7 +248,7 @@ namespace OutpostZero.Player
             }
             if (!TryConsume(id)) return false;
             bool eased = false;
-            if (record.Id == "bandage")
+            if (UseEffects.Treats(record.Effect, UseEffect.StopBleeding))
             {
                 GetComponent<StatusEffectController>()?.StopBleed();
                 eased = SurvivorRoster.Instance != null && SurvivorRoster.Instance.EaseLeader();
@@ -489,8 +489,11 @@ namespace OutpostZero.Player
             medicalKits--;
             LastDoseSkill = SurvivorRoster.LeaderPractice("Medic");
             health?.Heal(FieldHand.Medkit(LastDoseSkill) + HandDepth.Heal(LastDoseSkill));
-            effects?.StopBleed();
-            effects?.CureInfection();
+            var kit = OutpostZero.Items.ItemCatalog.Find("medkit");
+            var treats = kit != null ? kit.Effect : UseEffects.Medkit;
+            if (UseEffects.Treats(treats, UseEffect.StopBleeding)) effects?.StopBleed();
+            if (UseEffects.Treats(treats, UseEffect.CureInfection)) effects?.CureInfection();
+            if (UseEffects.Treats(treats, UseEffect.PainRelief)) effects?.ApplyPainkiller();
             LastEase = SurvivorRoster.Instance != null && SurvivorRoster.Instance.EaseLeader();
             RecalculateWeight();
             OnInventoryChanged?.Invoke();

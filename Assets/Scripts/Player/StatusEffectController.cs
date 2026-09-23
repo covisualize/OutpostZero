@@ -28,14 +28,19 @@ namespace OutpostZero.Player
         public float Infection => infection;
         public int InfectionStage => Affliction.Stage(infection);
         public bool IsKnockedDown => knockdownRemaining > 0f;
-        public float SprintBonus => adrenaline > 0f ? Affliction.AdrenalineSprint : 1f;
+        public float SprintBonus => adrenaline > 0f ? StatusTable.Of(StatusKind.Adrenaline).Scale : 1f;
         public bool IsBurning => burnLeft > 0f;
+        public float PoisonLeft => poisonRemaining > 0f ? poisonRemaining : 0f;
+        public float AdrenalineLeft => adrenaline > 0f ? adrenaline : 0f;
+        public float KnockdownLeft => knockdownRemaining > 0f ? knockdownRemaining : 0f;
+        /// <summary>Seconds until the infection reaches its next stage; 0 when clean or at the last.</summary>
+        public float InfectionToNext => StatusTimer.ToNextStage(infection);
         public float SlowMultiplier
         {
             get
             {
-                float slow = slowRemaining > 0f ? 0.55f : 1f;
-                if (InfectionStage >= 2) slow *= 0.85f;
+                float slow = slowRemaining > 0f ? StatusTable.Of(StatusKind.Slowed).Scale : 1f;
+                if (InfectionStage >= 2) slow *= StatusTable.Of(StatusKind.Infected).Scale;
                 return slow;
             }
         }
@@ -43,6 +48,22 @@ namespace OutpostZero.Player
         private void Awake()
         {
             health = GetComponent<HealthSystem>();
+            StatusBook.Ensure();
+        }
+
+        /// <summary>Starts a condition from data: a zombie's hit effect, a hazard or an item. Seconds of 0 or less take the row's length.</summary>
+        public void Apply(StatusKind kind, float seconds)
+        {
+            float span = StatusTable.SecondsFor(kind, seconds);
+            switch (kind)
+            {
+                case StatusKind.Bleeding: ApplyBleed(span); break;
+                case StatusKind.Infected: ApplyInfection(span); break;
+                case StatusKind.Poisoned: ApplyPoison(span); break;
+                case StatusKind.Adrenaline: ApplyAdrenaline(span); break;
+                case StatusKind.KnockedDown: Knockdown(span); break;
+                case StatusKind.Slowed: ApplySlow(span); break;
+            }
         }
 
         public void ApplyPoison(float seconds)
@@ -197,8 +218,8 @@ namespace OutpostZero.Player
             tick -= dt;
             if (tick > 0f || health == null || health.IsDead) return;
             tick = 1f;
-            if (poisonRemaining > 0f) health.TakeDamage(4f, transform.position, Vector3.zero, gameObject);
-            if (IsBleeding) health.TakeDamage(Affliction.BleedPerSecond, transform.position, Vector3.zero, gameObject);
+            if (poisonRemaining > 0f) health.TakeDamage(StatusTable.Of(StatusKind.Poisoned).DamagePerSecond, transform.position, Vector3.zero, gameObject);
+            if (IsBleeding) health.TakeDamage(StatusTable.Of(StatusKind.Bleeding).DamagePerSecond, transform.position, Vector3.zero, gameObject);
             if (Affliction.Fatal(infection)) health.TakeDamage(health.CurrentHealth + 5f, transform.position, Vector3.zero, gameObject);
         }
     }

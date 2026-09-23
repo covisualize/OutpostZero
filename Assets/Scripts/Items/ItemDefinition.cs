@@ -20,6 +20,8 @@ namespace OutpostZero.Items
         public float weight = 0.1f;
         [Tooltip("What using the item does.")]
         public ItemUse use = ItemUse.None;
+        [Tooltip("Conditions using it treats: stop bleeding, cure infection (stages I and II), pain relief (20 health over 20 s).")]
+        public UseEffect useEffect = UseEffect.None;
         [Tooltip("Health restored on use, in hit points.")]
         public int heal;
         [Tooltip("Hunger restored on use, out of 100.")]
@@ -40,6 +42,7 @@ namespace OutpostZero.Items
             Category = category,
             Weight = weight,
             Use = use,
+            Effect = useEffect,
             Heal = heal,
             Hunger = hunger,
             Thirst = thirst
@@ -53,6 +56,7 @@ namespace OutpostZero.Items
             category = record.Category;
             weight = record.Weight;
             use = record.Use;
+            useEffect = record.Effect;
             heal = record.Heal;
             hunger = record.Hunger;
             thirst = record.Thirst;

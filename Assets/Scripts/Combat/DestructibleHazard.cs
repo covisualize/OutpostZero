@@ -115,7 +115,7 @@ namespace OutpostZero.Combat
                     if (kind == HazardKind.Toxic)
                     {
                         var effects = hit.GetComponentInParent<Player.StatusEffectController>();
-                        if (effects != null) effects.ApplyPoison(6f);
+                        if (effects != null) effects.Apply(StatusKind.Poisoned, 0f);
                     }
                 }
             }

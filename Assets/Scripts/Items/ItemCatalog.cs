@@ -20,6 +20,16 @@ namespace OutpostZero.Items
         Cell
     }
 
+    /// <summary>Conditions an item treats when used, on top of its heal and needs. Stored as a bit mask in the item assets.</summary>
+    [System.Flags]
+    public enum UseEffect
+    {
+        None = 0,
+        StopBleeding = 1,
+        CureInfection = 2,
+        PainRelief = 4
+    }
+
     public sealed class ItemRecord
     {
         public string Id;
@@ -32,6 +42,7 @@ namespace OutpostZero.Items
         public Core.WeaponType AmmoType;
         public int AmmoAmount;
         public ItemUse Use;
+        public UseEffect Effect;
     }
 
     /// <summary>
@@ -42,10 +53,10 @@ namespace OutpostZero.Items
     {
         private static readonly List<ItemRecord> records = new List<ItemRecord>
         {
-            new ItemRecord { Id = "medkit", DisplayName = "Medkit", Category = Core.ItemCategory.Medical, Weight = 0.5f, Heal = 50, Use = ItemUse.Heal },
-            new ItemRecord { Id = "bandage", DisplayName = "Bandage", Category = Core.ItemCategory.Medical, Weight = 0.1f, Heal = 10, Use = ItemUse.Heal },
-            new ItemRecord { Id = "antibiotics", DisplayName = "Antibiotics", Category = Core.ItemCategory.Medical, Weight = 0.15f, Use = ItemUse.Cure },
-            new ItemRecord { Id = "painkillers", DisplayName = "Painkillers", Category = Core.ItemCategory.Medical, Weight = 0.1f, Use = ItemUse.Relief },
+            new ItemRecord { Id = "medkit", DisplayName = "Medkit", Category = Core.ItemCategory.Medical, Weight = 0.5f, Heal = 50, Use = ItemUse.Heal, Effect = UseEffect.StopBleeding | UseEffect.CureInfection },
+            new ItemRecord { Id = "bandage", DisplayName = "Bandage", Category = Core.ItemCategory.Medical, Weight = 0.1f, Heal = 10, Use = ItemUse.Heal, Effect = UseEffect.StopBleeding },
+            new ItemRecord { Id = "antibiotics", DisplayName = "Antibiotics", Category = Core.ItemCategory.Medical, Weight = 0.15f, Use = ItemUse.Cure, Effect = UseEffect.CureInfection },
+            new ItemRecord { Id = "painkillers", DisplayName = "Painkillers", Category = Core.ItemCategory.Medical, Weight = 0.1f, Use = ItemUse.Relief, Effect = UseEffect.PainRelief },
             new ItemRecord { Id = "canned_food", DisplayName = "Canned Food", Category = Core.ItemCategory.FoodWater, Weight = 0.4f, Hunger = 35f, Use = ItemUse.Food },
             new ItemRecord { Id = "raw_food", DisplayName = "Raw Food", Category = Core.ItemCategory.FoodWater, Weight = 0.35f, Hunger = 12f, Use = ItemUse.Food },
             new ItemRecord { Id = "water", DisplayName = "Water Bottle", Category = Core.ItemCategory.FoodWater, Weight = 0.5f, Thirst = 40f, Use = ItemUse.Water },

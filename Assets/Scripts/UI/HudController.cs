@@ -75,6 +75,7 @@ namespace OutpostZero.UI
         private bool shownReloading;
         private int shownNeeds = -1, shownBangs = -1, shownQuestions = -1, shownTape = -1, shownRescue = -1;
         private int shownTutorial = int.MinValue, shownTimer = -1, shownWeapons = -1, shownActive = -1, shownHot = -2;
+        private int shownPoison = -1, shownRush = -1;
         private int shownLamp = -1, shownContacts = -1, shownInfection = -1, shownToasts = -1, shownLow = -1;
         private int vision;
         private string language = "";
@@ -528,6 +529,8 @@ namespace OutpostZero.UI
             status[6].text = Loc.T("hud.thirsty");
             status[7].text = Loc.T("hud.exhausted");
             shownInfection = -1;
+            shownPoison = -1;
+            shownRush = -1;
             shownLamp = -1;
             shownContacts = -1;
             shownTape = -1;
@@ -761,12 +764,26 @@ namespace OutpostZero.UI
             {
                 Flag(0, effects.IsBleeding);
                 Flag(1, effects.IsPoisoned);
-                int stage = effects.InfectionStage;
-                if (stage != shownInfection)
+                int poison = StatusTimer.Shown(effects.PoisonLeft);
+                if (poison != shownPoison)
                 {
-                    shownInfection = stage;
-                    status[2].text = StreetHud.Infection(stage, null);
+                    shownPoison = poison;
+                    status[1].text = StatusTimer.Pill(Loc.T("hud.poison"), poison);
+                }
+                int stage = effects.InfectionStage;
+                int turn = StatusTimer.Shown(effects.InfectionToNext);
+                int infectionKey = stage * 100000 + turn;
+                if (infectionKey != shownInfection)
+                {
+                    shownInfection = infectionKey;
+                    status[2].text = StatusTimer.Pill(StreetHud.Infection(stage, null), turn);
                     Flag(2, stage > 0);
+                }
+                int rush = StatusTimer.Shown(effects.AdrenalineLeft);
+                if (rush != shownRush)
+                {
+                    shownRush = rush;
+                    status[3].text = StatusTimer.Pill(Loc.T("hud.adrenaline"), rush);
                 }
                 Flag(3, effects.SprintBonus > 1f);
                 Flag(4, effects.IsBurning);
