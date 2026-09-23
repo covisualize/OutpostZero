@@ -29,6 +29,7 @@ namespace OutpostZero.Core
             Add<SettingsService>(host.gameObject);
             Add<AudioManager>(host.gameObject);
             Add<SaveSystem>(host.gameObject);
+            Add<StreetRun>(host.gameObject);
             Add<RunArchive>(host.gameObject);
             Add<SurvivorRoster>(host.gameObject);
             Add<WorldClock>(host.gameObject);

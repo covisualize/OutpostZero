@@ -170,24 +170,64 @@ namespace OutpostZero.Core
 
         public void BeginExpedition()
         {
+            Launch(false);
+        }
+
+        /// <summary>
+        /// Puts a Merciful save's street run back: the same street opens without spending travel, then the clock,
+        /// tallies, objective progress, the leader's spot and health, and the saved bodies replace the fresh ones.
+        /// </summary>
+        public bool ResumeExpedition(StreetSnapshot.Run run)
+        {
+            if (!Launch(true)) return false;
+            expeditionTimer = run.Timer;
+            zombiesKilled = run.Kills;
+            scrapLooted = run.Scrap;
+            OnZombiesKilledChanged?.Invoke(zombiesKilled);
+            OnScrapLootedChanged?.Invoke(scrapLooted);
+            ObjectiveTracker.Instance?.RestoreBoard(run.Board);
+            var player = PlayerRegistry.Current;
+            if (player != null)
+            {
+                var body = player.GetComponent<CharacterController>();
+                if (body != null) body.enabled = false;
+                player.transform.SetPositionAndRotation(new Vector3(run.X, player.transform.position.y, run.Z), Quaternion.Euler(0f, run.Yaw, 0f));
+                if (body != null) body.enabled = true;
+                player.GetComponent<Combat.HealthSystem>()?.Restore(run.Health);
+            }
+            var spawner = FindFirstObjectByType<AI.ZombieSpawner>();
+            if (spawner != null)
+            {
+                spawner.Clear();
+                foreach (var saved in run.Bodies)
+                {
+                    if (!spawner.SpawnAt(saved.X, saved.Z, saved.Variant, out GameObject zombie)) continue;
+                    zombie.GetComponent<Combat.HealthSystem>()?.Restore(saved.Health);
+                }
+            }
+            return true;
+        }
+
+        private bool Launch(bool resumed)
+        {
             if (WorldMapService.Instance != null && WorldMapService.Instance.Current != null && WorldMapService.Instance.Current.cleared && !WorldMapService.Instance.Endless)
             {
                 GameplayFeedback.Toast(GateLine.District(null));
-                return;
+                return false;
             }
-            bool fromCamp = currentState == GameState.CampManagement;
+            bool fromCamp = currentState == GameState.CampManagement && !resumed;
             if (fromCamp) WorldMapService.Instance?.SpendTravel();
             var needs = PlayerRegistry.Current != null ? PlayerRegistry.Current.GetComponent<SurvivalNeeds>() : null;
             if (needs != null && SurvivorRoster.Instance != null && SurvivorRoster.Instance.ReadLeaderNeeds(out float hunger, out float thirst))
             {
                 float fatigue = needs.Fatigue;
-                if (SurvivorRoster.Instance.LeaderFatigue(out float carried)) fatigue = BodyCarry.Carry(carried, needs.Fatigue, true);
+                if (!resumed && SurvivorRoster.Instance.LeaderFatigue(out float carried)) fatigue = BodyCarry.Carry(carried, needs.Fatigue, true);
                 needs.Apply(hunger, thirst, fatigue);
             }
             int wound = SurvivorRoster.Instance != null && SurvivorRoster.Instance.Leader != null
                 ? SurvivorRoster.Instance.Leader.injury
                 : 0;
-            if (wound > 0) GameplayFeedback.Toast(StreetLimp.Line(wound, null));
+            if (wound > 0 && !resumed) GameplayFeedback.Toast(StreetLimp.Line(wound, null));
             zombiesKilled = 0;
             scrapLooted = 0;
             expeditionTimer = 0f;
@@ -196,11 +236,12 @@ namespace OutpostZero.Core
             OnZombiesKilledChanged?.Invoke(zombiesKilled);
             OnScrapLootedChanged?.Invoke(scrapLooted);
             ObjectiveTracker.Instance?.ResetProgress();
-            WorldMapService.Instance?.ApplyOpening();
+            WorldMapService.Instance?.ApplyOpening(resumed);
             Expedition = OpenContext();
             BalanceTelemetry.ExpeditionStarted();
             if (fromCamp) CodexDirector.Hear("launch");
             SetState(GameState.ExpeditionActive);
+            return true;
         }
 
         private static ExpeditionContext OpenContext()

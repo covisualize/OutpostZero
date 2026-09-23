@@ -217,6 +217,15 @@ namespace OutpostZero.Expedition
             if (near != null) Note(ObjectiveKind.Reach, near, 1);
         }
 
+        public string PackBoard() => board != null ? board.PackProgress() : "";
+
+        public void RestoreBoard(string packed)
+        {
+            if (board == null || string.IsNullOrEmpty(packed)) return;
+            board.RestoreProgress(packed);
+            OnObjectivesChanged?.Invoke();
+        }
+
         public void ResetProgress()
         {
             kills = 0;

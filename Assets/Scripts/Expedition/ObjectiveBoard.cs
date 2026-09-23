@@ -133,6 +133,36 @@ namespace OutpostZero.Expedition
             return dropped;
         }
 
+        /// <summary>Progress as <c>id=count</c> pairs joined by commas, for a Merciful street save.</summary>
+        public string PackProgress()
+        {
+            var bits = new List<string>();
+            for (int i = 0; i < specs.Count; i++)
+            {
+                string id = specs[i].Id;
+                if (progress[i] <= 0 || id.IndexOfAny(Separators) >= 0) continue;
+                bits.Add(id + "=" + progress[i].ToString(System.Globalization.CultureInfo.InvariantCulture));
+            }
+            return string.Join(",", bits);
+        }
+
+        /// <summary>Puts packed progress back on the objectives still on the board; unknown ids and bad counts are skipped.</summary>
+        public void RestoreProgress(string packed)
+        {
+            if (string.IsNullOrEmpty(packed)) return;
+            foreach (string pair in packed.Split(','))
+            {
+                int cut = pair.IndexOf('=');
+                if (cut <= 0) continue;
+                string id = pair.Substring(0, cut);
+                if (!int.TryParse(pair.Substring(cut + 1), System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out int count) || count < 0) continue;
+                for (int i = 0; i < specs.Count; i++)
+                    if (specs[i].Id == id) progress[i] = Math.Min(specs[i].Count, count);
+            }
+        }
+
+        private static readonly char[] Separators = { ',', '=', '|', ';', ':' };
+
         public bool RequiredDone
         {
             get

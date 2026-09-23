@@ -31,6 +31,12 @@ namespace OutpostZero.Shell
             return at == OutpostZero.Core.GameState.CampManagement;
         }
 
+        /// <summary>Merciful also saves a living leader's street run, which loads back onto the same street.</summary>
+        public static bool ManualAllowed(OutpostZero.Core.GameState state, OutpostZero.Core.GameState resume, bool merciful, bool leaderAlive)
+        {
+            return ManualAllowed(state, resume) || StreetSnapshot.Keeps(merciful, state, resume, leaderAlive);
+        }
+
         public static int Manual(int slot)
         {
             if (slot < 0) return 0;

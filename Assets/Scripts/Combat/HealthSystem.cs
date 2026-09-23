@@ -92,6 +92,15 @@ namespace OutpostZero.Combat
             isDead = false;
         }
 
+        /// <summary>Puts a saved health value back on a living body. A save never holds a death, so zero or less is ignored.</summary>
+        public void Restore(float value)
+        {
+            if (value <= 0f) return;
+            isDead = false;
+            currentHealth = Mathf.Min(maxHealth, value);
+            OnHealthChanged?.Invoke(currentHealth, maxHealth);
+        }
+
         public void ResetHealth()
         {
             isDead = false;

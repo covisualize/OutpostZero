@@ -161,7 +161,7 @@ namespace OutpostZero.Shell
             if (burned > 0.05f) GameplayFeedback.Toast(Loc.T("camp.trip") + " " + FuelTank.Label(burned));
         }
 
-        public void ApplyOpening()
+        public void ApplyOpening(bool resumed = false)
         {
             string districtId = Current != null ? Current.id : "ash_market";
             var rules = DistrictRules.For(districtId);
@@ -174,7 +174,7 @@ namespace OutpostZero.Shell
             if (tutorial) ObjectiveTracker.Instance?.SetGoals(TutorialRun.KillGoal, TutorialRun.Scrap(rules.ScrapGoal));
             else ObjectiveTracker.Instance?.SetGoals(kills, rules.ScrapGoal);
             float tension = rules.OpeningTension + curve.Tension;
-            bool ambush = !tutorial && FactionTrade.Instance != null && FactionTrade.Instance.Ambush;
+            bool ambush = !tutorial && !resumed && FactionTrade.Instance != null && FactionTrade.Instance.Ambush;
             if (ambush) tension += 12f;
             float interval = Mathf.Max(3f, rules.SpawnInterval * curve.Interval);
             if (endless)

@@ -72,7 +72,21 @@ namespace OutpostZero.Shell
         public bool Save() => Save(true);
 
         public static bool CanSaveManually =>
-            GameManager.Instance == null || SaveSlots.ManualAllowed(GameManager.Instance.CurrentState, GameManager.Instance.ResumeState);
+            GameManager.Instance == null || SaveSlots.ManualAllowed(
+                GameManager.Instance.CurrentState,
+                GameManager.Instance.ResumeState,
+                SettingsService.Instance != null && SettingsService.Instance.Merciful,
+                LeaderAlive);
+
+        private static bool LeaderAlive
+        {
+            get
+            {
+                var player = PlayerRegistry.Current;
+                var health = player != null ? player.GetComponent<HealthSystem>() : null;
+                return health != null && !health.IsDead;
+            }
+        }
 
         public bool Save(bool announce)
         {
@@ -458,6 +472,7 @@ namespace OutpostZero.Shell
                 GridBuilder.Instance.Restore(modules.ToArray());
             }
             if (GameManager.Instance != null) GameManager.Instance.SetState(GameState.CampManagement);
+            StreetRun.Instance?.Resume();
         }
 
         private static int ReadPractice(string packed, int index)

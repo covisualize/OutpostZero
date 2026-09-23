@@ -66,8 +66,13 @@ namespace OutpostZero.AI
             activeZombies.Clear();
         }
 
-        public bool SpawnAt(float x, float z, string variant)
+        public IReadOnlyList<GameObject> Active => activeZombies;
+
+        public bool SpawnAt(float x, float z, string variant) => SpawnAt(x, z, variant, out _);
+
+        public bool SpawnAt(float x, float z, string variant, out GameObject zombie)
         {
+            zombie = null;
             if (activeZombies.Count >= MaxAlive) return false;
             GameObject fallback = zombiePrefab;
             if (fallback == null && zombiePrefabVariants != null && zombiePrefabVariants.Length > 0) fallback = zombiePrefabVariants[0];
@@ -76,7 +81,7 @@ namespace OutpostZero.AI
             Vector3 pos = new Vector3(x, 0f, z);
             if (NavMesh.SamplePosition(pos, out NavMeshHit hit, 6f, NavMesh.AllAreas)) pos = hit.position;
             Quaternion rotation = Quaternion.Euler(0f, Random.Range(0f, 360f), 0f);
-            GameObject zombie = pool != null ? pool.Rent(chosen, pos, rotation) : Instantiate(chosen, pos, rotation);
+            zombie = pool != null ? pool.Rent(chosen, pos, rotation) : Instantiate(chosen, pos, rotation);
             if (zombie == null) return false;
             zombie.SetActive(true);
             activeZombies.Add(zombie);
