@@ -179,7 +179,8 @@ namespace OutpostZero.Items
             return next;
         }
 
-        private static bool Give(PlayerInventory inventory, string id, int count)
+        /// <summary>Hands one grant to the leader: rounds feed the matching gun, scrap goes to the count, the rest to the pack.</summary>
+        public static bool Give(PlayerInventory inventory, string id, int count)
         {
             var record = ItemCatalog.Find(id);
             if (record == null || count <= 0) return false;

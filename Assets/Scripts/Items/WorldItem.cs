@@ -26,7 +26,9 @@ namespace OutpostZero.Items
             if (!CanInteract(inventory)) return;
             var record = ItemCatalog.Find(itemId);
             if (record == null) return;
-            if (!inventory.TryAddItem(record.Id, record.DisplayName, record.Category, count, record.Weight))
+            bool got = LootContainer.Give(inventory, record.Id, count)
+                || (record.Use == ItemUse.Ammo && inventory.TryAddItem(record.Id, record.DisplayName, record.Category, count, record.Weight));
+            if (!got)
             {
                 GameplayFeedback.Toast(Loc.T("camp.heavy"));
                 return;
