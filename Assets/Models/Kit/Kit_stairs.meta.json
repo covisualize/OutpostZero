@@ -2,8 +2,8 @@
   "id": "Kit_stairs",
   "category": "Kit",
   "generator": "generate_kit.build_piece",
-  "generatorHash": "355a836a094828df5e6eb74033ba475a9e4a1102e1645d7f9701c24a69330c2a",
-  "gitSha": "21ed7f54ecaf729a3b2fd74b6f3babebc62fce0b",
+  "generatorHash": "42eda96c13960642ec9013ddc3117169bf798d185d40dc131b33d481c9a89176",
+  "gitSha": "6d865e2d876840354ba2219ba9ee42e81f47f678",
   "blender": "4.2.11",
   "tags": [
     "kit",

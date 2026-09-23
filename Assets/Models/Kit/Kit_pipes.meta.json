@@ -2,8 +2,8 @@
   "id": "Kit_pipes",
   "category": "Kit",
   "generator": "generate_kit.build_piece",
-  "generatorHash": "d6072acf5567c92fd0fc0e6e99c7ca86c0d54f5e8476548088737f42462acafa",
-  "gitSha": "21ed7f54ecaf729a3b2fd74b6f3babebc62fce0b",
+  "generatorHash": "7d387175e67cefba53b446ab8990c2cb454c1d03a2f9d6ffc4f2d110065f4caa",
+  "gitSha": "6d865e2d876840354ba2219ba9ee42e81f47f678",
   "blender": "4.2.11",
   "tags": [
     "kit",

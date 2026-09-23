@@ -68,6 +68,11 @@ class CharacterRigTests(unittest.TestCase):
         merchant = clips_for("NPC_Merchant")
         self.assertIn("Work", merchant)
         self.assertIn("Talk", merchant)
+        colonist = clips_for("Colonist_Survivor")
+        self.assertIn("Work", colonist)
+        self.assertIn("Talk", colonist)
+        for name in SURVIVOR_CLIPS:
+            self.assertIn(name, colonist)
         for clips in (survivor, walker, brute, merchant, clips_for("Colonist_Survivor")):
             for keys in clips.values():
                 for bone, _frame, _rotation in keys:

@@ -51,7 +51,7 @@ class ManifestTests(unittest.TestCase):
         root = repo_root()
         expected = {
             "Assets/Models/Characters/Survivor_Leader.fbx": ("Sprint", "CrouchIdle", "Reload", "Death", "Takedown"),
-            "Assets/Models/Characters/Colonist_Survivor.fbx": ("Sprint", "Reload", "Melee"),
+            "Assets/Models/Characters/Colonist_Survivor.fbx": ("Sprint", "Reload", "Melee", "Work", "Talk"),
             "Assets/Models/Characters/Zombie_Walker.fbx": ("Shamble", "Attack", "DeathC"),
             "Assets/Models/Characters/Zombie_Runner.fbx": ("Lunge",),
             "Assets/Models/Characters/Zombie_Brute.fbx": ("Charge", "Roar"),

@@ -2,8 +2,8 @@
   "id": "Loot_Cloth",
   "category": "Weapons",
   "generator": "generate_items.build_cloth",
-  "generatorHash": "aaa66ea4fdd554ab8253cfbe545dea0ecbc3fcb55461f6d70f70d65570767460",
-  "gitSha": "21ed7f54ecaf729a3b2fd74b6f3babebc62fce0b",
+  "generatorHash": "e711f7bfbe88d723116372bb883398047110d85f7a60e0b6ba21321403e66e4c",
+  "gitSha": "6d865e2d876840354ba2219ba9ee42e81f47f678",
   "blender": "4.2.11",
   "tags": [
     "loot",

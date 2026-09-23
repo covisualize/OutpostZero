@@ -414,7 +414,7 @@ def clips_for(role):
         return _runner_clips()
     if "brute" in name:
         return _brute_clips()
-    if "merchant" in name:
+    if "merchant" in name or "colonist" in name:
         return _npc_clips()
     return _survivor_clips()
 

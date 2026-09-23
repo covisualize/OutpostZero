@@ -2,8 +2,8 @@
   "id": "Road_Tile_Intersection",
   "category": "Environment",
   "generator": "generate_architecture.build_road_intersection",
-  "generatorHash": "43f7a33c61dc0c1d5ca5c96ddcef16c2b749d911c1db6ca29af515d646c7561f",
-  "gitSha": "21ed7f54ecaf729a3b2fd74b6f3babebc62fce0b",
+  "generatorHash": "8144371248d7be852f5b2b6225e1244b848940e6f98f4b7bb04d1d35aaa2b3e7",
+  "gitSha": "6d865e2d876840354ba2219ba9ee42e81f47f678",
   "blender": "4.2.11",
   "tags": [
     "road"

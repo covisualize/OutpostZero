@@ -2,8 +2,8 @@
   "id": "Kit_shelf",
   "category": "Kit",
   "generator": "generate_kit.build_piece",
-  "generatorHash": "94e4a717b31f845827efa443d00c12b1bb1532acdb0ac3d9fcd37c9894268f75",
-  "gitSha": "21ed7f54ecaf729a3b2fd74b6f3babebc62fce0b",
+  "generatorHash": "30d968991ea3550284db13a7090fff8e10b2e23fe949986949bf07765cad1b9b",
+  "gitSha": "6d865e2d876840354ba2219ba9ee42e81f47f678",
   "blender": "4.2.11",
   "tags": [
     "kit",

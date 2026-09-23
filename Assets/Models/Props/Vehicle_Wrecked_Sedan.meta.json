@@ -2,8 +2,8 @@
   "id": "Vehicle_Wrecked_Sedan",
   "category": "Props",
   "generator": "generate_props.build_wrecked_sedan",
-  "generatorHash": "286561a18eaf1fd5cd5df087b2135178702b08f0a3758da3c4c64deb5bcebca0",
-  "gitSha": "21ed7f54ecaf729a3b2fd74b6f3babebc62fce0b",
+  "generatorHash": "4ac9b019fa87bc4b9f8a6f512d5a5d5b67e51c55eaa2f99d6a01f8863fcadc89",
+  "gitSha": "6d865e2d876840354ba2219ba9ee42e81f47f678",
   "blender": "4.2.11",
   "tags": [
     "vehicle",

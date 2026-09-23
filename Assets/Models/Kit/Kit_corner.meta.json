@@ -2,8 +2,8 @@
   "id": "Kit_corner",
   "category": "Kit",
   "generator": "generate_kit.build_piece",
-  "generatorHash": "5666eab99bc5241a30f5ae0008476f961762bad9f61fa13034ad40e196a3cc1d",
-  "gitSha": "21ed7f54ecaf729a3b2fd74b6f3babebc62fce0b",
+  "generatorHash": "94ba6a8ef7c5cc08f6405bdfaf1009b39e6973f024886523b79bfeb726b904d1",
+  "gitSha": "6d865e2d876840354ba2219ba9ee42e81f47f678",
   "blender": "4.2.11",
   "tags": [
     "kit",
