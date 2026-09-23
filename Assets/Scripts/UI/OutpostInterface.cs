@@ -611,7 +611,7 @@ namespace OutpostZero.UI
             parent.Add(SliderRow(Loc.T("set.text"), settings.TextScale, 0.8f, 1.6f, settings.SetTextScale));
             parent.Add(SliderRow(Loc.T("set.ui_scale"), settings.UiScale, PlayOptions.UiScaleMin, PlayOptions.UiScaleMax, settings.SetUiScale));
             parent.Add(SliderRow(Loc.T("set.hud"), settings.HudOpacity, 0.45f, 1f, settings.SetHudOpacity));
-            parent.Add(SliderRow(Loc.T("set.bright"), settings.Brightness, 0.6f, 1.4f, settings.SetBrightness));
+            parent.Add(BrightnessRow(settings));
             parent.Add(Button(settings.Subtitles ? Loc.T("set.subs_on") : Loc.T("set.subs_off"), () => settings.SetSubtitles(!settings.Subtitles)));
             parent.Add(Button(settings.QuietFlash ? Loc.T("set.flash_off") : Loc.T("set.flash_on"), settings.ToggleQuietFlash));
             parent.Add(Button(Loc.T("set.color") + " " + Loc.T(HudPalette.Name(settings.ColorblindMode)), settings.CycleColorblind));
@@ -1465,6 +1465,38 @@ namespace OutpostZero.UI
                 ((Label)row[0]).text = caption + " " + evt.newValue.ToString("0.00");
             });
             row.Add(slider);
+            return row;
+        }
+
+        private const float CalibrationMark = 36f;
+
+        private static VisualElement BrightnessRow(SettingsService settings)
+        {
+            var row = SliderRow(Loc.T("set.bright"), settings.Brightness, 0.6f, 1.4f, settings.SetBrightness);
+            var strip = new VisualElement();
+            strip.style.flexDirection = FlexDirection.Row;
+            strip.style.backgroundColor = Color.black;
+            strip.style.paddingLeft = strip.style.paddingRight = strip.style.paddingTop = strip.style.paddingBottom = 8f;
+            var marks = new VisualElement[BrightnessCheck.Marks.Length];
+            for (int i = 0; i < marks.Length; i++)
+            {
+                marks[i] = new VisualElement();
+                marks[i].style.width = marks[i].style.height = CalibrationMark;
+                marks[i].style.marginRight = 8f;
+                strip.Add(marks[i]);
+            }
+            void Paint(float stored)
+            {
+                for (int i = 0; i < marks.Length; i++)
+                {
+                    float shade = BrightnessCheck.Shade(BrightnessCheck.Marks[i], stored);
+                    marks[i].style.backgroundColor = new Color(shade, shade, shade, 1f);
+                }
+            }
+            Paint(settings.Brightness);
+            ((Slider)row[1]).RegisterValueChangedCallback(evt => Paint(evt.newValue));
+            row.Add(strip);
+            row.Add(Body(Loc.T("set.bright_hint")));
             return row;
         }
     }
