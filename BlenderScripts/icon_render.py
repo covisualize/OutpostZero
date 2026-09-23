@@ -8,6 +8,12 @@ on a dark pack slot. Same triangles in, same bytes out, on any machine.
 import math
 
 ICON_RENDER_SIZE = 64
+RENDERED_ICON_TAGS = ("item", "codex")
+
+
+def rendered(tags):
+    """Pack items and codex subjects get a mesh render for their Icon map; everything else keeps the albedo crop."""
+    return any(tag in (tags or ()) for tag in RENDERED_ICON_TAGS)
 SUPERSAMPLE = 4
 YAW_DEGREES = 125.0
 PITCH_DEGREES = 28.0

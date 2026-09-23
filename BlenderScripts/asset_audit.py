@@ -7,6 +7,7 @@ import sys
 import zlib
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from icon_render import rendered as icon_rendered  # noqa: E402
 
 TEXTURES = ("Albedo", "Normal", "AO", "Mask", "Icon")
 RENDERED_ICON = 64
@@ -179,7 +180,7 @@ def audit(root=None, manifest=None):
                 problems.append(stem + "_" + suffix + " missing texture")
                 continue
             size = png_size(map_path)
-            rendered = suffix == "Icon" and "item" in (entry.get("tags") or ())
+            rendered = suffix == "Icon" and icon_rendered(entry.get("tags"))
             side = RENDERED_ICON if rendered else icon
             expected = (side, side) if suffix == "Icon" else (full, full)
             if size != expected:

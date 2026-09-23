@@ -2,12 +2,13 @@
   "id": "Zombie_Runner",
   "category": "Characters",
   "generator": "generate_characters.build_zombie_runner",
-  "generatorHash": "62f40f91acab9f2344009622298f807f488380a3fa5aa5345e2a9807b265292f",
-  "gitSha": "d914dbebffd2fe166ff62b598070041b9d596484",
+  "generatorHash": "4a8d53b3272042ffd1ea5d081b4c662e71b7c863d5de11fc4cb6150536cba8a4",
+  "gitSha": "569a4affb2f2343f0bb3cd726e1fb503be9e7de7",
   "blender": "4.2.11",
   "tags": [
     "character",
-    "zombie"
+    "zombie",
+    "codex"
   ],
   "pivot": "bottom",
   "collider": "box",

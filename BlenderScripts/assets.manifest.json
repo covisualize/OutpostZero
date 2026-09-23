@@ -60,7 +60,8 @@
       "output": "Characters/Zombie_Walker.fbx",
       "tags": [
         "character",
-        "zombie"
+        "zombie",
+        "codex"
       ],
       "rig": "humanoid"
     },
@@ -71,7 +72,8 @@
       "output": "Characters/Zombie_Runner.fbx",
       "tags": [
         "character",
-        "zombie"
+        "zombie",
+        "codex"
       ],
       "rig": "humanoid"
     },
@@ -82,7 +84,8 @@
       "output": "Characters/Zombie_Brute.fbx",
       "tags": [
         "character",
-        "zombie"
+        "zombie",
+        "codex"
       ],
       "rig": "humanoid"
     },
@@ -93,7 +96,8 @@
       "output": "Characters/NPC_Merchant.fbx",
       "tags": [
         "character",
-        "survivor"
+        "survivor",
+        "codex"
       ],
       "rig": "humanoid"
     },
@@ -446,7 +450,8 @@
       "output": "Props/Barricade_Wood_Wire.fbx",
       "tags": [
         "barricade",
-        "cover"
+        "cover",
+        "codex"
       ]
     },
     {
@@ -587,7 +592,8 @@
       "output": "BaseBuilding/Base_Generator_Diesel.fbx",
       "tags": [
         "camp",
-        "module"
+        "module",
+        "codex"
       ]
     },
     {
@@ -597,7 +603,8 @@
       "output": "BaseBuilding/Base_MedicalCot.fbx",
       "tags": [
         "camp",
-        "module"
+        "module",
+        "codex"
       ]
     },
     {

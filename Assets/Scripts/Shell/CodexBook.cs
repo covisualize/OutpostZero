@@ -11,6 +11,7 @@ namespace OutpostZero.Shell
             public string Title;
             public string Body;
             public bool LockedUntilSeen;
+            public string Model;
         }
 
         public sealed class Hint
@@ -22,19 +23,28 @@ namespace OutpostZero.Shell
 
         public static readonly Entry[] Entries =
         {
-            new Entry { Id = "zombie.walker", Title = "Walker", Body = "Slow, loud, and enough of them to pin you. A scream pulls the ones you have not seen.", LockedUntilSeen = true },
-            new Entry { Id = "zombie.runner", Title = "Runner", Body = "Closes the gap with a lunge. Crouch and a corner buy you the reload.", LockedUntilSeen = true },
-            new Entry { Id = "zombie.brute", Title = "Brute", Body = "A charge that knocks you down. Barrels and a clear lane do more than a pistol.", LockedUntilSeen = true },
+            new Entry { Id = "zombie.walker", Model = "Zombie_Walker", Title = "Walker", Body = "Slow, loud, and enough of them to pin you. A scream pulls the ones you have not seen.", LockedUntilSeen = true },
+            new Entry { Id = "zombie.runner", Model = "Zombie_Runner", Title = "Runner", Body = "Closes the gap with a lunge. Crouch and a corner buy you the reload.", LockedUntilSeen = true },
+            new Entry { Id = "zombie.brute", Model = "Zombie_Brute", Title = "Brute", Body = "A charge that knocks you down. Barrels and a clear lane do more than a pistol.", LockedUntilSeen = true },
             new Entry { Id = "item.medkit", Title = "Medkit", Body = "Stops bleeding and puts health back. Q uses the one in your hands.", LockedUntilSeen = false },
-            new Entry { Id = "module.generator", Title = "Generator", Body = "Keeps the sanctuary lamps lit. It drinks fuel after dusk.", LockedUntilSeen = false },
-            new Entry { Id = "module.barricade", Title = "Barricade", Body = "The night raid hits the nearest boards. A guard slows the damage.", LockedUntilSeen = false },
-            new Entry { Id = "module.cot", Title = "Medical cot", Body = "Rest and a medic close wounds faster than waiting the night out.", LockedUntilSeen = false },
-            new Entry { Id = "faction.market", Title = "Ash Market", Body = "The merchant trades medkits, rifle ammo, and water for camp scrap.", LockedUntilSeen = false },
+            new Entry { Id = "module.generator", Model = "Base_Generator_Diesel", Title = "Generator", Body = "Keeps the sanctuary lamps lit. It drinks fuel after dusk.", LockedUntilSeen = false },
+            new Entry { Id = "module.barricade", Model = "Barricade_Wood_Wire", Title = "Barricade", Body = "The night raid hits the nearest boards. A guard slows the damage.", LockedUntilSeen = false },
+            new Entry { Id = "module.cot", Model = "Base_MedicalCot", Title = "Medical cot", Body = "Rest and a medic close wounds faster than waiting the night out.", LockedUntilSeen = false },
+            new Entry { Id = "faction.market", Model = "NPC_Merchant", Title = "Ash Market", Body = "The merchant trades medkits, rifle ammo, and water for camp scrap.", LockedUntilSeen = false },
             new Entry { Id = "mechanic.noise", Title = "Noise", Body = "Shots, sprints, and breaking barrels carry. Crouching cuts the footfall.", LockedUntilSeen = false },
             new Entry { Id = "mechanic.exposure", Title = "Exposure", Body = "Lamplight and the flashlight make you easier to spot. Dark is cover.", LockedUntilSeen = false },
             new Entry { Id = "mechanic.infection", Title = "Infection", Body = "A dirty wound worsens until a medkit or the cot clears it.", LockedUntilSeen = false },
             new Entry { Id = "mechanic.extract", Title = "Extraction", Body = "Finish the quota, then stand in the sanctuary gate. The bag stays if you fall.", LockedUntilSeen = false }
         };
+
+        public const string ItemPrefix = "item.";
+
+        public static string ItemOf(string entryId)
+        {
+            return !string.IsNullOrEmpty(entryId) && entryId.StartsWith(ItemPrefix, System.StringComparison.Ordinal)
+                ? entryId.Substring(ItemPrefix.Length)
+                : "";
+        }
 
         public static readonly Hint[] Hints =
         {

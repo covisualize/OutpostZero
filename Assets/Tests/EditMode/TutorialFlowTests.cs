@@ -3,6 +3,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using NUnit.Framework;
 using OutpostZero.Core;
+using OutpostZero.Items;
 using OutpostZero.Player;
 using OutpostZero.Shell;
 
@@ -101,6 +102,35 @@ namespace OutpostZero.Tests.EditMode
             Assert.AreEqual(1f, TutorialMark.Opacity(true, false, true));
             Assert.AreEqual(TutorialMark.Dim, TutorialMark.Opacity(true, false, false));
             Assert.Less(TutorialMark.Dim, 1f);
+        }
+
+        [Test]
+        public void EveryCodexSubjectHasARenderedIcon()
+        {
+            string root = Directory.GetCurrentDirectory();
+            string icons = File.ReadAllText(Path.Combine(root, "Assets", "Resources", CodexIcons.ResourcePath + ".asset"));
+            string manifest = File.ReadAllText(Path.Combine(root, "BlenderScripts", "assets.manifest.json"));
+            int pictured = 0;
+            foreach (var entry in CodexBook.Entries)
+            {
+                string item = CodexBook.ItemOf(entry.Id);
+                if (item.Length > 0)
+                {
+                    Assert.IsNotNull(ItemCatalog.Find(item), entry.Id);
+                    pictured++;
+                    continue;
+                }
+                if (!entry.Id.StartsWith("zombie.") && !entry.Id.StartsWith("module.") && !entry.Id.StartsWith("faction.")) continue;
+                Assert.IsFalse(string.IsNullOrEmpty(entry.Model), entry.Id + " names no model");
+                StringAssert.Contains("  - id: " + entry.Model + "\n    icon: {fileID: 2800000, guid: ", icons.Replace("\r\n", "\n"), entry.Id);
+                var tagged = new Regex(@"""id"": """ + entry.Model + @""",[^}]*?""tags"": \[[^\]]*""codex""");
+                Assert.IsTrue(tagged.IsMatch(manifest), entry.Model + " is not tagged codex, so its icon is an albedo crop");
+                pictured++;
+            }
+            Assert.GreaterOrEqual(pictured, 8);
+            Assert.AreEqual("medkit", CodexBook.ItemOf("item.medkit"));
+            Assert.AreEqual("", CodexBook.ItemOf("zombie.walker"));
+            Assert.AreEqual("", CodexBook.ItemOf(null));
         }
 
         [Test]

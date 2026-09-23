@@ -2,8 +2,8 @@
   "id": "Kit_parapet",
   "category": "Kit",
   "generator": "generate_kit.build_piece",
-  "generatorHash": "4875951b045f1083771b28fcd5d7493868482bbee23b9400185e78f279a768a7",
-  "gitSha": "d914dbebffd2fe166ff62b598070041b9d596484",
+  "generatorHash": "8731297a958b082c75df26999c5030541bc9464d18b830ca207b7f3d529a8029",
+  "gitSha": "569a4affb2f2343f0bb3cd726e1fb503be9e7de7",
   "blender": "4.2.11",
   "tags": [
     "kit",

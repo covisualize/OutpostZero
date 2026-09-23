@@ -2,8 +2,8 @@
   "id": "Prop_Crate_Wood",
   "category": "Props",
   "generator": "generate_props.build_crate_wood",
-  "generatorHash": "965da7ffe794caaf7483c7d25d668f4422870b92234abf51f78db0d9dd8d7e7f",
-  "gitSha": "d914dbebffd2fe166ff62b598070041b9d596484",
+  "generatorHash": "d50b8909e53393209c4b25518473410163f980b64722723903d29ccb3ef41e70",
+  "gitSha": "569a4affb2f2343f0bb3cd726e1fb503be9e7de7",
   "blender": "4.2.11",
   "tags": [
     "container"

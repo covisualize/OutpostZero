@@ -131,13 +131,20 @@ def build_one(entry, models_root):
     blender_utils.export_fbx(output, animated=rigged, texture_size=bake.get("size"), unwrap=bake.get("uv", True))
     stats = dict(blender_utils.EXPORTS[-1])
     stats["lodTris"] = lod_triangles(names)
-    if "item" in (entry.get("tags") or ()):
+    if icon_rendered(entry.get("tags")):
         render_item_icon(output)
     return stats
 
 
+def icon_rendered(tags):
+    import icon_render
+
+    return icon_render.rendered(tags)
+
+
 def render_item_icon(output):
-    """Items show in the pack, so their Icon map is a render of the mesh rather than an albedo crop."""
+    """Items show in the pack and codex subjects in the codex, so their Icon map is a render of the mesh
+    rather than an albedo crop."""
     import bpy
     import icon_render
     import texture_set

@@ -2,8 +2,8 @@
   "id": "Loot_CannedFood",
   "category": "Weapons",
   "generator": "generate_items.build_canned_food",
-  "generatorHash": "f11293fd726c3e521496f6b2b34496637a942554a2cf71666a34c7016ef1ddaf",
-  "gitSha": "d914dbebffd2fe166ff62b598070041b9d596484",
+  "generatorHash": "f3b191ad624ef75dc1611fcc1c045ed9685bb19329632572691c38ed585adbae",
+  "gitSha": "569a4affb2f2343f0bb3cd726e1fb503be9e7de7",
   "blender": "4.2.11",
   "tags": [
     "loot",

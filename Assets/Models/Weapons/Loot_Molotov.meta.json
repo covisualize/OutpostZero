@@ -2,8 +2,8 @@
   "id": "Loot_Molotov",
   "category": "Weapons",
   "generator": "generate_items.build_molotov",
-  "generatorHash": "1c7fd7983d9b475271475f508a643f73295a3e6940fc5c6e54573600cedc2cf8",
-  "gitSha": "d914dbebffd2fe166ff62b598070041b9d596484",
+  "generatorHash": "2c68455d11eebe67597367d1502b273898ba5277508c7c2456ae195b480a5990",
+  "gitSha": "569a4affb2f2343f0bb3cd726e1fb503be9e7de7",
   "blender": "4.2.11",
   "tags": [
     "loot",

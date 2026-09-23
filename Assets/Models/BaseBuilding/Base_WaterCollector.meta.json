@@ -2,8 +2,8 @@
   "id": "Base_WaterCollector",
   "category": "BaseBuilding",
   "generator": "generate_base_building.build_water_collector",
-  "generatorHash": "9b1e9954f467158200bcd63989be782ef136b754a6ab940cf2c474ed506759d1",
-  "gitSha": "d914dbebffd2fe166ff62b598070041b9d596484",
+  "generatorHash": "d10f5d1e198fd26b66939a233e21340d81356f045fb51c5cd69f5a568d1405c5",
+  "gitSha": "569a4affb2f2343f0bb3cd726e1fb503be9e7de7",
   "blender": "4.2.11",
   "tags": [
     "camp",

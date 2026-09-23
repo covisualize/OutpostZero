@@ -2,8 +2,8 @@
   "id": "Base_Watchtower",
   "category": "BaseBuilding",
   "generator": "generate_base_building.build_watchtower",
-  "generatorHash": "2c23204614533c20fc01235c35c60d30a3f8113d53a3bba15cdb6ce910b122c1",
-  "gitSha": "d914dbebffd2fe166ff62b598070041b9d596484",
+  "generatorHash": "37947cc45f49770d09f9dc6016d4706c4f17515ffe733d776588b7b9720f4e18",
+  "gitSha": "569a4affb2f2343f0bb3cd726e1fb503be9e7de7",
   "blender": "4.2.11",
   "tags": [
     "camp",

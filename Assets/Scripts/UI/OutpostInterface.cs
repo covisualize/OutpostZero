@@ -586,8 +586,11 @@ namespace OutpostZero.UI
                 {
                     if (CodexBook.Entries[i].Id == codexId) selected = CodexBook.Entries[i];
                 }
-                parent.Add(Title(selected != null && CodexBook.Visible(selected, packed) ? Loc.EntryTitle(selected.Id, selected.Title) : Loc.T("camp.unknown")));
-                parent.Add(Body(selected != null && CodexBook.Visible(selected, packed) ? Loc.EntryBody(selected.Id, selected.Body) : Loc.T("camp.unseen")));
+                bool shown = selected != null && CodexBook.Visible(selected, packed);
+                var portrait = shown ? CodexIcons.For(selected) : null;
+                if (portrait != null) parent.Add(Picture(portrait, 96));
+                parent.Add(Title(shown ? Loc.EntryTitle(selected.Id, selected.Title) : Loc.T("camp.unknown")));
+                parent.Add(Body(shown ? Loc.EntryBody(selected.Id, selected.Body) : Loc.T("camp.unseen")));
                 parent.Add(Button(Loc.T("menu.back"), Close));
                 return;
             }
@@ -597,7 +600,11 @@ namespace OutpostZero.UI
                 var entry = CodexBook.Entries[i];
                 string id = entry.Id;
                 bool visible = CodexBook.Visible(entry, packed);
-                parent.Add(Button(visible ? Loc.EntryTitle(entry.Id, entry.Title) : Loc.T("camp.unknown"), () => { codexId = id; Open(MenuScreen.CodexEntry); }));
+                var line = new VisualElement { style = { flexDirection = FlexDirection.Row, alignItems = Align.Center } };
+                var thumb = visible ? CodexIcons.For(entry) : null;
+                if (thumb != null) line.Add(Picture(thumb, 28));
+                line.Add(Button(visible ? Loc.EntryTitle(entry.Id, entry.Title) : Loc.T("camp.unknown"), () => { codexId = id; Open(MenuScreen.CodexEntry); }));
+                parent.Add(line);
             }
             parent.Add(Button(Loc.T("set.close"), Close));
         }
@@ -1327,12 +1334,7 @@ namespace OutpostZero.UI
                 var icon = ItemDatabase.Icon(id);
                 if (icon != null)
                 {
-                    var picture = new VisualElement();
-                    picture.style.width = 32;
-                    picture.style.height = 32;
-                    picture.style.marginRight = 6;
-                    picture.style.backgroundImage = new StyleBackground(icon);
-                    row.Add(picture);
+                    row.Add(Picture(icon, 32));
                 }
                 var label = Body();
                 label.text = Loc.Item(id) + " x" + item.Quantity;
@@ -1595,6 +1597,17 @@ namespace OutpostZero.UI
             label.style.fontSize = 18;
             label.style.marginBottom = 8;
             return label;
+        }
+
+        private static VisualElement Picture(Texture2D icon, float side)
+        {
+            var picture = new VisualElement();
+            picture.style.width = side;
+            picture.style.height = side;
+            picture.style.marginRight = 6;
+            picture.style.flexShrink = 0;
+            picture.style.backgroundImage = new StyleBackground(icon);
+            return picture;
         }
 
         private static Label Body(string text)

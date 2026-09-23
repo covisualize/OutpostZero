@@ -2,8 +2,8 @@
   "id": "Prop_StreetLamp",
   "category": "Props",
   "generator": "generate_props.build_street_lamp",
-  "generatorHash": "7559b2efe8ab9fb27a7b204e4557d4b955d6aa7a9a202033e1056150e8d3e0ef",
-  "gitSha": "d914dbebffd2fe166ff62b598070041b9d596484",
+  "generatorHash": "6400414b272f7f002eac57eea3422ec5f83020fb290bf61156c4a35b6f1a51e3",
+  "gitSha": "569a4affb2f2343f0bb3cd726e1fb503be9e7de7",
   "blender": "4.2.11",
   "tags": [
     "street"

@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c75b42f8091a2b3c4d5e6f708192a470, type: 3}
+  m_Name: CodexIcons
+  m_EditorClassIdentifier: OutpostZero::OutpostZero.Shell.CodexIcons
+  entries:
+  - id: Zombie_Walker
+    icon: {fileID: 2800000, guid: 4842367705b96c3f9e4ee74c7602e6e2, type: 3}
+  - id: Zombie_Runner
+    icon: {fileID: 2800000, guid: b1669d7058cbd661febf1ece4cfe5624, type: 3}
+  - id: Zombie_Brute
+    icon: {fileID: 2800000, guid: 339691d1c85511c2240f3dadb8511f8a, type: 3}
+  - id: NPC_Merchant
+    icon: {fileID: 2800000, guid: a22eccedde23e6e257eb278b73a1b084, type: 3}
+  - id: Barricade_Wood_Wire
+    icon: {fileID: 2800000, guid: 65efee83d49c0c2e8d7c9ba484ebac0e, type: 3}
+  - id: Base_Generator_Diesel
+    icon: {fileID: 2800000, guid: 8356092251edf6b7fac52759d434cd47, type: 3}
+  - id: Base_MedicalCot
+    icon: {fileID: 2800000, guid: ce5cfadabfb56a9da546d308e196c97f, type: 3}
