@@ -66,7 +66,7 @@ namespace OutpostZero.Tests.EditMode
         {
             var source = File.ReadAllText(Path.Combine(Directory.GetCurrentDirectory(), "Assets", "Scripts", "Graphics", "PostFxRig.cs"));
             foreach (var part in new[] { "Tonemapping", "ColorAdjustments", "ShadowsMidtonesHighlights", "Bloom", "Vignette", "FilmGrain", "ChromaticAberration", "LiftGammaGain", "DepthOfField" })
-                StringAssert.Contains("Add<" + part + ">", source, part);
+                StringAssert.Contains("Take<" + part + ">", source, part);
             Assert.IsFalse(ScreenGrade.AberrationOn(0));
             Assert.IsTrue(ScreenGrade.AberrationOn(1));
         }

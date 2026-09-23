@@ -18,56 +18,64 @@ namespace OutpostZero.Graphics
         private LiftGammaGain night;
         private ChromaticAberration fringe;
 
+        public const string ProfilePath = "PostFX/OutpostZero_PostFX";
+        public const string AimProfilePath = "PostFX/OutpostZero_AimDepth";
+
+        public const float BloomIntensity = 0.35f;
+        public const float BloomThreshold = 1.1f;
+        public const float VignetteIntensity = 0.28f;
+        public const float VignetteSmoothness = 0.4f;
+        public const float Exposure = 0.2f;
+        public static readonly Color Filter = new Color(1f, 0.96f, 0.9f);
+        public const float GrainIntensity = 0.25f;
+        public const float BlurIntensity = 0.35f;
+        public const float DepthStart = 6f;
+        public const float DepthEnd = 18f;
+
         private void Start()
         {
             volume = Attach.Ensure<Volume>(gameObject);
             volume.isGlobal = true;
             volume.priority = 20f;
-            var profile = ScriptableObject.CreateInstance<VolumeProfile>();
-            volume.sharedProfile = profile;
+            var profile = Profile(volume, ProfilePath);
 
-            bloom = profile.Add<Bloom>();
-            bloom.active = true;
-            bloom.intensity.Override(0.35f);
-            bloom.threshold.Override(1.1f);
-
-            vignette = profile.Add<Vignette>();
-            vignette.active = true;
-            vignette.intensity.Override(0.28f);
-            vignette.smoothness.Override(0.4f);
-
-            var tone = profile.Add<Tonemapping>();
-            tone.active = true;
-            tone.mode.Override(TonemappingMode.ACES);
-
-            color = profile.Add<ColorAdjustments>();
-            color.active = true;
-            color.postExposure.Override(0.2f);
-            color.contrast.Override(ScreenGrade.Contrast);
-            color.saturation.Override(ScreenGrade.BaseSaturation);
-            color.colorFilter.Override(new Color(1f, 0.96f, 0.9f));
-
-            var tones = profile.Add<ShadowsMidtonesHighlights>();
-            tones.active = true;
-            tones.shadows.Override(ScreenGrade.Shadows);
-            tones.midtones.Override(ScreenGrade.Midtones);
-            tones.highlights.Override(ScreenGrade.Highlights);
-
-            night = profile.Add<LiftGammaGain>();
-            night.active = true;
-
-            fringe = profile.Add<ChromaticAberration>();
-            fringe.active = true;
-            fringe.intensity.Override(ScreenGrade.Aberration);
-
-            grain = profile.Add<FilmGrain>();
-            grain.active = false;
-            grain.intensity.Override(0.25f);
-            grain.type.Override(FilmGrainLookup.Thin1);
-
-            blur = profile.Add<MotionBlur>();
-            blur.active = false;
-            blur.intensity.Override(0.35f);
+            bloom = Take<Bloom>(profile, b =>
+            {
+                b.intensity.Override(BloomIntensity);
+                b.threshold.Override(BloomThreshold);
+            });
+            vignette = Take<Vignette>(profile, v =>
+            {
+                v.intensity.Override(VignetteIntensity);
+                v.smoothness.Override(VignetteSmoothness);
+            });
+            Take<Tonemapping>(profile, tone => tone.mode.Override(TonemappingMode.ACES));
+            color = Take<ColorAdjustments>(profile, c =>
+            {
+                c.postExposure.Override(Exposure);
+                c.contrast.Override(ScreenGrade.Contrast);
+                c.saturation.Override(ScreenGrade.BaseSaturation);
+                c.colorFilter.Override(Filter);
+            });
+            Take<ShadowsMidtonesHighlights>(profile, tones =>
+            {
+                tones.shadows.Override(ScreenGrade.Shadows);
+                tones.midtones.Override(ScreenGrade.Midtones);
+                tones.highlights.Override(ScreenGrade.Highlights);
+            });
+            night = Take<LiftGammaGain>(profile, _ => { });
+            fringe = Take<ChromaticAberration>(profile, f => f.intensity.Override(ScreenGrade.Aberration));
+            grain = Take<FilmGrain>(profile, g =>
+            {
+                g.active = false;
+                g.intensity.Override(GrainIntensity);
+                g.type.Override(FilmGrainLookup.Thin1);
+            });
+            blur = Take<MotionBlur>(profile, m =>
+            {
+                m.active = false;
+                m.intensity.Override(BlurIntensity);
+            });
 
             var aimHost = new GameObject("AimDepthVolume");
             aimHost.transform.SetParent(transform, false);
@@ -75,14 +83,40 @@ namespace OutpostZero.Graphics
             aimDepth.isGlobal = true;
             aimDepth.priority = 21f;
             aimDepth.weight = 0f;
-            var aimProfile = ScriptableObject.CreateInstance<VolumeProfile>();
-            aimDepth.sharedProfile = aimProfile;
-            depth = aimProfile.Add<DepthOfField>();
-            depth.active = true;
-            depth.mode.Override(DepthOfFieldMode.Gaussian);
-            depth.gaussianStart.Override(6f);
-            depth.gaussianEnd.Override(18f);
+            var aimProfile = Profile(aimDepth, AimProfilePath);
+            depth = Take<DepthOfField>(aimProfile, d =>
+            {
+                d.mode.Override(DepthOfFieldMode.Gaussian);
+                d.gaussianStart.Override(DepthStart);
+                d.gaussianEnd.Override(DepthEnd);
+            });
             ApplyTier(1, false);
+        }
+
+        /// <summary>
+        /// The committed profile under Resources, cloned per volume so the per-frame overrides never touch the
+        /// asset; an empty profile when it is missing, which <see cref="Take"/> then fills from the constants.
+        /// </summary>
+        private static VolumeProfile Profile(Volume host, string path)
+        {
+            var asset = Resources.Load<VolumeProfile>(path);
+            if (asset != null)
+            {
+                host.sharedProfile = asset;
+                return host.profile;
+            }
+            var profile = ScriptableObject.CreateInstance<VolumeProfile>();
+            host.sharedProfile = profile;
+            return profile;
+        }
+
+        private static T Take<T>(VolumeProfile profile, System.Action<T> defaults) where T : VolumeComponent
+        {
+            if (profile.TryGet(out T found)) return found;
+            var added = profile.Add<T>();
+            added.active = true;
+            defaults(added);
+            return added;
         }
 
         private void Update()

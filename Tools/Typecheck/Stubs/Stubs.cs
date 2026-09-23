@@ -10,7 +10,7 @@ namespace UnityEngine.Rendering
     public class Vector4Parameter : VolumeParameter<Vector4> { public Vector4Parameter(Vector4 v, bool o = false) { } }
     public class ColorParameter : VolumeParameter<Color> { public ColorParameter(Color v, bool a = false, bool b = true, bool c = true, bool o = false) { } }
     public class VolumeComponent : ScriptableObject { public bool active = true; }
-    public class VolumeProfile : ScriptableObject { public T Add<T>(bool overrides = false) where T : VolumeComponent { return null; } }
+    public class VolumeProfile : ScriptableObject { public T Add<T>(bool overrides = false) where T : VolumeComponent { return null; } public bool TryGet<T>(out T component) where T : VolumeComponent { component = null; return false; } }
     public class Volume : MonoBehaviour { public bool isGlobal { get; set; } public float priority; public VolumeProfile sharedProfile; public VolumeProfile profile { get; set; } public float weight = 1f; }
 }
 
