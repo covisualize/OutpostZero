@@ -27,6 +27,17 @@ namespace OutpostZero.Colony
 
         public static bool TryOf(string id, out Cost cost)
         {
+            if (RecipeTable.TryRow(id, out var row))
+            {
+                cost = row.Cost;
+                return true;
+            }
+            return CodeOf(id, out cost);
+        }
+
+        /// <summary>The built-in bill, ignoring any loaded recipe book.</summary>
+        public static bool CodeOf(string id, out Cost cost)
+        {
             cost = new Cost();
             if (id == "bandage") cost = Make(1, 2, 0, 0, Any, "");
             else if (id == "medkit") cost = Make(8, 1, 1, 1, Cot, "Medic");

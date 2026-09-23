@@ -29,7 +29,10 @@ namespace OutpostZero.Colony
         public IReadOnlyList<string> Orders => orders;
         public string PackedOrders => CraftQueue.Pack(orders);
 
-        public static readonly Recipe[] Recipes =
+        /// <summary>The recipe book's list once loaded, otherwise the built-in one.</summary>
+        public static Recipe[] Recipes => RecipeTable.Active ?? BuiltIn;
+
+        public static readonly Recipe[] BuiltIn =
         {
             new Recipe { Id = "bandage", Label = "Bandage", ScrapCost = 1, OutputId = "bandage", OutputCount = 1 },
             new Recipe { Id = "medkit", Label = "Medkit", ScrapCost = 8, OutputId = "medkit", OutputCount = 1 },
@@ -65,6 +68,7 @@ namespace OutpostZero.Colony
                 return;
             }
             Instance = this;
+            RecipeBook.Ensure();
         }
 
         public bool Craft(string recipeId)
