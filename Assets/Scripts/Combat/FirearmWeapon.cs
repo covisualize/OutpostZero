@@ -93,7 +93,13 @@ namespace OutpostZero.Combat
             automatic = WeaponCard.FiresAutomatic(weaponType, definition.automatic);
             useProjectile = WeaponCard.FiresProjectile(weaponType, definition.useProjectile);
             if (!string.IsNullOrEmpty(definition.id)) cardId = definition.id;
+            muzzleVfx = definition.muzzleVfx;
         }
+
+        private VfxEvent muzzleVfx = VfxEvent.None;
+
+        /// <summary>The flash this gun plays: its definition's, or the default for its type.</summary>
+        public VfxEvent MuzzleVfx => muzzleVfx != VfxEvent.None ? muzzleVfx : VfxBook.MuzzleFor(weaponType);
 
         public void SetFireMode(bool fullAuto, bool projectile)
         {
@@ -202,7 +208,7 @@ namespace OutpostZero.Combat
                 var bullet = Attach.Ensure<BulletProjectile>(projObj);
                 bullet.Setup(direction, ModifiedDamage, ownerGameObject, hitMask, weaponType, range, volley);
                 Vector3 eject = muzzlePoint != null ? muzzlePoint.right : transform.right;
-                CombatVfx.Shot(spawnPos, direction, spawnPos + direction * Mathf.Min(range, 8f), eject, tracer, weaponType);
+                CombatVfx.Shot(spawnPos, direction, spawnPos + direction * Mathf.Min(range, 8f), eject, tracer, weaponType, MuzzleVfx);
             }
             else
             {
@@ -225,7 +231,7 @@ namespace OutpostZero.Combat
                     struck = hit.collider != null ? hit.collider.GetComponentInParent<OutpostZero.AI.ZombieAI>() : null;
                 }
                 Vector3 eject = muzzlePoint != null ? muzzlePoint.right : transform.right;
-                CombatVfx.Shot(spawnPos, direction, end, eject, tracer, weaponType);
+                CombatVfx.Shot(spawnPos, direction, end, eject, tracer, weaponType, MuzzleVfx);
                 OilPatch.Shot(spawnPos, end);
                 OutpostZero.AI.ZombieAI.WhiffNear(spawnPos.x, spawnPos.z, end.x, end.z, struck);
             }

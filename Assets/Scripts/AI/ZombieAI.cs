@@ -281,6 +281,9 @@ namespace OutpostZero.AI
             sightToken = QualityProfile.NextToken();
         }
 
+        public VfxEvent HitVfx { get; private set; } = VfxEvent.BloodSpray;
+        public VfxEvent DeathVfx { get; private set; } = VfxEvent.DeathBurst;
+
         public void Configure(ZombieArchetype archetype)
         {
             if (archetype == null) return;
@@ -297,6 +300,8 @@ namespace OutpostZero.AI
             specialAbility = archetype.specialAbility;
             archetypeId = archetype.id;
             ModelId = CharacterRig.ModelId(archetype.modelPath);
+            if (archetype.hitVfx != VfxEvent.None) HitVfx = archetype.hitVfx;
+            if (archetype.deathVfx != VfxEvent.None) DeathVfx = archetype.deathVfx;
             visionMask = GameLayers.VisionOcclusionMask;
 
             if (agent == null) agent = GetComponent<NavMeshAgent>();
@@ -1159,6 +1164,7 @@ namespace OutpostZero.AI
             Voice("death");
             SetState(ZombieState.Dead);
             Collapse();
+            CombatVfx.Play(DeathVfx, transform.position + Vector3.up, hitDir);
 
             if (GameManager.Instance != null)
             {

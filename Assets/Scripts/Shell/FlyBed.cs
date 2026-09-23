@@ -49,9 +49,12 @@ namespace OutpostZero.Shell
     {
         public static readonly List<FlyMark> Live = new List<FlyMark>();
 
+        private GameObject swarm;
+
         private void OnEnable()
         {
             if (!Live.Contains(this)) Live.Add(this);
+            if (swarm == null) swarm = OutpostZero.Combat.CombatVfx.Flies(transform);
         }
 
         private void OnDisable()

@@ -81,5 +81,8 @@ namespace OutpostZero.Core
         /// <summary>Degrees that turn the model so its barrel or blade points along the aim.</summary>
         [Tooltip("Degrees that turn the model so its barrel or blade points along the aim.")]
         public Vector3 holdEuler = new Vector3(0f, 90f, 0f);
+        /// <summary>Muzzle effect (a VfxLibrary event); None picks the flash for the weapon type.</summary>
+        [Tooltip("Muzzle effect (a VfxLibrary event); None picks the flash for the weapon type.")]
+        public VfxEvent muzzleVfx = VfxEvent.None;
     }
 }

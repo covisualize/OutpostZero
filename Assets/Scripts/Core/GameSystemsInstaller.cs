@@ -25,6 +25,7 @@ namespace OutpostZero.Core
             if (host == null) return;
 
             ItemDatabase.Ensure();
+            VfxPool.Prewarm();
             Add<SettingsService>(host.gameObject);
             Add<AudioManager>(host.gameObject);
             Add<SaveSystem>(host.gameObject);

@@ -34,3 +34,4 @@ MonoBehaviour:
   heldPrefab: {fileID: 3250870778558825364, guid: 69a924fb5f5c7f7499e0d1da4d071040, type: 3}
   holdOffset: {x: 0, y: 0, z: 0}
   holdEuler: {x: 0, y: 90, z: 0}
+  muzzleVfx: 3

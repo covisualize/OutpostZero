@@ -168,7 +168,7 @@ namespace OutpostZero.Graphics
                 {
                     Place(point, normal, kind, full, stamp++, Vector3.zero);
                 }
-                Burst(point, face, 0f, 0f);
+                CombatVfx.Impact(point, face, 0f, 0f);
                 return;
             }
 
@@ -191,7 +191,8 @@ namespace OutpostZero.Graphics
                 }
             }
             if (shot.sqrMagnitude > 0.001f) SplatterBehind(point, shot.normalized, level, shotgun, full);
-            Burst(point, face, streak ? driftX : 0f, streak ? driftZ : 0f);
+            var zombie = target != null ? target.GetComponentInParent<OutpostZero.AI.ZombieAI>() : null;
+            CombatVfx.Impact(point, face, streak ? driftX : 0f, streak ? driftZ : 0f, zombie != null ? zombie.HitVfx : VfxBook.ImpactFor(face));
         }
 
         /// <summary>Blood carried past the body lands on whatever stands behind it along the shot.</summary>
@@ -233,7 +234,7 @@ namespace OutpostZero.Graphics
             for (int i = 0; i < 3; i++)
             {
                 GoreMark.Offset(i + 1, out float ox, out float oy);
-                Burst(point + new Vector3(ox, 0.1f, oy) * 6f, "concrete", 0f, 0f);
+                CombatVfx.Impact(point + new Vector3(ox, 0.1f, oy) * 6f, "concrete", 0f, 0f);
             }
         }
 
@@ -356,32 +357,6 @@ namespace OutpostZero.Graphics
             block.SetColor("_BaseColor", color);
             block.SetColor("_Color", color);
             decal.Quad.SetPropertyBlock(block);
-        }
-
-        private void Burst(Vector3 point, string face, float driftX, float driftZ)
-        {
-            var go = new GameObject("ImpactBurst");
-            go.transform.position = point;
-            var particles = go.AddComponent<ParticleSystem>();
-            var main = particles.main;
-            string sound = StrikeFace.Sound(face);
-            main.startLifetime = sound == "dust" ? 0.4f : 0.25f;
-            main.startSpeed = sound == "spark" ? 4.5f : sound == "spray" ? 3.2f : 2.2f;
-            main.startSize = sound == "splinter" ? 0.12f : 0.08f;
-            main.startColor = face == "flesh" ? new Color(0.55f, 0.05f, 0.04f)
-                : face == "metal" ? new Color(1f, 0.78f, 0.28f)
-                : face == "wood" ? new Color(0.62f, 0.42f, 0.18f)
-                : new Color(0.55f, 0.52f, 0.48f);
-            int emit = sound == "spark" ? 10 : 8;
-            main.maxParticles = 12;
-            if (face == "flesh" && (driftX != 0f || driftZ != 0f))
-            {
-                var shot = new ParticleSystem.EmitParams();
-                shot.velocity = new Vector3(driftX, 0.35f, driftZ) * 6f;
-                particles.Emit(shot, emit);
-            }
-            else particles.Emit(emit);
-            Destroy(go, 0.6f);
         }
 
         private Decal Rent()

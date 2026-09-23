@@ -19,6 +19,10 @@ namespace OutpostZero.Combat
         [SerializeField] private float radius = 4.5f;
         public const float Throw = 10f;
         [SerializeField] private float damage = 55f;
+        [Tooltip("Burst effect (a VfxLibrary event); None picks the one for the hazard kind.")]
+        [SerializeField] private VfxEvent blastVfx = VfxEvent.None;
+
+        public VfxEvent BlastVfx => blastVfx != VfxEvent.None ? blastVfx : CombatVfx.BlastFor(kind);
         private bool detonated;
         private float fuseAt;
         private float nextHiss;
@@ -120,7 +124,7 @@ namespace OutpostZero.Combat
                 if (blast) BlastKill.End();
             }
 
-            CombatVfx.Burst(origin, kind);
+            CombatVfx.Burst(origin, kind, BlastVfx);
             CombatEvents.RaiseHit(origin, Vector3.up, gameObject);
             GameplayFeedback.Toast(FightSay.Hazard(kind, null));
             Chain(origin);

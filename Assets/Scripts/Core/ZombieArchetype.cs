@@ -53,5 +53,11 @@ namespace OutpostZero.Core
         /// <summary>Runner lunge or brute charge, telegraphed by a wind-up.</summary>
         [Tooltip("Runner lunge or brute charge, telegraphed by a wind-up.")]
         public ZombieSpecialAbility specialAbility = ZombieSpecialAbility.None;
+        /// <summary>Effect a hit on this body throws (a VfxLibrary event).</summary>
+        [Tooltip("Effect a hit on this body throws (a VfxLibrary event).")]
+        public VfxEvent hitVfx = VfxEvent.BloodSpray;
+        /// <summary>Effect played where this body falls.</summary>
+        [Tooltip("Effect played where this body falls.")]
+        public VfxEvent deathVfx = VfxEvent.DeathBurst;
     }
 }

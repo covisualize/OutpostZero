@@ -40,7 +40,9 @@ namespace OutpostZero.Combat
         {
             string live = string.IsNullOrEmpty(language) ? OutpostZero.Shell.Loc.T("watch.vfx") : OutpostZero.Shell.Loc.T("watch.vfx", language);
             string peak = string.IsNullOrEmpty(language) ? OutpostZero.Shell.Loc.T("watch.peak") : OutpostZero.Shell.Loc.T("watch.peak", language);
-            return live + " " + Live + "  " + peak + " " + Peak;
+            string pool = string.IsNullOrEmpty(language) ? OutpostZero.Shell.Loc.T("watch.pool") : OutpostZero.Shell.Loc.T("watch.pool", language);
+            string reuse = string.IsNullOrEmpty(language) ? OutpostZero.Shell.Loc.T("watch.reuse") : OutpostZero.Shell.Loc.T("watch.reuse", language);
+            return live + " " + Live + "  " + peak + " " + Peak + "  " + pool + " " + Core.VfxStats.Idle + "  " + reuse + " " + Core.VfxStats.ReusePercent() + "%";
         }
     }
 
@@ -51,7 +53,7 @@ namespace OutpostZero.Combat
             VfxLedger.Borrow();
         }
 
-        private void OnDestroy()
+        private void OnDisable()
         {
             VfxLedger.Return();
         }

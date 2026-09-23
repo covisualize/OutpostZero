@@ -4968,8 +4968,8 @@ namespace OutpostZero.Tests.EditMode
             if (AiWatch.Open != wasOpen) AiWatch.Toggle();
             VfxLedger.Reset();
             VfxLedger.Borrow();
-            Assert.AreEqual("vfx 1  peak 1", VfxLedger.Line());
-            Assert.AreEqual("efectos 1  pico 1", VfxLedger.Line("es"));
+            StringAssert.StartsWith("vfx 1  peak 1  pooled ", VfxLedger.Line());
+            StringAssert.StartsWith("efectos 1  pico 1  en reserva ", VfxLedger.Line("es"));
             VfxLedger.Reset();
         }
 
@@ -7376,7 +7376,7 @@ namespace OutpostZero.Tests.EditMode
             VfxLedger.Return();
             Assert.AreEqual(1, VfxLedger.Live);
             Assert.AreEqual(2, VfxLedger.Peak);
-            Assert.AreEqual("vfx 1  peak 2", VfxLedger.Line());
+            StringAssert.StartsWith("vfx 1  peak 2  pooled ", VfxLedger.Line());
             VfxLedger.Return();
             VfxLedger.Return();
             Assert.AreEqual(0, VfxLedger.Live);

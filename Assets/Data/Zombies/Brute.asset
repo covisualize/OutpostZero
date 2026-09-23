@@ -27,3 +27,5 @@ MonoBehaviour:
   hearingSensitivity: 1
   hordeAlertRadius: 10
   specialAbility: 2
+  hitVfx: 11
+  deathVfx: 14
