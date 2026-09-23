@@ -2,6 +2,7 @@ using System;
 using UnityEngine;
 using OutpostZero.Colony;
 using OutpostZero.Core;
+using OutpostZero.Shell;
 
 namespace OutpostZero.AI
 {
@@ -35,9 +36,13 @@ namespace OutpostZero.AI
         private float elapsed;
         private float eventCursor;
         private string openingPrefer = "";
+        private bool scripted;
+        private bool nearHeard;
+        private float nextNearCheck;
 
         public float Tension => tension;
         public TensionState State => state;
+        public bool Scripted => scripted;
         public int AliveCap => spawner != null ? spawner.MaxAlive : maxAlive;
         public event Action<TensionState> OnTensionStateChanged;
 
@@ -81,6 +86,18 @@ namespace OutpostZero.AI
                 OnTensionStateChanged?.Invoke(state);
             }
 
+            if (!nearHeard && spawner != null && Time.time >= nextNearCheck && PlayerRegistry.Current != null)
+            {
+                nextNearCheck = Time.time + 0.5f;
+                if (TutorialRun.Close(spawner.Nearest(PlayerRegistry.Current.transform.position)))
+                {
+                    nearHeard = true;
+                    CodexDirector.Hear("near");
+                }
+            }
+
+            if (scripted) return;
+
             if (GameManager.Instance != null && GameManager.Instance.CurrentState == GameState.ExpeditionActive)
             {
                 elapsed += Time.deltaTime;
@@ -109,6 +126,7 @@ namespace OutpostZero.AI
             else if (type == NoiseType.GunshotQuiet) tension = Mathf.Min(100f, tension + 4f);
             else if (type == NoiseType.SprintFootstep) tension = Mathf.Min(100f, tension + 1f);
 
+            if (scripted) return;
             if ((type == NoiseType.GunshotLoud || type == NoiseType.Explosion) && Time.time >= nextAllowedReinforcement && spawner != null)
             {
                 nextAllowedReinforcement = Time.time + 20f;
@@ -131,6 +149,9 @@ namespace OutpostZero.AI
             elapsed = 0f;
             eventCursor = 0f;
             openingPrefer = preferredVariant ?? "";
+            scripted = false;
+            nearHeard = false;
+            spawner?.Script(0);
             tension = Mathf.Clamp(openingTension, 0f, 100f);
             spawnInterval = Mathf.Max(3f, interval);
             state = Evaluate(tension);
@@ -139,8 +160,25 @@ namespace OutpostZero.AI
             OnTensionStateChanged?.Invoke(state);
         }
 
+        public void BeginTutorial(Vector3 origin, Vector3 forward)
+        {
+            scripted = true;
+            tension = TutorialRun.Tension;
+            state = Evaluate(tension);
+            OnTensionStateChanged?.Invoke(state);
+            if (spawner == null) return;
+            spawner.Script(TutorialRun.Cap);
+            spawner.Clear();
+            for (int i = 0; i < TutorialRun.Beats.Length; i++)
+            {
+                if (!TutorialRun.Point(i, origin.x, origin.z, forward.x, forward.z, out float x, out float z)) continue;
+                spawner.SpawnAt(x, z, TutorialRun.Beats[i].Variant);
+            }
+        }
+
         public void DropAmbush(bool ambush)
         {
+            if (scripted) return;
             int extra = AmbushBeat.Bodies(ambush, AliveCap);
             if (extra <= 0 || spawner == null) return;
             spawner.SpawnZombies(extra);

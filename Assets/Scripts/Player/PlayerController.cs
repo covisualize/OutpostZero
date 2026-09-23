@@ -813,6 +813,10 @@ namespace OutpostZero.Player
                     GetComponent<SurvivorLocomotion>()?.NotifyAttack();
                     GetComponent<ProceduralSurvivorMotion>()?.Strike();
                 }
+                else if (ActiveWeapon is FirearmWeapon dry && dry.CurrentAmmo <= 0)
+                {
+                    CodexDirector.Hear("empty");
+                }
             }
         }
 

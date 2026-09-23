@@ -169,9 +169,12 @@ namespace OutpostZero.Shell
             int day = WorldClock.Instance != null ? WorldClock.Instance.Day : 1;
             var curve = DifficultyProfile.For(CampaignBoard.Tier(districtId), day, difficulty);
             int kills = rules.KillGoal + curve.ExtraKills;
-            ObjectiveTracker.Instance?.SetGoals(kills, rules.ScrapGoal);
+            bool lessonsDone = TutorialDirector.Instance == null || TutorialDirector.Instance.Finished;
+            bool tutorial = TutorialRun.Applies(lessonsDone, endless);
+            if (tutorial) ObjectiveTracker.Instance?.SetGoals(TutorialRun.KillGoal, TutorialRun.Scrap(rules.ScrapGoal));
+            else ObjectiveTracker.Instance?.SetGoals(kills, rules.ScrapGoal);
             float tension = rules.OpeningTension + curve.Tension;
-            bool ambush = FactionTrade.Instance != null && FactionTrade.Instance.Ambush;
+            bool ambush = !tutorial && FactionTrade.Instance != null && FactionTrade.Instance.Ambush;
             if (ambush) tension += 12f;
             float interval = Mathf.Max(3f, rules.SpawnInterval * curve.Interval);
             if (endless)
@@ -181,6 +184,8 @@ namespace OutpostZero.Shell
             }
             string prefer = string.IsNullOrEmpty(rules.PreferredVariant) ? curve.Prefer : rules.PreferredVariant;
             HordeDirector.Instance?.ApplyOpening(tension, interval, prefer, difficulty, CampaignBoard.Tier(districtId));
+            var player = PlayerRegistry.Current;
+            if (tutorial && player != null) HordeDirector.Instance?.BeginTutorial(player.transform.position, player.transform.forward);
             if (ambush)
             {
                 HordeDirector.Instance?.DropAmbush(true);

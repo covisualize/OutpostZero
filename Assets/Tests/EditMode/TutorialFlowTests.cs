@@ -68,6 +68,56 @@ namespace OutpostZero.Tests.EditMode
             foreach (var gate in TutorialTrack.Gates) Assert.IsTrue(signals.Contains(gate), gate);
             foreach (var step in TutorialTrack.Camp)
                 if (step.Gate != TutorialTrack.Read) Assert.IsTrue(signals.Contains(step.Gate), step.Gate);
+            foreach (var hint in CodexBook.Hints) Assert.IsTrue(signals.Contains(hint.Signal), hint.Id);
+        }
+
+        [Test]
+        public void HintsArriveWhenTheyAreNeeded()
+        {
+            string Signal(string id) => CodexBook.Hints.First(h => h.Id == id).Signal;
+            Assert.AreEqual("near", Signal("hint.crouch"));
+            Assert.AreEqual("empty", Signal("hint.reload"));
+            Assert.AreEqual("dark", Signal("hint.flashlight"));
+            Assert.IsTrue(ControlBindings.TryRebind(ControlBindings.Action.Crouch, UnityEngine.InputSystem.Key.H));
+            StringAssert.Contains("H crouches", Loc.T("hint.crouch", "en"));
+        }
+
+        [Test]
+        public void TheFirstExpeditionIsAQuietScriptedStreet()
+        {
+            Assert.IsTrue(TutorialRun.Applies(false, false));
+            Assert.IsFalse(TutorialRun.Applies(true, false));
+            Assert.IsFalse(TutorialRun.Applies(false, true));
+            Assert.LessOrEqual(TutorialRun.Beats.Length, TutorialRun.Cap);
+            Assert.LessOrEqual(TutorialRun.KillGoal, TutorialRun.Beats.Length);
+            Assert.AreEqual(2, TutorialRun.Scrap(2));
+            Assert.AreEqual(TutorialRun.ScrapGoal, TutorialRun.Scrap(9));
+            Assert.IsFalse(TutorialRun.Close(TutorialRun.Near + 0.5f));
+            Assert.IsTrue(TutorialRun.Close(TutorialRun.Near));
+            Assert.IsFalse(TutorialRun.Point(TutorialRun.Beats.Length, 0f, 0f, 0f, 1f, out _, out _));
+        }
+
+        [Test]
+        public void ScriptedBodiesStandAheadOfTheStartWhicheverWayItFaces()
+        {
+            Assert.IsTrue(TutorialRun.Point(0, 0f, 0f, 0f, 1f, out float x, out float z));
+            Assert.AreEqual(-3f, x, 1e-4f);
+            Assert.AreEqual(14f, z, 1e-4f);
+            Assert.IsTrue(TutorialRun.Point(0, 10f, 5f, 2f, 0f, out x, out z));
+            Assert.AreEqual(24f, x, 1e-4f);
+            Assert.AreEqual(8f, z, 1e-4f);
+            Assert.IsTrue(TutorialRun.Point(1, 0f, 0f, 0f, 0f, out x, out z));
+            Assert.AreEqual(4f, x, 1e-4f);
+            Assert.AreEqual(24f, z, 1e-4f);
+            float previous = 0f;
+            for (int i = 0; i < TutorialRun.Beats.Length; i++)
+            {
+                TutorialRun.Point(i, 0f, 0f, 0.6f, 0.8f, out x, out z);
+                float reach = (float)System.Math.Sqrt(x * x + z * z);
+                Assert.IsFalse(TutorialRun.Close(reach), "beat " + i + " starts beyond the crouch hint");
+                Assert.Greater(reach, previous);
+                previous = reach;
+            }
         }
 
         [Test]

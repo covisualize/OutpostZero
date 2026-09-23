@@ -103,6 +103,7 @@ namespace OutpostZero.Expedition
                 follower.transform.position = dest + new Vector3(0.8f, 0f, 0f);
 
             GameplayFeedback.Toast(DoorMap.Cross(leaving, null));
+            if (!leaving) Shell.CodexDirector.Hear("dark");
         }
     }
 }
