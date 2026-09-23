@@ -97,6 +97,15 @@ Model prefixes in use: `Survivor_`, `Zombie_`, `NPC_`, `Colonist_`, `Weapon_`, `
 python3 BlenderScripts/texture_set.py
 ```
 
+## Decal atlas
+
+`BlenderScripts/decal_atlas.py` draws `Assets/Textures/Decals/DecalAtlas.png`, a 1024 x 512 sheet of 128 px cells: 8 blood splats, 4 drips, 3 bullet holes each for concrete, metal and wood, 2 scorches, 2 oil puddles and a left and right boot print. The shapes come from value noise and Voronoi cells in plain Python, so the PNG is byte-identical on every machine. Each cell keeps a clear border, and the texture clamps, so neighbouring cells never bleed in. `Assets/Resources/Decals/DecalAtlas.mat` puts the atlas on URP's Decal shader graph with GPU instancing on. `ImpactDecalPool` picks a cell through `DecalAtlas`, whose table a test keeps matched to the generator.
+
+```powershell
+python BlenderScripts\decal_atlas.py          # redraw the atlas and its .meta
+python BlenderScripts\decal_atlas.py --check  # exit 1 if the committed atlas is stale
+```
+
 ## Unity import
 
 `Assets/Scripts/Editor/FbxPrefabPostprocessor.cs` handles anything under `Assets/Models/`:

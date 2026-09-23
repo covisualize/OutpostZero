@@ -240,6 +240,7 @@ namespace OutpostZero.Player
                     Sensory.NoiseManager.Instance.EmitNoise(blast, PipeBlast.Noise, 1f, NoiseType.Explosion, gameObject);
                 }
                 Collider[] caught = Physics.OverlapSphere(blast, PipeBlast.Radius);
+                CombatEvents.RaiseBlast(blast, PipeBlast.Radius);
                 BlastKill.Begin(blast, PipeBlast.Throw, PipeBlast.Radius);
                 try
                 {

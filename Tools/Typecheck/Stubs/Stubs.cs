@@ -36,6 +36,8 @@ namespace UnityEngine.Rendering.Universal
     public class UniversalRendererData : ScriptableRendererData { }
     public abstract class ScriptableRendererFeature : ScriptableObject { }
     public class DecalRendererFeature : ScriptableRendererFeature { }
+    public enum DecalScaleMode { ScaleInvariant, InheritFromHierarchy }
+    public class DecalProjector : MonoBehaviour { public Material material { get; set; } public float drawDistance { get; set; } public float fadeScale { get; set; } public float startAngleFade { get; set; } public float endAngleFade { get; set; } public Vector2 uvScale { get; set; } public Vector2 uvBias { get; set; } public uint renderingLayerMask { get; set; } public DecalScaleMode scaleMode { get; set; } public Vector3 pivot { get; set; } public Vector3 size { get; set; } public float fadeFactor { get; set; } public bool IsValid() { return false; } }
     public class UniversalRenderPipelineAsset : RenderPipelineAsset { public static UniversalRenderPipelineAsset Create(ScriptableRendererData rendererData = null) { return null; } protected override RenderPipeline CreatePipeline() { return null; } public int msaaSampleCount { get; set; } public float renderScale { get; set; } }
 }
 

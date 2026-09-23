@@ -99,6 +99,7 @@ namespace OutpostZero.Combat
 
             Collider[] hits = Physics.OverlapSphere(origin, radius);
             bool blast = kind == HazardKind.Explosive;
+            if (blast) CombatEvents.RaiseBlast(origin, radius);
             if (blast) BlastKill.Begin(origin, Throw, radius);
             try
             {

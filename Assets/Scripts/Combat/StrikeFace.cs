@@ -1,5 +1,6 @@
 using UnityEngine;
 using OutpostZero.AI;
+using OutpostZero.Core;
 
 namespace OutpostZero.Combat
 {
@@ -17,6 +18,12 @@ namespace OutpostZero.Combat
         {
             if (target == null) return "concrete";
             if (target.GetComponentInParent<ZombieAI>() != null) return "flesh";
+            var tag = target.GetComponentInParent<SurfaceTag>();
+            if (tag != null)
+            {
+                string tagged = OfSurface(tag.Kind);
+                if (tagged != null) return tagged;
+            }
             Transform cursor = target.transform;
             while (cursor != null)
             {
@@ -25,6 +32,22 @@ namespace OutpostZero.Combat
                 cursor = cursor.parent;
             }
             return "concrete";
+        }
+
+        /// <summary>The impact family for a tagged prefab; null leaves it to the name.</summary>
+        public static string OfSurface(SurfaceKind kind)
+        {
+            switch (kind)
+            {
+                case SurfaceKind.Metal: return "metal";
+                case SurfaceKind.Wood: return "wood";
+                case SurfaceKind.Flesh: return "flesh";
+                case SurfaceKind.Concrete:
+                case SurfaceKind.Gravel:
+                case SurfaceKind.Glass:
+                    return "concrete";
+                default: return null;
+            }
         }
 
         public static string OfName(string name)
