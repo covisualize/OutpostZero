@@ -135,6 +135,11 @@ Play this in a player build, not the editor. Use Survivor difficulty and a fixed
 ### M4: Sanctuary and colony
 
 - [ ] PRO-55 **Automated** (two seeds give different rosters) and **Play**: leader skills change expedition play.
+  - Roster: `SurvivorDraw` opens 4 seeded survivors, each with up to three traits from 16 (trait, aside and mark, with exclusions such as Brave and Cowardly), five skills, age and backstory (`LifeLine`), and needs. `KinBoard` keeps an opinion from -100 to 100 for each pair. `Heir.Pick` chooses the uninjured survivor with the highest leadership plus morale, and `SuccessionLedger` keeps the memorials.
+  - Leader skills in play: Guard sets spread, reload and stamina (`FieldHand`, `HandDepth`, `NeedsPressure`), Scavenge sets loot rolls, Medic sets medkit healing, and the traits hook in through `TraitHook`.
+  - Debug: F4 (editor and development builds) shows the roster sheet (`RosterSheet`), with each survivor's traits, skills, needs, wounds, task and opinion.
+  - Deviation: traits are string ids with hooks in `TraitHook`, not ScriptableObjects, and skills grow by practice up to 8 (`Practice.Cap`) instead of running 0 to 10 with XP.
+  - Automated: `RosterSheetTests` and the `SurvivorDraw` and `Heir` tests in `GameSystemsTests`.
 - [ ] PRO-56 **Play**: run 5 days in a row, each with tasks, an expedition and a return, and see events fire.
 - [ ] PRO-57 **Play**: survivors walk between modules. A starving, grieving camp collapses in about 3 days and a well-run one thrives.
 - [ ] PRO-58 **Play**: B places walls, a generator with lights, a farm and a purifier. Each changes the daily numbers and raid behaviour.

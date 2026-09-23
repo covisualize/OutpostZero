@@ -221,6 +221,17 @@ namespace OutpostZero.Colony
             return false;
         }
 
+        /// <summary>An open site or a damaged module is waiting for a builder.</summary>
+        public bool WorkWaiting()
+        {
+            for (int i = 0; i < placed.Count; i++)
+            {
+                if (placed[i].site != 0 && placed[i].integrity > 0) return true;
+                if (MendBoard.Needs(placed[i].site, placed[i].integrity)) return true;
+            }
+            return false;
+        }
+
         public bool Patch(int pace)
         {
             int best = -1;

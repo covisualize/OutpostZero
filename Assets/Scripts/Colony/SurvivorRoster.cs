@@ -32,6 +32,7 @@ namespace OutpostZero.Colony
         public int scavenge;
         public int leadership;
         public string task = "Rest";
+        public bool ownCall;
         public string bond = "";
         public string kin = "";
         public int age;
@@ -443,6 +444,16 @@ namespace OutpostZero.Colony
         {
             var survivor = Find(id);
             if (survivor == null || !survivor.alive) return;
+            if (task == TaskPick.Auto)
+            {
+                if (survivor.leader) return;
+                survivor.ownCall = true;
+                survivor.task = TaskPick.Choose(survivor, CampNeeds());
+                OnRosterChanged?.Invoke();
+                CodexDirector.Hear("assign");
+                return;
+            }
+            survivor.ownCall = false;
             if (task == "Quarantine")
             {
                 if (!CotPull.Holds(survivor.injury))
@@ -612,11 +623,42 @@ namespace OutpostZero.Colony
             ApplySnapshot(days);
             Spend(food, water);
             if (ColonyStorage.Instance != null) ColonyStorage.Instance.SetRaw(raw);
+            PickOwnCalls();
             Publish(notes);
             var held = Leader;
             if (held != null) held.leadership = Practice.Gain(held.leadership);
             FactionTrade.Instance?.OnMorning(WorldClock.Instance != null ? WorldClock.Instance.Day : 1);
             AudioManager.Instance?.Sting("dawn");
+        }
+
+        private void PickOwnCalls()
+        {
+            var camp = CampNeeds();
+            for (int i = 0; i < survivors.Count; i++)
+            {
+                var survivor = survivors[i];
+                if (!survivor.alive || survivor.leader || !survivor.ownCall) continue;
+                if (System.Array.IndexOf(TaskPick.Tasks, survivor.task) < 0) continue;
+                survivor.task = TaskPick.Choose(survivor, camp);
+            }
+        }
+
+        private TaskPick.Camp CampNeeds()
+        {
+            var storage = ColonyStorage.Instance;
+            int living = System.Math.Max(1, LivingCount());
+            int injured = 0;
+            for (int i = 0; i < survivors.Count; i++)
+                if (survivors[i].alive && survivors[i].injury > 0) injured++;
+            return new TaskPick.Camp
+            {
+                FoodPerHead = storage != null ? storage.Food / living : 0,
+                Raw = storage != null ? storage.Raw : 0,
+                Scrap = storage != null ? storage.Scrap : 0,
+                Injured = injured,
+                RaidLikely = NightRaidController.Instance != null && NightRaidController.Instance.RaidLikely,
+                WorkWaiting = GridBuilder.Instance != null && GridBuilder.Instance.WorkWaiting()
+            };
         }
 
         public void RewardReturn()

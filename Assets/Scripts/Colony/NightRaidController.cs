@@ -157,6 +157,8 @@ namespace OutpostZero.Colony
             return true;
         }
 
+        public bool RaidLikely => LikelyNow();
+
         private bool LikelyNow()
         {
             int day = WorldClock.Instance != null ? WorldClock.Instance.Day : 1;

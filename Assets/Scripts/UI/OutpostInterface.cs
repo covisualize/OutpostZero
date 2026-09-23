@@ -732,6 +732,7 @@ namespace OutpostZero.UI
                     string host = YardVisit.Host(survivor.id, doing, survivor.kin, survivor.fatigue, mateIds, mateActs, mateHere);
                     if (host.Length > 0) doing = "Visit";
                     string post = doing == survivor.task ? Loc.Task(survivor.task) : Loc.Task(survivor.task) + " → " + Loc.Task(doing);
+                    if (survivor.ownCall) post += " (" + Loc.Task(TaskPick.Auto) + ")";
                     string skills = Practice.Line(survivor.combat, survivor.medicine, survivor.engineering, survivor.cooking, survivor.scavenge, null);
                     string leads = Heir.Line(survivor.leadership, null);
                     string wound = WoundCard.Line(survivor.injury, null);
@@ -759,6 +760,7 @@ namespace OutpostZero.UI
                     row.Add(Button(Loc.Task("Medic"), () => roster.Assign(id, "Medic")));
                     row.Add(Button(Loc.Task("Build"), () => roster.Assign(id, "Build")));
                     row.Add(Button(Loc.Task("Clear"), () => roster.Assign(id, "Clear")));
+                    if (!survivor.leader) row.Add(Button(Loc.Task(TaskPick.Auto), () => roster.Assign(id, TaskPick.Auto)));
                     if (survivor.injury > 0) row.Add(Button(Loc.Task("Quarantine"), () => roster.Assign(id, "Quarantine")));
                     if (!survivor.leader) row.Add(Button(Loc.T("camp.gift"), () => roster.OfferMeal(id)));
                     camp.Add(Lit(row, TutorialMark.Task));
@@ -1214,6 +1216,7 @@ namespace OutpostZero.UI
                     key.Add(survivor.opinion);
                     key.Add(survivor.injury);
                     key.Add(survivor.leadership);
+                    key.Add(survivor.ownCall);
                     key.Add(survivor.combat);
                     key.Add(survivor.medicine);
                     key.Add(survivor.engineering);

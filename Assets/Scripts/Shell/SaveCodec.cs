@@ -25,6 +25,7 @@ namespace OutpostZero.Shell
         public string kin = "";
         public string practice = "";
         public int leadership;
+        public bool ownCall;
         public int age;
         public string past = "";
     }

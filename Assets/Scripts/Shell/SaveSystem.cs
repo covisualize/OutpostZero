@@ -42,6 +42,22 @@ namespace OutpostZero.Shell
             Instance = this;
         }
 
+        private void OnEnable()
+        {
+            WorldClock.PhaseTurned += OnPhaseTurned;
+        }
+
+        private void OnDisable()
+        {
+            WorldClock.PhaseTurned -= OnPhaseTurned;
+        }
+
+        private void OnPhaseTurned(DayPhase from, DayPhase to)
+        {
+            if (Instance != this || GameManager.Instance == null) return;
+            if (ClockPhase.Autosaves(GameManager.Instance.CurrentState)) Save(false);
+        }
+
         public bool Save() => Save(true);
 
         public bool Save(bool announce)
@@ -294,6 +310,7 @@ namespace OutpostZero.Shell
                         injury = survivor.injury,
                         needsTracked = true,
                         task = survivor.task,
+                        ownCall = survivor.ownCall,
                         bond = survivor.bond,
                         kin = survivor.kin,
                         practice = Practice.Pack(survivor.combat, survivor.medicine, survivor.engineering, survivor.cooking, survivor.scavenge),
@@ -377,6 +394,7 @@ namespace OutpostZero.Shell
                         opinion = saved.needsTracked ? saved.opinion : (string.IsNullOrEmpty(saved.bond) ? 0 : 18),
                         injury = saved.needsTracked ? saved.injury : 0,
                         task = string.IsNullOrEmpty(saved.task) ? "Rest" : saved.task,
+                        ownCall = saved.ownCall,
                         bond = saved.bond,
                         kin = saved.kin ?? "",
                         combat = ReadPractice(saved.practice, 0),
