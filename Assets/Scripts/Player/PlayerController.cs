@@ -60,6 +60,8 @@ namespace OutpostZero.Player
         public bool IsSprinting { get; private set; }
         public bool IsCrouching { get; private set; }
         public bool IsAimingDownSights { get; private set; }
+        /// <summary>Where the leader is aiming on the ground plane, for the rig's spine and head turn.</summary>
+        public Vector3 AimPoint { get; private set; }
         private bool sprintLatch;
         public bool FlashlightOn => flashlightOn;
         public bool ActiveHasRail
@@ -680,6 +682,7 @@ namespace OutpostZero.Player
             if (aimStick.sqrMagnitude > 0.04f)
             {
                 Vector3 stickDir = new Vector3(aimStick.x, 0f, aimStick.y);
+                AimPoint = transform.position + stickDir.normalized * 6f;
                 transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(stickDir), AimBlend());
                 NudgeAim();
                 return;
@@ -688,6 +691,7 @@ namespace OutpostZero.Player
             if (mainCamera == null) mainCamera = Camera.main;
             if (mainCamera == null)
             {
+                AimPoint = transform.position + transform.forward * 6f;
                 NudgeAim();
                 return;
             }
@@ -700,6 +704,7 @@ namespace OutpostZero.Player
             if (groundPlane.Raycast(ray, out float enter))
             {
                 Vector3 hitPoint = ray.GetPoint(enter);
+                AimPoint = hitPoint;
                 Vector3 lookDirection = (hitPoint - transform.position);
                 lookDirection.y = 0f;
 

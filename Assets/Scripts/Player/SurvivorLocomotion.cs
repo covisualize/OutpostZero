@@ -25,8 +25,16 @@ namespace OutpostZero.Player
         private Pose pose = Pose.Idle;
         private HealthSystem health;
         private FirearmWeapon[] guns;
+        private float aimWeight;
+        private Transform socket;
+        private Vector3 socketRest;
+        private Transform hand;
+        private Vector3 handRest;
+        private bool handSettled;
+        private float reloadClip;
 
         public Pose CurrentPose => pose;
+        public float AimWeight => aimWeight;
 
         private void Awake()
         {
@@ -40,6 +48,7 @@ namespace OutpostZero.Player
             if (animator != null && animator.runtimeAnimatorController != null)
             {
                 Arm(animator.gameObject);
+                AddClipEvents(animator.runtimeAnimatorController);
                 return;
             }
             visual = FindVisual();
@@ -66,6 +75,50 @@ namespace OutpostZero.Player
             Shell.AudioManager.Instance?.Footfall();
         }
 
+        /// <summary>Adds footfalls and the reload finish to the imported clips, once per shared clip.</summary>
+        private void AddClipEvents(RuntimeAnimatorController rig)
+        {
+            foreach (var clip in rig.animationClips)
+            {
+                if (clip == null) continue;
+                string name = clip.name;
+                int bar = name.LastIndexOf('|');
+                if (bar >= 0) name = name.Substring(bar + 1);
+                if (name == "Reload") reloadClip = clip.length;
+                float[] marks = AimRig.EventsFor(name, out string function);
+                if (marks.Length == 0 || Carries(clip, function)) continue;
+                for (int i = 0; i < marks.Length; i++)
+                    clip.AddEvent(new AnimationEvent { time = clip.length * marks[i], functionName = function });
+            }
+        }
+
+        private static bool Carries(AnimationClip clip, string function)
+        {
+            var events = clip.events;
+            for (int i = 0; i < events.Length; i++)
+                if (events[i].functionName == function) return true;
+            return false;
+        }
+
+        public void OnReloadAnimComplete()
+        {
+            var gun = controller != null ? controller.ActiveWeapon as FirearmWeapon : null;
+            if (gun != null) gun.FinishFromAnimation();
+        }
+
+        /// <summary>The humanoid look-at pass: chest and head turn toward the aim point inside the twist limit.</summary>
+        public void ApplyAim(Animator rig)
+        {
+            if (rig == null || controller == null) return;
+            bool alive = health == null || !health.IsDead;
+            var gun = controller.ActiveWeapon as FirearmWeapon;
+            float target = AimRig.Weight(alive, controller.IsSprinting, gun != null && gun.IsReloading, controller.IsAimingDownSights);
+            aimWeight = AimRig.Blend(aimWeight, target, Time.deltaTime);
+            Vector3 chest = transform.position + Vector3.up * 1.4f;
+            Vector3 aim = controller.AimPoint.sqrMagnitude > 0f ? controller.AimPoint : transform.position + transform.forward * 6f;
+            rig.SetLookAtWeight(aimWeight, AimRig.BodyWeight, AimRig.HeadWeight, 0f, AimRig.Clamp);
+            rig.SetLookAtPosition(AimRig.Target(chest, transform.forward, aim));
+        }
         private void Start()
         {
             health = GetComponent<HealthSystem>();
@@ -74,6 +127,9 @@ namespace OutpostZero.Player
                 health.OnDamaged += HandleDamaged;
                 health.OnDeath += HandleDeath;
             }
+            socket = transform.Find("Weapon_Socket");
+            if (socket != null) socketRest = socket.localPosition;
+            if (animator != null && animator.isHuman) hand = animator.GetBoneTransform(HumanBodyBones.RightHand);
             guns = GetComponentsInChildren<FirearmWeapon>(true);
             for (int i = 0; i < guns.Length; i++)
             {
@@ -166,6 +222,8 @@ namespace OutpostZero.Player
                 animator.SetFloat("Speed", speed);
                 animator.SetBool("Crouch", controller.IsCrouching);
                 animator.SetBool("Sprint", controller.IsSprinting);
+                var gun = controller.ActiveWeapon as FirearmWeapon;
+                animator.SetFloat("ReloadSpeed", gun != null && gun.IsReloading ? AimRig.ReloadSpeed(reloadClip, gun.ReloadSeconds) : 1f);
             }
             if (next == pose || animationPlayer == null) 
             {
@@ -174,6 +232,20 @@ namespace OutpostZero.Player
             }
             pose = next;
             animationPlayer.CrossFade(pose.ToString(), 0.12f);
+        }
+
+        private void LateUpdate()
+        {
+            if (socket == null || hand == null) return;
+            Vector3 local = transform.InverseTransformPoint(hand.position);
+            var state = animator.GetCurrentAnimatorStateInfo(0);
+            if (state.IsName("Idle") && state.normalizedTime > 0.2f)
+            {
+                handRest = handSettled ? Vector3.Lerp(handRest, local, 0.05f) : local;
+                handSettled = true;
+            }
+            if (!handSettled) return;
+            socket.localPosition = AimRig.Socket(socketRest, handRest, local, AimRig.HandFollow);
         }
     }
 
@@ -186,6 +258,20 @@ namespace OutpostZero.Player
         {
             var body = GetComponentInParent<SurvivorLocomotion>();
             if (body != null) body.OnFootstep();
+        }
+
+        public void OnReloadAnimComplete()
+        {
+            var body = GetComponentInParent<SurvivorLocomotion>();
+            if (body != null) body.OnReloadAnimComplete();
+        }
+
+        private void OnAnimatorIK(int layerIndex)
+        {
+            if (layerIndex != 0) return;
+            var rig = GetComponent<Animator>();
+            var body = GetComponentInParent<SurvivorLocomotion>();
+            if (body != null) body.ApplyAim(rig);
         }
     }
 }

@@ -263,6 +263,17 @@ namespace OutpostZero.Combat
             StartCoroutine(ReloadRoutine());
         }
 
+        public float ReloadSeconds => isReloading && reloadWait > 0f ? reloadWait : reloadDuration;
+
+        /// <summary>The reload clip's end event: finishes the reload when the timer is nearly done, so the rounds land with the animation.</summary>
+        public bool FinishFromAnimation()
+        {
+            if (!isReloading || reloadWait <= 0f) return false;
+            if (!OutpostZero.Player.AimRig.AcceptReloadEvent(reloadElapsed / reloadWait)) return false;
+            reloadElapsed = reloadWait;
+            return true;
+        }
+
         public bool TryAbortReload(bool sprinting, bool hit)
         {
             if (!isReloading) return false;

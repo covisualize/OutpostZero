@@ -23,6 +23,7 @@ namespace OutpostZero.EditorTools
             }
             EnsureParameters(controller);
             EnsureGraph(controller);
+            EnsureRig(controller);
             EditorUtility.SetDirty(controller);
             AssetDatabase.SaveAssets();
             return controller;
@@ -78,6 +79,36 @@ namespace OutpostZero.EditorTools
             EnsureParameter(controller, "Hit", AnimatorControllerParameterType.Trigger);
             EnsureParameter(controller, "Death", AnimatorControllerParameterType.Trigger);
             EnsureParameter(controller, "Reload", AnimatorControllerParameterType.Trigger);
+            EnsureParameter(controller, ReloadSpeed, AnimatorControllerParameterType.Float);
+            var parameters = controller.parameters;
+            for (int i = 0; i < parameters.Length; i++)
+            {
+                if (parameters[i].name == ReloadSpeed && parameters[i].defaultFloat != 1f)
+                {
+                    parameters[i].defaultFloat = 1f;
+                    controller.parameters = parameters;
+                    break;
+                }
+            }
+        }
+
+        public const string ReloadSpeed = "ReloadSpeed";
+
+        /// <summary>The base layer runs the look-at pass for aim, and the reload plays at the gun's reload speed.</summary>
+        private static void EnsureRig(AnimatorController controller)
+        {
+            var layers = controller.layers;
+            if (layers.Length > 0 && !layers[0].iKPass)
+            {
+                layers[0].iKPass = true;
+                controller.layers = layers;
+            }
+            foreach (var child in controller.layers[0].stateMachine.states)
+            {
+                if (child.state.name != "Reload") continue;
+                child.state.speedParameterActive = true;
+                child.state.speedParameter = ReloadSpeed;
+            }
         }
 
         private static void EnsureParameter(AnimatorController controller, string name, AnimatorControllerParameterType type)
