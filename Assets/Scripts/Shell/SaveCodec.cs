@@ -63,6 +63,7 @@ namespace OutpostZero.Shell
         public int rounds;
         public int cells;
         public int meds;
+        public bool wentOut;
         public int fuel;
         public int fuelSet;
         public int shots;

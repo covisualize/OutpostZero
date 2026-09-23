@@ -50,9 +50,21 @@ namespace OutpostZero.Colony
         public static SurvivorRoster Instance { get; private set; }
 
         [SerializeField] private List<Survivor> survivors = new List<Survivor>();
+        [SerializeField] private bool wentOut;
         public IReadOnlyList<Survivor> Survivors => survivors;
         public event Action OnRosterChanged;
         public string DayNotes { get; private set; } = "";
+        public bool WentOut => wentOut;
+
+        public void MarkOuting()
+        {
+            wentOut = true;
+        }
+
+        public void SetWentOut(bool value)
+        {
+            wentOut = value;
+        }
         private readonly List<SuccessionLedger.Memorial> memorials = new List<SuccessionLedger.Memorial>();
         private readonly List<SuccessionLedger.CorpseMark> corpses = new List<SuccessionLedger.CorpseMark>();
         public IReadOnlyList<SuccessionLedger.Memorial> Memorials => memorials;
@@ -765,7 +777,10 @@ namespace OutpostZero.Colony
             int bodies = ColonyStorage.Instance != null ? ColonyStorage.Instance.Bodies : 0;
             int raw = ColonyStorage.Instance != null ? ColonyStorage.Instance.Raw : 0;
             WeatherKind sky = WeatherController.Instance != null ? WeatherController.Instance.Kind : WeatherKind.Clear;
-            var notes = ColonyDay.Simulate(days, ref food, ref water, cot, expeditionWon, fallenName, bodies, ref raw, sky);
+            int endedDay = WorldClock.Instance != null ? WorldClock.Instance.Day - 1 : 1;
+            bool idle = IdleDay.Idle(wentOut || expeditionWon, endedDay);
+            wentOut = false;
+            var notes = ColonyDay.Simulate(days, ref food, ref water, cot, expeditionWon, fallenName, bodies, ref raw, sky, idle);
             ApplySnapshot(days);
             Spend(food, water);
             if (ColonyStorage.Instance != null) ColonyStorage.Instance.SetRaw(raw);

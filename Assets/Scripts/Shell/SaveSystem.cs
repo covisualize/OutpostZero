@@ -296,6 +296,7 @@ namespace OutpostZero.Shell
             if (SurvivorRoster.Instance != null)
             {
                 data.memorial = SurvivorRoster.Instance.PackMemorials();
+                data.wentOut = SurvivorRoster.Instance.WentOut;
                 data.corpses = SurvivorRoster.Instance.PackCorpses();
             }
             if (SettingsService.Instance != null)
@@ -400,6 +401,7 @@ namespace OutpostZero.Shell
             SettingsService.Instance?.ApplyPresentation(data.sfxVolume, data.musicVolume, data.quality, data.vsync, data.fieldOfView, data.bindings, data.ambienceVolume, data.uiVolume);
             SettingsService.Instance?.SetMerciful(data.mercy != 0);
             SurvivorRoster.Instance?.RestoreStory(data.memorial, data.corpses);
+            SurvivorRoster.Instance?.SetWentOut(data.wentOut);
             TutorialDirector.Instance?.SetFinished(data.tutorialDone);
             SaveRegistry.Restore(data.parts);
             OutpostZero.Core.PlayerRegistry.Current?.RestoreMods(data.weaponMods);

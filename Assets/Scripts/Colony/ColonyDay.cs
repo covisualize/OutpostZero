@@ -103,6 +103,11 @@ namespace OutpostZero.Colony
 
         public static string[] Simulate(IList<ColonistDay> people, ref int food, ref int water, bool cot, bool expeditionWon, string fallenName, int bodies, ref int raw, WeatherKind sky)
         {
+            return Simulate(people, ref food, ref water, cot, expeditionWon, fallenName, bodies, ref raw, sky, false);
+        }
+
+        public static string[] Simulate(IList<ColonistDay> people, ref int food, ref int water, bool cot, bool expeditionWon, string fallenName, int bodies, ref int raw, WeatherKind sky, bool idle)
+        {
             var events = new List<string>();
             if (people == null) return Array.Empty<string>();
             int stain = YardDead.MoodHit(bodies);
@@ -173,6 +178,7 @@ namespace OutpostZero.Colony
                 }
 
                 if (expeditionWon) person.morale += 10f;
+                if (idle) person.morale -= IdleDay.Mood;
 
                 if (!string.IsNullOrEmpty(fallenFirst))
                 {
@@ -250,6 +256,7 @@ namespace OutpostZero.Colony
             if (MealTable.Argument(volatilePresent, living, leaderPresent) || KinBoard.Quarrel(people, leaderPresent)) Once(events, "argument");
             if (expeditionWon && Average(people) > 70f) Once(events, "celebration");
             if (YardSoak.Soaked(sky)) Once(events, "soak");
+            if (idle && living > 0) Once(events, "idle");
             return events.ToArray();
         }
 

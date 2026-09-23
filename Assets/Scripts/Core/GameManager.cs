@@ -274,6 +274,7 @@ namespace OutpostZero.Core
             LastOutcome = ExpeditionLedger.Close(Expedition, end, zombiesKilled, tracker != null ? tracker.KillGoal : 1, scrapLooted, tracker != null ? tracker.ScrapGoal : 1, expeditionTimer);
             LastOutcome = ResultsSheet.Scored(LastOutcome, tracker != null ? tracker.Board : null);
             BalanceTelemetry.ExpeditionEnded(Expedition, LastOutcome);
+            SurvivorRoster.Instance?.MarkOuting();
             outcomeAnnounced = false;
             Expedition = default;
         }
