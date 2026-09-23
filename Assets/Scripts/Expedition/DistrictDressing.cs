@@ -114,13 +114,18 @@ namespace OutpostZero.Expedition
                 if (cell.Kind == "hole") continue;
                 if (cell.Kind == "lot")
                 {
-                    var shell = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                    shell.name = "RoadLot";
-                    shell.transform.SetParent(root, false);
-                    shell.transform.position = new Vector3(cell.X, 1.1f, cell.Z);
-                    shell.transform.localScale = new Vector3(2.5f, 2.2f, 2.5f);
-                    shell.layer = GameLayers.Environment;
-                    Paint(shell.GetComponent<Renderer>(), tint, OutpostZero.Graphics.SurfaceFamily.BrickRed);
+                    var corner = new Vector3(cell.X - KitPlan.LotTile * 0.5f, 0f, cell.Z - KitPlan.LotTile * 0.5f);
+                    var house = KitPlan.Lot(seed, cell.X, cell.Z, map.Footprint);
+                    if (!KitStructure.RaiseLot(house, corner, root, KitPlan.Variant(districtId), "RoadLot"))
+                    {
+                        var shell = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                        shell.name = "RoadLot";
+                        shell.transform.SetParent(root, false);
+                        shell.transform.position = new Vector3(cell.X, 1.1f, cell.Z);
+                        shell.transform.localScale = new Vector3(2.5f, 2.2f, 2.5f);
+                        shell.layer = GameLayers.Environment;
+                        Paint(shell.GetComponent<Renderer>(), tint, OutpostZero.Graphics.SurfaceFamily.BrickRed);
+                    }
                     if (map.HasLoot && Close(cell.X, map.LootX) && Close(cell.Z, map.LootZ))
                     {
                         var crate = GameObject.CreatePrimitive(PrimitiveType.Cube);

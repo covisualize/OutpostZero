@@ -222,6 +222,57 @@ namespace OutpostZero.Expedition
             return quarter * 90;
         }
 
+        public const float LotTile = 2f;
+        public const float Storey = 3f;
+
+        private static readonly string[] LotFronts = { "wall_door", "wall_boarded", "wall_window_broken", "wall_door" };
+
+        /// <summary>
+        /// One-tile kit house for a road-graph lot, local to the tile's south-west corner.
+        /// The front (south) face looks onto the spine; walls stay within 0.2 m of the tile.
+        /// </summary>
+        public static KitPlacement[] Lot(int seed, float x, float z, string footprint)
+        {
+            uint hash = LotHash(seed, x, z);
+            int storeys = footprint == "apartment" || footprint == "station" ? 2
+                : footprint == "warehouse" ? 1
+                : 1 + (int)(hash & 1u);
+            var list = new System.Collections.Generic.List<KitPlacement>();
+            for (int s = 0; s < storeys; s++)
+            {
+                float y = s * Storey;
+                list.Add(At("floor", 0f, y, 0f, 0));
+                string front = s == 0 ? LotFronts[(hash >> 1) % (uint)LotFronts.Length] : ((hash >> 3) & 1u) == 0u ? "wall_window" : "wall_window_broken";
+                list.Add(At(front, 0f, y, 0f, 0));
+                list.Add(At("wall_plain", 0f, y, LotTile - 0.2f, 0));
+                list.Add(At(((hash >> (4 + s)) & 1u) == 0u ? "wall_plain" : "wall_window", 0f, y, 0f, 270));
+                list.Add(At(((hash >> (6 + s)) & 1u) == 0u ? "wall_plain" : "wall_boarded", LotTile, y, LotTile, 90));
+            }
+            float top = storeys * Storey;
+            list.Add(At("roof", 0f, top, 0f, 0));
+            if (((hash >> 8) & 1u) == 1u) list.Add(At("parapet", 0f, top, 0f, 0));
+            return list.ToArray();
+        }
+
+        private static KitPlacement At(string id, float x, float y, float z, int yaw)
+        {
+            return new KitPlacement { id = id, x = x, y = y, z = z, yaw = yaw };
+        }
+
+        private static uint LotHash(int seed, float x, float z)
+        {
+            unchecked
+            {
+                uint h = (uint)seed * 2654435761u;
+                h ^= (uint)Mathf.RoundToInt(x * 4f) * 2246822519u;
+                h ^= (uint)Mathf.RoundToInt(z * 4f) * 3266489917u;
+                h ^= h >> 15;
+                h *= 668265263u;
+                h ^= h >> 13;
+                return h;
+            }
+        }
+
         public static KitPlacement Place(string id, Vector3 local, float yaw, float grid, float storey)
         {
             return new KitPlacement
@@ -240,11 +291,40 @@ namespace OutpostZero.Expedition
     /// </summary>
     public class KitStructure : MonoBehaviour
     {
+        private static KitBook catalog;
+        private static bool catalogLoaded;
+
+        private static KitBook Book
+        {
+            get
+            {
+                if (!catalogLoaded)
+                {
+                    catalogLoaded = true;
+                    var text = Resources.Load<TextAsset>("KitCatalog");
+                    catalog = text != null ? JsonUtility.FromJson<KitBook>(text.text) : null;
+                }
+                return catalog;
+            }
+        }
+
+        /// <summary>Raises a road-graph lot house; false when the kit catalog is missing so the caller can fall back.</summary>
+        public static bool RaiseLot(KitPlacement[] placements, Vector3 corner, Transform parent, string variant, string name)
+        {
+            var kit = Book;
+            if (kit == null || kit.pieces == null || parent == null || placements == null) return false;
+            var shell = new GameObject(name);
+            shell.transform.SetParent(parent, false);
+            Spawn(kit, placements, corner, shell.transform, variant);
+            if (shell.transform.childCount > 0) return true;
+            Destroy(shell);
+            return false;
+        }
+
         public static void Raise(string districtId, Transform parent)
         {
-            var text = Resources.Load<TextAsset>("KitCatalog");
-            if (text == null || parent == null) return;
-            var book = JsonUtility.FromJson<KitBook>(text.text);
+            if (parent == null) return;
+            var book = Book;
             if (book == null || book.anchor == null) return;
             var anchor = new Vector3(book.anchor.x, book.anchor.y, book.anchor.z);
             var shell = new GameObject("KitShell");

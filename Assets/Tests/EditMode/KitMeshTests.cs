@@ -14,7 +14,7 @@ namespace OutpostZero.Tests.EditMode
     {
         static string Root => Directory.GetCurrentDirectory();
 
-        static KitBook Book()
+        internal static KitBook Book()
         {
             var root = MiniJson.Object(MiniJson.Parse(File.ReadAllText(Path.Combine(Root, "Assets", "Resources", "KitCatalog.json"))));
             var pieces = MiniJson.List(root["pieces"]).Select(MiniJson.Object).Select(p => new KitPiece
