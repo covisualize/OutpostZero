@@ -158,7 +158,7 @@ namespace OutpostZero.Tests.EditMode
             StringAssert.Contains("Note(ObjectiveKind.Escort, FactionQuest.Porter, 1)", porter);
             StringAssert.Contains("Waive(ObjectiveKind.Escort, FactionQuest.Porter)", porter);
             StringAssert.DoesNotContain("NoteDistrictCleared", Read("Assets/Scripts/Shell/WorldMapService.cs"));
-            StringAssert.Contains("inventory.TrySpendMeds(wanted)", Read("Assets/Scripts/Colony/FactionTrade.cs"));
+            StringAssert.Contains("inventory.TrySpendMeds(rest)", Read("Assets/Scripts/Colony/FactionTrade.cs"));
             Assert.AreEqual("Walk me to the gate", StallVoice.Porter(false, "en"));
             Assert.AreEqual("El porteador de la caravana cayó", StallVoice.PorterFell("es"));
             Assert.AreEqual("The Clinic wants 10 meds", StallVoice.Quest("clinic", false, "en"));

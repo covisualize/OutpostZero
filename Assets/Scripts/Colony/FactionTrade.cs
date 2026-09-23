@@ -42,6 +42,7 @@ namespace OutpostZero.Colony
                 key.Add(Day);
                 key.Add(PostBuilt);
                 key.Add(summonedDay);
+                key.Add(ColonyStorage.Instance != null ? ColonyStorage.Instance.Meds : 0);
                 return key.Value;
             }
         }
@@ -198,11 +199,15 @@ namespace OutpostZero.Colony
             int wanted = MedsWanted;
             if (wanted <= 0 || CaravanBook.QuestDone(quests, "clinic")) return false;
             var inventory = PlayerRegistry.Current != null ? PlayerRegistry.Current.GetComponent<PlayerInventory>() : null;
-            if (inventory == null || !inventory.TrySpendMeds(wanted))
+            var storage = ColonyStorage.Instance;
+            int shelf = FactionQuest.Shelf(wanted, storage != null ? storage.Meds : 0);
+            int rest = wanted - shelf;
+            if (rest > 0 && (inventory == null || !inventory.TrySpendMeds(rest)))
             {
                 GameplayFeedback.Toast(StallVoice.Quest("clinic", false, null));
                 return false;
             }
+            if (shelf > 0) storage.TakeMeds(shelf);
             Complete("clinic");
             return true;
         }

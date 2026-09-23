@@ -115,6 +115,13 @@ namespace OutpostZero.Colony
             return true;
         }
 
+        /// <summary>How much of a hand-in of <paramref name="need"/> meds the camp shelf covers. The pack gives the rest.</summary>
+        public static int Shelf(int need, int stock)
+        {
+            if (need <= 0 || stock <= 0) return 0;
+            return stock < need ? stock : need;
+        }
+
         private static ObjectiveSpec Stamp(ObjectiveSpec spec, string faction)
         {
             string id = Prefix + faction;

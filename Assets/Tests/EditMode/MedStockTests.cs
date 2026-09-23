@@ -46,6 +46,19 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void TheClinicTakesTheCampShelfFirstThenThePack()
+        {
+            Assert.AreEqual(4, FactionQuest.Shelf(10, 4), "four on the shelf leave six for the pack");
+            Assert.AreEqual(10, FactionQuest.Shelf(10, 15), "a full shelf covers the whole delivery");
+            Assert.AreEqual(0, FactionQuest.Shelf(10, 0));
+            Assert.AreEqual(0, FactionQuest.Shelf(0, 5));
+            string trade = Read("Assets/Scripts/Colony/FactionTrade.cs");
+            StringAssert.Contains("if (rest > 0 && (inventory == null || !inventory.TrySpendMeds(rest)))", trade);
+            StringAssert.Contains("if (shelf > 0) storage.TakeMeds(shelf);", trade);
+            StringAssert.Contains("key.Add(ColonyStorage.Instance != null ? ColonyStorage.Instance.Meds : 0);", trade);
+        }
+
+        [Test]
         public void MedsMoveBetweenThePackAndTheCampAndTheMedicSpendsThem()
         {
             string ui = Read("Assets/Scripts/UI/OutpostInterface.cs");

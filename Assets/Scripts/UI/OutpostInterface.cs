@@ -371,7 +371,7 @@ namespace OutpostZero.UI
             if (id == "clinic" && faction.MedsWanted > 0 && !CaravanBook.QuestDone(faction.Quests, "clinic"))
             {
                 var bag = PlayerRegistry.Current != null ? PlayerRegistry.Current.GetComponent<PlayerInventory>() : null;
-                int carried = bag != null ? bag.CarriedMeds : 0;
+                int carried = (bag != null ? bag.CarriedMeds : 0) + (ColonyStorage.Instance != null ? ColonyStorage.Instance.Meds : 0);
                 parent.Add(Button(Loc.T("stall.deliver") + "  " + carried + "/" + faction.MedsWanted, () => faction.DeliverMeds()));
             }
             parent.Add(Button(Loc.T("stall.leave"), faction.Toggle));

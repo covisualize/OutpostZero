@@ -238,6 +238,7 @@ Play this in a player build, not the editor. Use Survivor difficulty and a fixed
   - Outcomes: held gives +6 morale and a task tick. Lost costs scrap, and a breach also spoils food. Injuries land on guards first and can kill, dead zombies are left as bodies to clear, and the morning line asks for repairs when modules are damaged. Nobody left alive is game over.
   - Automated: `RaidOutcome.Holds` in `GameSystemsTests` pins day 3 with one wall lost, two walls or one guard held, and day 10 needing two walls and a guard, or one wall and three lamps.
 - [ ] PRO-62 **Play**: scrap buys from the merchant, caravan visits can be planned around, and reputation changes prices and unlocks stock.
+- [ ] PRO-62 **Play** (Clinic delivery from the shelf): stock 4 meds in camp, carry 6, and open the Clinic's stall. The Deliver line reads 10/10. Deliver, and the camp shelf and the pack both empty. With 4 on the shelf and 3 carried it reads 7/10, and delivering takes nothing.
   - At standing 30 or higher, each faction adds one item to its table, marked "(trusted)": the Caravan sells flares, the Iron Militia pipe bombs, the Clinic antibiotics and the Free Farmers raw food. Below 30 the stall says where more stock opens.
   - Every carried item with a barter value gets a Sell row. The offer is half the base price, up to 10% more at full standing, and can never beat what the same item costs to buy. Crafted gear is priced from its recipe bill (`CraftBill.Value`).
   - The leader haggles 1% off per point of Leadership, capped at 10%.
