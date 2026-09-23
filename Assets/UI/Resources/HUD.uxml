@@ -58,6 +58,7 @@
         <ui:VisualElement name="objectives" class="hud-panel hud-objectives" picking-mode="Ignore">
             <ui:Label name="objective-quota" class="hud-line" picking-mode="Ignore" />
             <ui:Label name="objective-poi" class="hud-line" picking-mode="Ignore" />
+            <ui:Label name="objective-board" class="hud-line" picking-mode="Ignore" />
             <ui:Label name="objective-rescue" class="hud-line" picking-mode="Ignore" />
             <ui:Label name="objective-district" class="hud-line hud-dim" picking-mode="Ignore" />
             <ui:Label name="objective-clock" class="hud-line hud-dim" picking-mode="Ignore" />

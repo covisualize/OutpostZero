@@ -53,6 +53,9 @@ namespace OutpostZero.Expedition
         public int scavengeShifts;
         public int combatLevel;
         public int scavengeLevel;
+        public int objectivesDone;
+        public int objectivesTotal;
+        public int bonusScrap;
 
         public bool LeaderCameHome => end == ExpeditionEnd.Extracted || end == ExpeditionEnd.Victory || end == ExpeditionEnd.Dragged;
         public bool QuotaMet => kills >= killGoal && scrap >= scrapGoal;

@@ -25,6 +25,26 @@ namespace OutpostZero.Expedition
             if (outcome.scrap >= outcome.scrapGoal) scavenge = 1;
         }
 
+        /// <summary>
+        /// Records the objectives met. Their rewards count only when the leader extracts; a run that ends any other
+        /// way brings nothing home.
+        /// </summary>
+        public static ExpeditionOutcome Scored(ExpeditionOutcome outcome, ObjectiveBoard board)
+        {
+            outcome.objectivesDone = board != null ? board.DoneCount : 0;
+            outcome.objectivesTotal = board != null ? board.Count : 0;
+            bool home = outcome.end == ExpeditionEnd.Extracted || outcome.end == ExpeditionEnd.Victory;
+            outcome.bonusScrap = home && board != null ? board.BonusReward : 0;
+            return outcome;
+        }
+
+        public static string ObjectivesLine(ExpeditionOutcome outcome, string language)
+        {
+            if (outcome.objectivesTotal <= 0) return "";
+            string line = Word("result.objectives", language) + " " + outcome.objectivesDone + "/" + outcome.objectivesTotal;
+            return outcome.bonusScrap > 0 ? line + "  +" + outcome.bonusScrap + " " + Word("result.bonus", language) : line;
+        }
+
         public static ExpeditionOutcome Trained(ExpeditionOutcome outcome, Survivor leader)
         {
             Earned(outcome, out int combat, out int scavenge);

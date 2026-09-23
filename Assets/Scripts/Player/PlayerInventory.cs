@@ -141,7 +141,14 @@ namespace OutpostZero.Player
             OnInventoryChanged?.Invoke();
             if (WeightRatio >= 0.8f) OutpostZero.Shell.CodexDirector.Hear("weight");
             if (TossKind.Of(id) != TossKind.None) OutpostZero.Shell.CodexDirector.Hear("throwable");
+            NoteFound(category, id, count);
             return true;
+        }
+
+        private static void NoteFound(ItemCategory category, string id, int count)
+        {
+            if (GameManager.Instance == null || GameManager.Instance.CurrentState != GameState.ExpeditionActive) return;
+            OutpostZero.Expedition.ObjectiveTracker.Instance?.NotePickup(category, id, count);
         }
 
         public void AddMedicalKits(int amount)
@@ -158,6 +165,7 @@ namespace OutpostZero.Player
             {
                 case LootKind.Medkit:
                     AddMedicalKits(amount);
+                    NoteFound(ItemCategory.Medical, "medkit", amount);
                     return true;
                 case LootKind.Ammo9mm:
                     return GrantAmmo(WeaponType.Pistol, amount);

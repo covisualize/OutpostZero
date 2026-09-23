@@ -79,12 +79,18 @@ namespace OutpostZero.Expedition
             poi.Configure(plan.PoiRole);
             string poiMark = StreetLedger.Mark("poi", plan.PoiX, plan.PoiZ);
             poi.Stamp(poiMark);
-            if (WorldMapService.Instance != null && WorldMapService.Instance.StreetTaken(poiMark)) poi.Recall();
+            ObjectiveTracker.Instance?.MarkSpot("poi", room.transform.position);
+            if (WorldMapService.Instance != null && WorldMapService.Instance.StreetTaken(poiMark))
+            {
+                poi.Recall();
+                ObjectiveTracker.Instance?.Waive(ObjectiveKind.Retrieve, "poi");
+            }
 
             var nest = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
             nest.name = "DistrictNest";
             nest.transform.SetParent(root, false);
             nest.transform.position = new Vector3(plan.NestX, 0.15f, plan.NestZ);
+            ObjectiveTracker.Instance?.MarkSpot("nest", nest.transform.position);
             nest.transform.localScale = new Vector3(1.2f, 0.08f, 1.2f);
             var nestCollider = nest.GetComponent<Collider>();
             if (nestCollider != null) Destroy(nestCollider);
@@ -94,6 +100,7 @@ namespace OutpostZero.Expedition
             exit.name = "DistrictExtract";
             exit.transform.SetParent(root, false);
             exit.transform.position = new Vector3(plan.ExtractX, 0.08f, plan.ExtractZ);
+            ObjectiveTracker.Instance?.MarkSpot("extract", exit.transform.position);
             exit.transform.localScale = new Vector3(2.4f, 0.04f, 2.4f);
             var exitCollider = exit.GetComponent<Collider>();
             if (exitCollider != null) Destroy(exitCollider);
@@ -176,6 +183,7 @@ namespace OutpostZero.Expedition
             nest.name = "EastNest";
             nest.transform.SetParent(root, false);
             nest.transform.position = new Vector3(map.NestX, 0.08f, map.NestZ);
+            ObjectiveTracker.Instance?.MarkSpot("nest", nest.transform.position);
             nest.transform.localScale = new Vector3(1.4f, 0.05f, 1.4f);
             var nestCollider = nest.GetComponent<Collider>();
             if (nestCollider != null) Destroy(nestCollider);
@@ -342,8 +350,12 @@ namespace OutpostZero.Expedition
         private void RaiseRescue(string districtId, DistrictBlocks.Plan plan)
         {
             var offer = RescueBook.For(districtId);
-            if (string.IsNullOrEmpty(offer.Id)) return;
-            if (SurvivorRoster.Instance != null && SurvivorRoster.Instance.Has(offer.Id)) return;
+            bool waiting = !string.IsNullOrEmpty(offer.Id) && (SurvivorRoster.Instance == null || !SurvivorRoster.Instance.Has(offer.Id));
+            if (!waiting)
+            {
+                ObjectiveTracker.Instance?.Waive(ObjectiveKind.Rescue, "");
+                return;
+            }
 
             var person = GameObject.CreatePrimitive(PrimitiveType.Capsule);
             person.name = "Rescue_" + offer.Id;

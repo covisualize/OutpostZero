@@ -177,6 +177,7 @@ namespace OutpostZero.Expedition
             following = false;
             GameplayFeedback.Toast(FollowFall.Line(personName, null));
             SurvivorRoster.Instance?.Lose(personId, personName, Trait(), transform.position);
+            ObjectiveTracker.Instance?.Waive(ObjectiveKind.Rescue, personId);
             gameObject.SetActive(false);
         }
 
@@ -194,6 +195,7 @@ namespace OutpostZero.Expedition
             joined = true;
             following = false;
             GameplayFeedback.Toast(StreetAsk.Stays(personName, null));
+            ObjectiveTracker.Instance?.Note(ObjectiveKind.Rescue, personId, 1);
             gameObject.SetActive(false);
         }
 

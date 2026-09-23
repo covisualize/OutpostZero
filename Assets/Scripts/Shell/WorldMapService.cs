@@ -191,6 +191,7 @@ namespace OutpostZero.Shell
                 HordeDirector.Instance?.DropAmbush(true);
                 GameplayFeedback.Toast(Loc.T("ambush.warn"));
             }
+            ObjectiveTracker.Instance?.Brief(tutorial ? "" : districtId);
             WeatherController.Instance?.SetDistrict(districtId);
             WeatherController.Instance?.SetFor(CloudDeck.Lay(rules.Weather, day), 180f);
             DistrictDressing.Instance?.Build(districtId);

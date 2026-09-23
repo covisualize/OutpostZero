@@ -1212,6 +1212,7 @@ namespace OutpostZero.AI
             {
                 GameManager.Instance.RecordZombieKill(archetypeId);
             }
+            ObjectiveTracker.Instance?.NoteKillAt(transform.position);
 
             DropLoot();
 

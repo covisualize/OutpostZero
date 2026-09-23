@@ -86,6 +86,7 @@ namespace OutpostZero.UI
             Add("objectives", Root, Kind.Box, "hud-panel hud-objectives");
             Add("objective-quota", "objectives", Kind.Text, "hud-line", 0.95f);
             Add("objective-poi", "objectives", Kind.Text, "hud-line", 0.9f);
+            Add("objective-board", "objectives", Kind.Text, "hud-line", 0.9f);
             Add("objective-rescue", "objectives", Kind.Text, "hud-line", 0.9f);
             Add("objective-district", "objectives", Kind.Text, "hud-line hud-dim", 0.85f);
             Add("objective-clock", "objectives", Kind.Text, "hud-line hud-dim", 0.85f);

@@ -49,7 +49,7 @@ namespace OutpostZero.UI
         private VisualElement vitals, objectives, compass, feed, meters, loadout, veil, hitMarker, beat, radial, wheelBox;
         private VisualElement healthFill, healthGhost, staminaFill, noiseFill, exposureFill;
         private Label healthCaption, healthValue, healthMax, noiseLabel, noiseMark, exposureLabel, tensionLabel;
-        private Label quota, poi, rescue, district, clock, timer;
+        private Label quota, poi, board, rescue, district, clock, timer;
         private Label killFeed, threats, watch, subtitle, hurt, tutorial, prompt;
         private Label mag, split, reserve, weaponName, belt, compassPoi, compassGate;
 
@@ -224,6 +224,7 @@ namespace OutpostZero.UI
             tensionLabel = L("tension-label");
             quota = L("objective-quota");
             poi = L("objective-poi");
+            board = L("objective-board");
             rescue = L("objective-rescue");
             district = L("objective-district");
             clock = L("objective-clock");
@@ -653,14 +654,17 @@ namespace OutpostZero.UI
             {
                 quota.text = StreetHud.Quota(tracker.Kills, tracker.KillGoal, tracker.Scrap, tracker.ScrapGoal, null);
                 poi.text = tracker.PoiLine();
+                if (board != null) board.text = tracker.BoardLines(null);
             }
             else
             {
                 quota.text = "";
                 poi.text = "";
+                if (board != null) board.text = "";
             }
             Show(quota, quota.text.Length > 0);
             Show(poi, !string.IsNullOrEmpty(poi.text));
+            if (board != null) Show(board, !string.IsNullOrEmpty(board.text));
         }
 
         private void HandleClock()

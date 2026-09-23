@@ -228,6 +228,7 @@ namespace OutpostZero.Core
         {
             var tracker = ObjectiveTracker.Instance;
             LastOutcome = ExpeditionLedger.Close(Expedition, end, zombiesKilled, tracker != null ? tracker.KillGoal : 1, scrapLooted, tracker != null ? tracker.ScrapGoal : 1, expeditionTimer);
+            LastOutcome = ResultsSheet.Scored(LastOutcome, tracker != null ? tracker.Board : null);
             BalanceTelemetry.ExpeditionEnded(Expedition, LastOutcome);
             outcomeAnnounced = false;
             Expedition = default;
@@ -260,6 +261,7 @@ namespace OutpostZero.Core
             bool won = WorldMapService.Instance != null && WorldMapService.Instance.CampaignWon && !WorldMapService.Instance.Endless;
             CloseExpedition(won ? ExpeditionEnd.Victory : ExpeditionEnd.Extracted);
             LastOutcome = ResultsSheet.Trained(LastOutcome, SurvivorRoster.Instance != null ? SurvivorRoster.Instance.Leader : null);
+            if (LastOutcome.bonusScrap > 0) ColonyStorage.Instance?.AddScrap(LastOutcome.bonusScrap);
             SurvivorRoster.Instance?.RewardReturn();
             BringHomeBite();
             FactionTrade.Instance?.NoteExtracted();

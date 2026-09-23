@@ -577,6 +577,7 @@ namespace OutpostZero.UI
             int scrapGoal = closed ? outcome.scrapGoal : tracker != null ? tracker.ScrapGoal : 1;
             menu.Add(Body(ExtractSlip.Line(district, kills, killGoal, scrap, scrapGoal, Loc.T("result.kills"), Loc.T("result.scrap"))));
             if (closed) menu.Add(Body(ExpeditionLedger.TimeLine(outcome, null)));
+            if (closed && outcome.objectivesTotal > 0) menu.Add(Body(ResultsSheet.ObjectivesLine(outcome, null)));
             if (tracker != null && tracker.PoiLine().Length > 0) menu.Add(Body(tracker.PoiLine()));
             if (!closed) return;
             var player = PlayerRegistry.Current;
