@@ -48,6 +48,8 @@ namespace OutpostZero.Expedition
         public float y;
         public float z;
         public int yaw;
+        /// <summary>Material variant for this piece alone (brick, concrete, plaster); empty takes the building's.</summary>
+        public string variant;
     }
 
     [Serializable]
@@ -145,6 +147,37 @@ namespace OutpostZero.Expedition
         public const float MeshYaw = 180f;
 
         public static string PrefabName(string id) => "Kit_" + id;
+
+        /// <summary>The placement's own variant when the piece offers it, otherwise the building's.</summary>
+        public static string VariantFor(KitPiece piece, string own, string building)
+        {
+            if (piece == null || string.IsNullOrEmpty(own) || piece.variants == null) return building;
+            for (int i = 0; i < piece.variants.Length; i++)
+                if (piece.variants[i] == own) return own;
+            return building;
+        }
+
+        /// <summary>Scene name of an assembled piece: Kit_&lt;id&gt;, with |&lt;variant&gt; when it overrides the building's.</summary>
+        public static string HostName(string id, string variant)
+        {
+            return string.IsNullOrEmpty(variant) ? PrefabName(id) : PrefabName(id) + "|" + variant;
+        }
+
+        public static bool ReadHost(string name, out string id, out string variant)
+        {
+            id = "";
+            variant = "";
+            if (string.IsNullOrEmpty(name) || !name.StartsWith("Kit_")) return false;
+            string rest = name.Substring(4);
+            int bar = rest.IndexOf('|');
+            if (bar >= 0)
+            {
+                variant = rest.Substring(bar + 1);
+                rest = rest.Substring(0, bar);
+            }
+            id = rest;
+            return id.Length > 0;
+        }
 
         /// <summary>
         /// Pieces with a breakable pane keep their box build so the glass can shatter on its own.
@@ -617,10 +650,11 @@ namespace OutpostZero.Expedition
                 host.transform.rotation = Quaternion.Euler(0f, placement.yaw, 0f);
                 bool cap = piece.id == "roof" || piece.id == "ceiling" || (piece.id == "floor" && placement.y > 0.5f);
                 if (cap) host.AddComponent<KitCap>().slabY = origin.y;
-                var tint = KitPlan.Tint(piece, variant);
+                string look = KitPlan.VariantFor(piece, placement.variant, variant);
+                var tint = KitPlan.Tint(piece, look);
                 var kind = KitPlan.Surface(piece.surface);
                 var mesh = Meshes != null && KitPlan.UsesMesh(piece) ? Meshes.Find(piece.id) : null;
-                if (mesh != null) Dress(mesh, host.transform, KitPlan.Shade(piece, variant));
+                if (mesh != null) Dress(mesh, host.transform, KitPlan.Shade(piece, look));
                 for (int c = 0; c < piece.colliders.Length; c++)
                 {
                     var box = piece.colliders[c];

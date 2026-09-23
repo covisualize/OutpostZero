@@ -85,6 +85,7 @@ namespace OutpostZero.EditorTools
         private float storey = 3f;
         private float level;
         private int yaw;
+        private string variant = "";
         private string recipeName = "custom";
         private static readonly string[] Recipes = { "storefront", "warehouse", "hospital", "apartment", "edge" };
         private int recipe = 3;
@@ -114,8 +115,18 @@ namespace OutpostZero.EditorTools
                 return;
             }
             var pieces = new DropdownField("Piece", new List<string>(ids), Mathf.Clamp(piece, 0, ids.Length - 1));
-            pieces.RegisterValueChangedCallback(e => piece = System.Array.IndexOf(ids, e.newValue));
+            var looks = new DropdownField("Variant", Looks(ids[Mathf.Clamp(piece, 0, ids.Length - 1)]), 0);
+            pieces.RegisterValueChangedCallback(e =>
+            {
+                piece = System.Array.IndexOf(ids, e.newValue);
+                looks.choices = Looks(e.newValue);
+                looks.index = 0;
+                variant = "";
+            });
+            looks.RegisterValueChangedCallback(e => variant = e.newValue == BuildingLook ? "" : e.newValue);
             ui.Add(pieces);
+            ui.Add(looks);
+            ui.Add(new Button(ApplyVariant) { text = "Apply variant to selection" });
             ui.Add(Number("Grid (m)", grid, v => grid = v));
             ui.Add(Number("Storey (m)", storey, v => storey = v));
             ui.Add(Number("Level", level, v => level = v));
@@ -140,6 +151,42 @@ namespace OutpostZero.EditorTools
             ui.Add(export);
             ui.Add(new Button(() => Export(recipeName)) { text = "Export assembly as recipe" });
             ui.Add(new Button(KitPrefabSync.SyncFromMenu) { text = "Sync Kit Prefabs" });
+        }
+
+        private const string BuildingLook = "(building)";
+
+        private List<string> Looks(string id)
+        {
+            var list = new List<string> { BuildingLook };
+            var kit = book != null ? KitPlan.Find(book.pieces, id) : null;
+            if (kit != null && kit.variants != null && kit.variants.Length > 1) list.AddRange(kit.variants);
+            return list;
+        }
+
+        private void ApplyVariant()
+        {
+            foreach (var chosen in Selection.gameObjects)
+            {
+                if (chosen == null || !KitPlan.ReadHost(chosen.name, out string id, out _)) continue;
+                var kit = KitPlan.Find(book.pieces, id);
+                string look = KitPlan.VariantFor(kit, variant, "");
+                Undo.RecordObject(chosen, "Kit variant");
+                chosen.name = KitPlan.HostName(id, look);
+                Shade(chosen, kit, look);
+            }
+        }
+
+        private static void Shade(GameObject host, KitPiece kit, string look)
+        {
+            if (kit == null) return;
+            var shade = KitPlan.Shade(kit, string.IsNullOrEmpty(look) ? "brick" : look);
+            foreach (var renderer in host.GetComponentsInChildren<Renderer>(true))
+            {
+                var block = new MaterialPropertyBlock();
+                renderer.GetPropertyBlock(block);
+                block.SetColor("_Tint", shade);
+                renderer.SetPropertyBlock(block);
+            }
         }
 
         private static FloatField Number(string label, float value, System.Action<float> set)
@@ -177,6 +224,7 @@ namespace OutpostZero.EditorTools
             var local = root.InverseTransformPoint(world);
             local.y = level * storey;
             var placement = KitPlan.Place(id, local, yaw, grid, storey);
+            placement.variant = KitPlan.VariantFor(KitPlan.Find(book.pieces, id), variant, "");
             var host = Spawn(root, placement);
             if (host != null) Selection.activeGameObject = host;
         }
@@ -189,7 +237,7 @@ namespace OutpostZero.EditorTools
                 Debug.LogWarning("[KitAssembler] No prefab for " + placement.id);
                 return null;
             }
-            var host = new GameObject(KitPlan.PrefabName(placement.id));
+            var host = new GameObject(KitPlan.HostName(placement.id, placement.variant));
             Undo.RegisterCreatedObjectUndo(host, "Place kit piece");
             host.transform.SetParent(root, false);
             host.transform.localPosition = new Vector3(placement.x, placement.y, placement.z);
@@ -197,6 +245,8 @@ namespace OutpostZero.EditorTools
             var visual = (GameObject)PrefabUtility.InstantiatePrefab(prefab, host.transform);
             visual.transform.localPosition = Vector3.zero;
             visual.transform.localRotation = Quaternion.Euler(0f, KitPlan.MeshYaw, 0f);
+            var book = KitPrefabSync.Book();
+            if (book != null) Shade(host, KitPlan.Find(book.pieces, placement.id), placement.variant);
             return host;
         }
 
@@ -221,9 +271,10 @@ namespace OutpostZero.EditorTools
             for (int i = 0; i < root.childCount; i++)
             {
                 var child = root.GetChild(i);
-                if (!child.name.StartsWith("Kit_")) continue;
-                var p = child.localPosition;
-                list.Add(KitPlan.Place(child.name.Substring(4), p, child.localEulerAngles.y, 0.01f, 0.01f));
+                if (!KitPlan.ReadHost(child.name, out string id, out string look)) continue;
+                var placement = KitPlan.Place(id, child.localPosition, child.localEulerAngles.y, 0.01f, 0.01f);
+                placement.variant = look;
+                list.Add(placement);
             }
             return list.ToArray();
         }
