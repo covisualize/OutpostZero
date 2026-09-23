@@ -883,7 +883,8 @@ namespace OutpostZero.UI
             parent.Add(Button(settings.QuietFlash ? Loc.T("set.flash_off") : Loc.T("set.flash_on"), settings.ToggleQuietFlash));
             parent.Add(Button(Loc.T("set.color") + " " + Loc.T(HudPalette.Name(settings.ColorblindMode)), settings.CycleColorblind));
             parent.Add(Button(settings.EnemyOutline ? Loc.T("set.outline_on") : Loc.T("set.outline_off"), settings.ToggleEnemyOutline));
-            parent.Add(Button(settings.Language == "es" ? "Idioma: ES" : "Language: EN", () => settings.SetLanguage(settings.Language == "es" ? "en" : "es")));
+            bool devTongue = DevCheats.Allowed(Application.isEditor, Debug.isDebugBuild);
+            parent.Add(Button(PseudoLoc.Label(settings.Language), () => settings.SetLanguage(PseudoLoc.Next(settings.Language, devTongue))));
             int tier = Mathf.Clamp(settings.Quality, 0, 3);
             parent.Add(Button(Loc.T("set.quality") + " " + Loc.T("set.tier" + tier), settings.CycleQuality));
             parent.Add(Button(settings.VSync ? Loc.T("set.vsync_on") : Loc.T("set.vsync_off"), settings.ToggleVSync));

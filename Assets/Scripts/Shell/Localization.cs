@@ -1639,7 +1639,8 @@ namespace OutpostZero.Shell
         public static string Raw(string key, string language)
         {
             var table = language == "es" ? spanish : english;
-            return table.TryGetValue(key, out var value) ? value : key;
+            if (!table.TryGetValue(key, out var value)) return key;
+            return language == PseudoLoc.Code ? PseudoLoc.Wrap(value) : value;
         }
 
         public static string Difficulty(int stored)

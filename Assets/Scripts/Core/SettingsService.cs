@@ -550,7 +550,7 @@ namespace OutpostZero.Core
             subtitles = snap.subtitles;
             merciful = snap.merciful;
             quietFlash = snap.quietFlash;
-            language = string.IsNullOrEmpty(snap.language) ? "en" : snap.language;
+            language = PseudoLoc.Keep(snap.language, DevCheats.Allowed(Application.isEditor, Debug.isDebugBuild));
             OutpostZero.Player.ControlBindings.Unpack(snap.keys);
             OutpostZero.Player.PadBindings.Unpack(snap.pad);
             ApplyVolume();

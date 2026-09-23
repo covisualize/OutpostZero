@@ -90,6 +90,42 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void PseudoLanguageWrapsEveryTableStringAndKeepsKeyTokens()
+        {
+            foreach (var key in Loc.Keys)
+            {
+                string english = Loc.Raw(key, "en");
+                if (english.Length == 0) continue;
+                string pseudo = Loc.Raw(key, PseudoLoc.Code);
+                Assert.IsTrue(PseudoLoc.Wrapped(pseudo), key);
+                Assert.Greater(pseudo.Length, english.Length, key);
+            }
+            string wrapped = PseudoLoc.Wrap("Press {key:Build} to build");
+            StringAssert.Contains("{key:Build}", wrapped);
+            StringAssert.DoesNotContain("Press", wrapped);
+            StringAssert.StartsWith("[Préšš", wrapped);
+            Assert.AreEqual("", PseudoLoc.Wrap(""));
+            Assert.IsNull(PseudoLoc.Wrap(null));
+            Assert.IsFalse(PseudoLoc.Wrapped("Plain text"));
+        }
+
+        [Test]
+        public void PseudoLanguageIsOnlyOfferedInDevBuilds()
+        {
+            Assert.AreEqual("es", PseudoLoc.Next("en", false));
+            Assert.AreEqual("en", PseudoLoc.Next("es", false));
+            Assert.AreEqual(PseudoLoc.Code, PseudoLoc.Next("es", true));
+            Assert.AreEqual("en", PseudoLoc.Next(PseudoLoc.Code, true));
+            Assert.AreEqual("en", PseudoLoc.Next(PseudoLoc.Code, false));
+            Assert.AreEqual("en", PseudoLoc.Keep(PseudoLoc.Code, false));
+            Assert.AreEqual(PseudoLoc.Code, PseudoLoc.Keep(PseudoLoc.Code, true));
+            Assert.AreEqual("es", PseudoLoc.Keep("es", false));
+            Assert.AreEqual("en", PseudoLoc.Keep(null, false));
+            Assert.AreEqual("en", PseudoLoc.Keep("fr", true));
+            Assert.IsTrue(PseudoLoc.Wrapped(PseudoLoc.Label(PseudoLoc.Code)));
+        }
+
+        [Test]
         public void TheOutlineAndRedTealModeSurviveARestart()
         {
             var snap = SettingsFile.Defaults();
