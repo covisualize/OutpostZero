@@ -49,6 +49,7 @@ namespace OutpostZero.Colony
                 return;
             }
             Instance = this;
+            FactionBook.Ensure();
         }
 
         public void Toggle()

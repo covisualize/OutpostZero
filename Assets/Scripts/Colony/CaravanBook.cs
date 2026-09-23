@@ -14,6 +14,11 @@ namespace OutpostZero.Colony
 
         public static string Display(string id)
         {
+            return FactionTable.TryRow(id, out var row) && !string.IsNullOrEmpty(row.Label) ? row.Label : CodeDisplay(id);
+        }
+
+        public static string CodeDisplay(string id)
+        {
             switch (id)
             {
                 case "militia": return "Iron Militia";
@@ -24,6 +29,11 @@ namespace OutpostZero.Colony
         }
 
         public static string[] Stock(string id)
+        {
+            return FactionTable.TryRow(id, out var row) ? (string[])row.Stock.Clone() : CodeStock(id);
+        }
+
+        public static string[] CodeStock(string id)
         {
             switch (id)
             {
@@ -37,6 +47,11 @@ namespace OutpostZero.Colony
         /// <summary>What a faction adds to its table once the camp is trusted.</summary>
         public static string Premium(string id)
         {
+            return FactionTable.TryRow(id, out var row) ? row.Premium : CodePremium(id);
+        }
+
+        public static string CodePremium(string id)
+        {
             switch (id)
             {
                 case "militia": return "pipe_bomb";
@@ -49,8 +64,9 @@ namespace OutpostZero.Colony
         public static string[] Stock(string id, int standing)
         {
             string[] table = Stock(id);
-            if (standing < Trusted) return table;
-            var list = new List<string>(table) { Premium(id) };
+            string premium = Premium(id);
+            if (standing < Trusted || string.IsNullOrEmpty(premium)) return table;
+            var list = new List<string>(table) { premium };
             return list.ToArray();
         }
 
@@ -111,7 +127,17 @@ namespace OutpostZero.Colony
             return CraftBill.Value(itemId) > 0;
         }
 
-        public static bool Refuses(string id, int standing) => id == "militia" && standing < -20;
+        /// <summary>Standing below which a faction won't trade at all; below -100 means never.</summary>
+        public const int Never = -101;
+
+        public static bool Refuses(string id, int standing) => standing < RefuseBelow(id);
+
+        public static int RefuseBelow(string id)
+        {
+            return FactionTable.TryRow(id, out var row) ? row.RefuseBelow : CodeRefuseBelow(id);
+        }
+
+        public static int CodeRefuseBelow(string id) => id == "militia" ? -20 : Never;
 
         public static bool Ambush(int standing) => standing < -40;
 
