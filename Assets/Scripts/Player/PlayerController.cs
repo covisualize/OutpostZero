@@ -876,7 +876,7 @@ namespace OutpostZero.Player
 
         private void HandleWeapons()
         {
-            if (WheelOpen || Time.time < dodgeUntil || TakingDown() || ActiveWeapon == null) return;
+            if (WheelOpen || OutpostZero.Items.PackView.Showing || Time.time < dodgeUntil || TakingDown() || ActiveWeapon == null) return;
 
             bool automatic = ActiveWeapon is FirearmWeapon gun && gun.Automatic;
             bool fire = ActiveWeapon is FirearmWeapon

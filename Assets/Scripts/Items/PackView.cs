@@ -6,6 +6,15 @@ namespace OutpostZero.Items
     public static class PackView
     {
         private static int ask;
+        public const float NightmarePace = 0.15f;
+
+        public static bool Showing { get; set; }
+
+        /// <summary>Street time while the pack is open: stopped, or a crawl on Nightmare.</summary>
+        public static float Pace(int difficulty)
+        {
+            return difficulty >= 3 ? NightmarePace : 0f;
+        }
 
         public static void AskOpen()
         {
