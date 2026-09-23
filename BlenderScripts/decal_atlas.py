@@ -32,6 +32,8 @@ LAYOUT = (
     ("scorch", 2),
     ("oil", 2),
     ("footprint", 2),
+    ("blob", 1),
+    ("aim", 1),
 )
 
 
@@ -243,6 +245,23 @@ def footprint(u, v, seed):
     return colour, shape * tread * patchy * 0.85
 
 
+def blob(u, v, seed):
+    """Contact shadow under a character: dark core, long soft falloff, no hard rim."""
+    r = math.hypot(u, v)
+    falloff = 1.0 - _step(0.0, 0.88, r)
+    return (0.0, 0.0, 0.0), 0.62 * falloff * falloff
+
+
+def aim(u, v, seed):
+    """Faint aim stripe; its tip is the top of the PNG, which the projector puts forward."""
+    along = (-v + 1.0) * 0.5
+    width = 0.16 * (1.0 - along) + 0.02
+    stripe = 1.0 - _step(width * 0.6, width, abs(u))
+    fade = _step(0.02, 0.2, along) * (1.0 - _step(0.82, 0.96, along))
+    tip = 1.0 - _step(0.05, 0.09, math.hypot(u, v + 0.84))
+    return (0.55, 0.95, 1.0), max(stripe * fade * (0.25 + 0.3 * along), tip * 0.5)
+
+
 def shade(kind, variant, u, v):
     seed = variant + 1 + first(kind) * 97
     if kind == "blood":
@@ -257,6 +276,10 @@ def shade(kind, variant, u, v):
         return oil(u, v, seed)
     if kind == "footprint":
         return footprint(u, v, variant)
+    if kind == "blob":
+        return blob(u, v, seed)
+    if kind == "aim":
+        return aim(u, v, seed)
     raise KeyError(kind)
 
 

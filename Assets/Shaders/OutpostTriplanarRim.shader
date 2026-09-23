@@ -2,7 +2,8 @@
 // albedo, tangent normal, AO and mask (R metallic, G roughness, B emissive: zombie eyes and veins);
 // untextured meshes fall back to a flat colour with world-space noise. On top: a view rim for
 // top-down readability (per faction: survivors cyan, zombies sickly green, overridden by the
-// colour-vision palette), _HitFlash, a _Dissolve with a burning edge, wetness and wind sway.
+// colour-vision palette), _HitFlash, a _Dissolve with a burning edge, wetness and wind sway,
+// and a per-instance gore mask (_Gore amount, _GoreSeed placement) for hordes and wounds.
 // All material properties live in UnityPerMaterial so materials SRP-batch; property blocks
 // (variety, palette rim, dissolve) still apply and opt that renderer out of the batch.
 Shader "OutpostZero/TriplanarRim"
@@ -29,6 +30,9 @@ Shader "OutpostZero/TriplanarRim"
         _DissolveEdge ("Dissolve Edge Colour", Color) = (1, 0.32, 0.06, 1)
         _Wetness ("Wetness", Range(0, 1)) = 0
         _Sway ("Sway", Range(0, 1)) = 0
+        _Gore ("Gore", Range(0, 1)) = 0
+        _GoreSeed ("Gore Seed", Float) = 0
+        _GoreColor ("Gore Colour", Color) = (0.28, 0.03, 0.03, 1)
     }
 
     SubShader
@@ -47,6 +51,7 @@ Shader "OutpostZero/TriplanarRim"
             half4 _Emission;
             half4 _HitColor;
             half4 _DissolveEdge;
+            half4 _GoreColor;
             half _HasMaps;
             half _Metallic;
             half _Smoothness;
@@ -56,6 +61,8 @@ Shader "OutpostZero/TriplanarRim"
             half _Dissolve;
             half _Wetness;
             half _Sway;
+            half _Gore;
+            float _GoreSeed;
         CBUFFER_END
 
         TEXTURE2D(_BaseMap);
@@ -106,6 +113,17 @@ Shader "OutpostZero/TriplanarRim"
             return positionOS;
         }
 
+        // Blood splats fixed in object space so they ride a walking body; the seed moves them
+        // per instance and _Gore grows them from a few spots (0.2) to a soaked body (1).
+        half GoreMask(float3 positionOS)
+        {
+            if (_Gore < 0.001) return 0;
+            float3 p = positionOS * 5.0 + _GoreSeed * float3(17.31, 3.7, 11.13);
+            float splat = OutpostNoise(p) * 0.65 + OutpostNoise(p * 2.7) * 0.35;
+            float cut = 1.0 - _Gore * 0.62;
+            return (half)saturate((splat - cut) / 0.05);
+        }
+
         void ClipDissolve(float3 positionWS, float3 normalWS)
         {
             if (_Dissolve > 0.001) clip(WorldNoise(positionWS, normalize(normalWS)) - _Dissolve);
@@ -154,6 +172,7 @@ Shader "OutpostZero/TriplanarRim"
                 #ifdef _ADDITIONAL_LIGHTS_VERTEX
                 half3 vertexLight : TEXCOORD5;
                 #endif
+                float3 positionOS : TEXCOORD6;
                 UNITY_VERTEX_INPUT_INSTANCE_ID
                 UNITY_VERTEX_OUTPUT_STEREO
             };
@@ -171,6 +190,7 @@ Shader "OutpostZero/TriplanarRim"
                 output.normalWS = normals.normalWS;
                 output.tangentWS = float4(normals.tangentWS, input.tangentOS.w * GetOddNegativeScale());
                 output.uv = TRANSFORM_TEX(input.uv, _BaseMap);
+                output.positionOS = input.positionOS.xyz;
                 output.fogFactor = ComputeFogFactor(pos.positionCS.z);
                 #ifdef _ADDITIONAL_LIGHTS_VERTEX
                 output.vertexLight = VertexLighting(pos.positionWS, normals.normalWS);
@@ -211,6 +231,11 @@ Shader "OutpostZero/TriplanarRim"
                     metallic = _Metallic;
                     smoothness = _Smoothness;
                 }
+
+                half gore = GoreMask(input.positionOS);
+                albedo = lerp(albedo, _GoreColor.rgb * lerp(0.7, 1.1, noise), gore);
+                smoothness = lerp(smoothness, 0.72, gore);
+                metallic = lerp(metallic, 0, gore);
 
                 half wet = saturate(max(_Wetness, _OutpostWet)) * saturate(normalWS.y * 0.7 + 0.3);
                 albedo *= lerp(1.0, 0.6, wet);

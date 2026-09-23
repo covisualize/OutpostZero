@@ -28,6 +28,7 @@ namespace OutpostZero.Tests.EditMode
                 { DecalAtlas.Blood, 8 }, { DecalAtlas.Drip, 4 },
                 { DecalAtlas.HoleConcrete, 3 }, { DecalAtlas.HoleMetal, 3 }, { DecalAtlas.HoleWood, 3 },
                 { DecalAtlas.Scorch, 2 }, { DecalAtlas.Oil, 2 }, { DecalAtlas.Footprint, 2 },
+                { DecalAtlas.Blob, 1 }, { DecalAtlas.Aim, 1 },
             };
             foreach (var pair in expected) Assert.AreEqual(pair.Value, DecalAtlas.Count(pair.Key), pair.Key);
             Assert.LessOrEqual(DecalAtlas.Total, DecalAtlas.Columns * DecalAtlas.Rows);

@@ -1,15 +1,23 @@
 using UnityEngine;
+using UnityEngine.Rendering.Universal;
 using OutpostZero.Combat;
 using OutpostZero.Core;
 
 namespace OutpostZero.Graphics
 {
     /// <summary>
-    /// Shifts clothing, lights the eyes, and tears the body once health drops under 40%.
-    /// A ground blob and, on the player, a cyan aim mark keep the silhouette readable.
+    /// Shifts clothing, lights the eyes, and spreads the shader's blood mask (heavier once health
+    /// drops under 40%). A soft blob shadow decal and, on the player, a faint cyan aim stripe keep
+    /// the silhouette readable from the top-down camera.
     /// </summary>
     public class CharacterVariety : MonoBehaviour
     {
+        public const float BlobSize = 1.1f;
+        public const float BlobOpacity = 0.85f;
+        public const float AimLength = 1.6f;
+        public const float AimOpacity = 0.55f;
+        public const float MarkDepth = 0.5f;
+
         private string role = "walker";
         private int seed = 1;
         private bool wounded;
@@ -64,6 +72,7 @@ namespace OutpostZero.Graphics
             var health = GetComponent<HealthSystem>();
             bool hurt = health != null && CharacterLook.Wounded(health.CurrentHealth, health.MaxHealth, GoreLevel());
             if (!painted || hurt != wounded) Paint();
+            if (blob != null) blob.gameObject.SetActive(health == null || health.CurrentHealth > 0f);
         }
 
         private void EnsureMarks()
@@ -71,34 +80,65 @@ namespace OutpostZero.Graphics
             if (CharacterLook.Glows(role))
             {
                 float height = CharacterLook.EyeHeight(role);
-                eyeL = EnsureMark(eyeL, "ReadEyeL", PrimitiveType.Sphere, new Vector3(-0.045f, height, 0.16f), 0.04f);
-                eyeR = EnsureMark(eyeR, "ReadEyeR", PrimitiveType.Sphere, new Vector3(0.045f, height, 0.16f), 0.04f);
+                eyeL = EnsureEye(eyeL, "ReadEyeL", new Vector3(-0.045f, height, 0.16f));
+                eyeR = EnsureEye(eyeR, "ReadEyeR", new Vector3(0.045f, height, 0.16f));
             }
-            blob = EnsureMark(blob, "ReadBlob", PrimitiveType.Cube, new Vector3(0f, 0.03f, 0f), 0.7f);
-            if (blob != null) blob.localScale = new Vector3(0.7f, 0.02f, 0.7f);
+            float girth = role == "brute" ? 1.6f : 1f;
+            blob = EnsureDecal(blob, "ReadBlob", DecalAtlas.Blob, Vector3.zero, new Vector2(BlobSize * girth, BlobSize * girth), BlobOpacity);
             if (role == "survivor")
-            {
-                aim = EnsureMark(aim, "ReadAim", PrimitiveType.Cube, new Vector3(0f, 0.05f, 0.9f), 0.2f);
-                if (aim != null) aim.localScale = new Vector3(0.1f, 0.02f, 0.6f);
-            }
+                aim = EnsureDecal(aim, "ReadAim", DecalAtlas.Aim, new Vector3(0f, 0f, 0.45f + AimLength * 0.5f), new Vector2(0.5f, AimLength), AimOpacity);
         }
 
-        private Transform EnsureMark(Transform existing, string markName, PrimitiveType shape, Vector3 local, float size)
+        private Transform EnsureEye(Transform existing, string markName, Vector3 local)
         {
             if (existing != null) return existing;
             var found = transform.Find(markName);
             if (found != null) return found;
-            var body = GameObject.CreatePrimitive(shape);
+            var body = GameObject.CreatePrimitive(PrimitiveType.Sphere);
             body.name = markName;
             body.transform.SetParent(transform, false);
             body.transform.localPosition = local;
-            body.transform.localScale = Vector3.one * size;
+            body.transform.localScale = Vector3.one * 0.04f;
             var collider = body.GetComponent<Collider>();
             if (collider != null) Destroy(collider);
             var material = Resources.Load<Material>("OutpostTriplanar");
             var renderer = body.GetComponent<Renderer>();
-            if (renderer != null && material != null) renderer.sharedMaterial = material;
+            if (renderer != null)
+            {
+                if (material != null) renderer.sharedMaterial = material;
+                renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            }
             return body.transform;
+        }
+
+        /// <summary>
+        /// A ground decal from the atlas, projected straight down from just above the feet. The angle
+        /// fade keeps it on the floor and off the character's own legs.
+        /// </summary>
+        private Transform EnsureDecal(Transform existing, string markName, string kind, Vector3 local, Vector2 size, float opacity)
+        {
+            if (existing != null) return existing;
+            var found = transform.Find(markName);
+            if (found != null) return found;
+            var material = Resources.Load<Material>(DecalAtlas.MaterialPath);
+            if (material == null) return null;
+            var go = new GameObject(markName);
+            go.transform.SetParent(transform, false);
+            go.transform.localPosition = local + new Vector3(0f, MarkDepth * 0.5f, 0f);
+            go.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
+            var projector = go.AddComponent<DecalProjector>();
+            projector.material = material;
+            projector.scaleMode = DecalScaleMode.InheritFromHierarchy;
+            projector.pivot = Vector3.zero;
+            projector.size = new Vector3(size.x, size.y, MarkDepth + 0.2f);
+            int cell = DecalAtlas.Cell(kind, 0);
+            projector.uvScale = new Vector2(DecalAtlas.ScaleU, DecalAtlas.ScaleV);
+            projector.uvBias = new Vector2(DecalAtlas.BiasU(cell), DecalAtlas.BiasV(cell));
+            projector.fadeFactor = opacity;
+            projector.startAngleFade = 25f;
+            projector.endAngleFade = 50f;
+            projector.drawDistance = GoreMark.Cull;
+            return go.transform;
         }
 
         private static int GoreLevel()
@@ -110,9 +150,11 @@ namespace OutpostZero.Graphics
         {
             painted = true;
             var health = GetComponent<HealthSystem>();
-            wounded = health != null && CharacterLook.Wounded(health.CurrentHealth, health.MaxHealth, GoreLevel());
+            int goreLevel = GoreLevel();
+            wounded = health != null && CharacterLook.Wounded(health.CurrentHealth, health.MaxHealth, goreLevel);
             var tint = CharacterLook.Clothing(seed);
-            if (wounded) tint = CharacterLook.Gore(tint);
+            float gore = CharacterLook.GoreAmount(role, wounded, goreLevel);
+            float goreSeed = CharacterLook.GoreSeed(seed);
             var settings = SettingsService.Instance;
             int vision = settings != null ? settings.ColorblindMode : 0;
             var eye = CharacterLook.Eye(role, vision);
@@ -133,24 +175,11 @@ namespace OutpostZero.Graphics
                     block.SetColor("_Emission", glow);
                     block.SetFloat("_HasMaps", 0f);
                 }
-                else if (mark == "ReadBlob")
-                {
-                    block.SetColor("_BaseColor", new Color(0.02f, 0.02f, 0.02f, 1f));
-                    block.SetColor("_Tint", Color.white);
-                    block.SetFloat("_Dissolve", 0f);
-                }
-                else if (mark == "ReadAim")
-                {
-                    var cyan = new Color(0.25f, 0.9f, 1f, 1f);
-                    block.SetColor("_BaseColor", cyan);
-                    block.SetColor("_Emission", cyan);
-                    block.SetFloat("_HasMaps", 0f);
-                }
                 else
                 {
                     block.SetColor("_Tint", new Color(tint.R, tint.G, tint.B, 1f));
-                    block.SetColor("_Emission", wounded ? new Color(0.35f, 0.02f, 0.02f, 1f) : Color.black);
-                    block.SetFloat("_Dissolve", wounded ? 0.22f : 0f);
+                    block.SetFloat("_Gore", gore);
+                    block.SetFloat("_GoreSeed", goreSeed);
                     block.SetColor("_RimColor", new Color(rim.R, rim.G, rim.B, rimAlpha));
                     block.SetFloat("_RimPower", rimPower);
                 }

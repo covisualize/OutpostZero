@@ -128,6 +128,30 @@ namespace OutpostZero.Graphics
             };
         }
 
+        public const float ZombieGore = 0.22f;
+        public const float WoundedGore = 0.6f;
+        public const float SurvivorWoundedGore = 0.4f;
+
+        /// <summary>
+        /// How much of the body the shader's blood mask covers: zombies always carry some, the
+        /// wounded state (the gore variant) soaks them, the gore setting scales or removes it.
+        /// </summary>
+        public static float GoreAmount(string role, bool wounded, int gore)
+        {
+            if (gore <= 0) return 0f;
+            float amount = Glows(role) ? (wounded ? WoundedGore : ZombieGore) : (wounded ? SurvivorWoundedGore : 0f);
+            if (gore >= 2) amount *= 1.25f;
+            return amount > 1f ? 1f : amount;
+        }
+
+        /// <summary>Where the splats land on this body, in [0, 100); neighbours in a horde differ.</summary>
+        public static float GoreSeed(int seed)
+        {
+            uint mixed = unchecked((uint)seed * 2654435761u ^ 0x9E3779B9u);
+            mixed ^= mixed >> 15;
+            return (mixed % 10000u) / 100f;
+        }
+
         public static bool Wounded(float current, float maximum)
         {
             return Wounded(current, maximum, 1);

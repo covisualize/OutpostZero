@@ -18,9 +18,11 @@ namespace OutpostZero.Graphics
         public const string Scorch = "scorch";
         public const string Oil = "oil";
         public const string Footprint = "footprint";
+        public const string Blob = "blob";
+        public const string Aim = "aim";
 
-        private static readonly string[] Kinds = { Blood, Drip, HoleConcrete, HoleMetal, HoleWood, Scorch, Oil, Footprint };
-        private static readonly int[] Counts = { 8, 4, 3, 3, 3, 2, 2, 2 };
+        private static readonly string[] Kinds = { Blood, Drip, HoleConcrete, HoleMetal, HoleWood, Scorch, Oil, Footprint, Blob, Aim };
+        private static readonly int[] Counts = { 8, 4, 3, 3, 3, 2, 2, 2, 1, 1 };
 
         public static int Total
         {

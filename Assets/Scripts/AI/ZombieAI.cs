@@ -351,6 +351,8 @@ namespace OutpostZero.AI
             dashX = 0f;
             dashZ = 1f;
             SetState(ZombieState.Wander);
+            var melt = GetComponent<CorpseMelt>();
+            if (melt != null) melt.Clear();
             CharacterVariety.Ensure(gameObject).Bind(string.IsNullOrEmpty(archetypeId) ? name : archetypeId, true);
         }
 
