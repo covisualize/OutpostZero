@@ -13,6 +13,7 @@ namespace OutpostZero.Colony
             if (id == "militia") return Word("stall.militia", language);
             if (id == "clinic") return Word("stall.clinic", language);
             if (id == "farmers") return Word("stall.farmers", language);
+            if (!string.IsNullOrEmpty(id) && !CaravanBook.IsBuiltIn(id)) return CaravanBook.Display(id);
             return Word("stall.caravan", language);
         }
 

@@ -9,8 +9,9 @@ namespace OutpostZero.EditorTools
 {
     /// <summary>
     /// Keeps Assets/Data/Factions and Resources/FactionBook in step with the built-in faction table. Missing factions
-    /// are created from the code tables; existing assets keep their tuned values. A faction
-    /// added by hand only takes effect when its id is one of CaravanBook.Ids.
+    /// are created from the code tables; existing assets keep their tuned values. A faction asset added by hand
+    /// with a new id (lower-case letters, digits and underscores) is listed after the built-in four and joins
+    /// the visit calendar as a new faction.
     /// </summary>
     public static class FactionBookSync
     {

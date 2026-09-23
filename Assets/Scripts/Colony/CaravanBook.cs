@@ -4,11 +4,17 @@ using System.Collections.Generic;
 namespace OutpostZero.Colony
 {
     /// <summary>
-    /// Four factions, a visit calendar, and prices that move with reputation.
+    /// The factions, a visit calendar, and prices that move with reputation.
     /// </summary>
     public static class CaravanBook
     {
-        public static readonly string[] Ids = { "caravan", "militia", "clinic", "farmers" };
+        /// <summary>The four factions the code tables and quests know. The first holds the legacy single standing.</summary>
+        public static readonly string[] BuiltInIds = { "caravan", "militia", "clinic", "farmers" };
+
+        /// <summary>Every faction in play: the built-in four, then any the faction book adds.</summary>
+        public static string[] Ids => FactionTable.Roster;
+
+        public static bool IsBuiltIn(string id) => Array.IndexOf(BuiltInIds, id) >= 0;
         public const int Trusted = 30;
         public const int HaggleCap = 10;
 
@@ -238,15 +244,52 @@ namespace OutpostZero.Colony
         public static string Pack(int[] standing)
         {
             if (standing == null || standing.Length == 0) return "";
-            var parts = new string[Math.Min(Ids.Length, standing.Length)];
-            for (int i = 0; i < parts.Length; i++) parts[i] = Ids[i] + "=" + standing[i];
+            var ids = Ids;
+            var parts = new string[Math.Min(ids.Length, standing.Length)];
+            for (int i = 0; i < parts.Length; i++) parts[i] = ids[i] + "=" + standing[i];
             return string.Join(",", parts);
+        }
+
+        /// <summary>Standing that follows the roster: same values by position, zero for factions added since.</summary>
+        public static int[] Fit(int[] standing)
+        {
+            int size = Ids.Length;
+            if (standing != null && standing.Length == size) return standing;
+            var fitted = new int[size];
+            if (standing != null) Array.Copy(standing, fitted, Math.Min(size, standing.Length));
+            return fitted;
+        }
+
+        /// <summary>
+        /// The saved entries for factions the roster no longer has, kept as written so a save that meets a
+        /// smaller book and is saved again still holds their standing for when the faction returns.
+        /// </summary>
+        public static string Strays(string packed)
+        {
+            if (string.IsNullOrEmpty(packed)) return "";
+            var kept = new List<string>();
+            foreach (string part in packed.Split(','))
+            {
+                int cut = part.IndexOf('=');
+                if (cut <= 0) continue;
+                string id = part.Substring(0, cut);
+                if (IndexOf(id) >= 0 || !FactionTable.ValidId(id) || !int.TryParse(part.Substring(cut + 1), out _)) continue;
+                kept.Add(part);
+            }
+            return string.Join(",", kept);
+        }
+
+        public static string Pack(int[] standing, string strays)
+        {
+            string packed = Pack(standing);
+            if (string.IsNullOrEmpty(strays)) return packed;
+            return string.IsNullOrEmpty(packed) ? strays : packed + "," + strays;
         }
 
         public static void Unpack(string packed, int legacy, int[] standing)
         {
             if (standing == null || standing.Length < Ids.Length) return;
-            for (int i = 0; i < Ids.Length; i++) standing[i] = 0;
+            for (int i = 0; i < standing.Length; i++) standing[i] = 0;
             if (string.IsNullOrEmpty(packed))
             {
                 standing[0] = Math.Max(-100, Math.Min(100, legacy));

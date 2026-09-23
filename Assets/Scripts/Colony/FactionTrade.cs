@@ -10,7 +10,8 @@ namespace OutpostZero.Colony
     {
         public static FactionTrade Instance { get; private set; }
 
-        private readonly int[] standing = { 10, 0, 0, 0 };
+        private int[] standing = { 10, 0, 0, 0 };
+        private string strays = "";
         private string quests = "";
         private bool open;
         private int summonedDay = -1;
@@ -21,7 +22,7 @@ namespace OutpostZero.Colony
         public string Quests => quests;
         public string ActiveId => CaravanBook.Counterparty(Day, PostBuilt || summonedDay == Day);
         public bool Away => string.IsNullOrEmpty(ActiveId);
-        public string Signature => open + "|" + CaravanBook.Pack(standing) + "|" + quests + "|" + Day + "|" + PostBuilt;
+        public string Signature => open + "|" + Pack() + "|" + quests + "|" + Day + "|" + PostBuilt;
 
         /// <summary>The same inputs as <see cref="Signature"/>, hashed without building a string.</summary>
         public int Key
@@ -30,6 +31,7 @@ namespace OutpostZero.Colony
             {
                 var key = new UiKey();
                 key.Add(open);
+                Fit();
                 for (int i = 0; i < standing.Length; i++) key.Add(standing[i]);
                 key.Add(quests);
                 key.Add(Day);
@@ -53,6 +55,13 @@ namespace OutpostZero.Colony
             }
             Instance = this;
             FactionBook.Ensure();
+            Fit();
+        }
+
+        /// <summary>Grows the standing row when the faction book has added factions since it was made.</summary>
+        private void Fit()
+        {
+            standing = CaravanBook.Fit(standing);
         }
 
         /// <summary>A caravan that turns up unannounced trades at the gate for the rest of that day.</summary>
@@ -73,6 +82,7 @@ namespace OutpostZero.Colony
 
         public int StandingOf(string id)
         {
+            Fit();
             int index = CaravanBook.IndexOf(id);
             if (index < 0) return 0;
             return standing[index];
@@ -126,6 +136,7 @@ namespace OutpostZero.Colony
                 GameplayFeedback.Toast(StallVoice.Full(null));
                 return false;
             }
+            Fit();
             CaravanBook.Shift(standing, faction, 2);
             GameplayFeedback.Toast(StallVoice.Deal(faction, stock, null));
             return true;
@@ -151,6 +162,7 @@ namespace OutpostZero.Colony
                 GameplayFeedback.Toast(YardSay.Stores(null));
                 return false;
             }
+            Fit();
             CaravanBook.Shift(standing, faction, 1);
             GameplayFeedback.Toast(StallVoice.Bartered(stored, null));
             return true;
@@ -166,6 +178,7 @@ namespace OutpostZero.Colony
                 return false;
             }
             quests = CaravanBook.MarkQuest(quests, "clinic");
+            Fit();
             CaravanBook.Shift(standing, "clinic", 15);
             ColonyStorage.Instance?.LearnPrint("dressing");
             GameplayFeedback.Toast(StallVoice.Blueprint(null));
@@ -176,6 +189,7 @@ namespace OutpostZero.Colony
         {
             if (CaravanBook.QuestDone(quests, "farmers")) return;
             quests = CaravanBook.MarkQuest(quests, "farmers");
+            Fit();
             CaravanBook.Shift(standing, "farmers", 10);
             GameplayFeedback.Toast(StallVoice.Nest(null));
         }
@@ -184,12 +198,14 @@ namespace OutpostZero.Colony
         {
             if (!CaravanBook.Visits(Day) || CaravanBook.QuestDone(quests, "caravan")) return;
             quests = CaravanBook.MarkQuest(quests, "caravan");
+            Fit();
             CaravanBook.Shift(standing, "caravan", 10);
             GameplayFeedback.Toast(StallVoice.Through(null));
         }
 
         public void OnMorning(int day)
         {
+            Fit();
             CaravanBook.Decay(standing);
             string visitor = CaravanBook.Visitor(day);
             if (!string.IsNullOrEmpty(visitor))
@@ -199,14 +215,24 @@ namespace OutpostZero.Colony
             }
         }
 
-        public void SetStanding(int value) => standing[0] = Mathf.Clamp(value, -100, 100);
+        public void SetStanding(int value)
+        {
+            Fit();
+            standing[0] = Mathf.Clamp(value, -100, 100);
+        }
 
         public void Restore(int legacy, string packed, string questPacked)
         {
+            Fit();
             CaravanBook.Unpack(packed, legacy, standing);
+            strays = CaravanBook.Strays(packed);
             quests = questPacked ?? "";
         }
 
-        public string Pack() => CaravanBook.Pack(standing);
+        public string Pack()
+        {
+            Fit();
+            return CaravanBook.Pack(standing, strays);
+        }
     }
 }
