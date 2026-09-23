@@ -404,7 +404,7 @@ namespace OutpostZero.Colony
             int shots = 0;
             for (int g = 0; g < crew.Count && shots < budget; g++)
             {
-                Vector3 origin = GuardPost(g);
+                Vector3 origin = GuardPost(g, out bool perched);
                 var distance = new float[living.Count];
                 for (int i = 0; i < living.Count; i++)
                 {
@@ -412,7 +412,7 @@ namespace OutpostZero.Colony
                     float dz = living[i].transform.position.z - origin.z;
                     distance[i] = (float)System.Math.Sqrt(dx * dx + dz * dz);
                 }
-                float reach = PostBite.Range(crew[g].injury);
+                float reach = TowerPerch.Range(PostBite.Range(crew[g].injury), perched);
                 for (int i = 0; i < distance.Length; i++)
                 {
                     if (distance[i] > reach) distance[i] = -1f;
@@ -452,7 +452,7 @@ namespace OutpostZero.Colony
             return count;
         }
 
-        private Vector3 GuardPost(int slot)
+        private Vector3 GuardPost(int slot, out bool perched)
         {
             var grid = GridBuilder.Instance;
             int count = grid != null ? grid.Placed.Count : 0;
@@ -473,7 +473,8 @@ namespace OutpostZero.Colony
             string side = SideAt(slot);
             int post = PostOnSide(slot);
             GuardStand.Mark(side, post, kinds, xs, zs, sites, integrity, out float x, out float z);
-            return new Vector3(x, 1.6f, z);
+            perched = GuardStand.Perched(side, post, kinds, xs, zs, sites, integrity);
+            return new Vector3(x, TowerPerch.Height(perched), z);
         }
 
         private static Vector3 TurretOrigin()
