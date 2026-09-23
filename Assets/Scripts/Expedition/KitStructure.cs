@@ -282,12 +282,24 @@ namespace OutpostZero.Expedition
             bool large = wide * deep > 1;
             int storeys = large ? template.TallStoreys : template.Storeys > 0 ? template.Storeys : 1 + (int)(hash & 1u);
             if (string.IsNullOrEmpty(front)) front = "south";
+            bool climbs = wide >= 3 && deep >= 3 && storeys > 1;
+            int wellA = -1, wellB = -1;
+            KitPlacement flight = null;
+            if (climbs) flight = Flight(front, out wellA, out wellB);
             var list = new List<KitPlacement>();
             for (int s = 0; s < storeys; s++)
             {
                 float y = s * Storey;
                 for (int i = 0; i < wide; i++)
-                    for (int j = 0; j < deep; j++) list.Add(At("floor", i * LotTile, y, j * LotTile, 0));
+                {
+                    for (int j = 0; j < deep; j++)
+                    {
+                        int tile = i * deep + j;
+                        if (s > 0 && (tile == wellA || tile == wellB)) continue;
+                        list.Add(At("floor", i * LotTile, y, j * LotTile, 0));
+                    }
+                }
+                if (flight != null && s < storeys - 1) list.Add(At(flight.id, flight.x, y, flight.z, flight.yaw));
                 foreach (var face in new[] { "south", "north", "west", "east" })
                 {
                     int length = face == "south" || face == "north" ? wide : deep;
@@ -306,8 +318,43 @@ namespace OutpostZero.Expedition
                 int length = front == "south" || front == "north" ? wide : deep;
                 for (int i = 0; i < length; i++) list.Add(Wall("parapet", front, i, top, wide, deep));
             }
-            if (large) Furnish(list, template, hash, front, wide, deep);
+            if (large) Furnish(list, template, hash, front, wide, deep, flight);
             return list.ToArray();
+        }
+
+        /// <summary>
+        /// The flight up a 3 by 3 tile building: always in an east or west column, since the south and north walls
+        /// stand 0.2 m inside the floor and a 2 m flight only clears them running north-south. It climbs away from a
+        /// south or north door, and sits in the column across from a west or east door. Two tiles of each slab above it
+        /// are left open (tile index = column * 3 + row) for head room, and the top step lands sideways on the tile beside it.
+        /// </summary>
+        private static KitPlacement Flight(string front, out int wellA, out int wellB)
+        {
+            const float run = 4.08f;
+            float far = 3f * LotTile - 0.2f;
+            switch (front)
+            {
+                case "north":
+                    wellA = 2 * 3 + 0; wellB = 2 * 3 + 1;
+                    return At("stairs", 3f * LotTile, 0f, 0.2f + run, 180);
+                case "east":
+                    wellA = 0 * 3 + 1; wellB = 0 * 3 + 2;
+                    return At("stairs", 0f, 0f, far - run, 0);
+                default:
+                    wellA = 2 * 3 + 1; wellB = 2 * 3 + 2;
+                    return At("stairs", 2f * LotTile, 0f, far - run, 0);
+            }
+        }
+
+        /// <summary>Floor area a flight covers, local to the building: x from minX to maxX, z from minZ to maxZ.</summary>
+        public static void FlightArea(KitPlacement flight, out float minX, out float maxX, out float minZ, out float maxZ)
+        {
+            const float run = 4.08f;
+            switch (flight.yaw)
+            {
+                case 180: minX = flight.x - LotTile; maxX = flight.x; minZ = flight.z - run; maxZ = flight.z; return;
+                default: minX = flight.x; maxX = flight.x + LotTile; minZ = flight.z; maxZ = flight.z + run; return;
+            }
         }
 
         private static List<Slot> Slots(string face, int length, bool garage)
@@ -353,8 +400,10 @@ namespace OutpostZero.Expedition
         }
 
         /// <summary>Props stand against the wall across from the door, clear of the walk in.</summary>
-        private static void Furnish(List<KitPlacement> list, Template template, uint hash, string front, int wide, int deep)
+        private static void Furnish(List<KitPlacement> list, Template template, uint hash, string front, int wide, int deep, KitPlacement flight)
         {
+            float fx0 = 0f, fx1 = 0f, fz0 = 0f, fz1 = 0f;
+            if (flight != null) FlightArea(flight, out fx0, out fx1, out fz0, out fz1);
             string back = front == "south" ? "north" : front == "north" ? "south" : front == "west" ? "east" : "west";
             bool across = back == "north" || back == "south";
             int length = across ? wide : deep;
@@ -366,13 +415,29 @@ namespace OutpostZero.Expedition
                 PropSize(id, out float w, out float d);
                 if (d > reach || (!across && w > LotTile - 0.4f)) continue;
                 float slot = i * LotTile + (LotTile - w) * 0.5f;
+                KitPlacement prop;
+                float px0, px1, pz0, pz1;
                 switch (back)
                 {
-                    case "north": list.Add(At(id, slot, 0f, deep * LotTile - 0.3f - d, 0)); break;
-                    case "south": list.Add(At(id, slot, 0f, 0.3f, 0)); break;
-                    case "east": list.Add(At(id, wide * LotTile - 0.1f - d, 0f, slot + w, 90)); break;
-                    default: list.Add(At(id, 0.1f, 0f, slot + w, 90)); break;
+                    case "north":
+                        prop = At(id, slot, 0f, deep * LotTile - 0.3f - d, 0);
+                        px0 = slot; px1 = slot + w; pz0 = prop.z; pz1 = prop.z + d;
+                        break;
+                    case "south":
+                        prop = At(id, slot, 0f, 0.3f, 0);
+                        px0 = slot; px1 = slot + w; pz0 = 0.3f; pz1 = 0.3f + d;
+                        break;
+                    case "east":
+                        prop = At(id, wide * LotTile - 0.1f - d, 0f, slot + w, 90);
+                        px0 = prop.x; px1 = prop.x + d; pz0 = slot; pz1 = slot + w;
+                        break;
+                    default:
+                        prop = At(id, 0.1f, 0f, slot + w, 90);
+                        px0 = 0.1f; px1 = 0.1f + d; pz0 = slot; pz1 = slot + w;
+                        break;
                 }
+                if (flight != null && px0 < fx1 + 0.6f && px1 > fx0 - 0.6f && pz0 < fz1 + 0.6f && pz1 > fz0 - 0.6f) continue;
+                list.Add(prop);
             }
         }
 

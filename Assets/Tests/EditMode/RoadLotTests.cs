@@ -60,6 +60,8 @@ namespace OutpostZero.Tests.EditMode
 
         static bool IsWall(string id) => id.StartsWith("wall");
 
+        static int Storeys(KitPlacement[] house) => Mathf.RoundToInt(house.Where(p => p.id == "roof").Max(p => p.y) / KitPlan.Storey);
+
         static string FaceOf(KitPiece piece, KitPlacement placement, int wide, int deep)
         {
             Extent(piece, placement, out var minX, out var maxX, out var minZ, out var maxZ);
@@ -136,7 +138,7 @@ namespace OutpostZero.Tests.EditMode
                     Assert.AreEqual(a[i].yaw, b[i].yaw);
                 }
                 fronts.Add(block.Front);
-                heights.Add(a.Count(p => p.id == "floor") / (KitPlan.Tiles(block.Cols) * KitPlan.Tiles(block.Rows)));
+                heights.Add(Storeys(a));
                 foreach (var p in a.Where(p => p.id.Contains("door") || p.id == "wall_garage")) doors.Add(p.id);
             }
             Assert.GreaterOrEqual(fronts.Count, 2, "some blocks open onto a side road");
@@ -151,13 +153,14 @@ namespace OutpostZero.Tests.EditMode
             foreach (var (map, block, house) in Buildings())
             {
                 int wide = KitPlan.Tiles(block.Cols), deep = KitPlan.Tiles(block.Rows);
-                int storeys = house.Count(p => p.id == "floor") / (wide * deep);
+                int storeys = Storeys(house);
                 Assert.GreaterOrEqual(storeys, 1);
+                int well = house.Any(p => p.id == "stairs") ? 2 : 0;
                 Assert.AreEqual(wide * deep, house.Count(p => p.id == "roof" && Mathf.Approximately(p.y, storeys * KitPlan.Storey)), map.Id);
                 for (int s = 0; s < storeys; s++)
                 {
                     float y = s * KitPlan.Storey;
-                    Assert.AreEqual(wide * deep, house.Count(p => p.id == "floor" && Mathf.Approximately(p.y, y)), map.Id);
+                    Assert.AreEqual(wide * deep - (s > 0 ? well : 0), house.Count(p => p.id == "floor" && Mathf.Approximately(p.y, y)), map.Id);
                     var run = new Dictionary<string, float> { { "south", 0f }, { "north", 0f }, { "west", 0f }, { "east", 0f } };
                     foreach (var p in house.Where(p => IsWall(p.id) && Mathf.Approximately(p.y, y)))
                     {
@@ -203,6 +206,78 @@ namespace OutpostZero.Tests.EditMode
                             anyOpen |= IsOpen(RoadGraph.KindAt(map, block.X + (c + d.Item1) * RoadGraph.Step, block.Z + (r + d.Item2) * RoadGraph.Step));
                 if (anyOpen) Assert.IsTrue(open, map.Id + " the front faces no road");
             }
+        }
+
+        [Test]
+        public void EveryUpperStoreyOfABigBuildingIsReachedByStairsWithHeadRoomAndALanding()
+        {
+            var book = KitMeshTests.Book();
+            var steps = KitPlan.Find(book.pieces, "stairs");
+            var flights = 0;
+            var fronts = new HashSet<string>();
+            var cases = Buildings().Select(b => (b.map.Id, b.block, b.house)).ToList();
+            foreach (var front in new[] { "south", "north", "west", "east" })
+            {
+                foreach (var footprint in new[] { "apartment", "station", "storefront" })
+                {
+                    var block = new RoadGraph.Block { Cols = 2, Rows = 2, Front = front };
+                    cases.Add((footprint + " " + front, block, KitPlan.Building(7, 0f, 0f, 2, 2, footprint, front)));
+                }
+            }
+            foreach (var (label, block, house) in cases)
+            {
+                var map = new { Id = label };
+                int wide = KitPlan.Tiles(block.Cols), deep = KitPlan.Tiles(block.Rows);
+                int storeys = Storeys(house);
+                var stairs = house.Where(p => p.id == "stairs").ToList();
+                if (wide < 3 || deep < 3 || storeys < 2)
+                {
+                    Assert.IsEmpty(stairs, map.Id);
+                    continue;
+                }
+                Assert.AreEqual(storeys - 1, stairs.Count, map.Id);
+                fronts.Add(block.Front);
+                foreach (var flight in stairs)
+                {
+                    flights++;
+                    var slabs = house.Where(p => p.id == "floor" && Mathf.Approximately(p.y, flight.y + KitPlan.Storey)).ToList();
+                    KitPlan.FlightArea(flight, out var ax0, out var ax1, out var az0, out var az1);
+                    Extent(steps, flight, out var ex0, out var ex1, out var ez0, out var ez1);
+                    Assert.AreEqual(ax0, ex0, 0.01f); Assert.AreEqual(ax1, ex1, 0.01f);
+                    Assert.AreEqual(az0, ez0, 0.01f); Assert.AreEqual(az1, ez1, 0.01f);
+                    Assert.GreaterOrEqual(ex0, -0.001f); Assert.LessOrEqual(ex1, wide * KitPlan.LotTile + 0.001f);
+                    Assert.GreaterOrEqual(ez0, 0.2f - 0.001f); Assert.LessOrEqual(ez1, deep * KitPlan.LotTile - 0.2f + 0.001f);
+
+                    KitBox top = null;
+                    float topX0 = 0, topX1 = 0, topZ0 = 0, topZ1 = 0;
+                    foreach (var box in steps.colliders)
+                    {
+                        var one = new KitPiece { id = "step", colliders = new[] { box } };
+                        Extent(one, flight, out var x0, out var x1, out var z0, out var z1);
+                        float stepTop = flight.y + box.y + box.h;
+                        foreach (var slab in slabs)
+                        {
+                            bool over = slab.x < x1 - 0.01f && slab.x + KitPlan.LotTile > x0 + 0.01f && slab.z < z1 - 0.01f && slab.z + KitPlan.LotTile > z0 + 0.01f;
+                            if (over) Assert.GreaterOrEqual(slab.y - stepTop, 1.9f, map.Id + " the slab above leaves no head room");
+                        }
+                        if (top == null || box.y > top.y) { top = box; topX0 = x0; topX1 = x1; topZ0 = z0; topZ1 = z1; }
+                    }
+                    Assert.AreEqual(KitPlan.Storey, top.y + top.h, 0.01f, "the last step meets the slab above");
+                    bool landing = slabs.Any(slab =>
+                        (Mathf.Abs(slab.x + KitPlan.LotTile - topX0) < 0.01f || Mathf.Abs(slab.x - topX1) < 0.01f) && slab.z <= topZ0 + 0.01f && slab.z + KitPlan.LotTile >= topZ1 - 0.01f
+                        || (Mathf.Abs(slab.z + KitPlan.LotTile - topZ0) < 0.01f || Mathf.Abs(slab.z - topZ1) < 0.01f) && slab.x <= topX0 + 0.01f && slab.x + KitPlan.LotTile >= topX1 - 0.01f);
+                    Assert.IsTrue(landing, map.Id + " " + block.Front + " the top step has nowhere to land");
+
+                    foreach (var prop in house.Where(p => Props.Contains(p.id)))
+                    {
+                        Extent(KitPlan.Find(book.pieces, prop.id), prop, out var px0, out var px1, out var pz0, out var pz1);
+                        bool hits = px0 < ex1 && px1 > ex0 && pz0 < ez1 && pz1 > ez0;
+                        Assert.IsFalse(hits, map.Id + " " + prop.id + " stands on the stairs");
+                    }
+                }
+            }
+            Assert.Greater(flights, 12);
+            Assert.AreEqual(4, fronts.Count);
         }
 
         static bool IsOpen(string kind) => kind == "spine" || kind == "road" || kind == "alley" || kind == "poi" || kind == "extract";
