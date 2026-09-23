@@ -18,6 +18,7 @@ namespace OutpostZero.Graphics
         private Transform eyeR;
         private Transform blob;
         private Transform aim;
+        private SettingsService listening;
 
         public static CharacterVariety Ensure(GameObject host)
         {
@@ -37,6 +38,23 @@ namespace OutpostZero.Graphics
         }
 
         private void Start()
+        {
+            painted = false;
+        }
+
+        private void OnEnable()
+        {
+            listening = SettingsService.Instance;
+            if (listening != null) listening.OnChanged += Repaint;
+        }
+
+        private void OnDisable()
+        {
+            if (listening != null) listening.OnChanged -= Repaint;
+            listening = null;
+        }
+
+        private void Repaint()
         {
             painted = false;
         }
@@ -95,7 +113,10 @@ namespace OutpostZero.Graphics
             wounded = health != null && CharacterLook.Wounded(health.CurrentHealth, health.MaxHealth, GoreLevel());
             var tint = CharacterLook.Clothing(seed);
             if (wounded) tint = CharacterLook.Gore(tint);
-            var eye = CharacterLook.Eye(role);
+            var settings = SettingsService.Instance;
+            int vision = settings != null ? settings.ColorblindMode : 0;
+            var eye = CharacterLook.Eye(role, vision);
+            CharacterLook.Rim(role, vision, settings != null && settings.EnemyOutline, out var rim, out float rimAlpha, out float rimPower);
             float strength = CharacterLook.Strength(role);
             var renderers = GetComponentsInChildren<Renderer>(true);
             for (int i = 0; i < renderers.Length; i++)
@@ -130,8 +151,8 @@ namespace OutpostZero.Graphics
                     block.SetColor("_Tint", new Color(tint.R, tint.G, tint.B, 1f));
                     block.SetColor("_Emission", wounded ? new Color(0.35f, 0.02f, 0.02f, 1f) : Color.black);
                     block.SetFloat("_Dissolve", wounded ? 0.22f : 0f);
-                    block.SetColor("_RimColor", new Color(0.85f, 0.55f, 0.28f, CharacterLook.Glows(role) ? 0.85f : 0.35f));
-                    block.SetFloat("_RimPower", CharacterLook.Glows(role) ? 1.6f : 3.2f);
+                    block.SetColor("_RimColor", new Color(rim.R, rim.G, rim.B, rimAlpha));
+                    block.SetFloat("_RimPower", rimPower);
                 }
                 renderer.SetPropertyBlock(block);
             }

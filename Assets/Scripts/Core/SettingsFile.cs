@@ -25,6 +25,7 @@ namespace OutpostZero.Core
             public float opacity;
             public float brightness;
             public int colorblind;
+            public int outline;
             public int quality;
             public int vsync;
             public int difficulty;
@@ -63,6 +64,7 @@ namespace OutpostZero.Core
                 opacity = 1f,
                 brightness = 1f,
                 colorblind = 0,
+                outline = 0,
                 quality = 1,
                 vsync = 1,
                 difficulty = 2,
@@ -102,6 +104,7 @@ namespace OutpostZero.Core
             Num(builder, "opacity", snap.opacity, false);
             Num(builder, "brightness", snap.brightness, false);
             Int(builder, "colorblind", snap.colorblind);
+            Int(builder, "outline", snap.outline);
             Int(builder, "quality", snap.quality);
             Int(builder, "vsync", snap.vsync);
             Int(builder, "difficulty", snap.difficulty);
@@ -142,6 +145,7 @@ namespace OutpostZero.Core
             snap.opacity = Num(json, "opacity", snap.opacity);
             snap.brightness = Num(json, "brightness", snap.brightness);
             snap.colorblind = (int)Num(json, "colorblind", snap.colorblind);
+            snap.outline = (int)Num(json, "outline", snap.outline);
             snap.quality = (int)Num(json, "quality", snap.quality);
             snap.vsync = (int)Num(json, "vsync", snap.vsync);
             snap.difficulty = (int)Num(json, "difficulty", snap.difficulty);

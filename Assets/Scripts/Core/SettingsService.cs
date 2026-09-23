@@ -5,6 +5,7 @@ using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 using OutpostZero.AI;
 using OutpostZero.Graphics;
+using OutpostZero.Shell;
 
 namespace OutpostZero.Core
 {
@@ -19,6 +20,7 @@ namespace OutpostZero.Core
         [SerializeField] private bool subtitles = true;
         [SerializeField] private bool quietFlash;
         [SerializeField] private int colorblindMode;
+        [SerializeField] private bool enemyOutline;
         [SerializeField] private string language = "en";
         [SerializeField] private float sfxVolume = 1f;
         [SerializeField] private float musicVolume = 0.7f;
@@ -54,6 +56,7 @@ namespace OutpostZero.Core
         public bool Subtitles => subtitles;
         public bool QuietFlash => quietFlash;
         public int ColorblindMode => colorblindMode;
+        public bool EnemyOutline => enemyOutline;
         public string Language => language;
         public int Quality => quality;
         public bool VSync => vsync != 0;
@@ -74,7 +77,7 @@ namespace OutpostZero.Core
         public int FrameCap => frameCap < 0 || frameCap > 4 ? 0 : frameCap;
         public int Resolution => resolution < 0 || resolution >= DisplayModes.Count ? 0 : resolution;
         public int RenderScaleStep => PlayOptions.ScaleStep(renderScale);
-        public string DiscreteKey => (subtitles ? "1" : "0") + colorblindMode + quality + vsync + (merciful ? "1" : "0") + NextDifficulty + goreLevel + hitStop + damageNumbers + motionBlur + windowMode + AimAssist + (InvertLook ? 1 : 0) + CrouchMode + SprintMode + FrameCap + Resolution + (quietFlash ? "1" : "0") + RenderScaleStep;
+        public string DiscreteKey => (subtitles ? "1" : "0") + colorblindMode + quality + vsync + (merciful ? "1" : "0") + NextDifficulty + goreLevel + hitStop + damageNumbers + motionBlur + windowMode + AimAssist + (InvertLook ? 1 : 0) + CrouchMode + SprintMode + FrameCap + Resolution + (quietFlash ? "1" : "0") + RenderScaleStep + (enemyOutline ? "1" : "0");
         public bool ShowSettings { get; private set; }
 
         public event Action OnChanged;
@@ -157,7 +160,13 @@ namespace OutpostZero.Core
 
         public void CycleColorblind()
         {
-            colorblindMode = (colorblindMode + 1) % 3;
+            colorblindMode = HudPalette.Next(colorblindMode);
+            Raise();
+        }
+
+        public void ToggleEnemyOutline()
+        {
+            enemyOutline = !enemyOutline;
             Raise();
         }
 
@@ -484,6 +493,7 @@ namespace OutpostZero.Core
                 opacity = hudOpacity,
                 brightness = brightness,
                 colorblind = colorblindMode,
+                outline = enemyOutline ? 1 : 0,
                 quality = quality,
                 vsync = vsync,
                 difficulty = NextDifficulty,
@@ -520,7 +530,8 @@ namespace OutpostZero.Core
             fieldOfView = Mathf.Clamp(snap.fov < 40f ? 55f : snap.fov, 40f, 75f);
             hudOpacity = Presentation.Opacity(snap.opacity);
             brightness = Presentation.Brightness(snap.brightness);
-            colorblindMode = snap.colorblind < 0 ? 0 : snap.colorblind % 3;
+            colorblindMode = HudPalette.Clamp(snap.colorblind);
+            enemyOutline = snap.outline == 1;
             quality = Mathf.Clamp(snap.quality, 0, 3);
             vsync = snap.vsync == 0 ? 0 : 1;
             nextDifficulty = snap.difficulty <= 0 ? 2 : snap.difficulty >= 3 ? 3 : snap.difficulty;

@@ -24,9 +24,9 @@ namespace OutpostZero.Shell
 
         public static string Mark(int mode, float noise)
         {
-            if (mode != 1 && mode != 2) return "";
+            if (mode != 1 && mode != 2 && mode != HudPalette.Tritan) return "";
             int band = Band(noise);
-            if (mode == 1)
+            if (mode == 1 || mode == HudPalette.Tritan)
             {
                 if (band == 0) return ".";
                 if (band == 1) return "-";

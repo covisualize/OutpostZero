@@ -2977,7 +2977,9 @@ namespace OutpostZero.Tests.EditMode
             Assert.AreEqual(18f, NoiseCue.Height(2, 2f), 0.001f);
 
             Assert.AreEqual("", NoiseCue.Mark(0, 1f));
-            Assert.AreEqual("", NoiseCue.Mark(3, 1f));
+            Assert.AreEqual("", NoiseCue.Mark(HudPalette.Count, 1f));
+            Assert.AreEqual("#", NoiseCue.Mark(HudPalette.Tritan, 1f));
+            Assert.AreEqual(".", NoiseCue.Mark(HudPalette.Tritan, 0f));
             Assert.AreEqual(".", NoiseCue.Mark(1, 0f));
             Assert.AreEqual("-", NoiseCue.Mark(1, 0.25f));
             Assert.AreEqual("=", NoiseCue.Mark(1, 0.55f));
@@ -2993,7 +2995,7 @@ namespace OutpostZero.Tests.EditMode
             Assert.AreEqual(0.2f, health.g, 0.001f);
             Assert.AreEqual(0.16f, health.b, 0.001f);
             Assert.AreEqual(health, HudPalette.Health(-1));
-            Assert.AreEqual(health, HudPalette.Health(3));
+            Assert.AreEqual(health, HudPalette.Health(HudPalette.Count));
             Color blue = HudPalette.Health(1);
             Assert.Greater(blue.b, blue.r);
             Color mono = HudPalette.Health(2);

@@ -430,9 +430,7 @@ namespace OutpostZero.UI
             threats.style.display = string.IsNullOrEmpty(threats.text) ? DisplayStyle.None : DisplayStyle.Flex;
             threats.style.color = bangs > 0 ? HudPalette.Alarm(vision) : HudPalette.Ask(vision);
             noiseFill.style.width = Length.Percent(noise * 100f);
-            if (vision == 1) noiseFill.style.backgroundColor = Color.Lerp(new Color(0.2f, 0.45f, 0.95f), new Color(0.95f, 0.85f, 0.15f), noise);
-            else if (vision == 2) noiseFill.style.backgroundColor = Color.Lerp(new Color(0.1f, 0.1f, 0.1f), Color.white, noise);
-            else noiseFill.style.backgroundColor = Color.Lerp(new Color(0.2f, 0.7f, 0.3f), new Color(0.8f, 0.15f, 0.1f), noise);
+            noiseFill.style.backgroundColor = HudPalette.Noise(vision, noise);
             noiseFill.style.height = NoiseCue.Height(vision, noise);
             noiseMark.text = NoiseCue.Mark(vision, noise);
             noiseMark.style.display = string.IsNullOrEmpty(noiseMark.text) ? DisplayStyle.None : DisplayStyle.Flex;
@@ -884,6 +882,7 @@ namespace OutpostZero.UI
             parent.Add(Button(settings.Subtitles ? Loc.T("set.subs_on") : Loc.T("set.subs_off"), () => settings.SetSubtitles(!settings.Subtitles)));
             parent.Add(Button(settings.QuietFlash ? Loc.T("set.flash_off") : Loc.T("set.flash_on"), settings.ToggleQuietFlash));
             parent.Add(Button(Loc.T("set.color") + " " + Loc.T(HudPalette.Name(settings.ColorblindMode)), settings.CycleColorblind));
+            parent.Add(Button(settings.EnemyOutline ? Loc.T("set.outline_on") : Loc.T("set.outline_off"), settings.ToggleEnemyOutline));
             parent.Add(Button(settings.Language == "es" ? "Idioma: ES" : "Language: EN", () => settings.SetLanguage(settings.Language == "es" ? "en" : "es")));
             int tier = Mathf.Clamp(settings.Quality, 0, 3);
             parent.Add(Button(Loc.T("set.quality") + " " + Loc.T("set.tier" + tier), settings.CycleQuality));

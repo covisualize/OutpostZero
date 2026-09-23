@@ -49,6 +49,40 @@ namespace OutpostZero.Graphics
             }
         }
 
+        public const float OutlinePower = 1.1f;
+        public static readonly Rgb RimWarm = new Rgb { R = 0.85f, G = 0.55f, B = 0.28f };
+
+        /// <summary>
+        /// Enemy eyes and rim in a colour-blind mode: amber for blue-yellow (1), white for mono (2),
+        /// pink-red for red-teal (3). Mode 0 keeps the per-archetype eyes and the warm rim.
+        /// </summary>
+        public static Rgb Enemy(int vision)
+        {
+            if (vision == 1) return new Rgb { R = 1f, G = 0.78f, B = 0.1f };
+            if (vision == 2) return new Rgb { R = 1f, G = 1f, B = 1f };
+            if (vision == 3) return new Rgb { R = 1f, G = 0.2f, B = 0.45f };
+            return RimWarm;
+        }
+
+        public static Rgb Eye(string role, int vision)
+        {
+            return vision > 0 && Glows(role) ? Enemy(vision) : Eye(role);
+        }
+
+        public static void Rim(string role, int vision, bool outline, out Rgb color, out float alpha, out float power)
+        {
+            if (!Glows(role))
+            {
+                color = RimWarm;
+                alpha = 0.35f;
+                power = 3.2f;
+                return;
+            }
+            color = vision > 0 ? Enemy(vision) : RimWarm;
+            alpha = outline ? 1f : 0.85f;
+            power = outline ? OutlinePower : 1.6f;
+        }
+
         public static float Strength(string role)
         {
             switch (RoleOf(role))
