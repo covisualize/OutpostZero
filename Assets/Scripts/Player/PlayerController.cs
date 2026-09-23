@@ -434,7 +434,8 @@ namespace OutpostZero.Player
             TryDodge();
             if (WheelOpen) return;
 
-            float scroll = ExpeditionInput.Scroll;
+            bool zooming = GridBuilder.Instance != null && GridBuilder.Instance.BuildMode;
+            float scroll = zooming ? 0f : ExpeditionInput.Scroll;
             if (scroll > 0.05f) CycleWeapon(1);
             else if (scroll < -0.05f) CycleWeapon(-1);
             int padCycle = ExpeditionInput.WeaponCycle;

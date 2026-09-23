@@ -30,7 +30,7 @@ Most gameplay rules live in small `static` classes with no Unity state (for exam
 
 `SettingsService`, `AudioManager`, `SaveSystem`, `RunArchive`, `SurvivorRoster`, `WorldClock`, `ColonyStorage`, `GridBuilder`, `CraftingBench`, `NightRaidController`, `FactionTrade`, `ObjectiveTracker`, `DayNightCycle`, `WeatherController`, `PostFxRig`, `UrpMaterialPass`, `PerfBudget`, `LodGovernor`, `WorldMapService`, `TutorialDirector`, `CodexDirector`, `SceneFlow`, `DevPanel`, `CampServices`, `CampPopulation`, `DistrictDressing`.
 
-The installer also outfits the player (`SurvivalNeeds`, `StatusEffectController`, `PlayerInteractor`, locomotion), and adds `HitFeedback`, `ImpactDecalPool`, `GameShellUI`, `OutpostInterface` and `ExpeditionCameraRig` to the main camera. The saved arena scene predates most of these components, so they are added when the scene loads.
+The installer also outfits the player (`SurvivalNeeds`, `StatusEffectController`, `PlayerInteractor`, locomotion), and adds `HitFeedback`, `ImpactDecalPool`, `GameShellUI`, `OutpostInterface` and `ExpeditionCameraRig` to the main camera. The rig builds the Cinemachine cameras (follow, aim, camp overview, fallen-leader zoom, results sequence) around the proxies that `CameraTargetDriver` moves, and reads every shot and shake from `Resources/CameraProfile.asset`. The saved arena scene predates most of these components, so they are added when the scene loads.
 
 Always reach a service through `Instance` with a null check (`SaveSystem.Instance?.Save()`), because EditMode tests and the Boot scene run without them.
 

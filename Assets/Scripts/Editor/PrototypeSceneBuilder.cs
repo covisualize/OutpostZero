@@ -531,7 +531,7 @@ namespace OutpostZero.EditorTools
 
             var camData = Attach.Ensure<UniversalAdditionalCameraData>(cam.gameObject);
 
-            var follow = Attach.Ensure<TopDownCameraFollow>(cam.gameObject);
+            var follow = Attach.Ensure<CameraTargetDriver>(cam.gameObject);
             follow.SetFollowTarget(playerTarget);
         }
 

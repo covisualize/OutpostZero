@@ -12,6 +12,7 @@ namespace OutpostZero.Graphics
         private Vignette vignette;
         private FilmGrain grain;
         private DepthOfField depth;
+        private Volume aimDepth;
         private ColorAdjustments color;
         private MotionBlur blur;
 
@@ -52,8 +53,16 @@ namespace OutpostZero.Graphics
             blur.active = false;
             blur.intensity.Override(0.35f);
 
-            depth = profile.Add<DepthOfField>();
-            depth.active = false;
+            var aimHost = new GameObject("AimDepthVolume");
+            aimHost.transform.SetParent(transform, false);
+            aimDepth = aimHost.AddComponent<Volume>();
+            aimDepth.isGlobal = true;
+            aimDepth.priority = 21f;
+            aimDepth.weight = 0f;
+            var aimProfile = ScriptableObject.CreateInstance<VolumeProfile>();
+            aimDepth.sharedProfile = aimProfile;
+            depth = aimProfile.Add<DepthOfField>();
+            depth.active = true;
             depth.mode.Override(DepthOfFieldMode.Gaussian);
             depth.gaussianStart.Override(6f);
             depth.gaussianEnd.Override(18f);
@@ -65,6 +74,14 @@ namespace OutpostZero.Graphics
             int tier = SettingsService.Instance != null ? SettingsService.Instance.Quality : 1;
             bool aiming = PlayerRegistry.Current != null && PlayerRegistry.Current.IsAimingDownSights;
             ApplyTier(tier, aiming);
+        }
+
+        /// <summary>Depth-of-field volume weight: follows the ADS camera blend, or snaps with aiming when no rig runs.</summary>
+        public static float AimDepth(bool tierAllows, bool aiming, bool rig, float blend)
+        {
+            if (!tierAllows) return 0f;
+            if (!rig) return aiming ? 1f : 0f;
+            return blend < 0f ? 0f : blend > 1f ? 1f : blend;
         }
 
         private void ApplyTier(int tier, bool aiming)
@@ -83,7 +100,7 @@ namespace OutpostZero.Graphics
             bloom.intensity.Override(budget.Bloom);
             vignette.intensity.Override(PoisonVeil.Shade(RaidGrade.Vignette(raid, tier), poisoned));
             grain.active = raid || budget.Grain;
-            depth.active = aiming && budget.DepthOfField;
+            if (aimDepth != null) aimDepth.weight = AimDepth(budget.DepthOfField, aiming, ExpeditionCameraRig.Instance != null, ExpeditionCameraRig.AimWeight);
             if (color != null)
             {
                 float bright = SettingsService.Instance != null ? SettingsService.Instance.Brightness : 1f;

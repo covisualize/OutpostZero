@@ -868,6 +868,7 @@ namespace OutpostZero.AI
             float amount = charge ? attackDamage + 8f : SpecialBeat.LungeDamage;
             damageable.TakeDamage(amount, currentTarget.position, transform.forward, gameObject);
             if (charge) currentTarget.GetComponent<StatusEffectController>()?.Knockdown(0.7f);
+            if (charge) ExpeditionCameraRig.At(CameraTuning.BruteStomp, transform.position);
         }
 
         private void UpdateSearching()
@@ -1232,9 +1233,10 @@ namespace OutpostZero.AI
 
         private void Voice(string moment)
         {
+            string breed = Breed();
+            if (moment == "bite" && breed == "brute") ExpeditionCameraRig.At(CameraTuning.BruteStomp, transform.position);
             var ear = OutpostZero.Shell.AudioManager.Instance;
             if (ear == null) return;
-            string breed = Breed();
             if (moment == "idle")
             {
                 ear.Groan(breed, transform.position, Time.time, nextGroan, out nextGroan);

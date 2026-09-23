@@ -1627,16 +1627,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   target: {fileID: 1003238123}
-  offset: {x: 0, y: 16, z: -11}
-  smoothTime: 0.18
-  mouseInfluence: 3.5
-  maxMouseLeadDistance: 4.5
-  defaultFov: 50
-  aimFov: 42
-  zoomSpeed: 8
-  traumaDecayRate: 1.4
-  maxShakeAngle: 2.5
-  maxShakeOffset: 0.4
 --- !u!114 &256836053
 MonoBehaviour:
   m_ObjectHideFlags: 0

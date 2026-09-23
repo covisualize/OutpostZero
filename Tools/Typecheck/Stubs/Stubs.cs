@@ -43,11 +43,22 @@ namespace UnityEngine.Rendering.Universal
 
 namespace Unity.Cinemachine
 {
-    public struct LensSettings { public float FieldOfView; public static LensSettings Default => new LensSettings { FieldOfView = 40f }; }
-    public class CinemachineBrain : MonoBehaviour { public enum UpdateMethods { FixedUpdate, LateUpdate, SmartUpdate, ManualUpdate } public UpdateMethods UpdateMethod = UpdateMethods.SmartUpdate; }
-    public abstract class CinemachineVirtualCameraBase : MonoBehaviour { public abstract Transform LookAt { get; set; } public abstract Transform Follow { get; set; } }
+    public struct LensSettings { public float FieldOfView; public float OrthographicSize; public static LensSettings Default => new LensSettings { FieldOfView = 40f }; }
+    public struct PrioritySettings { public bool Enabled; public int Value { get; set; } public static implicit operator int(PrioritySettings p) => p.Value; public static implicit operator PrioritySettings(int v) => new PrioritySettings { Value = v, Enabled = true }; }
+    public static class CinemachineCore { public enum Stage { Body, Aim, Noise, Finalize } }
+    [Serializable] public struct CinemachineBlendDefinition { public enum Styles { Cut, EaseInOut, EaseIn, EaseOut, HardIn, HardOut, Linear, Custom } public Styles Style; public float Time; public CinemachineBlendDefinition(Styles style, float time) { Style = style; Time = time; } }
+    public class CinemachineBrain : MonoBehaviour { public enum UpdateMethods { FixedUpdate, LateUpdate, SmartUpdate, ManualUpdate } public UpdateMethods UpdateMethod = UpdateMethods.SmartUpdate; public bool IgnoreTimeScale; public CinemachineBlendDefinition DefaultBlend = new CinemachineBlendDefinition(CinemachineBlendDefinition.Styles.EaseInOut, 2f); }
+    public abstract class CinemachineVirtualCameraBase : MonoBehaviour { public PrioritySettings Priority = new PrioritySettings(); public abstract Transform LookAt { get; set; } public abstract Transform Follow { get; set; } }
     public class CinemachineCamera : CinemachineVirtualCameraBase { public LensSettings Lens = LensSettings.Default; public override Transform LookAt { get; set; } public override Transform Follow { get; set; } }
+    public abstract class CinemachineCameraManagerBase : CinemachineVirtualCameraBase { public override Transform LookAt { get; set; } public override Transform Follow { get; set; } }
+    public class CinemachineSequencerCamera : CinemachineCameraManagerBase { [Serializable] public struct Instruction { public CinemachineVirtualCameraBase Camera; public CinemachineBlendDefinition Blend; public float Hold; } public bool Loop; public System.Collections.Generic.List<Instruction> Instructions = new System.Collections.Generic.List<Instruction>(); }
     public abstract class CinemachineComponentBase : MonoBehaviour { }
+    public abstract class CinemachineExtension : MonoBehaviour { }
     public class CinemachineFollow : CinemachineComponentBase { public Vector3 FollowOffset = Vector3.back * 10f; }
     public class CinemachineHardLookAt : CinemachineComponentBase { }
+    public class CinemachinePositionComposer : CinemachineComponentBase { public float CameraDistance = 10f; public float DeadZoneDepth; public bool CenterOnActivate = true; public Vector3 TargetOffset; public Vector3 Damping; }
+    public class CinemachineConfiner3D : CinemachineExtension { public Collider BoundingVolume; public float SlowingDistance; }
+    public class CinemachineImpulseListener : CinemachineExtension { [Serializable] public struct ImpulseReaction { public float AmplitudeGain; public float FrequencyGain; public float Duration; } public CinemachineCore.Stage ApplyAfter = CinemachineCore.Stage.Aim; public int ChannelMask; public float Gain; public bool Use2DDistance; public bool UseCameraSpace; public ImpulseReaction ReactionSettings; }
+    [Serializable] public class CinemachineImpulseDefinition { public enum ImpulseShapes { Custom, Recoil, Bump, Explosion, Rumble } public enum ImpulseTypes { Uniform, Dissipating, Propagating, Legacy } public int ImpulseChannel = 1; public ImpulseShapes ImpulseShape; public float ImpulseDuration = 0.2f; public ImpulseTypes ImpulseType = ImpulseTypes.Legacy; public float DissipationRate; public float AmplitudeGain = 1f; public float FrequencyGain = 1f; public bool Randomize = true; public float ImpactRadius = 100f; public float DissipationDistance = 100f; public float PropagationSpeed = 343f; }
+    public class CinemachineImpulseSource : MonoBehaviour { public CinemachineImpulseDefinition ImpulseDefinition = new CinemachineImpulseDefinition(); public Vector3 DefaultVelocity = Vector3.down; public void GenerateImpulseAt(Vector3 position, Vector3 velocity) { } public void GenerateImpulseWithForce(float force) { } }
 }
