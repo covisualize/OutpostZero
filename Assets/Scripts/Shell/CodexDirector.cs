@@ -6,8 +6,10 @@ namespace OutpostZero.Shell
     /// <summary>
     /// Remembers which hints and codex pages the player has earned, and shows a hint once.
     /// </summary>
-    public class CodexDirector : MonoBehaviour
+    public class CodexDirector : MonoBehaviour, ISaveable
     {
+        public const string SaveKey = "codex";
+
         public static CodexDirector Instance { get; private set; }
 
         private string packed = "";
@@ -22,7 +24,21 @@ namespace OutpostZero.Shell
                 return;
             }
             Instance = this;
+            SaveRegistry.Register(this);
         }
+
+        private void OnDestroy()
+        {
+            if (Instance != this) return;
+            SaveRegistry.Unregister(this);
+            Instance = null;
+        }
+
+        public string SaveId => SaveKey;
+
+        public string CaptureState() => Packed;
+
+        public void RestoreState(string state) => Restore(state);
 
         public static void Hear(string signal)
         {

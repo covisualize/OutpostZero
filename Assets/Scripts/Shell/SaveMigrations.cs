@@ -17,7 +17,8 @@ namespace OutpostZero.Shell
 
         private static readonly Func<SaveGameData, SaveGameData>[] steps =
         {
-            OneToTwo
+            OneToTwo,
+            TwoToThree
         };
 
         public static int Oldest => SaveCodec.CurrentSchema - steps.Length;
@@ -81,6 +82,23 @@ namespace OutpostZero.Shell
                 modules.Add(m);
             }
             data.modules = modules.ToArray();
+            return data;
+        }
+
+        /// <summary>
+        /// Schema 3 keeps each <see cref="ISaveable"/> system's state in <c>parts</c> under its save id.
+        /// The codex was the first to move, out of its own named field.
+        /// </summary>
+        private static SaveGameData TwoToThree(SaveGameData data)
+        {
+            var parts = new List<SaveBlob>();
+            if (data.parts != null)
+                foreach (var part in data.parts)
+                    if (part != null && !string.IsNullOrEmpty(part.id)) parts.Add(part);
+            if (!string.IsNullOrEmpty(data.codex) && SaveRegistry.Find(parts.ToArray(), CodexDirector.SaveKey) == null)
+                parts.Add(new SaveBlob { id = CodexDirector.SaveKey, state = data.codex });
+            data.codex = "";
+            data.parts = parts.ToArray();
             return data;
         }
 

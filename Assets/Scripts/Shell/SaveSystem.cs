@@ -257,7 +257,7 @@ namespace OutpostZero.Shell
                 data.quests = FactionTrade.Instance.Quests;
             }
             if (TutorialDirector.Instance != null) data.tutorialDone = TutorialDirector.Instance.Finished;
-            if (CodexDirector.Instance != null) data.codex = CodexDirector.Instance.Packed;
+            data.parts = SaveRegistry.Capture();
             if (OutpostZero.Core.PlayerRegistry.Current != null)
             {
                 data.weaponMods = OutpostZero.Core.PlayerRegistry.Current.PackMods();
@@ -383,7 +383,7 @@ namespace OutpostZero.Shell
             SettingsService.Instance?.SetMerciful(data.mercy != 0);
             SurvivorRoster.Instance?.RestoreStory(data.memorial, data.corpses);
             TutorialDirector.Instance?.SetFinished(data.tutorialDone);
-            CodexDirector.Instance?.Restore(data.codex);
+            SaveRegistry.Restore(data.parts);
             OutpostZero.Core.PlayerRegistry.Current?.RestoreMods(data.weaponMods);
             OutpostZero.Core.PlayerRegistry.Current?.RestoreLamp(data.lampSpent);
             OutpostZero.Core.PlayerRegistry.Current?.GetComponent<OutpostZero.Player.PlayerInventory>()?.SetPackTier(data.packTier);

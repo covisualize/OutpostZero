@@ -35,7 +35,7 @@ namespace OutpostZero.Tests.EditMode
         [Test]
         public void VersionOneUpgradesToTheCurrentSchema()
         {
-            Assert.AreEqual(2, SaveCodec.CurrentSchema);
+            Assert.AreEqual(3, SaveCodec.CurrentSchema);
             Assert.AreEqual(1, SaveMigrations.Oldest);
             Assert.IsTrue(SaveMigrations.CanUpgrade(1));
             Assert.IsTrue(SaveMigrations.CanUpgrade(SaveCodec.CurrentSchema));

@@ -127,11 +127,12 @@ namespace OutpostZero.Shell
         public bool subtitles = true;
         public SurvivorSave[] survivors = Array.Empty<SurvivorSave>();
         public ModuleSave[] modules = Array.Empty<ModuleSave>();
+        public SaveBlob[] parts = Array.Empty<SaveBlob>();
     }
 
     public static class SaveCodec
     {
-        public const int CurrentSchema = 2;
+        public const int CurrentSchema = 3;
 
         public static string Serialize(SaveGameData data)
         {
