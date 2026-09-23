@@ -12,13 +12,34 @@ namespace OutpostZero.Shell
         public string Key;
         public string Fallback;
         public string Gate;
+        public string Mark;
 
-        public TutorialStep(string key, string fallback, string gate)
+        public TutorialStep(string key, string fallback, string gate, string mark = "")
         {
             Key = key;
             Fallback = fallback;
             Gate = gate;
+            Mark = mark ?? "";
         }
+    }
+
+    /// <summary>
+    /// Which camp control a tutorial step points at. The panel rings the marked control and dims
+    /// the rows that hold nothing marked, so the step reads as "press this".
+    /// </summary>
+    public static class TutorialMark
+    {
+        public const string Task = "task";
+        public const string Stores = "stores";
+        public const string Barricade = "barricade";
+        public const string Bandage = "bandage";
+        public const string Leave = "leave";
+        public const float Dim = 0.4f;
+        public const float Ring = 2f;
+
+        public static bool Lit(string current, string tag) => !string.IsNullOrEmpty(current) && current == tag;
+
+        public static float Opacity(bool anyLit, bool holdsLit, bool guide) => !anyLit || holdsLit || guide ? 1f : Dim;
     }
 
     /// <summary>
@@ -32,11 +53,11 @@ namespace OutpostZero.Shell
 
         public static readonly TutorialStep[] Camp =
         {
-            new TutorialStep("day1.0", "Pick a survivor and give them a task.", "assign"),
-            new TutorialStep("day1.1", "The stores line shows scrap, food and water. When they run dry, the sanctuary starves.", Read),
-            new TutorialStep("day1.2", "Press {key:Build}, pick Barricade and place it on the yard.", "barricade"),
-            new TutorialStep("day1.3", "Craft a bandage at the bench. It costs one scrap.", "craft_bandage"),
-            new TutorialStep("day1.4", "Send the first expedition out through the gate.", "launch"),
+            new TutorialStep("day1.0", "Pick a survivor and give them a task.", "assign", TutorialMark.Task),
+            new TutorialStep("day1.1", "The stores line shows scrap, food and water. When they run dry, the sanctuary starves.", Read, TutorialMark.Stores),
+            new TutorialStep("day1.2", "Press {key:Build}, pick Barricade and place it on the yard.", "barricade", TutorialMark.Barricade),
+            new TutorialStep("day1.3", "Craft a bandage at the bench. It costs one scrap.", "craft_bandage", TutorialMark.Bandage),
+            new TutorialStep("day1.4", "Send the first expedition out through the gate.", "launch", TutorialMark.Leave),
         };
 
         public static readonly string[] Steps =
@@ -120,6 +141,8 @@ namespace OutpostZero.Shell
                 return Loc.Hint(step.Key, step.Fallback);
             }
         }
+
+        public string CampMark => campFinished || campIndex >= TutorialTrack.Camp.Length ? string.Empty : TutorialTrack.Camp[campIndex].Mark;
 
         public bool CampAwaitsRead => !campFinished && campIndex < TutorialTrack.Camp.Length && TutorialTrack.Camp[campIndex].Gate == TutorialTrack.Read;
 

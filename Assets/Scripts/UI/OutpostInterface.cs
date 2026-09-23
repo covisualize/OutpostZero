@@ -26,6 +26,9 @@ namespace OutpostZero.UI
         private VisualElement root;
         private VisualElement menu;
         private VisualElement camp;
+        private readonly List<VisualElement> campLit = new List<VisualElement>();
+        private VisualElement guideBox;
+        private string campMark = "";
         private VisualElement pack;
         private VisualElement damageLayer;
         private Label vitals;
@@ -955,22 +958,27 @@ namespace OutpostZero.UI
             if (!open) return;
             camp.Add(Title(Loc.T("camp.title")));
             var guide = TutorialDirector.Instance;
+            campMark = guide != null ? guide.CampMark : "";
+            campLit.Clear();
+            guideBox = null;
             if (guide != null && !guide.CampFinished && guide.CampCurrent.Length > 0)
             {
-                camp.Add(Body(Loc.T("tut.day1") + " " + (guide.CampIndex + 1) + "/" + TutorialTrack.Camp.Length + ": " + guide.CampCurrent));
+                guideBox = new VisualElement();
+                guideBox.Add(Body(Loc.T("tut.day1") + " " + (guide.CampIndex + 1) + "/" + TutorialTrack.Camp.Length + ": " + guide.CampCurrent));
                 var row = new VisualElement { style = { flexDirection = FlexDirection.Row } };
                 if (guide.CampAwaitsRead) row.Add(Button(Loc.T("tut.next"), () => guide.Note(TutorialTrack.Read)));
                 row.Add(Button(Loc.T("menu.skip"), guide.Dismiss));
-                camp.Add(row);
+                guideBox.Add(row);
+                camp.Add(guideBox);
             }
             var storage = ColonyStorage.Instance;
             var services = CampServices.Instance;
             if (storage != null)
             {
-                camp.Add(Body(Loc.T("camp.scrap") + " " + storage.Scrap + "  " + Loc.T("camp.food") + " " + storage.Food + "  " + Loc.T("camp.water") + " " + storage.Water
+                camp.Add(Lit(Body(Loc.T("camp.scrap") + " " + storage.Scrap + "  " + Loc.T("camp.food") + " " + storage.Food + "  " + Loc.T("camp.water") + " " + storage.Water
                     + "  " + Loc.T("camp.cloth") + " " + storage.Cloth + "  " + Loc.T("camp.chem") + " " + storage.Chemicals                     + "  " + Loc.T("camp.tape") + " " + storage.Tape + "  " + Loc.T("camp.raw") + " " + storage.Raw + "  " + Loc.T("camp.rounds") + " " + storage.Rounds
                     + "  " + (services != null && services.GeneratorOnline ? Loc.T("camp.gen_on") : Loc.T("camp.gen_off"))
-                    + (services != null ? "  " + Loc.T("camp.fuel") + " " + FuelTank.Label(services.FuelHours) + StormNote(services) : "")));
+                    + (services != null ? "  " + Loc.T("camp.fuel") + " " + FuelTank.Label(services.FuelHours) + StormNote(services) : "")), TutorialMark.Stores));
                 camp.Add(Body(Loc.T("camp.room") + " " + storage.Used + "/" + storage.Room));
                 if (storage.Bodies > 0) camp.Add(Body(Loc.T("camp.bodies") + " " + storage.Bodies));
                 if (storage.Cells > 0)
@@ -1045,7 +1053,7 @@ namespace OutpostZero.UI
                     row.Add(Button(Loc.Task("Clear"), () => roster.Assign(id, "Clear")));
                     if (survivor.injury > 0) row.Add(Button(Loc.Task("Quarantine"), () => roster.Assign(id, "Quarantine")));
                     if (!survivor.leader) row.Add(Button(Loc.T("camp.gift"), () => roster.OfferMeal(id)));
-                    camp.Add(row);
+                    camp.Add(Lit(row, TutorialMark.Task));
                 }
             }
             if (FactionTrade.Instance != null)
@@ -1076,7 +1084,7 @@ namespace OutpostZero.UI
                 camp.Add(Body(Loc.T("camp.warn") + " " + Mathf.CeilToInt(NightRaidController.Instance.WarningLeft)));
             camp.Add(Body(Loc.T("camp.build") + " " + (GridBuilder.Instance != null ? GridBuilder.Instance.Selected + "  " + GridBuilder.Instance.Facing : "")));
             var build = new VisualElement { style = { flexDirection = FlexDirection.Row } };
-            build.Add(Button(Loc.T("camp.barricade"), () => GridBuilder.Instance?.Select(ModuleKind.Barricade)));
+            build.Add(Lit(Button(Loc.T("camp.barricade"), () => GridBuilder.Instance?.Select(ModuleKind.Barricade)), TutorialMark.Barricade));
             build.Add(Button(Loc.T("camp.cot"), () => GridBuilder.Instance?.Select(ModuleKind.Cot)));
             build.Add(Button(Loc.T("camp.water"), () => GridBuilder.Instance?.Select(ModuleKind.Water)));
             build.Add(Button(Loc.T("camp.tower"), () => GridBuilder.Instance?.Select(ModuleKind.Watchtower)));
@@ -1175,7 +1183,8 @@ namespace OutpostZero.UI
                 if (!CraftGate.Open(id, benchTier, prints)) continue;
                 if (!CraftBill.TryOf(id, out var bill)) continue;
                 int due = CraftingBench.Priced(bill.Scrap, bench, benchTier);
-                camp.Add(Button(CraftSay.Line(Loc.Recipe(id, recipe.Label), due, bill.Cloth, bill.Chemicals, bill.Tape, null), () => CraftingBench.Instance?.Craft(id)));
+                var craft = Button(CraftSay.Line(Loc.Recipe(id, recipe.Label), due, bill.Cloth, bill.Chemicals, bill.Tape, null), () => CraftingBench.Instance?.Craft(id));
+                camp.Add(id == TutorialMark.Bandage ? Lit(craft, TutorialMark.Bandage) : craft);
             }
             var map = WorldMapService.Instance;
             if (map != null)
@@ -1213,7 +1222,40 @@ namespace OutpostZero.UI
                 }
                 if (hidden > 0) camp.Add(Body(Loc.T("camp.fog") + "  " + hidden));
             }
-            camp.Add(Button(Loc.T("camp.leave"), () => Go(FlowStep.Expedition)));
+            camp.Add(Lit(Button(Loc.T("camp.leave"), () => Go(FlowStep.Expedition)), TutorialMark.Leave));
+            ShadeCamp();
+        }
+
+        private T Lit<T>(T element, string tag) where T : VisualElement
+        {
+            if (!TutorialMark.Lit(campMark, tag)) return element;
+            var ring = new Color(0.95f, 0.72f, 0.3f);
+            element.style.borderTopWidth = TutorialMark.Ring;
+            element.style.borderBottomWidth = TutorialMark.Ring;
+            element.style.borderLeftWidth = TutorialMark.Ring;
+            element.style.borderRightWidth = TutorialMark.Ring;
+            element.style.borderTopColor = ring;
+            element.style.borderBottomColor = ring;
+            element.style.borderLeftColor = ring;
+            element.style.borderRightColor = ring;
+            campLit.Add(element);
+            return element;
+        }
+
+        private void ShadeCamp()
+        {
+            var holders = new HashSet<VisualElement>();
+            foreach (var lit in campLit)
+            {
+                var node = lit;
+                while (node != null && node.parent != camp) node = node.parent;
+                if (node != null) holders.Add(node);
+            }
+            foreach (var child in camp.Children())
+                child.style.opacity = TutorialMark.Opacity(campLit.Count > 0, holders.Contains(child), child == guideBox);
+            if (campLit.Count == 0 || !InputGlyphs.UsingPad) return;
+            var first = campLit[0] as Button ?? campLit[0].Q<Button>();
+            first?.Focus();
         }
 
         private void RebuildPack(bool open)

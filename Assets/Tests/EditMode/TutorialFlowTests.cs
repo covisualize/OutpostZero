@@ -72,6 +72,38 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void EveryCampStepPointsAtAControlThePanelRings()
+        {
+            var marks = TutorialTrack.Camp.Select(s => s.Mark).ToArray();
+            CollectionAssert.AllItemsAreNotNull(marks);
+            CollectionAssert.AllItemsAreUnique(marks);
+            foreach (var mark in marks) Assert.IsNotEmpty(mark);
+            string ui = File.ReadAllText(Path.Combine(Directory.GetCurrentDirectory(), "Assets", "Scripts", "UI", "OutpostInterface.cs"));
+            var ringed = new Regex(@"Lit\([\s\S]*?TutorialMark\.(\w+)\)").Matches(ui).Cast<Match>().Select(m => m.Groups[1].Value).ToHashSet();
+            var names = typeof(TutorialMark).GetFields()
+                .Where(f => f.IsLiteral && f.FieldType == typeof(string))
+                .ToDictionary(f => (string)f.GetRawConstantValue(), f => f.Name);
+            foreach (var mark in marks)
+            {
+                Assert.IsTrue(names.ContainsKey(mark), mark);
+                Assert.IsTrue(ringed.Contains(names[mark]), "the camp panel never rings " + mark);
+            }
+        }
+
+        [Test]
+        public void TheRingDimsOnlyRowsWithNothingMarked()
+        {
+            Assert.IsTrue(TutorialMark.Lit(TutorialMark.Stores, TutorialMark.Stores));
+            Assert.IsFalse(TutorialMark.Lit(TutorialMark.Stores, TutorialMark.Task));
+            Assert.IsFalse(TutorialMark.Lit("", ""));
+            Assert.AreEqual(1f, TutorialMark.Opacity(false, false, false));
+            Assert.AreEqual(1f, TutorialMark.Opacity(true, true, false));
+            Assert.AreEqual(1f, TutorialMark.Opacity(true, false, true));
+            Assert.AreEqual(TutorialMark.Dim, TutorialMark.Opacity(true, false, false));
+            Assert.Less(TutorialMark.Dim, 1f);
+        }
+
+        [Test]
         public void HintsArriveWhenTheyAreNeeded()
         {
             string Signal(string id) => CodexBook.Hints.First(h => h.Id == id).Signal;
