@@ -15,6 +15,7 @@ namespace OutpostZero.Colony
             if (action == "Guard") return "Watchtower";
             if (action == "Medic") return "Cot";
             if (action == "Scavenge") return "Crate";
+            if (action == CraftQueue.Task) return "Workbench";
             return "";
         }
 

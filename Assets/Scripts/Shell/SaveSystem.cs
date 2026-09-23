@@ -202,6 +202,7 @@ namespace OutpostZero.Shell
                 data.cells = ColonyStorage.Instance.Cells;
                 data.shots = ColonyStorage.Instance.Shots;
                 data.prints = ColonyStorage.Instance.Prints;
+                data.craftOrders = CraftingBench.Instance != null ? CraftingBench.Instance.PackedOrders : "";
             }
             if (CampServices.Instance != null)
             {
@@ -347,6 +348,7 @@ namespace OutpostZero.Shell
             ColonyStorage.Instance?.SetShots(data.shots);
             CampServices.Instance?.SetFuel(FuelTank.Unpack(data.fuel, data.fuelSet));
             ColonyStorage.Instance?.SetPrints(data.prints);
+            CraftingBench.Instance?.SetOrders(data.craftOrders);
             FactionTrade.Instance?.Restore(data.factionStanding, data.factions, data.quests);
             SettingsService.Instance?.ApplySnapshot(data.shake, data.volume, data.textScale, data.subtitles, data.language);
             SettingsService.Instance?.ApplyPresentation(data.sfxVolume, data.musicVolume, data.quality, data.vsync, data.fieldOfView, data.bindings, data.ambienceVolume, data.uiVolume);

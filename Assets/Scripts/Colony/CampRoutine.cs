@@ -39,6 +39,7 @@ namespace OutpostZero.Colony
             if (action == "Medic") return "Hold still.";
             if (action == "Scavenge") return "I'll check the piles.";
             if (action == "Build") return "I'll raise it.";
+            if (action == CraftQueue.Task) return "Bench is mine.";
             if (action == "Clear") return "I'll haul them.";
             if (morale > 70f) return "We'll hold.";
             return "Resting.";

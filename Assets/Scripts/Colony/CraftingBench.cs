@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using OutpostZero.Combat;
 using OutpostZero.Core;
@@ -23,6 +24,10 @@ namespace OutpostZero.Colony
 
         public const string CampFood = "camp_food";
         public const string CampWater = "camp_water";
+
+        private readonly List<string> orders = new List<string>();
+        public IReadOnlyList<string> Orders => orders;
+        public string PackedOrders => CraftQueue.Pack(orders);
 
         public static readonly Recipe[] Recipes =
         {
@@ -64,12 +69,68 @@ namespace OutpostZero.Colony
 
         public bool Craft(string recipeId)
         {
-            Recipe recipe = null;
+            if (!TrySpend(recipeId, out var recipe, out int due, out var bill)) return false;
+            return Deliver(recipe, due, bill, true);
+        }
+
+        public bool Order(string recipeId)
+        {
+            if (!CraftQueue.CanAdd(orders, recipeId))
+            {
+                GameplayFeedback.Toast(Loc.T(CraftQueue.Orderable(recipeId) ? "craft.queue_full" : "craft.no_queue"));
+                return false;
+            }
+            if (!TrySpend(recipeId, out var recipe, out _, out _)) return false;
+            orders.Add(recipe.Id);
+            GameplayFeedback.Toast(Loc.T("craft.queued") + " " + Loc.Recipe(recipe.Id, recipe.Label));
+            return true;
+        }
+
+        /// <summary>A Craft shift finishes up to <paramref name="hands"/> orders. An order that can't be delivered waits.</summary>
+        public int WorkOrders(int hands)
+        {
+            int made = 0;
+            while (hands > 0 && orders.Count > 0)
+            {
+                var recipe = Find(orders[0]);
+                if (recipe == null || !CraftBill.TryOf(recipe.Id, out var bill))
+                {
+                    orders.RemoveAt(0);
+                    continue;
+                }
+                if (!Deliver(recipe, 0, bill, false)) break;
+                orders.RemoveAt(0);
+                made++;
+                hands--;
+            }
+            return made;
+        }
+
+        public void SetOrders(string packed)
+        {
+            orders.Clear();
+            orders.AddRange(CraftQueue.Unpack(packed));
+        }
+
+        private static Recipe Find(string recipeId)
+        {
+            foreach (var candidate in Recipes)
+            {
+                if (candidate.Id == recipeId) return candidate;
+            }
+            return null;
+        }
+
+        private bool TrySpend(string recipeId, out Recipe recipe, out int due, out CraftBill.Cost bill)
+        {
+            due = 0;
+            bill = default;
+            recipe = null;
             foreach (var candidate in Recipes)
             {
                 if (candidate.Id == recipeId) recipe = candidate;
             }
-            if (recipe == null || !CraftBill.TryOf(recipeId, out var bill)) return false;
+            if (recipe == null || !CraftBill.TryOf(recipeId, out bill)) return false;
             var storage = ColonyStorage.Instance;
             if (storage == null) return false;
 
@@ -88,7 +149,7 @@ namespace OutpostZero.Colony
                 GameplayFeedback.Toast(Loc.T("gate.print"));
                 return false;
             }
-            int due = Priced(bill.Scrap, workbench, tier);
+            due = Priced(bill.Scrap, workbench, tier);
             string block = CraftBill.Block(bill.Station, bill.Skill, CraftBill.StationReady(bill.Station, workbench, cot, fire), SkillReady(bill.Skill));
             if (!string.IsNullOrEmpty(block))
             {
@@ -102,13 +163,20 @@ namespace OutpostZero.Colony
             }
             if (recipe.Id == "bandage") CodexDirector.Hear("craft_bandage");
             if (bill.Raw > 0) storage.TakeRaw(bill.Raw);
+            return true;
+        }
+
+        private bool Deliver(Recipe recipe, int due, CraftBill.Cost bill, bool refund)
+        {
+            var storage = ColonyStorage.Instance;
+            if (storage == null) return false;
 
             if (recipe.OutputId == CampFood || recipe.OutputId == CampWater)
             {
                 int kept = recipe.OutputId == CampFood ? storage.AddFood(recipe.OutputCount) : storage.AddWater(recipe.OutputCount);
                 if (kept <= 0)
                 {
-                    Refund(due, bill);
+                    if (refund) Refund(due, bill);
                     GameplayFeedback.Toast(Loc.T("camp.strip_full"));
                     return false;
                 }
@@ -120,7 +188,7 @@ namespace OutpostZero.Colony
             {
                 if (GridBuilder.Instance == null || !GridBuilder.Instance.RepairGenerator())
                 {
-                    Refund(due, bill);
+                    if (refund) Refund(due, bill);
                     GameplayFeedback.Toast(Loc.T("gate.gen"));
                     return false;
                 }
@@ -131,7 +199,7 @@ namespace OutpostZero.Colony
             {
                 if (GridBuilder.Instance == null || !GridBuilder.Instance.BraceWall())
                 {
-                    Refund(due, bill);
+                    if (refund) Refund(due, bill);
                     GameplayFeedback.Toast(Loc.T("gate.wall"));
                     return false;
                 }
@@ -143,7 +211,7 @@ namespace OutpostZero.Colony
                 var map = WorldMapService.Instance;
                 if (map == null || CampaignBoard.PartsComplete(map.Parts))
                 {
-                    Refund(due, bill);
+                    if (refund) Refund(due, bill);
                     GameplayFeedback.Toast(Loc.T("camp.radio_full"));
                     return false;
                 }
@@ -158,7 +226,7 @@ namespace OutpostZero.Colony
                 var weapon = player != null ? player.ActiveWeapon : null;
                 if (weapon == null)
                 {
-                    Refund(due, bill);
+                    if (refund) Refund(due, bill);
                     return false;
                 }
                 var mod = Attach.Ensure<WeaponMod>(weapon.gameObject);
@@ -171,7 +239,7 @@ namespace OutpostZero.Colony
             var inventory = PlayerRegistry.Current != null ? PlayerRegistry.Current.GetComponent<PlayerInventory>() : null;
             if (record == null || inventory == null)
             {
-                Refund(due, bill);
+                if (refund) Refund(due, bill);
                 return false;
             }
 
@@ -184,7 +252,7 @@ namespace OutpostZero.Colony
             }
             else if (!inventory.TryAddItem(record.Id, record.DisplayName, record.Category, recipe.OutputCount, record.Weight))
             {
-                Refund(due, bill);
+                if (refund) Refund(due, bill);
                 GameplayFeedback.Toast(PackSay.Pack(null));
                 return false;
             }

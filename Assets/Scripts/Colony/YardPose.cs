@@ -31,7 +31,7 @@ namespace OutpostZero.Colony
             if (action == "Rest") return RestLean;
             if (action == "Guard") return GuardLean;
             if (action == "Cook") return CookLean * Stir(age);
-            if (action == "Build") return BuildLean * Stir(age);
+            if (action == "Build" || action == CraftQueue.Task) return BuildLean * Stir(age);
             if (action == "Medic") return MedicLean;
             if (action == "Clear") return ClearLean * Stir(age);
             if (action == "Scavenge") return ScavengeLean;

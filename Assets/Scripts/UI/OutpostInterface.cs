@@ -775,6 +775,7 @@ namespace OutpostZero.UI
                     row.Add(Button(Loc.Task("Cook"), () => roster.Assign(id, "Cook")));
                     row.Add(Button(Loc.Task("Medic"), () => roster.Assign(id, "Medic")));
                     row.Add(Button(Loc.Task("Build"), () => roster.Assign(id, "Build")));
+                    row.Add(Button(Loc.Task(CraftQueue.Task), () => roster.Assign(id, CraftQueue.Task)));
                     row.Add(Button(Loc.Task("Clear"), () => roster.Assign(id, "Clear")));
                     if (!survivor.leader) row.Add(Button(Loc.Task(TaskPick.Auto), () => roster.Assign(id, TaskPick.Auto)));
                     if (survivor.injury > 0) row.Add(Button(Loc.Task("Quarantine"), () => roster.Assign(id, "Quarantine")));
@@ -908,6 +909,9 @@ namespace OutpostZero.UI
             }
             else if (bench && GridBuilder.Instance.BenchOrdered()) camp.Add(Body(Loc.T("camp.bench_raise") + " " + GridBuilder.Instance.BenchWork() + "/" + CraftGate.Hours));
             else if (bench) camp.Add(Button(Loc.T("camp.bench_raise") + "  " + CraftGate.UpgradeScrap, () => GridBuilder.Instance.OrderBench()));
+            var benchOrders = CraftingBench.Instance != null ? CraftingBench.Instance.Orders : null;
+            if (benchOrders != null && benchOrders.Count > 0)
+                camp.Add(Body(Loc.T("craft.orders") + " " + CraftQueue.Line(benchOrders, order => Loc.Recipe(order, order))));
             foreach (var recipe in CraftingBench.Recipes)
             {
                 string id = recipe.Id;
@@ -917,7 +921,11 @@ namespace OutpostZero.UI
                 string line = CraftSay.Line(Loc.Recipe(id, recipe.Label), due, bill.Cloth, bill.Chemicals, bill.Tape, null);
                 if (bill.Raw > 0) line += "   " + Loc.T("camp.raw") + " " + bill.Raw;
                 var craft = Button(line, () => CraftingBench.Instance?.Craft(id));
-                camp.Add(id == TutorialMark.Bandage ? Lit(craft, TutorialMark.Bandage) : craft);
+                var recipeRow = new VisualElement();
+                recipeRow.style.flexDirection = FlexDirection.Row;
+                recipeRow.Add(id == TutorialMark.Bandage ? Lit(craft, TutorialMark.Bandage) : craft);
+                if (bench && CraftQueue.Orderable(id)) recipeRow.Add(Button(Loc.T("craft.queue"), () => CraftingBench.Instance?.Order(id)));
+                camp.Add(recipeRow);
             }
             if (bench && leaderPack != null)
             {
@@ -1292,6 +1300,7 @@ namespace OutpostZero.UI
                 key.Add(map.Street);
             }
             if (FactionTrade.Instance != null) key.Add(FactionTrade.Instance.Key);
+            if (CraftingBench.Instance != null) key.Add(CraftingBench.Instance.PackedOrders);
             return key.Value;
         }
 

@@ -597,6 +597,19 @@ namespace OutpostZero.Colony
                         if (pace > 0 && GridBuilder.Instance != null && (GridBuilder.Instance.Raise(pace) || GridBuilder.Instance.Patch(pace) || GridBuilder.Instance.Lift(pace)))
                             survivor.morale = Mathf.Max(0f, survivor.morale - 2f);
                         break;
+                    case CraftQueue.Task:
+                        bool bench = GridBuilder.Instance != null && GridBuilder.Instance.HasKind("Workbench");
+                        int orders = CraftingBench.Instance != null ? CraftingBench.Instance.Orders.Count : 0;
+                        int crafts = orders > 0 ? CraftQueue.Hands(survivor.morale, survivor.engineering, bench) : 0;
+                        crafts = ShiftWear.Short(crafts, survivor.fatigue);
+                        int made = crafts > 0 ? CraftingBench.Instance.WorkOrders(crafts) : 0;
+                        if (made > 0)
+                        {
+                            survivor.engineering = Practice.Gain(survivor.engineering);
+                            survivor.morale = Mathf.Max(0f, survivor.morale - 1f);
+                            GameplayFeedback.Toast(survivor.displayName + " " + Loc.T("craft.done") + " " + made);
+                        }
+                        break;
                     case "Clear":
                         int haul = ShiftWear.Short(YardDead.Hands(survivor.morale), survivor.fatigue);
                         haul = YardSoak.Keep(haul, survivor.task, sky);
@@ -661,7 +674,9 @@ namespace OutpostZero.Colony
                 Scrap = storage != null ? storage.Scrap : 0,
                 Injured = injured,
                 RaidLikely = NightRaidController.Instance != null && NightRaidController.Instance.RaidLikely,
-                WorkWaiting = GridBuilder.Instance != null && GridBuilder.Instance.WorkWaiting()
+                WorkWaiting = GridBuilder.Instance != null && GridBuilder.Instance.WorkWaiting(),
+                Orders = CraftingBench.Instance != null ? CraftingBench.Instance.Orders.Count : 0,
+                Bench = GridBuilder.Instance != null && GridBuilder.Instance.HasKind("Workbench")
             };
         }
 

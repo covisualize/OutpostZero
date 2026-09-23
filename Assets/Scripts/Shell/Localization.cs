@@ -253,6 +253,13 @@ namespace OutpostZero.Shell
             { "task.cook", "Cook" },
             { "task.medic", "Medic" },
             { "task.build", "Build" },
+            { "task.craft", "Craft" },
+            { "craft.queue", "Queue" },
+            { "craft.queued", "Queued for the bench:" },
+            { "craft.queue_full", "The bench queue is full" },
+            { "craft.no_queue", "That has to be fitted by hand" },
+            { "craft.orders", "Bench orders:" },
+            { "craft.done", "finished bench orders:" },
             { "task.clear", "Clear" },
             { "task.auto", "Their call" },
             { "task.lead", "Lead" },
@@ -786,6 +793,7 @@ namespace OutpostZero.Shell
             { "bark.medic", "Hold still." },
             { "bark.scavenge", "I'll check the piles." },
             { "bark.build", "I'll raise it." },
+            { "bark.craft", "Bench is mine." },
             { "bark.clear", "I'll haul them." },
             { "bark.hold", "We'll hold." },
             { "bark.rest", "Resting." },
@@ -1107,6 +1115,13 @@ namespace OutpostZero.Shell
             { "task.cook", "Cocinar" },
             { "task.medic", "Curar" },
             { "task.build", "Construir" },
+            { "task.craft", "Fabricar" },
+            { "craft.queue", "Encargar" },
+            { "craft.queued", "Encargado al banco:" },
+            { "craft.queue_full", "La cola del banco está llena" },
+            { "craft.no_queue", "Eso hay que montarlo a mano" },
+            { "craft.orders", "Encargos del banco:" },
+            { "craft.done", "terminó encargos:" },
             { "task.clear", "Retirar" },
             { "task.auto", "A su criterio" },
             { "task.lead", "Liderar" },
@@ -1640,6 +1655,7 @@ namespace OutpostZero.Shell
             { "bark.medic", "Quieto." },
             { "bark.scavenge", "Reviso los montones." },
             { "bark.build", "Lo levanto." },
+            { "bark.craft", "El banco es mío." },
             { "bark.clear", "Los retiro." },
             { "bark.hold", "Aguantaremos." },
             { "bark.rest", "Descansando." },
@@ -1880,6 +1896,7 @@ namespace OutpostZero.Shell
                 : action == "Medic" ? "bark.medic"
                 : action == "Scavenge" ? "bark.scavenge"
                 : action == "Build" ? "bark.build"
+                : action == "Craft" ? "bark.craft"
                 : action == "Clear" ? "bark.clear"
                 : morale > 70f ? "bark.hold"
                 : "bark.rest";

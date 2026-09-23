@@ -71,6 +71,7 @@ namespace OutpostZero.Shell
         public int bleed;
         public int infection;
         public string prints = "";
+        public string craftOrders = "";
         public int kills;
         public int lifetimeKills;
         public int districtsCleared;

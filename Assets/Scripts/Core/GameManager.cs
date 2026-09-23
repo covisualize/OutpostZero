@@ -351,6 +351,7 @@ namespace OutpostZero.Core
             }
             SurvivorRoster.Instance?.ResetRoster(camp);
             ColonyStorage.Instance?.ResetStores();
+            CraftingBench.Instance?.SetOrders("");
             GridBuilder.Instance?.ClearAll();
             TutorialDirector.Instance?.SetFinished(false);
             CodexDirector.Instance?.Restore("");
@@ -389,6 +390,7 @@ namespace OutpostZero.Core
             WorldMapService.Instance?.ResetMap();
             SurvivorRoster.Instance?.ResetRoster();
             ColonyStorage.Instance?.ResetStores();
+            CraftingBench.Instance?.SetOrders("");
             GridBuilder.Instance?.ClearAll();
             TutorialDirector.Instance?.SetFinished(false);
             CodexDirector.Instance?.Restore("");

@@ -8,7 +8,7 @@ namespace OutpostZero.Colony
     public static class TaskPick
     {
         public const string Auto = "Auto";
-        public static readonly string[] Tasks = { "Guard", "Cook", "Medic", "Build", "Scavenge", "Rest" };
+        public static readonly string[] Tasks = { "Guard", "Cook", "Medic", "Build", "Craft", "Scavenge", "Rest" };
 
         public struct Camp
         {
@@ -18,6 +18,8 @@ namespace OutpostZero.Colony
             public bool RaidLikely;
             public bool WorkWaiting;
             public int Scrap;
+            public int Orders;
+            public bool Bench;
         }
 
         public static string Choose(Survivor survivor, Camp camp)
@@ -52,6 +54,9 @@ namespace OutpostZero.Colony
                 case "Build":
                     if (!camp.WorkWaiting) return -10;
                     return s.engineering + 2 + Lean(s, "Engineer", 3) + Lean(s, "Steady Hands", 1);
+                case "Craft":
+                    if (camp.Orders <= 0 || !camp.Bench) return -10;
+                    return s.engineering + 2 + camp.Orders / 2 + Lean(s, "Engineer", 2) + Lean(s, "Steady Hands", 2);
                 case "Scavenge":
                     return s.scavenge + (camp.Scrap < 20 ? 2 : 0) + Lean(s, "Scrounger", 3) + Lean(s, "Loner", 1) - Lean(s, "Cowardly", 1);
                 case "Rest":
