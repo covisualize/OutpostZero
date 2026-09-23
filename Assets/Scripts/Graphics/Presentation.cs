@@ -74,36 +74,52 @@ namespace OutpostZero.Graphics
 
         public static string Compass(float dx, float dz, string language)
         {
-            bool es = language == "es";
-            if (dx * dx + dz * dz < 0.04f) return es ? "aquí" : "here";
+            return Say("dir." + Heading(dx, dz), language);
+        }
+
+        public static string Heading(float dx, float dz)
+        {
+            if (dx * dx + dz * dz < 0.04f) return "here";
             float ax = dx < 0f ? -dx : dx;
             float az = dz < 0f ? -dz : dz;
             bool north = dz >= 0f;
             bool east = dx >= 0f;
-            if (az >= ax * 2f) return north ? (es ? "norte" : "north") : (es ? "sur" : "south");
-            if (ax >= az * 2f) return east ? (es ? "este" : "east") : (es ? "oeste" : "west");
-            if (north && east) return es ? "noreste" : "northeast";
-            if (north) return es ? "noroeste" : "northwest";
-            if (east) return es ? "sureste" : "southeast";
-            return es ? "suroeste" : "southwest";
+            if (az >= ax * 2f) return north ? "north" : "south";
+            if (ax >= az * 2f) return east ? "east" : "west";
+            if (north) return east ? "northeast" : "northwest";
+            return east ? "southeast" : "southwest";
+        }
+
+        public static string Sound(NoiseType type)
+        {
+            switch (type)
+            {
+                case NoiseType.ZombieScream: return "scream";
+                case NoiseType.GunshotLoud:
+                case NoiseType.GunshotQuiet: return "gunshot";
+                case NoiseType.Explosion: return "explosion";
+                case NoiseType.Thunder: return "thunder";
+                case NoiseType.ObjectBroken: return "broken";
+                case NoiseType.MeleeSwing: return "blade";
+                case NoiseType.BleedDrip: return "drip";
+                case NoiseType.DoorSwing: return "door";
+                case NoiseType.ShellClink: return "shell";
+                case NoiseType.RationBite: return "bite";
+                case NoiseType.Cough: return "cough";
+                default: return "";
+            }
         }
 
         public static string Caption(NoiseType type, float dx, float dz, string language)
         {
-            string where = Compass(dx, dz, language);
-            bool es = language == "es";
-            if (type == NoiseType.ZombieScream) return es ? "[Grito, " + where + "]" : "[Zombie scream, " + where + "]";
-            if (type == NoiseType.GunshotLoud || type == NoiseType.GunshotQuiet) return es ? "[Disparo, " + where + "]" : "[Gunshot, " + where + "]";
-            if (type == NoiseType.Explosion) return es ? "[Explosión, " + where + "]" : "[Explosion, " + where + "]";
-            if (type == NoiseType.Thunder) return es ? "[Trueno, " + where + "]" : "[Thunder, " + where + "]";
-            if (type == NoiseType.ObjectBroken) return es ? "[Rotura, " + where + "]" : "[Something broke, " + where + "]";
-            if (type == NoiseType.MeleeSwing) return es ? "[Corte, " + where + "]" : "[Blade, " + where + "]";
-            if (type == NoiseType.BleedDrip) return es ? "[Goteo, " + where + "]" : "[Drip, " + where + "]";
-            if (type == NoiseType.DoorSwing) return es ? "[Puerta, " + where + "]" : "[Door, " + where + "]";
-            if (type == NoiseType.ShellClink) return es ? "[Casquillo, " + where + "]" : "[Shell, " + where + "]";
-            if (type == NoiseType.RationBite) return es ? "[Bocado, " + where + "]" : "[Bite, " + where + "]";
-            if (type == NoiseType.Cough) return es ? "[Tos, " + where + "]" : "[Cough, " + where + "]";
-            return "";
+            string sound = Sound(type);
+            if (sound.Length == 0) return "";
+            return "[" + Say("cap." + sound, language) + ", " + Compass(dx, dz, language) + "]";
+        }
+
+        private static string Say(string key, string language)
+        {
+            return string.IsNullOrEmpty(language) ? Shell.Loc.T(key) : Shell.Loc.T(key, language);
         }
     }
 }

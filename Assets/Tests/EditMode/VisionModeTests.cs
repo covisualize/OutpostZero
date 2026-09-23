@@ -107,6 +107,11 @@ namespace OutpostZero.Tests.EditMode
             Assert.AreEqual("", PseudoLoc.Wrap(""));
             Assert.IsNull(PseudoLoc.Wrap(null));
             Assert.IsFalse(PseudoLoc.Wrapped("Plain text"));
+
+            string caption = OutpostZero.Graphics.Presentation.Caption(NoiseType.ZombieScream, 0f, 5f, PseudoLoc.Code);
+            StringAssert.DoesNotContain("Zombie", caption);
+            StringAssert.DoesNotContain("north", caption);
+            Assert.IsTrue(PseudoLoc.Wrapped(OutpostZero.Graphics.Presentation.Compass(-5f, 0f, PseudoLoc.Code)));
         }
 
         [Test]
