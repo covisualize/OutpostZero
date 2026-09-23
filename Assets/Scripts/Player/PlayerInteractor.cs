@@ -141,7 +141,7 @@ namespace OutpostZero.Player
             var health = marked.GetComponent<HealthSystem>();
             if (health != null) health.TakeDamage(999f, marked.transform.position, transform.forward, gameObject);
             if (Sensory.NoiseManager.Instance != null)
-                Sensory.NoiseManager.Instance.EmitNoise(marked.transform.position, QuietKill.Noise, 0.45f, NoiseType.MeleeSwing, gameObject);
+                Sensory.NoiseManager.Instance.EmitNoise(marked.transform.position, Sensory.NoiseTable.Radius(Sensory.NoiseTable.Takedown), Sensory.NoiseTable.Loud(Sensory.NoiseTable.Takedown), NoiseType.MeleeSwing, gameObject);
             CombatEvents.RaiseKill(marked.gameObject, gameObject);
             marked = null;
             windup = -1f;

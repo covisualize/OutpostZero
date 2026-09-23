@@ -208,7 +208,7 @@ namespace OutpostZero.Player
                 lastDrip = Time.time;
                 CombatVfx.Drip(transform.position);
                 if (Sensory.BleedScent.Calls(true, true, gore) && Sensory.NoiseManager.Instance != null)
-                    Sensory.NoiseManager.Instance.EmitNoise(transform.position, Sensory.BleedScent.Radius, Sensory.BleedScent.Loud, Core.NoiseType.BleedDrip, gameObject);
+                    Sensory.NoiseManager.Instance.EmitNoise(transform.position, Sensory.NoiseTable.Radius(Sensory.NoiseTable.Bleed), Sensory.NoiseTable.Loud(Sensory.NoiseTable.Bleed), Core.NoiseType.BleedDrip, gameObject);
             }
             else if (!IsBleeding)
             {

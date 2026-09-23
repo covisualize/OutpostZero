@@ -82,7 +82,7 @@ namespace OutpostZero.Expedition
             GameplayFeedback.Toast(OutpostZero.Shell.Loc.T("pane.break"));
             OutpostZero.Shell.AudioManager.Instance?.PlayAt("splinter", transform.position, 0.55f);
             if (NoiseManager.Instance != null)
-                NoiseManager.Instance.EmitNoise(transform.position, PaneGlass.Noise, 0.8f, NoiseType.ObjectBroken, null);
+                NoiseManager.Instance.EmitNoise(transform.position, NoiseTable.Radius(NoiseTable.Glass), NoiseTable.Loud(NoiseTable.Glass), NoiseType.ObjectBroken, null);
             GlassShard.Leave(transform.position);
             Destroy(gameObject);
         }

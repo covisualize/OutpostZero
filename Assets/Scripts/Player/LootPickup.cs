@@ -116,7 +116,7 @@ namespace OutpostZero.Player
 
             collected = true;
             if (NoiseManager.Instance != null)
-                NoiseManager.Instance.EmitNoise(transform.position, LootTake.Noise, 0.4f, NoiseType.ObjectBroken, player.gameObject);
+                NoiseManager.Instance.EmitNoise(transform.position, NoiseTable.Radius(NoiseTable.LootTake), NoiseTable.Loud(NoiseTable.LootTake), NoiseType.ObjectBroken, player.gameObject);
             AudioManager.Instance?.PlayAt(LootTake.Sound(kind), transform.position, LootTake.Volume);
             string language = SettingsService.Instance != null ? SettingsService.Instance.Language : "en";
             GameplayFeedback.Toast(LootTake.Line(kind, amount, language));

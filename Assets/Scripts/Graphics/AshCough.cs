@@ -21,7 +21,13 @@ namespace OutpostZero.Graphics
 
         public static float Carry(bool crouch)
         {
-            return crouch ? Radius * 0.5f : Radius;
+            return Carry(crouch, Radius);
+        }
+
+        public static float Carry(bool crouch, float radius)
+        {
+            if (radius < 0f) radius = 0f;
+            return crouch ? radius * 0.5f : radius;
         }
     }
 }

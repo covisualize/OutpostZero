@@ -333,7 +333,7 @@ namespace OutpostZero.Colony
             if (health != null)
                 health.TakeDamage(TurretBeat.Damage, target.transform.position, (origin - target.transform.position).normalized, gameObject);
             if (Sensory.NoiseManager.Instance != null)
-                Sensory.NoiseManager.Instance.EmitNoise(origin, 18f, 0.7f, NoiseType.GunshotLoud, gameObject);
+                Sensory.NoiseManager.Instance.EmitNoise(origin, Sensory.NoiseTable.Radius(Sensory.NoiseTable.RaidTurret), Sensory.NoiseTable.Loud(Sensory.NoiseTable.RaidTurret), NoiseType.GunshotLoud, gameObject);
             nextTurret = Time.time + TurretBeat.Interval;
         }
 
@@ -435,7 +435,7 @@ namespace OutpostZero.Colony
                 Vector3 eject = Vector3.Cross(direction.sqrMagnitude > 0.01f ? direction.normalized : Vector3.forward, Vector3.up);
                 CombatVfx.Shot(origin, direction, aim, eject);
                 if (Sensory.NoiseManager.Instance != null)
-                    Sensory.NoiseManager.Instance.EmitNoise(origin, 14f, 0.45f, NoiseType.GunshotQuiet, gameObject);
+                    Sensory.NoiseManager.Instance.EmitNoise(origin, Sensory.NoiseTable.Radius(Sensory.NoiseTable.RaidGuard), Sensory.NoiseTable.Loud(Sensory.NoiseTable.RaidGuard), NoiseType.GunshotQuiet, gameObject);
             }
             nextGuard = Time.time + GuardVolley.Interval;
         }

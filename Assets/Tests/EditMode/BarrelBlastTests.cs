@@ -56,7 +56,8 @@ namespace OutpostZero.Tests.EditMode
         {
             string hazard = Read("Assets", "Scripts", "Combat", "DestructibleHazard.cs");
             StringAssert.Contains("BarrelBlast.Damage(", hazard);
-            StringAssert.Contains("BarrelBlast.Noise", hazard);
+            StringAssert.Contains("NoiseTable.Radius(kind == HazardKind.Explosive ? NoiseTable.BarrelBlast", hazard);
+            Assert.AreEqual(BarrelBlast.Noise, OutpostZero.Sensory.NoiseTable.Radius(OutpostZero.Sensory.NoiseTable.BarrelBlast));
             StringAssert.Contains("hazard.Prime(BarrelBlast.ChainDelay(", hazard);
             StringAssert.Contains("NoiseType.Explosion", hazard);
             StringAssert.DoesNotContain("hazard.TakeHit(damage)", hazard, "a neighbour waits for its own delay");

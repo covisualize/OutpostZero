@@ -117,7 +117,7 @@ namespace OutpostZero.Expedition
                 GameplayFeedback.Toast(StreetAsk.Cry(personName, null));
                 AudioManager.Instance?.PlayAt("scream", transform.position, 0.45f);
                 if (NoiseManager.Instance != null)
-                    NoiseManager.Instance.EmitNoise(transform.position, StraggleCall.Radius, 0.8f, NoiseType.ZombieScream, gameObject);
+                    NoiseManager.Instance.EmitNoise(transform.position, NoiseTable.Radius(NoiseTable.RescueCall), NoiseTable.Loud(NoiseTable.RescueCall), NoiseType.ZombieScream, gameObject);
             }
 
             if (FollowLimp.Swings(bites) && StreetAid.Due(lastAid, Time.time, ZombieAI.Nearest(nextX, nextZ)))
@@ -134,7 +134,7 @@ namespace OutpostZero.Expedition
                         health.TakeDamage(StreetAid.Damage, foe.transform.position + Vector3.up, aim.normalized, gameObject);
                     GameplayFeedback.Toast(StreetAid.Line(personName, null));
                     if (NoiseManager.Instance != null)
-                        NoiseManager.Instance.EmitNoise(transform.position, StreetAid.Noise, 0.7f, NoiseType.MeleeSwing, gameObject);
+                        NoiseManager.Instance.EmitNoise(transform.position, NoiseTable.Radius(NoiseTable.StreetAid), NoiseTable.Loud(NoiseTable.StreetAid), NoiseType.MeleeSwing, gameObject);
                 }
             }
 

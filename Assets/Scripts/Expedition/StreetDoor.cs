@@ -72,7 +72,7 @@ namespace OutpostZero.Expedition
         private void Ring(bool open, GameObject attacker)
         {
             if (Sensory.NoiseManager.Instance != null)
-                Sensory.NoiseManager.Instance.EmitNoise(transform.position, open ? DoorBar.BreakNoise : DoorBar.Noise, 0.85f, NoiseType.ObjectBroken, attacker);
+                Sensory.NoiseManager.Instance.EmitNoise(transform.position, Sensory.NoiseTable.Radius(open ? Sensory.NoiseTable.DoorBreak : Sensory.NoiseTable.DoorBash), Sensory.NoiseTable.Loud(open ? Sensory.NoiseTable.DoorBreak : Sensory.NoiseTable.DoorBash), NoiseType.ObjectBroken, attacker);
         }
 
         public bool CanInteract(PlayerInventory inventory) => inventory != null;
@@ -93,7 +93,7 @@ namespace OutpostZero.Expedition
             var dest = new Vector3(destination.x, from.y, destination.z);
             DoorCross.Note(from.x, from.z, dest.x, dest.z, Time.time);
             if (Sensory.NoiseManager.Instance != null)
-                Sensory.NoiseManager.Instance.EmitNoise(from, DoorCreak.Radius, DoorCreak.Loud, NoiseType.DoorSwing, player.gameObject);
+                Sensory.NoiseManager.Instance.EmitNoise(from, Sensory.NoiseTable.Radius(Sensory.NoiseTable.DoorCreak), Sensory.NoiseTable.Loud(Sensory.NoiseTable.DoorCreak), NoiseType.DoorSwing, player.gameObject);
             if (body != null) body.enabled = false;
             player.transform.position = dest;
             if (body != null) body.enabled = true;

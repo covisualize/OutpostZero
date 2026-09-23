@@ -386,7 +386,7 @@ namespace OutpostZero.Combat
                 if (sound.Length == 0 || volume <= 0f) return;
                 OutpostZero.Shell.AudioManager.Instance?.PlayAt(sound, transform.position, volume);
                 if (ShellRing.Calls(kind) && OutpostZero.Sensory.NoiseManager.Instance != null)
-                    OutpostZero.Sensory.NoiseManager.Instance.EmitNoise(transform.position, ShellRing.Radius, ShellRing.Loud, NoiseType.ShellClink, null);
+                    OutpostZero.Sensory.NoiseManager.Instance.EmitNoise(transform.position, OutpostZero.Sensory.NoiseTable.Radius(OutpostZero.Sensory.NoiseTable.Shell), OutpostZero.Sensory.NoiseTable.Loud(OutpostZero.Sensory.NoiseTable.Shell), NoiseType.ShellClink, null);
                 Mark(VfxEvent.BrassMark, transform.position + Vector3.down * 0.02f, new Vector3(0.05f, 0.09f, 1f), new Color(0.72f, 0.58f, 0.22f, 0.85f));
             }
         }

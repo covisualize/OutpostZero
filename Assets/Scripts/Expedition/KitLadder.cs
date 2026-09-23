@@ -64,7 +64,7 @@ namespace OutpostZero.Expedition
                 follower.transform.position = destination + new Vector3(0.4f, 0f, 0f);
 
             if (Sensory.NoiseManager.Instance != null)
-                Sensory.NoiseManager.Instance.EmitNoise(destination, Noise, 0.35f, NoiseType.WalkFootstep, player.gameObject);
+                Sensory.NoiseManager.Instance.EmitNoise(destination, Sensory.NoiseTable.Radius(Sensory.NoiseTable.Ladder), Sensory.NoiseTable.Loud(Sensory.NoiseTable.Ladder), NoiseType.WalkFootstep, player.gameObject);
         }
     }
 }

@@ -172,7 +172,7 @@ namespace OutpostZero.Graphics
                 Vector3 at = transform.position;
                 Shell.AudioManager.Instance?.PlayAt("thunder", at, Sensory.StormCover.Volume);
                 if (Sensory.NoiseManager.Instance != null)
-                    Sensory.NoiseManager.Instance.EmitNoise(at, Sensory.StormCover.Radius, 1f, NoiseType.Thunder);
+                    Sensory.NoiseManager.Instance.EmitNoise(at, Sensory.NoiseTable.Radius(Sensory.NoiseTable.Thunder), Sensory.NoiseTable.Loud(Sensory.NoiseTable.Thunder), NoiseType.Thunder);
             }
         }
 

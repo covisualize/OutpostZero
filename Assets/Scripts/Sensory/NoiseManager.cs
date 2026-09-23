@@ -38,6 +38,7 @@ namespace OutpostZero.Sensory
             }
 
             Instance = this;
+            NoiseBook.Ensure();
         }
 
         public void RegisterListener(INoiseListener listener)

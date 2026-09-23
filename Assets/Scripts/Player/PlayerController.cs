@@ -442,10 +442,10 @@ namespace OutpostZero.Player
             bool ash = sky != null && OutpostZero.Graphics.AshFall.Falls(sky.District);
             if (!OutpostZero.Graphics.AshCough.Due(ash, IsCrouching, lastCough, Time.time)) return;
             lastCough = Time.time;
-            float radius = OutpostZero.Graphics.AshCough.Carry(IsCrouching);
+            float radius = OutpostZero.Graphics.AshCough.Carry(IsCrouching, NoiseTable.Radius(NoiseTable.Cough));
             AudioManager.Instance?.PlayAt("cough", transform.position, IsCrouching ? 0.15f : 0.4f);
             if (NoiseManager.Instance != null)
-                NoiseManager.Instance.EmitNoise(transform.position, radius, 0.7f, NoiseType.Cough, gameObject);
+                NoiseManager.Instance.EmitNoise(transform.position, radius, NoiseTable.Loud(NoiseTable.Cough), NoiseType.Cough, gameObject);
         }
 
         private void HandleInput()
@@ -712,20 +712,23 @@ namespace OutpostZero.Player
         private void GenerateFootstepNoise()
         {
             float interval = footstepInterval;
-            float radius = walkNoiseRadius;
+            float radius = StepNoise.Base(walkNoiseRadius, NoiseTable.StepWalk);
             NoiseType nType = NoiseType.WalkFootstep;
+            string stepRow = NoiseTable.StepWalk;
 
             if (IsSprinting)
             {
                 interval = footstepInterval * 0.65f;
-                radius = sprintNoiseRadius;
+                radius = StepNoise.Base(sprintNoiseRadius, NoiseTable.StepSprint);
                 nType = NoiseType.SprintFootstep;
+                stepRow = NoiseTable.StepSprint;
             }
             else if (IsCrouching)
             {
                 interval = footstepInterval * 1.35f;
-                radius = crouchNoiseRadius;
+                radius = StepNoise.Base(crouchNoiseRadius, NoiseTable.StepCrouch);
                 nType = NoiseType.SneakFootstep;
+                stepRow = NoiseTable.StepCrouch;
             }
 
             nextFootstepTime = Time.time + interval;
@@ -751,7 +754,7 @@ namespace OutpostZero.Player
 
             if (NoiseManager.Instance != null && radius > 0f)
             {
-                NoiseManager.Instance.EmitNoise(transform.position, radius, 0.7f, nType, gameObject);
+                NoiseManager.Instance.EmitNoise(transform.position, radius, NoiseTable.Loud(stepRow), nType, gameObject);
             }
         }
 

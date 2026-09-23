@@ -113,7 +113,7 @@ namespace OutpostZero.Combat
             if (NoiseManager.Instance != null)
             {
                 NoiseType noise = kind == HazardKind.Explosive ? NoiseType.Explosion : NoiseType.ObjectBroken;
-                NoiseManager.Instance.EmitNoise(origin, kind == HazardKind.Explosive ? BarrelBlast.Noise : 10f, 1f, noise, gameObject);
+                NoiseManager.Instance.EmitNoise(origin, NoiseTable.Radius(kind == HazardKind.Explosive ? NoiseTable.BarrelBlast : NoiseTable.BarrelBurst), NoiseTable.Loud(kind == HazardKind.Explosive ? NoiseTable.BarrelBlast : NoiseTable.BarrelBurst), noise, gameObject);
             }
 
             bool blast = kind == HazardKind.Explosive;

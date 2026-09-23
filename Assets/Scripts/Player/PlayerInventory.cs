@@ -265,7 +265,7 @@ namespace OutpostZero.Player
             if (record.Hunger > 0f) needs?.Eat(record.Hunger);
             if (record.Thirst > 0f) needs?.Drink(record.Thirst);
             if (RationNoise.Calls(record.Hunger, record.Thirst) && OutpostZero.Sensory.NoiseManager.Instance != null)
-                OutpostZero.Sensory.NoiseManager.Instance.EmitNoise(transform.position, RationNoise.Radius, RationNoise.Loud, NoiseType.RationBite, gameObject);
+                OutpostZero.Sensory.NoiseManager.Instance.EmitNoise(transform.position, OutpostZero.Sensory.NoiseTable.Radius(OutpostZero.Sensory.NoiseTable.Ration), OutpostZero.Sensory.NoiseTable.Loud(OutpostZero.Sensory.NoiseTable.Ration), NoiseType.RationBite, gameObject);
             GameplayFeedback.Toast(WoundEase.Note(FieldHand.Spent(record.Id, null), eased, null));
             return true;
         }
