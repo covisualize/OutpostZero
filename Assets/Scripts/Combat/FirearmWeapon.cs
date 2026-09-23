@@ -343,6 +343,14 @@ namespace OutpostZero.Combat
             OnReloadCompleted?.Invoke();
         }
 
+        public void SetAmmo(int magazine, int reserve)
+        {
+            isReloading = false;
+            currentAmmo = Mathf.Clamp(magazine, 0, MagazineCapacity);
+            reserveAmmo = Mathf.Max(0, reserve);
+            OnAmmoChanged?.Invoke(currentAmmo, reserveAmmo);
+        }
+
         public void AddReserveAmmo(int amount)
         {
             reserveAmmo += amount;

@@ -338,7 +338,8 @@ namespace OutpostZero.Player
             return granted;
         }
 
-        public string TakeGear()
+        /// <summary>The pack as <c>id*count+...</c>, the form <see cref="RestoreGear"/> reads.</summary>
+        public string PackGear()
         {
             var parts = new List<string>();
             for (int i = 0; i < items.Count; i++)
@@ -348,12 +349,37 @@ namespace OutpostZero.Player
             }
             if (scrapCount > 0) parts.Add("scrap*" + scrapCount);
             if (medicalKits > 0) parts.Add("medkit*" + medicalKits);
+            return string.Join("+", parts);
+        }
+
+        public string TakeGear()
+        {
+            string packed = PackGear();
             items.Clear();
             scrapCount = 0;
             medicalKits = 0;
             currentWeight = 0f;
             OnInventoryChanged?.Invoke();
-            return string.Join("+", parts);
+            return packed;
+        }
+
+        /// <summary>Empties the pack and fills it from a packed list, as a loaded save does.</summary>
+        public void ReplaceGear(string packed)
+        {
+            TakeGear();
+            RestoreGear(packed);
+        }
+
+        public string[] BeltSlots() => (string[])belt.Clone();
+
+        public void SetBelt(string[] slots)
+        {
+            for (int i = 0; i < belt.Length; i++)
+            {
+                string id = slots != null && i < slots.Length ? slots[i] ?? "" : "";
+                belt[i] = id.Length > 0 && StillCarrying(id) ? id : "";
+            }
+            OnInventoryChanged?.Invoke();
         }
 
         public void RestoreGear(string packed)

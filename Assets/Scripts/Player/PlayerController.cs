@@ -140,6 +140,7 @@ namespace OutpostZero.Player
             characterController = GetComponent<CharacterController>();
             healthSystem = GetComponent<HealthSystem>();
             inventory = GetComponent<PlayerInventory>();
+            if (inventory != null) Attach.Ensure<LeaderKitSave>(gameObject);
             mainCamera = Camera.main;
             currentStamina = maxStamina;
 
@@ -186,6 +187,65 @@ namespace OutpostZero.Player
                 }
                 mod.Restore(slot);
             }
+        }
+
+        public static string ArmId(WeaponBase weapon)
+        {
+            if (weapon == null) return "";
+            return weapon is FirearmWeapon gun ? gun.CardId : WeaponCard.IdFor(weapon.Type);
+        }
+
+        public System.Collections.Generic.List<LeaderKit.Arm> PackArms()
+        {
+            var arms = new System.Collections.Generic.List<LeaderKit.Arm>();
+            if (equippedWeapons == null) return arms;
+            for (int i = 0; i < equippedWeapons.Length; i++)
+            {
+                var weapon = equippedWeapons[i];
+                if (weapon == null) continue;
+                var gun = weapon as FirearmWeapon;
+                arms.Add(new LeaderKit.Arm { Id = ArmId(weapon), Magazine = gun != null ? gun.CurrentAmmo : 0, Reserve = gun != null ? gun.ReserveAmmo : 0 });
+            }
+            return arms;
+        }
+
+        /// <summary>
+        /// Rebuilds the slots in saved order: a held weapon of the same id keeps its object and takes the
+        /// saved rounds, a missing one is built from its card, and one the save lacks is dropped.
+        /// </summary>
+        public void RestoreArms(System.Collections.Generic.List<LeaderKit.Arm> arms, int active)
+        {
+            if (arms == null || arms.Count == 0) return;
+            var spare = new System.Collections.Generic.List<WeaponBase>();
+            if (equippedWeapons != null)
+                for (int i = 0; i < equippedWeapons.Length; i++)
+                    if (equippedWeapons[i] != null) spare.Add(equippedWeapons[i]);
+            var next = new System.Collections.Generic.List<WeaponBase>();
+            foreach (var arm in arms)
+            {
+                WeaponBase held = null;
+                for (int i = 0; i < spare.Count; i++)
+                {
+                    if (ArmId(spare[i]) != arm.Id) continue;
+                    held = spare[i];
+                    spare.RemoveAt(i);
+                    break;
+                }
+                if (held == null)
+                {
+                    var spec = WeaponCard.Find(arm.Id);
+                    if (string.IsNullOrEmpty(spec.Id)) continue;
+                    held = SpawnWeapon(spec, arm.Magazine, arm.Reserve);
+                    if (held == null) continue;
+                }
+                if (held is FirearmWeapon gun) gun.SetAmmo(arm.Magazine, arm.Reserve);
+                held.gameObject.SetActive(false);
+                next.Add(held);
+            }
+            if (next.Count == 0) return;
+            foreach (var left in spare) Destroy(left.gameObject);
+            equippedWeapons = next.ToArray();
+            SelectWeapon(Mathf.Clamp(active, 0, equippedWeapons.Length - 1));
         }
 
         public void Configure(WeaponBase[] weapons, Light tacticalLight)
