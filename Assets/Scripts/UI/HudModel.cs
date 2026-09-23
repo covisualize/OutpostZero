@@ -111,6 +111,10 @@ namespace OutpostZero.UI
             Add("tutorial", Root, Kind.Text, "hud-tutorial", 0.95f);
             Add("prompt", Root, Kind.Text, "hud-prompt", 0.9f);
 
+            Add("waypoint", Root, Kind.Box, "hud-waypoint");
+            Add("waypoint-arrow", "waypoint", Kind.Box, "hud-waypoint-arrow");
+            Add("waypoint-label", "waypoint", Kind.Text, "hud-waypoint-label", 0.85f);
+
             Add("hit-marker", Root, Kind.Box, "hud-hit");
             foreach (var edge in Edges) Add("hit-" + edge, "hit-marker", Kind.Box, "hud-hit-tick hud-hit-" + edge);
 
@@ -384,6 +388,58 @@ namespace OutpostZero.UI
             if (span >= StreetHeading.Half) return 0f;
             float t = span / StreetHeading.Half;
             return 1f - t * t;
+        }
+    }
+
+    /// <summary>
+    /// The objective waypoint: over the target while it is on screen, else pinned to the screen edge and turned toward it.
+    /// Panel coordinates, y down; an angle of 0 points up and 180 points down at the target.
+    /// </summary>
+    public static class EdgeArrow
+    {
+        public const float Margin = 36f;
+
+        public static bool Place(float x, float y, bool behind, float width, float height, out float px, out float py, out float angle)
+        {
+            float cx = width * 0.5f;
+            float cy = height * 0.5f;
+            bool inside = !behind && x >= Margin && x <= width - Margin && y >= Margin && y <= height - Margin;
+            if (inside)
+            {
+                px = x;
+                py = y;
+                angle = 180f;
+                return true;
+            }
+            float dx = x - cx;
+            float dy = y - cy;
+            if (behind)
+            {
+                dx = -dx;
+                dy = -dy;
+            }
+            if (Math.Abs(dx) < 0.001f && Math.Abs(dy) < 0.001f) dy = height;
+            float halfW = Math.Max(1f, cx - Margin);
+            float halfH = Math.Max(1f, cy - Margin);
+            float scale = Math.Min(Math.Abs(dx) > 0.001f ? halfW / Math.Abs(dx) : float.MaxValue, Math.Abs(dy) > 0.001f ? halfH / Math.Abs(dy) : float.MaxValue);
+            px = cx + dx * scale;
+            py = cy + dy * scale;
+            angle = (float)(Math.Atan2(dx, -dy) * 180.0 / Math.PI);
+            return false;
+        }
+
+        public static string Label(int metres, string language)
+        {
+            string format = language == null ? OutpostZero.Shell.Loc.T("hud.metres") : OutpostZero.Shell.Loc.T("hud.metres", language);
+            return string.Format(format, HudNumbers.Of(metres < 0 ? 0 : metres));
+        }
+
+        /// <summary>Whole metres to the target, shown under the arrow.</summary>
+        public static int Metres(float ax, float az, float bx, float bz)
+        {
+            float dx = bx - ax;
+            float dz = bz - az;
+            return (int)Math.Round(Math.Sqrt(dx * dx + dz * dz));
         }
     }
 

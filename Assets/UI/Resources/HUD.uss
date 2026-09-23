@@ -273,6 +273,34 @@
     display: none;
 }
 
+.hud-waypoint {
+    position: absolute;
+    width: 0;
+    height: 0;
+}
+
+.hud-waypoint-arrow {
+    position: absolute;
+    left: -8px;
+    top: -8px;
+    width: 16px;
+    height: 16px;
+    border-top-width: 3px;
+    border-left-width: 3px;
+    border-top-color: var(--hud-accent);
+    border-left-color: var(--hud-accent);
+}
+
+.hud-waypoint-label {
+    position: absolute;
+    left: -32px;
+    width: 64px;
+    top: 12px;
+    -unity-text-align: middle-center;
+    color: var(--hud-accent);
+    -unity-font-style: bold;
+}
+
 .hud-hit {
     position: absolute;
     width: 0;

@@ -90,6 +90,10 @@
         <ui:Label name="hurt" class="hud-hurt" picking-mode="Ignore" />
         <ui:Label name="tutorial" class="hud-tutorial" picking-mode="Ignore" />
         <ui:Label name="prompt" class="hud-prompt" picking-mode="Ignore" />
+        <ui:VisualElement name="waypoint" class="hud-waypoint" picking-mode="Ignore">
+            <ui:VisualElement name="waypoint-arrow" class="hud-waypoint-arrow" picking-mode="Ignore" />
+            <ui:Label name="waypoint-label" class="hud-waypoint-label" picking-mode="Ignore" />
+        </ui:VisualElement>
         <ui:VisualElement name="hit-marker" class="hud-hit" picking-mode="Ignore">
             <ui:VisualElement name="hit-top" class="hud-hit-tick hud-hit-top" picking-mode="Ignore" />
             <ui:VisualElement name="hit-right" class="hud-hit-tick hud-hit-right" picking-mode="Ignore" />

@@ -75,7 +75,9 @@ namespace OutpostZero.UI
         private bool shownReloading;
         private int shownNeeds = -1, shownBangs = -1, shownQuestions = -1, shownTape = -1, shownRescue = -1;
         private int shownTutorial = int.MinValue, shownTimer = -1, shownWeapons = -1, shownActive = -1, shownHot = -2;
-        private int shownPoison = -1, shownRush = -1, shownLeft = -1;
+        private int shownPoison = -1, shownRush = -1, shownLeft = -1, shownMetres = -1;
+        private VisualElement waypoint, waypointArrow;
+        private Label waypointLabel;
         private int shownLamp = -1, shownContacts = -1, shownInfection = -1, shownToasts = -1, shownLow = -1;
         private int vision;
         private string language = "";
@@ -208,6 +210,9 @@ namespace OutpostZero.UI
             loadout = E("loadout");
             veil = E("veil");
             hitMarker = E("hit-marker");
+            waypoint = E("waypoint");
+            waypointArrow = E("waypoint-arrow");
+            waypointLabel = L("waypoint-label");
             beat = E("tension-beat");
             radial = E("reload-radial");
             wheelBox = E("wheel");
@@ -341,6 +346,7 @@ namespace OutpostZero.UI
             Wheel();
             Compass();
             StreetClock();
+            Waypoint();
             Markers(now);
             Toasts(now);
             Prompt(now);
@@ -534,6 +540,7 @@ namespace OutpostZero.UI
             shownRush = -1;
             shownLamp = -1;
             shownContacts = -1;
+            shownMetres = -1;
             shownTape = -1;
             shownRescue = -1;
             shownTutorial = int.MinValue;
@@ -669,6 +676,33 @@ namespace OutpostZero.UI
             Show(quota, quota.text.Length > 0);
             Show(poi, !string.IsNullOrEmpty(poi.text));
             if (board != null) Show(board, !string.IsNullOrEmpty(board.text));
+        }
+
+        /// <summary>The objective's world marker: the gate once the quotas are met, else the unfound point of interest.</summary>
+        private void Waypoint()
+        {
+            if (waypoint == null) return;
+            Transform target = null;
+            var gate = ExtractionZone.Current;
+            bool ready = tracker != null && tracker.ReadyToExtract;
+            if (ready && gate != null) target = gate.transform;
+            else if (poiSite != null && (tracker == null || !tracker.PoiFound)) target = poiSite.transform;
+            else if (gate != null) target = gate.transform;
+            bool on = street && player != null && target != null && view != null && root.panel != null;
+            Show(waypoint, on);
+            if (!on) return;
+            Vector3 world = target.position + Vector3.up * 1.5f;
+            bool behind = view.transform.InverseTransformPoint(world).z < 0f;
+            Vector2 spot = RuntimePanelUtils.CameraTransformWorldToPanel(root.panel, world, view);
+            EdgeArrow.Place(spot.x, spot.y, behind, root.layout.width, root.layout.height, out float x, out float y, out float angle);
+            waypoint.style.left = x;
+            waypoint.style.top = y;
+            waypointArrow.style.rotate = new Rotate(new Angle(angle + 45f, AngleUnit.Degree));
+            var at = player.transform.position;
+            int metres = EdgeArrow.Metres(at.x, at.z, target.position.x, target.position.z);
+            if (metres == shownMetres) return;
+            shownMetres = metres;
+            waypointLabel.text = EdgeArrow.Label(metres, null);
         }
 
         private void StreetClock()
