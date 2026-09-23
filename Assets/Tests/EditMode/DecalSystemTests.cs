@@ -149,7 +149,7 @@ namespace OutpostZero.Tests.EditMode
             StringAssert.Contains("SplatterBehind(", pool);
             StringAssert.Contains("AddComponent<DecalProjector>()", pool);
             StringAssert.Contains("CombatEvents.RaiseBlast(blast, row.Radius)", Read("Assets", "Scripts", "Player", "PlayerInteractor.cs"));
-            StringAssert.Contains("CombatEvents.RaiseBlast(origin, radius)", Read("Assets", "Scripts", "Combat", "DestructibleHazard.cs"));
+            StringAssert.Contains("CombatEvents.RaiseBlast(origin, reach)", Read("Assets", "Scripts", "Combat", "DestructibleHazard.cs"));
         }
 
         [Test]
