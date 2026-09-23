@@ -44,15 +44,23 @@ namespace OutpostZero.Core
             }
         }
 
-        /// <summary>Gait blend is never mixed: two gaits with different strides would skate.</summary>
+        /// <summary>Gait takes, in blend order: the slouch walk, the lopsided drag, the slow shamble.</summary>
+        public static readonly string[] WalkTakes = { "Walk", "WalkB", "Shamble" };
+
+        /// <summary>Gait blend sits exactly on one take's threshold: two gaits with different strides mixed would skate.</summary>
         public static float Walk(int variant)
         {
-            return variant == 2 ? 1f : 0f;
+            return Threshold(Gait(variant), WalkTakes.Length);
         }
 
         public static string WalkClip(int variant)
         {
-            return variant == 2 ? "Shamble" : "Walk";
+            return WalkTakes[Gait(variant)];
+        }
+
+        private static int Gait(int variant)
+        {
+            return variant >= 0 && variant < WalkTakes.Length ? variant : 0;
         }
 
         /// <summary>One of the three falls, picked apart from the idle so looks and deaths don't pair up.</summary>

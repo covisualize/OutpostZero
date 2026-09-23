@@ -2,8 +2,8 @@
   "id": "Kit_road_deadend",
   "category": "Kit",
   "generator": "generate_kit.build_piece",
-  "generatorHash": "038907863ad391a9ca9267674a5b96af91a7ac0073b4f7a9c20bdfbb9df5c91b",
-  "gitSha": "d603d236bf331476ae64349b92965cbfb924bc20",
+  "generatorHash": "1c27f610827f62aedc31c74af5b1ad8edbb768b55c58fce493a727955ebff354",
+  "gitSha": "edff058f31a908ed7de64edaf527c44ea12a41ff",
   "blender": "4.2.11",
   "tags": [
     "kit",

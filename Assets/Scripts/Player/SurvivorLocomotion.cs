@@ -35,7 +35,7 @@ namespace OutpostZero.Player
         private readonly BoneTurn headTurn = new BoneTurn();
         private Vector3 handRest;
         private bool handSettled;
-        private float reloadClip;
+        private readonly float[] reloadClips = new float[CharacterRig.ReloadTakes.Length];
 
         public Pose CurrentPose => pose;
         public float AimWeight => aimWeight;
@@ -82,7 +82,11 @@ namespace OutpostZero.Player
         private void AddClipEvents(RuntimeAnimatorController rig)
         {
             foreach (var clip in rig.animationClips)
-                if (clip != null && ClipEvents.Bare(clip.name) == "Reload") reloadClip = clip.length;
+            {
+                if (clip == null) continue;
+                int take = System.Array.IndexOf(CharacterRig.ReloadTakes, ClipEvents.Bare(clip.name));
+                if (take >= 0) reloadClips[take] = clip.length;
+            }
             ClipEvents.Arm(rig);
         }
 
@@ -142,7 +146,10 @@ namespace OutpostZero.Player
 
         private void HandleReload()
         {
-            if (animator != null) animator.SetTrigger("Reload");
+            if (animator == null) return;
+            var gun = controller != null ? controller.ActiveWeapon as FirearmWeapon : null;
+            if (gun != null) animator.SetFloat(CharacterRig.ReloadVariant, CharacterRig.ReloadBlend(gun.Type));
+            animator.SetTrigger("Reload");
         }
 
         private void HandleDamaged(float amount, Vector3 point)
@@ -207,7 +214,7 @@ namespace OutpostZero.Player
                 animator.SetBool("Crouch", controller.IsCrouching);
                 animator.SetBool("Sprint", controller.IsSprinting);
                 var gun = controller.ActiveWeapon as FirearmWeapon;
-                animator.SetFloat("ReloadSpeed", gun != null && gun.IsReloading ? AimRig.ReloadSpeed(reloadClip, gun.ReloadSeconds) : 1f);
+                animator.SetFloat("ReloadSpeed", gun != null && gun.IsReloading ? AimRig.ReloadSpeed(ReloadClipLength(gun.Type), gun.ReloadSeconds) : 1f);
                 Vector3 planar = body != null ? body.velocity : Vector3.zero;
                 planar.y = 0f;
                 string gait = controller.IsCrouching ? "CrouchWalk" : controller.IsSprinting ? "Sprint" : "Walk";
@@ -221,6 +228,13 @@ namespace OutpostZero.Player
             }
             pose = next;
             animationPlayer.CrossFade(pose.ToString(), 0.12f);
+        }
+
+        /// <summary>The take this gun plays, or the plain reload on a model baked before the gun takes.</summary>
+        private float ReloadClipLength(WeaponType type)
+        {
+            float length = reloadClips[CharacterRig.ReloadTake(type)];
+            return length > 0f ? length : reloadClips[0];
         }
 
         private static Transform Bone(Transform root, string name)

@@ -15,6 +15,27 @@ namespace OutpostZero.Core
         public const string IdleVariant = "IdleVariant";
         public const string GaitVariant = "GaitVariant";
         public const string DeathVariant = "DeathVariant";
+        /// <summary>Blend parameter that picks the reload take for the gun in hand.</summary>
+        public const string ReloadVariant = "ReloadVariant";
+        /// <summary>Reload takes in blend order: pistol and SMG magazine, shotgun shells, rifle bolt and magazine.</summary>
+        public static readonly string[] ReloadTakes = { "Reload", "ReloadShotgun", "ReloadRifle" };
+        /// <summary>A zombie's corpse holds this sinking heap after its fall while it burns away.</summary>
+        public const string Dissolve = "Dissolve";
+
+        public static int ReloadTake(WeaponType type)
+        {
+            switch (type)
+            {
+                case WeaponType.Shotgun: return 1;
+                case WeaponType.Rifle: return 2;
+                default: return 0;
+            }
+        }
+
+        public static string ReloadClip(WeaponType type) => ReloadTakes[ReloadTake(type)];
+
+        public static float ReloadBlend(WeaponType type) => CrowdVariant.Threshold(ReloadTake(type), ReloadTakes.Length);
+
         /// <summary>Trigger for the brace before a special: the brute's roar, the walker's scream.</summary>
         public const string Windup = "Windup";
         /// <summary>Held while a lunge or charge carries the body.</summary>

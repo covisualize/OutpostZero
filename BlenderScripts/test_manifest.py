@@ -50,9 +50,9 @@ class ManifestTests(unittest.TestCase):
     def test_character_takes_include_combat_and_role_clips(self):
         root = repo_root()
         expected = {
-            "Assets/Models/Characters/Survivor_Leader.fbx": ("Sprint", "CrouchIdle", "Reload", "Death", "Takedown"),
+            "Assets/Models/Characters/Survivor_Leader.fbx": ("Sprint", "CrouchIdle", "Reload", "ReloadShotgun", "ReloadRifle", "Death", "Takedown"),
             "Assets/Models/Characters/Colonist_Survivor.fbx": ("Sprint", "Reload", "Melee", "Work", "Talk"),
-            "Assets/Models/Characters/Zombie_Walker.fbx": ("Shamble", "Attack", "DeathC"),
+            "Assets/Models/Characters/Zombie_Walker.fbx": ("Shamble", "WalkB", "Attack", "DeathC", "Dissolve"),
             "Assets/Models/Characters/Zombie_Runner.fbx": ("Lunge",),
             "Assets/Models/Characters/Zombie_Brute.fbx": ("Charge", "Roar"),
             "Assets/Models/Characters/NPC_Merchant.fbx": ("Work", "Talk"),

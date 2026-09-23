@@ -34,6 +34,7 @@ namespace OutpostZero.Core
             switch (clip)
             {
                 case "Walk": return Speed("Zombie", "Walk", 1.557f);
+                case "WalkB": return Speed("Zombie", "WalkB", 1.557f);
                 case "Shamble": return Speed("Zombie", "Shamble", 0.848f);
                 case "Sprint": return Speed("Zombie", "Sprint", 3.287f);
                 case "Charge": return modelId == "Zombie_Brute" ? Speed("Zombie_Brute", "Charge", 5.759f) : 0f;

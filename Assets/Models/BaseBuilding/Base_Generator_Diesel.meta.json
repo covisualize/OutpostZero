@@ -2,8 +2,8 @@
   "id": "Base_Generator_Diesel",
   "category": "BaseBuilding",
   "generator": "generate_base_building.build_generator",
-  "generatorHash": "97a392145489c10bf4657a11694bcc3d50dd757c504d18e816300292c5a04142",
-  "gitSha": "d603d236bf331476ae64349b92965cbfb924bc20",
+  "generatorHash": "d4275e22d424a71dde2bb974ed8c45464a656b2cf8b2423b5781a2c061ba107f",
+  "gitSha": "edff058f31a908ed7de64edaf527c44ea12a41ff",
   "blender": "4.2.11",
   "tags": [
     "camp",

@@ -2,8 +2,8 @@
   "id": "Kit_tower_segment",
   "category": "Kit",
   "generator": "generate_kit.build_piece",
-  "generatorHash": "e09b7fa68abc7aae91d4e6d1f3a569e3ec1b7d7a1dcfcb33ead1672339b799b0",
-  "gitSha": "d603d236bf331476ae64349b92965cbfb924bc20",
+  "generatorHash": "9298f8b1c3f0922bee5371fa40db41d80efad6ad644080b10efc75fdeba90710",
+  "gitSha": "edff058f31a908ed7de64edaf527c44ea12a41ff",
   "blender": "4.2.11",
   "tags": [
     "kit",

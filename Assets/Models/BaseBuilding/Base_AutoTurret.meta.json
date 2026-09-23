@@ -2,8 +2,8 @@
   "id": "Base_AutoTurret",
   "category": "BaseBuilding",
   "generator": "generate_base_building.build_auto_turret",
-  "generatorHash": "8b3fa1fc6443890cc41c268ee9bf482e3644095b325d8f2656d52e736560ad27",
-  "gitSha": "d603d236bf331476ae64349b92965cbfb924bc20",
+  "generatorHash": "c1e06a3b45f82e33d48b3a5b643dc7ff46ceb340566a7274f2629e5fc02218d8",
+  "gitSha": "edff058f31a908ed7de64edaf527c44ea12a41ff",
   "blender": "4.2.11",
   "tags": [
     "camp",

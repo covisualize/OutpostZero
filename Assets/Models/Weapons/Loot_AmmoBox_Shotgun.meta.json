@@ -2,8 +2,8 @@
   "id": "Loot_AmmoBox_Shotgun",
   "category": "Weapons",
   "generator": "generate_weapons.build_ammo_box_shotgun",
-  "generatorHash": "21e59a5ee7828537a6a9e4215d5b50a9e5a975d004d331c4114efeb14b1f7ec6",
-  "gitSha": "d603d236bf331476ae64349b92965cbfb924bc20",
+  "generatorHash": "edf8d448950c4afa231245d3604651e5caa9df5d1a66c3d6bf03976c6ab65da4",
+  "gitSha": "edff058f31a908ed7de64edaf527c44ea12a41ff",
   "blender": "4.2.11",
   "tags": [
     "loot",

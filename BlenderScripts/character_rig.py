@@ -31,6 +31,8 @@ SURVIVOR_CLIPS = (
     "Aim",
     "Fire",
     "Reload",
+    "ReloadShotgun",
+    "ReloadRifle",
     "Melee",
     "Hit",
     "Death",
@@ -43,6 +45,7 @@ WALKER_CLIPS = (
     "Idle",
     "IdleB",
     "Walk",
+    "WalkB",
     "Shamble",
     "Sprint",
     "Attack",
@@ -53,6 +56,7 @@ WALKER_CLIPS = (
     "Death",
     "DeathB",
     "DeathC",
+    "Dissolve",
 )
 
 
@@ -102,7 +106,7 @@ def _gait(amount, frames=(1, 9, 17)):
 
 
 FPS = 24
-GAIT_CLIPS = ("Walk", "Sprint", "CrouchWalk", "Shamble", "Charge")
+GAIT_CLIPS = ("Walk", "WalkB", "Sprint", "CrouchWalk", "Shamble", "Charge")
 LEG = 0.84
 """Hip height above the soles; a planted straight leg swings about this length."""
 
@@ -202,6 +206,40 @@ def _survivor_clips():
         ("LeftUpperArm", 16, (-20.0, 0.0, -8.0)),
         ("RightUpperArm", 16, (-70.0, 10.0, 20.0)),
     )
+    reload_shotgun = (
+        ("LeftUpperArm", 1, (-40.0, 0.0, -10.0)),
+        ("RightUpperArm", 1, (-60.0, 0.0, 18.0)),
+        ("Spine", 1, (6.0, 0.0, 0.0)),
+        ("LeftLowerArm", 6, (-30.0, 0.0, 0.0)),
+        ("LeftUpperArm", 6, (-20.0, 10.0, -24.0)),
+        ("LeftUpperArm", 11, (-58.0, -6.0, -6.0)),
+        ("LeftLowerArm", 11, (-6.0, 0.0, 0.0)),
+        ("LeftUpperArm", 16, (-20.0, 10.0, -24.0)),
+        ("LeftLowerArm", 16, (-30.0, 0.0, 0.0)),
+        ("LeftUpperArm", 21, (-58.0, -6.0, -6.0)),
+        ("LeftLowerArm", 21, (-6.0, 0.0, 0.0)),
+        ("Spine", 21, (10.0, -4.0, 0.0)),
+        ("LeftUpperArm", 26, (-40.0, 0.0, -10.0)),
+        ("RightUpperArm", 26, (-60.0, 0.0, 18.0)),
+        ("Spine", 26, (6.0, 0.0, 0.0)),
+    )
+    reload_rifle = (
+        ("LeftUpperArm", 1, (-44.0, 0.0, -12.0)),
+        ("RightUpperArm", 1, (-72.0, 0.0, 16.0)),
+        ("Spine", 1, (6.0, 0.0, 0.0)),
+        ("LeftUpperArm", 6, (-24.0, 0.0, -2.0)),
+        ("LeftLowerArm", 6, (-54.0, 0.0, 0.0)),
+        ("Head", 6, (14.0, 8.0, 0.0)),
+        ("LeftUpperArm", 12, (-10.0, 0.0, 6.0)),
+        ("LeftUpperArm", 16, (-26.0, 0.0, -2.0)),
+        ("LeftLowerArm", 16, (-58.0, 0.0, 0.0)),
+        ("RightLowerArm", 20, (-24.0, 0.0, 0.0)),
+        ("LeftUpperArm", 20, (-60.0, 0.0, 20.0)),
+        ("Head", 20, (4.0, 0.0, 0.0)),
+        ("LeftUpperArm", 24, (-44.0, 0.0, -12.0)),
+        ("LeftLowerArm", 24, (0.0, 0.0, 0.0)),
+        ("RightLowerArm", 24, (0.0, 0.0, 0.0)),
+    )
     melee = (
         ("RightUpperArm", 1, (-10.0, 0.0, 20.0)),
         ("Spine", 1, (0.0, 12.0, 0.0)),
@@ -262,6 +300,8 @@ def _survivor_clips():
         "Aim": aim,
         "Fire": fire,
         "Reload": reload,
+        "ReloadShotgun": reload_shotgun,
+        "ReloadRifle": reload_rifle,
         "Melee": melee,
         "Hit": hit,
         "Death": death,
@@ -304,12 +344,44 @@ def _death_side(yaw):
     )
 
 
+def _lopsided():
+    """A second wander: the torso leans to one side and one arm hangs forward, dragging."""
+    return (
+        ("Spine", 1, (18.0, 0.0, 10.0)),
+        ("Head", 1, (10.0, 0.0, 16.0)),
+        ("LeftUpperArm", 1, (-34.0, 0.0, -6.0)),
+        ("RightUpperArm", 1, (6.0, 0.0, 12.0)),
+        ("Spine", 12, (22.0, 0.0, 14.0)),
+        ("Head", 12, (12.0, 0.0, 20.0)),
+        ("Spine", 24, (18.0, 0.0, 10.0)),
+        ("Head", 24, (10.0, 0.0, 16.0)),
+    )
+
+
+def _dissolve():
+    """The corpse sinks into a heap while it burns away; the last key holds."""
+    return (
+        ("Hips", 1, (84.0, 0.0, 0.0)),
+        ("Spine", 1, (90.0, 0.0, 0.0)),
+        ("Hips", 20, (96.0, 0.0, 6.0)),
+        ("Spine", 20, (110.0, 0.0, -8.0)),
+        ("Head", 20, (40.0, 0.0, 20.0)),
+        ("LeftUpperArm", 20, (20.0, 0.0, -60.0)),
+        ("RightUpperArm", 20, (20.0, 0.0, 60.0)),
+        ("LeftLowerLeg", 20, (-70.0, 0.0, 0.0)),
+        ("RightLowerLeg", 20, (-70.0, 0.0, 0.0)),
+        ("Hips", 60, (100.0, 0.0, 8.0)),
+        ("Spine", 60, (118.0, 0.0, -10.0)),
+    )
+
+
 def _walker_clips():
     slouch = _slouch(20.0)
     return {
         "Idle": slouch,
         "IdleB": _slouch(24.0),
         "Walk": _plus(_held(slouch, 17), _gait(18.0)),
+        "WalkB": _plus(_held(_lopsided(), 17), _gait(18.0)),
         "Shamble": _plus(_slouch(28.0), _gait(14.0, (1, 12, 24))),
         "Sprint": _plus(_held(_slouch(16.0), 14), _gait(32.0, (1, 7, 14))),
         "Attack": _attack("RightUpperArm", 100.0),
@@ -338,6 +410,7 @@ def _walker_clips():
         "Death": _death_side(0.0),
         "DeathB": _death_side(18.0),
         "DeathC": _death_side(-22.0),
+        "Dissolve": _dissolve(),
     }
 
 

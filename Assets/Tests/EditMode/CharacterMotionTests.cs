@@ -57,8 +57,8 @@ namespace OutpostZero.Tests.EditMode
             for (int v = 0; v < CrowdVariant.Count; v++)
             {
                 float walk = CrowdVariant.Walk(v);
-                Assert.IsTrue(walk == 0f || walk == 1f, "gait blend " + walk);
-                Assert.AreEqual(walk == 1f ? "Shamble" : "Walk", CrowdVariant.WalkClip(v));
+                Assert.AreEqual(CrowdVariant.Threshold(v, CrowdVariant.WalkTakes.Length), walk, "gait blend " + walk + " sits on one take");
+                Assert.AreEqual(CrowdVariant.WalkTakes[v], CrowdVariant.WalkClip(v));
             }
             Assert.AreNotEqual(CrowdVariant.Idle(0), CrowdVariant.Idle(1));
             Assert.AreEqual(0f, CrowdVariant.Threshold(0, 3));

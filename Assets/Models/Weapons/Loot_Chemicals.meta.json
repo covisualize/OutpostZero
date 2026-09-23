@@ -2,8 +2,8 @@
   "id": "Loot_Chemicals",
   "category": "Weapons",
   "generator": "generate_items.build_chemicals",
-  "generatorHash": "6eb5a9c60b4def8d3c47c348c113e92c237be2bbcee5100d7ae6934df08db963",
-  "gitSha": "d603d236bf331476ae64349b92965cbfb924bc20",
+  "generatorHash": "2a5fe133c32f783101ba874479f3720331d58e7b90b851e76c0b170370a03cb6",
+  "gitSha": "edff058f31a908ed7de64edaf527c44ea12a41ff",
   "blender": "4.2.11",
   "tags": [
     "loot",

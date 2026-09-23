@@ -113,12 +113,15 @@ namespace OutpostZero.Player
             switch (clip)
             {
                 case "Walk":
+                case "WalkB":
                 case "Sprint":
                 case "CrouchWalk":
                 case "Shamble":
                     function = Footstep;
                     return new[] { 0.25f, 0.75f };
                 case "Reload":
+                case "ReloadShotgun":
+                case "ReloadRifle":
                     function = ReloadDone;
                     return new[] { 0.95f };
                 case "Attack":

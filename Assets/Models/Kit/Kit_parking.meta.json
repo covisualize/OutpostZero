@@ -2,8 +2,8 @@
   "id": "Kit_parking",
   "category": "Kit",
   "generator": "generate_kit.build_piece",
-  "generatorHash": "de24a9a777a3422ee32ee39801705a11967a2d785b8aca026e3a1edcbe094595",
-  "gitSha": "d603d236bf331476ae64349b92965cbfb924bc20",
+  "generatorHash": "22d9107f822cb7a874a152839d6b28deee6eb88cc338aa3494a788d29ee71e36",
+  "gitSha": "edff058f31a908ed7de64edaf527c44ea12a41ff",
   "blender": "4.2.11",
   "tags": [
     "kit",

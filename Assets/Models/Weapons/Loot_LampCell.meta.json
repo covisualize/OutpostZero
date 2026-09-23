@@ -2,8 +2,8 @@
   "id": "Loot_LampCell",
   "category": "Weapons",
   "generator": "generate_items.build_lamp_cell",
-  "generatorHash": "d11f47a891b3db63e2a7a41f8baeda6233acfdd3ea3d6afe09a7fce0e501ec2f",
-  "gitSha": "d603d236bf331476ae64349b92965cbfb924bc20",
+  "generatorHash": "9c10321de26c7f7619a67348da08bdd07fbb20c62c2f743a18c92011e30a8868",
+  "gitSha": "edff058f31a908ed7de64edaf527c44ea12a41ff",
   "blender": "4.2.11",
   "tags": [
     "loot",

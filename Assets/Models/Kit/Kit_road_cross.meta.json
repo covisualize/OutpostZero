@@ -2,8 +2,8 @@
   "id": "Kit_road_cross",
   "category": "Kit",
   "generator": "generate_kit.build_piece",
-  "generatorHash": "3fd070cff50523ed770afa9eaf21778c6c279db896637b61b1d0ff8ef2adb895",
-  "gitSha": "d603d236bf331476ae64349b92965cbfb924bc20",
+  "generatorHash": "3f79b882cc99f3d83dd946d72900cb4de063313930f64aa2ef3be1540b4064be",
+  "gitSha": "edff058f31a908ed7de64edaf527c44ea12a41ff",
   "blender": "4.2.11",
   "tags": [
     "kit",

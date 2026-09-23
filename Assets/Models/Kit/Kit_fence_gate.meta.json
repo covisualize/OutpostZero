@@ -2,8 +2,8 @@
   "id": "Kit_fence_gate",
   "category": "Kit",
   "generator": "generate_kit.build_piece",
-  "generatorHash": "19e69a237fdc9479de30ac1679f2dbf31a2aeb3f1fce674ca6c84baa0f3258a5",
-  "gitSha": "d603d236bf331476ae64349b92965cbfb924bc20",
+  "generatorHash": "0a16df314e69effc43cbbe49185779daaf3dcaeeed105978e43c61845a32c3a2",
+  "gitSha": "edff058f31a908ed7de64edaf527c44ea12a41ff",
   "blender": "4.2.11",
   "tags": [
     "kit",

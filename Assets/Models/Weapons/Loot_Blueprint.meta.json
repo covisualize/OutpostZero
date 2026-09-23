@@ -2,8 +2,8 @@
   "id": "Loot_Blueprint",
   "category": "Weapons",
   "generator": "generate_items.build_blueprint",
-  "generatorHash": "a3b1f62878ca13a8da92b069ab12629a7fb8607524ecf2fa390408433928ebce",
-  "gitSha": "d603d236bf331476ae64349b92965cbfb924bc20",
+  "generatorHash": "6e7b9c750e7aaadb2280479d18cbf57667a9bc3b6144c9c8b45335b7187786e5",
+  "gitSha": "edff058f31a908ed7de64edaf527c44ea12a41ff",
   "blender": "4.2.11",
   "tags": [
     "loot",

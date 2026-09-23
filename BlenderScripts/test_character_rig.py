@@ -78,6 +78,21 @@ class CharacterRigTests(unittest.TestCase):
                 for bone, _frame, _rotation in keys:
                     self.assertIn(bone, known)
 
+    def test_each_gun_family_reloads_its_own_way_and_zombies_melt_into_a_heap(self):
+        survivor = clips_for("Survivor_Leader")
+        takes = [survivor[name] for name in ("Reload", "ReloadShotgun", "ReloadRifle")]
+        self.assertEqual(len(set(takes)), 3)
+        self.assertGreater(cycle_frames(survivor["ReloadShotgun"]), cycle_frames(survivor["Reload"]), "shells go in one at a time")
+        for role in ("Zombie_Walker", "Zombie_Runner", "Zombie_Brute"):
+            clips = clips_for(role)
+            self.assertIn("WalkB", clips)
+            self.assertNotEqual(clips["WalkB"], clips["Walk"])
+            self.assertAlmostEqual(ground_speed(clips["WalkB"]), ground_speed(clips["Walk"]), msg="the two wanders share a stride")
+            heap = clips["Dissolve"]
+            hips = [rotation[0] for bone, frame, rotation in heap if bone == "Hips"]
+            self.assertGreaterEqual(min(hips), 80.0, "the heap starts where the falls end")
+            self.assertGreaterEqual(cycle_frames(heap) / 24.0, 2.0, "the heap keeps sinking through most of the melt")
+
     def test_every_gait_clip_loops_on_its_stride(self):
         for role in ROLES:
             for name, keys in clips_for(role).items():

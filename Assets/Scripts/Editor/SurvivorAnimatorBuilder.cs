@@ -92,8 +92,10 @@ namespace OutpostZero.EditorTools
             MotionOr(machine, CharacterRig.Windup, byName, "Roar", "Scream");
             MotionOr(machine, CharacterRig.Dash, byName, "Charge", "Lunge", "Sprint");
             Variants(controller, machine, "Idle", CharacterRig.IdleVariant, byName, "Idle", "IdleB");
-            Variants(controller, machine, "Walk", CharacterRig.GaitVariant, byName, "Walk", "Shamble");
+            Variants(controller, machine, "Walk", CharacterRig.GaitVariant, byName, CrowdVariant.WalkTakes);
             Variants(controller, machine, "Death", CharacterRig.DeathVariant, byName, "Death", "DeathB", "DeathC");
+            if (upper != null) Variants(controller, upper, "Reload", CharacterRig.ReloadVariant, byName, CharacterRig.ReloadTakes);
+            if (byName.TryGetValue(CharacterRig.Dissolve, out var heap)) Melt(machine, heap);
             EditorUtility.SetDirty(controller);
             AssetDatabase.SaveAssets();
         }
@@ -120,6 +122,7 @@ namespace OutpostZero.EditorTools
             EnsureParameter(controller, CharacterRig.IdleVariant, AnimatorControllerParameterType.Float);
             EnsureParameter(controller, CharacterRig.GaitVariant, AnimatorControllerParameterType.Float);
             EnsureParameter(controller, CharacterRig.DeathVariant, AnimatorControllerParameterType.Float);
+            EnsureParameter(controller, CharacterRig.ReloadVariant, AnimatorControllerParameterType.Float);
             EnsureParameter(controller, CharacterRig.Windup, AnimatorControllerParameterType.Trigger);
             EnsureParameter(controller, CharacterRig.Dash, AnimatorControllerParameterType.Bool);
             EnsureParameter(controller, CharacterRig.Activity, AnimatorControllerParameterType.Int);
@@ -152,6 +155,18 @@ namespace OutpostZero.EditorTools
                     child.state.speedParameter = rate;
                 }
             }
+        }
+
+        /// <summary>Only a model with the heap take gets the state; a survivor's fall holds its last frame.</summary>
+        private static void Melt(AnimatorStateMachine machine, AnimationClip heap)
+        {
+            AnimatorState death = null;
+            foreach (var child in machine.states)
+                if (child.state.name == "Death") death = child.state;
+            if (death == null) return;
+            var melt = FindOrAdd(machine, CharacterRig.Dissolve, new Vector3(280, 380, 0));
+            melt.motion = heap;
+            ExitTo(death, melt);
         }
 
         public const string UpperMaskName = "UpperBodyMask";
@@ -466,6 +481,7 @@ namespace OutpostZero.EditorTools
                 case "Idle":
                 case "IdleB":
                 case "Walk":
+                case "WalkB":
                 case "Sprint":
                 case "CrouchIdle":
                 case "CrouchWalk":
