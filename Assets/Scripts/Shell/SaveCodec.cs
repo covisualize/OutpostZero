@@ -162,7 +162,7 @@ namespace OutpostZero.Shell
                 error = "schema";
                 return false;
             }
-            if (!string.IsNullOrEmpty(data.seal))
+            if (!string.IsNullOrEmpty(data.seal) && !SealHolds(json))
             {
                 string claimed = data.seal;
                 data.seal = "";
@@ -176,6 +176,24 @@ namespace OutpostZero.Shell
             }
             data = SaveMigrations.Upgrade(data);
             return true;
+        }
+
+        private static readonly System.Text.RegularExpressions.Regex SealField =
+            new System.Text.RegularExpressions.Regex("\"seal\": \"([0-9a-f]*)\"");
+
+        /// <summary>
+        /// Checks the seal against the file's own text with the seal emptied, which is exactly what
+        /// <see cref="Serialize"/> hashed. Re-serializing instead would add every field a newer build
+        /// declares and break the seal on any save written before that field existed.
+        /// </summary>
+        public static bool SealHolds(string json)
+        {
+            if (string.IsNullOrEmpty(json)) return false;
+            string text = json.Replace("\r\n", "\n");
+            var match = SealField.Match(text);
+            if (!match.Success || match.Groups[1].Value.Length == 0) return false;
+            string bare = text.Substring(0, match.Index) + "\"seal\": \"\"" + text.Substring(match.Index + match.Length);
+            return SaveSlots.Hash(bare) == match.Groups[1].Value;
         }
     }
 }

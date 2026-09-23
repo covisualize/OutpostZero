@@ -123,6 +123,38 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void TheSealIsCheckedAgainstTheFileTextSoOlderSavesStillOpen()
+        {
+            string bare = "{\n    \"day\": 4,\n    \"seal\": \"\",\n    \"food\": 9\n}";
+            string seal = SaveSlots.Hash(bare);
+            string sealed_ = bare.Replace("\"seal\": \"\"", "\"seal\": \"" + seal + "\"");
+            Assert.IsTrue(SaveCodec.SealHolds(sealed_));
+            Assert.IsTrue(SaveCodec.SealHolds(sealed_.Replace("\n", "\r\n")), "a CRLF copy of the file still holds");
+            Assert.IsFalse(SaveCodec.SealHolds(sealed_.Replace("\"food\": 9", "\"food\": 99")), "an edited value breaks the seal");
+            Assert.IsFalse(SaveCodec.SealHolds(bare), "an empty seal proves nothing");
+            Assert.IsFalse(SaveCodec.SealHolds(""));
+        }
+
+        [Test]
+        public void ASealedSaveFromABuildWithFewerFieldsStillLoads()
+        {
+            Assert.IsTrue(SaveCodec.TryDeserialize(File.ReadAllText(Fixture("save_v1.json")), out var data, out var error), error);
+            string written = SaveCodec.Serialize(data);
+            Assert.IsTrue(SaveCodec.SealHolds(written));
+            var lines = new System.Collections.Generic.List<string>(written.Replace("\r\n", "\n").Split('\n'));
+            int drop = lines.FindIndex(l => l.TrimStart().StartsWith("\"subtitles\""));
+            Assert.Greater(drop, 0);
+            lines.RemoveAt(drop);
+            string older = string.Join("\n", lines);
+            string bare = System.Text.RegularExpressions.Regex.Replace(older, "\"seal\": \"[0-9a-f]*\"", "\"seal\": \"\"");
+            older = older.Replace("\"seal\": \"" + data.seal + "\"", "\"seal\": \"" + SaveSlots.Hash(bare) + "\"");
+            Assert.IsTrue(SaveCodec.TryDeserialize(older, out var loaded, out error), error);
+            Assert.AreEqual(data.day, loaded.day);
+            Assert.IsFalse(SaveCodec.TryDeserialize(older.Replace("\"day\": " + data.day, "\"day\": 99"), out _, out error));
+            Assert.AreEqual("seal", error);
+        }
+
+        [Test]
         public void ARoundTripIsDeepEqual()
         {
             Assert.IsTrue(SaveCodec.TryDeserialize(File.ReadAllText(Fixture("save_v1.json")), out var first, out var error), error);
