@@ -26,7 +26,8 @@ MonoBehaviour:
     probeVolumeBlendStatesCS: {fileID: 0}
   m_RendererFeatures:
   - {fileID: 5213409862175406311}
-  m_RendererFeatureMap: e7b87bd7a5c05948
+  - {fileID: 1422794490716520317}
+  m_RendererFeatureMap: e7b87bd7a5c059487d7f8a0f0dc8be13
   m_UseNativeRenderPass: 0
   postProcessData: {fileID: 0}
   m_AssetVersion: 2
@@ -72,3 +73,22 @@ MonoBehaviour:
       surfaceData: 2
     screenSpaceSettings:
       normalBlend: 0
+--- !u!114 &1422794490716520317
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b00045f12942b46c698459096c89274e, type: 3}
+  m_Name: HeightFog
+  m_EditorClassIdentifier: 
+  m_Active: 1
+  injectionPoint: 450
+  fetchColorBuffer: 0
+  requirements: 1
+  passMaterial: {fileID: 2100000, guid: adb4df82fa03450b8971212eb3e1ab51, type: 2}
+  passIndex: 0
+  bindDepthStencilAttachment: 0

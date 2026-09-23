@@ -146,6 +146,11 @@ namespace OutpostZero.Graphics
             nextShift = Time.time + 80f;
         }
 
+        private void OnDestroy()
+        {
+            if (Instance == this) HeightFog.Clear();
+        }
+
         private void Update()
         {
             if (Time.time >= nextShift)
@@ -195,6 +200,7 @@ namespace OutpostZero.Graphics
             RenderSettings.fogMode = FogMode.ExponentialSquared;
             RenderSettings.fogColor = GroundMist.Tint(kind, night);
             RenderSettings.fogDensity = density;
+            HeightFog.Push(kind, night);
             Shader.SetGlobalFloat("_WindStrength", GroundMist.Wind(kind));
             Shader.SetGlobalFloat("_OutpostWet", WeatherSurface.Wetness(kind));
             HoldPuddles(WeatherSurface.Wetness(kind));
