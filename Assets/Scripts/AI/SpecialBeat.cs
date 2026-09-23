@@ -59,6 +59,11 @@ namespace OutpostZero.AI
 
         public static Clock Advance(Clock clock, bool inReach, float now, float dt, bool charge = false, float cooldown = Cooldown)
         {
+            return Advance(clock, inReach, now, dt, charge ? ChargeWindup : Windup, charge ? ChargeDash : Dash, cooldown);
+        }
+
+        public static Clock Advance(Clock clock, bool inReach, float now, float dt, float windup, float dash, float cooldown)
+        {
             if (dt < 0f) dt = 0f;
             if (clock.Phase == 2)
             {
@@ -78,7 +83,7 @@ namespace OutpostZero.AI
                 if (clock.Left <= 0f)
                 {
                     clock.Phase = 2;
-                    clock.Left = charge ? ChargeDash : Dash;
+                    clock.Left = dash;
                     clock.Struck = false;
                 }
                 return clock;
@@ -86,7 +91,7 @@ namespace OutpostZero.AI
 
             if (!inReach || now < clock.Ready) return clock;
             clock.Phase = 1;
-            clock.Left = charge ? ChargeWindup : Windup;
+            clock.Left = windup;
             return clock;
         }
     }

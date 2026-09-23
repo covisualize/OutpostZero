@@ -823,12 +823,11 @@ namespace OutpostZero.AI
             float distToTarget = Vector3.Distance(transform.position, currentTarget.position);
             Vector3 aim = (seen ? currentTarget.position : lastKnownPosition) - transform.position;
             aim.y = 0f;
-            bool charging = specialAbility == ZombieSpecialAbility.Charge;
-            bool lunging = specialAbility == ZombieSpecialAbility.Lunge;
+            var special = SpecialAbility.For(specialAbility);
             int phaseBefore = abilityClock.Phase;
-            if (charging || lunging)
+            if (special != null)
             {
-                abilityClock = SpecialBeat.Advance(abilityClock, SpecialBeat.InReach(distToTarget, charging), Time.time, Time.deltaTime, charging, AbilityCooldown);
+                abilityClock = special.Advance(abilityClock, distToTarget, Time.time, Time.deltaTime, AbilityCooldown);
                 if (phaseBefore != 2 && abilityClock.Phase == 2)
                 {
                     SpecialBeat.Commit(aim.x, aim.z, out dashX, out dashZ);
@@ -845,11 +844,11 @@ namespace OutpostZero.AI
                     var dash = new Vector3(dashX, 0f, dashZ);
                     if (agent.isOnNavMesh && dash.sqrMagnitude > 0.01f)
                     {
-                        agent.Move(dash * SpecialBeat.Speed(charging) * Time.deltaTime);
+                        agent.Move(dash * special.Speed * Time.deltaTime);
                     }
-                    if (charging)
+                    if (special.BreaksThrough)
                     {
-                        BraceCharge(dash);
+                        BraceCharge(dash, special);
                         if (currentState != ZombieState.Chase) return;
                     }
                 }
@@ -865,7 +864,7 @@ namespace OutpostZero.AI
                     abilityClock.Phase = 0;
                     abilityClock.Left = 0f;
                     abilityClock.Ready = Time.time + AbilityCooldown;
-                    ConnectDash(charging);
+                    ConnectDash(special);
                 }
             }
 
@@ -906,15 +905,14 @@ namespace OutpostZero.AI
 
         private static float AbilityCooldown => DifficultyProfile.Cooldown(SpecialBeat.Cooldown, DifficultyProfile.Active);
 
-        private void ConnectDash(bool charge)
+        private void ConnectDash(SpecialAbility special)
         {
             if (currentTarget == null) return;
             var damageable = currentTarget.GetComponent<IDamageable>();
             if (damageable == null || damageable.IsDead) return;
-            float amount = charge ? attackDamage + 8f : SpecialBeat.LungeDamage;
-            damageable.TakeDamage(amount, currentTarget.position, transform.forward, gameObject);
-            if (charge) currentTarget.GetComponent<StatusEffectController>()?.Knockdown(SpecialBeat.ChargeKnockdown);
-            if (charge) ExpeditionCameraRig.At(CameraTuning.BruteStomp, transform.position);
+            damageable.TakeDamage(special.Damage(attackDamage), currentTarget.position, transform.forward, gameObject);
+            if (special.Knockdown > 0f) currentTarget.GetComponent<StatusEffectController>()?.Knockdown(special.Knockdown);
+            if (special.Stomps) ExpeditionCameraRig.At(CameraTuning.BruteStomp, transform.position);
         }
 
         private void UpdateSearching()
@@ -971,11 +969,11 @@ namespace OutpostZero.AI
             return !headBlocked || !chestBlocked;
         }
 
-        private void BraceCharge(Vector3 dash)
+        private void BraceCharge(Vector3 dash, SpecialAbility special)
         {
             if (dash.sqrMagnitude < 0.01f) return;
             Vector3 origin = transform.position + Vector3.up * 0.9f;
-            float reach = SpecialBeat.Speed(true) * Time.deltaTime + 0.5f;
+            float reach = special.Speed * Time.deltaTime + 0.5f;
             bool wallHit = Physics.Raycast(origin, dash.normalized, out RaycastHit wall, reach, GameLayers.EnvironmentMask);
             if (RipBar(origin, dash, reach, wallHit, wall)) return;
             if (!wallHit) return;
