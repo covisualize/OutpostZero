@@ -44,6 +44,7 @@ namespace OutpostZero.AI
         private int scriptedCap;
 
         public int MaxAlive => scriptedCap > 0 ? scriptedCap : maxAliveZombies;
+        public int Alive => activeZombies.Count;
 
         public void ApplyCap(int max)
         {
