@@ -6,18 +6,21 @@ namespace OutpostZero.AI
     /// </summary>
     public static class SpecialBeat
     {
-        public const float LungeNear = 2.2f;
-        public const float LungeFar = 5.5f;
-        public const float ChargeNear = 3f;
-        public const float ChargeFar = 8f;
+        public const float LungeNear = 3f;
+        public const float LungeFar = 5f;
+        public const float ChargeNear = 6f;
+        public const float ChargeFar = 12f;
         public const float Windup = 0.4f;
         public const float ChargeWindup = 0.8f;
         public const float Dash = 0.45f;
         public const float WallStun = 1.5f;
         public const float LungeSpeed = 8f;
         public const float ChargeSpeed = 6.5f;
-        public const float Cooldown = 4.5f;
+        public const float Cooldown = 4f;
         public const float LungeDamage = 30f;
+        public const float ChargeKnockdown = 1.2f;
+        /// <summary>The charge runs long enough to cover its whole line-up, so a brute that starts at 12 m arrives.</summary>
+        public const float ChargeDash = ChargeFar / ChargeSpeed + 0.15f;
 
         public struct Clock
         {
@@ -75,7 +78,7 @@ namespace OutpostZero.AI
                 if (clock.Left <= 0f)
                 {
                     clock.Phase = 2;
-                    clock.Left = Dash;
+                    clock.Left = charge ? ChargeDash : Dash;
                     clock.Struck = false;
                 }
                 return clock;

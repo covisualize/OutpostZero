@@ -906,7 +906,7 @@ namespace OutpostZero.AI
             if (damageable == null || damageable.IsDead) return;
             float amount = charge ? attackDamage + 8f : SpecialBeat.LungeDamage;
             damageable.TakeDamage(amount, currentTarget.position, transform.forward, gameObject);
-            if (charge) currentTarget.GetComponent<StatusEffectController>()?.Knockdown(0.7f);
+            if (charge) currentTarget.GetComponent<StatusEffectController>()?.Knockdown(SpecialBeat.ChargeKnockdown);
             if (charge) ExpeditionCameraRig.At(CameraTuning.BruteStomp, transform.position);
         }
 

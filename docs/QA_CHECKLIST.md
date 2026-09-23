@@ -74,6 +74,7 @@ Play this in a player build, not the editor. Use Survivor difficulty and a fixed
 - [ ] PRO-25 **Play**: with your eyes shut, each weapon is recognisable from its shake and hit-stop. Every hit gets a visible reaction.
 - [ ] PRO-26 **Play**: the red barrel next to 3 zombies kills them, alerts the map and brings reinforcements. Barrels chain. The toxic cloud ticks.
 - [ ] PRO-27 **Play**: a Runner lunge can be dodged. A Brute charge breaks a wood barricade. A scream pulls a group through an open door but not through a wall.
+  - The numbers follow the issue (`SpecialBeat`): a runner lunges from 3 to 5 m after a 0.4 s brace, at 8 m/s for 30 damage, then waits 4 s. A brute lines up from 6 to 12 m, roars for 0.8 s and charges at 6.5 m/s for long enough to cover the full 12 m. It breaks boards and barred doors on the way, knocks the leader down for 1.2 s, and stuns itself for 1.5 s on a wall. The direction is fixed when the dash starts, so a side-step dodges both. Stand 10 m from a brute and check it charges, and step aside during the roar to make it miss.
 - [ ] PRO-28 **Play**: no zombie is ever seen spawning, pressure ebbs and flows, and Nightmare is clearly harder than Scavenger.
 - [ ] PRO-29 **Play**: crouched with the light off at night, you pass 5 m from a Walker unseen. Turning the flashlight on gets you spotted. A lure thrown 15 m (G) pulls a group away. V takes down an unalerted zombie from behind.
 - [ ] PRO-30 **Play**: hunger, thirst, fatigue, bleeding and infection each visibly change play. Medical items cure them.

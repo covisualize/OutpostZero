@@ -2343,13 +2343,18 @@ namespace OutpostZero.Tests.EditMode
         [Test]
         public void ARunnerWindsUpBeforeTheLungeAndABruteBeforeTheCharge()
         {
-            Assert.IsTrue(SpecialBeat.InReach(2.2f, false));
-            Assert.IsFalse(SpecialBeat.InReach(2.1f, false));
-            Assert.IsTrue(SpecialBeat.InReach(5.5f, false));
-            Assert.IsFalse(SpecialBeat.InReach(5.6f, false));
-            Assert.IsTrue(SpecialBeat.InReach(3f, true));
-            Assert.IsTrue(SpecialBeat.InReach(8f, true));
-            Assert.IsFalse(SpecialBeat.InReach(2.5f, true));
+            Assert.IsTrue(SpecialBeat.InReach(3f, false));
+            Assert.IsFalse(SpecialBeat.InReach(2.9f, false));
+            Assert.IsTrue(SpecialBeat.InReach(5f, false));
+            Assert.IsFalse(SpecialBeat.InReach(5.1f, false));
+            Assert.IsTrue(SpecialBeat.InReach(6f, true));
+            Assert.IsTrue(SpecialBeat.InReach(12f, true));
+            Assert.IsFalse(SpecialBeat.InReach(5.9f, true));
+            Assert.IsFalse(SpecialBeat.InReach(12.1f, true));
+            Assert.AreEqual(4f, SpecialBeat.Cooldown);
+            Assert.AreEqual(1.2f, SpecialBeat.ChargeKnockdown);
+            Assert.GreaterOrEqual(SpecialBeat.ChargeDash * SpecialBeat.ChargeSpeed, SpecialBeat.ChargeFar, "a charge from the far edge arrives");
+            Assert.GreaterOrEqual(SpecialBeat.Dash * SpecialBeat.LungeSpeed + 1.5f, SpecialBeat.LungeFar, "a lunge from 5 m closes to bite reach");
             Assert.AreEqual(8f, SpecialBeat.Speed(false));
             Assert.AreEqual(6.5f, SpecialBeat.Speed(true));
             Assert.AreEqual(30f, SpecialBeat.LungeDamage);
@@ -2379,6 +2384,9 @@ namespace OutpostZero.Tests.EditMode
             var brute = SpecialBeat.Advance(new SpecialBeat.Clock(), true, 10f, 0.05f, true);
             Assert.AreEqual(1, brute.Phase);
             Assert.AreEqual(SpecialBeat.ChargeWindup, brute.Left, 0.001f);
+            var rush = SpecialBeat.Advance(brute, true, 10.05f, 1f, true);
+            Assert.AreEqual(2, rush.Phase);
+            Assert.AreEqual(SpecialBeat.ChargeDash, rush.Left, 0.001f);
             Assert.AreEqual(1.5f, SpecialBeat.WallStun);
             SpecialBeat.Commit(0f, 4f, out float headX, out float headZ);
             Assert.AreEqual(0f, headX, 0.001f);
