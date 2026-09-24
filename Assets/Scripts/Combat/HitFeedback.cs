@@ -54,9 +54,9 @@ namespace OutpostZero.Combat
 
         private void Update()
         {
-            if (hitStopUntil > 0f && Time.unscaledTime >= hitStopUntil && Time.timeScale < 0.2f)
+            if (hitStopUntil > 0f && Time.unscaledTime >= hitStopUntil)
             {
-                Time.timeScale = previousTimeScale;
+                if (HitStun.StopStillHolds(Time.timeScale)) Time.timeScale = previousTimeScale;
                 hitStopUntil = 0f;
             }
         }
@@ -99,7 +99,7 @@ namespace OutpostZero.Combat
             if (melee == null || !melee.isActiveAndEnabled) return;
             if (Time.timeScale < 0.2f) return;
             previousTimeScale = Time.timeScale <= 0f ? 1f : Time.timeScale;
-            Time.timeScale = 0.05f;
+            Time.timeScale = HitStun.StopScale;
             hitStopUntil = Time.unscaledTime + 0.03f;
         }
 

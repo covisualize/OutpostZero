@@ -1,3 +1,4 @@
+using System;
 using OutpostZero.Core;
 
 namespace OutpostZero.Combat
@@ -32,5 +33,14 @@ namespace OutpostZero.Combat
             if (seconds < 0.05f) return 0.05f;
             return seconds;
         }
+
+        /// <summary>The time scale a melee kill drops to for its brief hit-stop.</summary>
+        public const float StopScale = 0.05f;
+
+        /// <summary>
+        /// The hit-stop may hand time back only while the clock is still at its own scale. A pause,
+        /// game over or loading card that froze time meanwhile owns the clock, and the stop just ends.
+        /// </summary>
+        public static bool StopStillHolds(float timeScale) => Math.Abs(timeScale - StopScale) <= Tick.Slack;
     }
 }
