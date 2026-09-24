@@ -2793,6 +2793,15 @@ namespace OutpostZero.Tests.EditMode
         }
 
         [Test]
+        public void AHitStopHandsTimeBackOnlyWhileItStillHoldsTheClock()
+        {
+            Assert.IsTrue(HitStun.StopStillHolds(HitStun.StopScale));
+            Assert.IsFalse(HitStun.StopStillHolds(0f), "a pause during the stop keeps the game frozen");
+            Assert.IsFalse(HitStun.StopStillHolds(1f));
+            Assert.IsFalse(HitStun.StopStillHolds(0.1f));
+        }
+
+        [Test]
         public void AChaseIsABangAndASearchIsAQuestion()
         {
             Assert.AreEqual("!", ThreatMark.Glyph(ZombieAI.ZombieState.Chase));
