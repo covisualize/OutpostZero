@@ -3,7 +3,7 @@ name: Blender assets
 on:
   pull_request:
   push:
-    branches: [main]
+    branches: ['**']
   workflow_dispatch:
 
 jobs:
