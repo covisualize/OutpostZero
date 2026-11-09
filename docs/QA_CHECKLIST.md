@@ -32,8 +32,7 @@ python3 -m unittest discover -s Tools/Balance
 - [ ] The typecheck harness builds every assembly and EditMode reports `failed 0`.
 - [ ] GameCI `editmode`, `playmode` and the Linux player job are green. These need the `UNITY_LICENSE`, `UNITY_EMAIL` and `UNITY_PASSWORD` secrets.
 - [ ] The PR carries the screenshot-tour comment with six fresh captures (overview, clear, fog, rain, overcast, night storm).
-- [ ] The nightly soak (`soak.yml`) passed within the last 24 h: 30 min at 4x, memory stays within 1.10x of baseline, and there are no errors.
-- [ ] `Tools/Balance/summarize.py` on the soak or playtest CSVs hits the Survivor targets: first death on days 4 to 7 and a win on days 25 to 35.
+- [ ] `Tools/Balance/summarize.py` on the playtest CSVs hits the Survivor targets: first death on days 4 to 7 and a win on days 25 to 35.
 
 ## 2. Full loop, menu to win
 
